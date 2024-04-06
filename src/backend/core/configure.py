@@ -1,3 +1,5 @@
+from functools import lru_cache
+import logging
 from fastapi import FastAPI
 
 # Apps
@@ -8,3 +10,7 @@ def configure(app: FastAPI):
     '''
     app.mount('/admin', create_admin())
     
+
+@lru_cache
+def get_core_logger() -> logging.Logger:
+    return logging.getLogger("core")
