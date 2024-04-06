@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from admin.configure import configure, get_admin_logger
-import logging
 
 def create_admin() -> FastAPI:
     admin = FastAPI()
