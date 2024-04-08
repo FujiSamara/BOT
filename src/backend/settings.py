@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     psql_user: str = Field(validation_alias="POSTGRES_USER")
     psql_host: str = Field(validation_alias="POSTGRES_HOST", default="localhost")
     psql_port: int = Field(validation_alias="POSTGRES_HOST", default=5432)
-    psql_db_name: str = Field(validation_alias="POSTGRES_DB_NAME", default="db")
+    psql_db_name: str = Field(validation_alias="POSTGRES_DB_NAME", default="postgres")
 
     @computed_field
     @property
