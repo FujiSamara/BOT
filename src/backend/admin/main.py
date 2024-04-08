@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from admin.configure import configure, get_admin_logger
+import sys
 
 def create_admin() -> FastAPI:
     admin = FastAPI()
@@ -7,7 +8,7 @@ def create_admin() -> FastAPI:
         configure(admin)
     except Exception as e:
         get_admin_logger().critical(f"Admin configuring is failed: {e}")
-        return admin
+        sys.exit()
     get_admin_logger().info("Admin created")
     return admin
 
