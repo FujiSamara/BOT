@@ -1,7 +1,7 @@
 from db.database import Base
-from sqlalchemy import Integer, String, ForeignKey
-from sqlalchemy.orm import mapped_column, Mapped
-from typing import Annotated
+from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy.orm import mapped_column, Mapped, relationship
+from typing import Annotated, List
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
 
@@ -10,6 +10,7 @@ class Role(Base):
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
+    level: Mapped[int] = mapped_column(CheckConstraint("level<=10 AND level>0"), nullable=False)
 
 class Company(Base):
     __tablename__ = "companies"
@@ -17,20 +18,28 @@ class Company(Base):
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
 
+    enterprises: Mapped[List["Enterprise"]] = relationship("Enterprise", back_populates="company")
+
+    def __str__(self) -> str:
+        return self.name
+
 class Enterprise(Base):
     __tablename__ = "enterprises"
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
-    address = Mapped[str]
+    address: Mapped[str]
 
-    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"))
-    
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), nullable=False)
+    company: Mapped["Company"] = relationship("Company", back_populates="enterprises")
 
-class Post(Base):
-    __tablename__ = "posts"
+    def __str__(self) -> str:
+        return self.name
 
-    id: Mapped[intpk]
-    name: Mapped[str] = mapped_column(nullable=False)
+# class Post(Base):
+#     __tablename__ = "posts"
+
+#     id: Mapped[intpk]
+#     name: Mapped[str] = mapped_column(nullable=False)
 
 
