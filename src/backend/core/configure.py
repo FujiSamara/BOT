@@ -8,7 +8,7 @@ from admin.main import create_admin
 def configure(app: FastAPI):
     '''Configure fast api core app.
     '''
-    app.mount('/admin', create_admin())
+    create_admin(app)
     
 
 @lru_cache

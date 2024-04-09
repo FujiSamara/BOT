@@ -1,23 +1,16 @@
 from functools import lru_cache
-from fastapi import FastAPI
 import logging
-from db.database import engine, session
-from admin.shemas import RoleView
+from admin.shemas import RoleView, EnterpriseView, CompanyView
 
 # Routers
 from sqladmin import Admin
 
-def configure(admin: FastAPI):
+def configure(admin: Admin):
     '''Configure fast api admin app.
     '''
-    admin_handler = Admin(
-        admin, 
-        engine, 
-        session_maker=session,
-        base_url='/', 
-        title='Fuji admin',
-    )
-    admin_handler.add_view(RoleView)
+    admin.add_view(RoleView)
+    admin.add_view(EnterpriseView)
+    admin.add_view(CompanyView)
 
 
 
