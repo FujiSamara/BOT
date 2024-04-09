@@ -8,7 +8,7 @@ class RoleView(ModelView, model=Role):
 
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
-    form_columns = [Company.name, Company.enterprises]
+    form_columns = [Company.name]
     name_plural = "Companies"
 
 
