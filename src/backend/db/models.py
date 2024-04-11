@@ -8,17 +8,20 @@ intpk = Annotated[int, mapped_column(primary_key=True)]
 class Role(Base):
     __tablename__ = "roles"
 
+    def __str__(self) -> str:
+        return f"{self.name}: {self.level}"
+
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     level: Mapped[int] = mapped_column(CheckConstraint("level<=10 AND level>0"), nullable=False)
 
     posts: Mapped[List["Post"]] = relationship("Post", cascade="all,delete", back_populates="role")
 
-    def __str__(self) -> str:
-        return f"{self.name}, level: {self.level}"
-
 class Post(Base):
     __tablename__ = "posts"
+
+    def __str__(self) -> str:
+        return self.name
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
@@ -28,22 +31,22 @@ class Post(Base):
 
     employees: Mapped[List["Employee"]] = relationship("Employee", back_populates="post")
 
-    def __str__(self) -> str:
-        return self.name
-
 class Company(Base):
     __tablename__ = "companies"
+
+    def __str__(self) -> str:
+        return self.name
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
 
     enterprises: Mapped[List["Enterprise"]] = relationship("Enterprise", cascade="all,delete", back_populates="company")
 
-    def __str__(self) -> str:
-        return self.name
-
 class Enterprise(Base):
     __tablename__ = "enterprises"
+
+    def __str__(self) -> str:
+        return self.name
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
@@ -54,11 +57,11 @@ class Enterprise(Base):
 
     employees: Mapped[List["Employee"]] = relationship("Employee", back_populates="enterprise")
 
-    def __str__(self) -> str:
-        return self.name
-
 class Employee(Base):
     __tablename__ = "employees"
+
+    def __str__(self) -> str:
+        return f"{self.surname} {self.name} {self.patronymic}"
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
