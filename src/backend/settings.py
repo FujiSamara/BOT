@@ -20,8 +20,9 @@ class Settings(BaseSettings):
             f"@{self.psql_host}:{self.psql_port}/{self.psql_db_name}"
         )
     
-
-
+    # bot
+    bot_token: str = Field(validate_default="BOT_TOKEN")
+    telegram_token: str = Field(validate_default="TELEGRAM_TOKEN")
 
 @lru_cache
 def get_settings() -> Settings:
