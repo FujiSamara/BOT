@@ -1,12 +1,11 @@
 from fastapi import FastAPI
-from bot.configure import configure, get_bot_logger
-import asyncio
+from bot.configure import configure, get_bot_logger, lifespan
 import sys
 
 def create_bot(app: FastAPI) -> FastAPI:
-    bot = FastAPI()
+    bot = FastAPI(lifespan=lifespan)
     try:
-        asyncio.run(configure(bot))
+        configure(bot)
     except Exception as e:
         get_bot_logger().critical(f"Bot configuring is failed: {e}")
         sys.exit()
