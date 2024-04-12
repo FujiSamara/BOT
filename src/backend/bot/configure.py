@@ -3,6 +3,7 @@ from fastapi import FastAPI, Header
 from typing import Annotated
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
+from contextlib import asynccontextmanager
 from aiogram.types import Update, WebhookInfo
 import logging
 from settings import get_settings
@@ -13,7 +14,8 @@ def configure(bot_api: FastAPI):
     bot_api.add_api_route(path="/webhook", endpoint=_bot_webhook, methods=["POST"])
     _configure_dispatcher(get_dispatcher())
 
-async def lifespan(app: FastAPI):
+@asynccontextmanager
+async def lifespan(_: FastAPI):
     await get_bot().set_webhook(
         url=get_settings().bot_webhook_url,
         secret_token=get_settings().telegram_token,
@@ -21,6 +23,21 @@ async def lifespan(app: FastAPI):
         drop_pending_updates=True
     )
     get_bot_logger().info(await _check_webhook())
+    yield
+    await get_bot().delete_webhook(drop_pending_updates=True)
+
+@lru_cache
+def get_dispatcher() -> Dispatcher:
+    return Dispatcher()
+
+@lru_cache
+def get_bot() -> Bot:
+    return Bot(token=get_settings().bot_token, parse_mode=ParseMode.HTML)
+
+@lru_cache
+def get_bot_logger() -> logging.Logger:
+    return logging.getLogger("bot") 
+
 
 async def _check_webhook() -> WebhookInfo | None:
     try:
@@ -34,18 +51,6 @@ def _configure_dispatcher(dp: Dispatcher):
     '''
     from bot.handlers import router
     dp.include_router(router)
-
-@lru_cache
-def get_dispatcher() -> Dispatcher:
-    return Dispatcher()
-
-@lru_cache
-def get_bot() -> Bot:
-    return Bot(token=get_settings().bot_token, parse_mode=ParseMode.HTML)
-
-@lru_cache
-def get_bot_logger() -> logging.Logger:
-    return logging.getLogger("bot") 
 
 async def _bot_webhook(update: dict,
                     x_telegram_bot_api_secret_token: Annotated[str | None, Header()] = None):
