@@ -68,6 +68,7 @@ class Employee(Base):
     surname: Mapped[str] = mapped_column(nullable=False)
     patronymic: Mapped[str] = mapped_column(nullable=False)
     phone_number: Mapped[str] = mapped_column(nullable=False)
+    telegram_id: int = mapped_column()
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     post: Mapped["Post"] = relationship("Post", back_populates="employees")
