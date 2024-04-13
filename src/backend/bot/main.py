@@ -2,8 +2,8 @@ from fastapi import FastAPI
 from bot.configure import configure, get_bot_logger, lifespan
 import sys
 
-def create_bot(app: FastAPI) -> FastAPI:
-    bot = FastAPI(lifespan=lifespan)
+def create(app: FastAPI) -> FastAPI:
+    bot = FastAPI()
     try:
         configure(bot)
     except Exception as e:

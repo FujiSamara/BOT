@@ -5,7 +5,7 @@ import sys
 from db.database import engine, session
 
 
-def create_admin(app: FastAPI) -> FastAPI:
+def create(app: FastAPI) -> FastAPI:
     admin = Admin(
         app,
         engine=engine,

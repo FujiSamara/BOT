@@ -3,15 +3,14 @@ import logging
 from fastapi import FastAPI
 
 # Apps
-from admin.main import create_admin
-from bot.main import create_bot
+import admin
+import bot
 
 def configure(app: FastAPI):
     '''Configure fast api core app.
     '''
-    create_admin(app)
-    create_bot(app)
-    
+    bot.create(app)
+    admin.create(app)
 
 @lru_cache
 def get_core_logger() -> logging.Logger:
