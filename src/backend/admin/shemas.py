@@ -12,7 +12,7 @@ class RoleView(ModelView, model=Role):
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name]
     column_searchable_list = [Post.name]
-    form_excluded_columns = [Post.employees]
+    form_excluded_columns = [Post.workers]
 
     form_ajax_refs = {
         "role": {
@@ -27,11 +27,11 @@ class CompanyView(ModelView, model=Company):
     form_columns = [Company.name]
     name_plural = "Companies"
     
-class EnterpriseView(ModelView, model=Enterprise):
-    column_list = [Enterprise.id, Enterprise.name]
-    column_searchable_list = [Enterprise.name]
-    column_details_exclude_list = [Enterprise.company_id]
-    form_excluded_columns = [Enterprise.employees]
+class EnterpriseView(ModelView, model=Department):
+    column_list = [Department.id, Department.name]
+    column_searchable_list = [Department.name]
+    column_details_exclude_list = [Department.company_id]
+    form_excluded_columns = [Department.workers]
 
     form_ajax_refs = {
         "company": {
@@ -40,22 +40,22 @@ class EnterpriseView(ModelView, model=Enterprise):
         }
     }
 
-class EmployeeView(ModelView, model=Employee):
-    column_searchable_list = [Employee.name, Employee.surname, Employee.patronymic, Employee.phone_number]
-    column_list = [Employee.name, Employee.surname, Employee.patronymic, Employee.phone_number]
-    column_details_exclude_list = [Employee.enterprise_id, Employee.post_id]
+class EmployeeView(ModelView, model=Worker):
+    column_searchable_list = [Worker.worker_f_name, Worker.worker_l_name, Worker.worker_o_name, Worker.phone_number]
+    column_list = [Worker.worker_f_name, Worker.worker_l_name, Worker.worker_o_name, Worker.phone_number]
+    column_details_exclude_list = [Worker.department_id, Worker.post_id]
 
     form_columns = [
-        Employee.name,
-        Employee.surname,
-        Employee.patronymic,
-        Employee.phone_number,
-        Employee.enterprise,
-        Employee.post
+        Worker.worker_f_name,
+        Worker.worker_l_name,
+        Worker.worker_o_name,
+        Worker.phone_number,
+        Worker.department,
+        Worker.post
     ]
 
     form_ajax_refs = {
-        "enterprise": {
+        "department": {
             "fields": ("name", ),
             "order_by": "name",
         },

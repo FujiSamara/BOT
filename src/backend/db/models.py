@@ -29,7 +29,7 @@ class Post(Base):
     role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
     role: Mapped["Role"] = relationship("Role", back_populates="posts")
 
-    employees: Mapped[List["Employee"]] = relationship("Employee", back_populates="post")
+    workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="post")
 
 class Company(Base):
     __tablename__ = "companies"
@@ -40,10 +40,10 @@ class Company(Base):
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
 
-    enterprises: Mapped[List["Enterprise"]] = relationship("Enterprise", cascade="all,delete", back_populates="company")
+    departments: Mapped[List["Department"]] = relationship("Department", cascade="all,delete", back_populates="company")
 
-class Enterprise(Base):
-    __tablename__ = "enterprises"
+class Department(Base):
+    __tablename__ = "departments"
 
     def __str__(self) -> str:
         return self.name
@@ -53,25 +53,25 @@ class Enterprise(Base):
     address: Mapped[str]
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
-    company: Mapped["Company"] = relationship("Company", back_populates="enterprises")
+    company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
-    employees: Mapped[List["Employee"]] = relationship("Employee", back_populates="enterprise")
+    workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="department")
 
-class Employee(Base):
-    __tablename__ = "employees"
+class Worker(Base):
+    __tablename__ = "workers"
 
     def __str__(self) -> str:
-        return f"{self.surname} {self.name} {self.patronymic}"
+        return f"{self.worker_l_name} {self.worker_f_name} {self.worker_o_name}"
 
-    id: Mapped[intpk]
-    name: Mapped[str] = mapped_column(nullable=False)
-    surname: Mapped[str] = mapped_column(nullable=False)
-    patronymic: Mapped[str] = mapped_column(nullable=False)
+    worker_id: Mapped[intpk]
+    worker_f_name: Mapped[str] = mapped_column(nullable=False)
+    worker_l_name: Mapped[str] = mapped_column(nullable=False)
+    worker_o_name: Mapped[str] = mapped_column(nullable=False)
     phone_number: Mapped[str] = mapped_column(nullable=False)
-    telegram_id: int = mapped_column()
+    telegram_id: Mapped[int]
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
-    post: Mapped["Post"] = relationship("Post", back_populates="employees")
+    post: Mapped["Post"] = relationship("Post", back_populates="workers")
 
-    enterprise_id: Mapped[int] = mapped_column(ForeignKey("enterprises.id"))
-    enterprise: Mapped["Enterprise"] = relationship("Enterprise", back_populates="employees")
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    department: Mapped["Department"] = relationship("Department", back_populates="workers")
