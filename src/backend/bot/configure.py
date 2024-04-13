@@ -1,9 +1,9 @@
 from functools import lru_cache
 from fastapi import FastAPI, Header
 from typing import Annotated
+from typing import AsyncGenerator
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from contextlib import asynccontextmanager
 from aiogram.types import Update, WebhookInfo
 import logging
 from settings import get_settings
@@ -14,8 +14,7 @@ def configure(bot_api: FastAPI):
     bot_api.add_api_route(path="/webhook", endpoint=_bot_webhook, methods=["POST"])
     _configure_dispatcher(get_dispatcher())
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncGenerator:
     await get_bot().set_webhook(
         url=get_settings().bot_webhook_url,
         secret_token=get_settings().telegram_token,
@@ -25,6 +24,7 @@ async def lifespan(_: FastAPI):
     get_bot_logger().info(await _check_webhook())
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
+    yield
 
 @lru_cache
 def get_dispatcher() -> Dispatcher:
