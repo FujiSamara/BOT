@@ -4,7 +4,7 @@ from typing import Annotated
 from typing import AsyncGenerator
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
-from aiogram.types import Update, WebhookInfo
+from aiogram.types import Update
 import logging
 from settings import get_settings
 
@@ -21,7 +21,6 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         allowed_updates=get_dispatcher().resolve_used_update_types(),
         drop_pending_updates=True
     )
-    get_bot_logger().info(await _check_webhook())
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
     yield
@@ -37,14 +36,6 @@ def get_bot() -> Bot:
 @lru_cache
 def get_bot_logger() -> logging.Logger:
     return logging.getLogger("bot") 
-
-
-async def _check_webhook() -> WebhookInfo | None:
-    try:
-        webhook_info = await get_bot().get_webhook_info()
-        return webhook_info
-    except Exception as e:
-        raise
 
 def _configure_dispatcher(dp: Dispatcher):
     '''Configures telegram dispatcher
