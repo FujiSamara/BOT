@@ -2,6 +2,7 @@ from db.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List
+import datetime
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
 
@@ -61,14 +62,15 @@ class Worker(Base):
     __tablename__ = "workers"
 
     def __str__(self) -> str:
-        return f"{self.worker_l_name} {self.worker_f_name} {self.worker_o_name}"
+        return f"{self.l_name} {self.f_name} {self.o_name}"
 
-    worker_id: Mapped[intpk]
-    worker_f_name: Mapped[str] = mapped_column(nullable=False)
-    worker_l_name: Mapped[str] = mapped_column(nullable=False)
-    worker_o_name: Mapped[str] = mapped_column(nullable=False)
+    id: Mapped[intpk]
+    f_name: Mapped[str] = mapped_column(nullable=False)
+    l_name: Mapped[str] = mapped_column(nullable=False)
+    o_name: Mapped[str] = mapped_column(nullable=False)
+    b_date: Mapped[datetime.date]
     phone_number: Mapped[str] = mapped_column(nullable=False)
-    telegram_id: Mapped[int]
+    telegram_id: Mapped[int] = mapped_column(unique=True)
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     post: Mapped["Post"] = relationship("Post", back_populates="workers")

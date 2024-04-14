@@ -41,17 +41,18 @@ class EnterpriseView(ModelView, model=Department):
     }
 
 class EmployeeView(ModelView, model=Worker):
-    column_searchable_list = [Worker.worker_f_name, Worker.worker_l_name, Worker.worker_o_name, Worker.phone_number]
-    column_list = [Worker.worker_f_name, Worker.worker_l_name, Worker.worker_o_name, Worker.phone_number]
+    column_searchable_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
+    column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
     column_details_exclude_list = [Worker.department_id, Worker.post_id]
 
     form_columns = [
-        Worker.worker_f_name,
-        Worker.worker_l_name,
-        Worker.worker_o_name,
+        Worker.f_name,
+        Worker.l_name,
+        Worker.o_name,
         Worker.phone_number,
         Worker.department,
-        Worker.post
+        Worker.post,
+        Worker.b_date
     ]
 
     form_ajax_refs = {
