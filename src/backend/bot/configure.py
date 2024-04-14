@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.types import Update
 import logging
+from bot.router import router
 from settings import get_settings
 
 def configure(bot_api: FastAPI):
@@ -40,7 +41,6 @@ def get_bot_logger() -> logging.Logger:
 def _configure_dispatcher(dp: Dispatcher):
     '''Configures telegram dispatcher
     '''
-    from bot.handlers import router
     dp.include_router(router)
 
 async def _bot_webhook(update: dict,
