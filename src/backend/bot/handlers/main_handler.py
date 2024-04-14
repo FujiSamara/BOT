@@ -27,7 +27,7 @@ async def send_menu_by_role(message: Message):
     '''Sends specific menu for user by his role.
     '''
     if True: # bid menu
-        message.answer(hbold("Добро пожаловать!"), reply_markup=bid_menu)
+        await message.answer(hbold("Добро пожаловать!"), reply_markup=bid_menu)
     else:
         pass
     # TODO: Make menu switching

@@ -11,7 +11,7 @@ from bot.kb import bid_menu
 
 router = Router(name="bid")
 
-@router.callback_query(F.data == "get_menu")
+@router.callback_query(F.data == "get_bid_menu")
 async def get_menu(callback: CallbackQuery):
     await callback.message.delete()
     await callback.message.answer(hbold("Добро пожаловать!"), reply_markup=bid_menu)
