@@ -29,7 +29,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         allowed_updates=get_dispatcher().resolve_used_update_types(),
         drop_pending_updates=True
     )
-    logging.info("Webhook info: " + str(await _check_webhook()))
+    logging.getLogger("uvicorn.error").info("Webhook info: " + str(await _check_webhook()))
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
     yield
