@@ -1,7 +1,7 @@
 from functools import lru_cache
 from aiogram.enums import ParseMode
 from aiogram import Bot, Dispatcher
-from aiogram.types import Update
+from aiogram.types import Update, WebhookInfo
 from settings import get_settings
 from typing import Annotated
 from fastapi import Header
@@ -23,3 +23,9 @@ async def _bot_webhook(update: dict,
         return {"status": "error", "message": "Wrong secret token !"}
     return await get_dispatcher().feed_update(bot=get_bot(), update=Update(**update))
 
+async def _check_webhook() -> WebhookInfo | None:
+    try:
+        webhook_info = await get_bot().get_webhook_info()
+        return webhook_info
+    except Exception as e:
+        raise
