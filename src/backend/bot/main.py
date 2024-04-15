@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from bot.configure import configure, get_bot_logger, lifespan
+from bot.configure import configure, get_bot_logger
 import sys
 
 def create(app: FastAPI) -> FastAPI:
