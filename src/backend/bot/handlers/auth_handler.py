@@ -8,7 +8,7 @@ from bot.text import user_not_exist_text
 
 from bot.states import Auth
 
-from bot.handlers.main_handler import send_menu_by_access
+from bot.handlers.main_handler import send_menu_by_level
 
 # db imports
 from db.service import update_user_tg_id_by_number
@@ -22,7 +22,7 @@ router = Router(name="auth")
 async def auth(message: Message, state: FSMContext):
     if update_user_tg_id_by_number(message.html_text, message.from_user.id):
         await state.clear()
-        await send_menu_by_access(message)
+        await send_menu_by_level(message)
     else:
         await message.answer(user_not_exist_text)
         

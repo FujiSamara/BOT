@@ -16,14 +16,12 @@ async def start(message: Message, state: FSMContext):
     if level == -1:
         await state.set_state(Auth.authing)
         await message.answer(first_run_text(message.from_user.full_name))
-        
-    if level != -1:
-        # TODO: Redirect to another menu by level.
-        pass
+        return
+    await send_menu_by_level(message)
 
 from bot.kb import bid_menu
 
-async def send_menu_by_access(message: Message):
+async def send_menu_by_level(message: Message):
     '''Sends specific menu for user by his role.
     '''
     if True: # bid menu
