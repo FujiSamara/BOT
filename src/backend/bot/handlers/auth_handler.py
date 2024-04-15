@@ -1,7 +1,6 @@
 from aiogram import Router, flags
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.markdown import hbold
 
 # bot imports
 from bot.text import user_not_exist_text
