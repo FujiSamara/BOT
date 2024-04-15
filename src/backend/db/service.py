@@ -2,22 +2,17 @@ from db.orm import find_worker_by_number, find_worker_by_telegram_id, update_wor
 from db.shemas import *
 import logging
 
-def get_user_level_by_tg_id(id: str) -> int:
+def get_user_level_by_telegram_id(id: str) -> int:
     '''
     Returns user access level by his telegram id.
 
     Return `-1`, if user doesn't exits.
     '''
-    # TODO: Completes calling orm.
-    return -1
+    worker = find_worker_by_telegram_id(id)
+    if not worker:
+        return -1
 
-def get_user_role_by_tg_id(id: str) -> str:
-    '''
-    Return user role by his telegram id.
-
-    Return role if user exist, `None` otherwise.
-    '''
-    pass
+    return worker.post.level
 
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
     '''
@@ -33,6 +28,6 @@ def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
     try:
         update_worker(worker)
     except Exception as e:
-        logging.error(f"update_worker error: {e}")
+        logging.getLogger("uvicorn.error").error(f"update_worker error: {e}")
         return False
     return True
