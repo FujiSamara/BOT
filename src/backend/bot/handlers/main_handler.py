@@ -23,7 +23,7 @@ async def start(message: Message, state: FSMContext):
 
 from bot.kb import bid_menu
 
-async def send_menu_by_role(message: Message):
+async def send_menu_by_access(message: Message):
     '''Sends specific menu for user by his role.
     '''
     if True: # bid menu
