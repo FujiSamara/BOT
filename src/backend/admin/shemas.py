@@ -2,24 +2,10 @@
 from sqladmin import ModelView
 from db.models import *
 
-
-class RoleView(ModelView, model=Role):
-    column_list = [Role.id, Role.name, Role.level]
-    column_searchable_list = [Role.name]
-    column_details_exclude_list = [Role.posts]
-    form_columns = [Role.name, Role.level]
-
 class PostView(ModelView, model=Post):
-    column_list = [Post.id, Post.name]
-    column_searchable_list = [Post.name]
+    column_list = [Post.id, Post.name, Post.level]
+    column_searchable_list = [Post.name, Post.level]
     form_excluded_columns = [Post.workers]
-
-    form_ajax_refs = {
-        "role": {
-            "fields": ("name",),
-            "order_by": "name",
-        }
-    }
 
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
