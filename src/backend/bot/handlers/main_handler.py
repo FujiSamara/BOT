@@ -5,14 +5,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from bot.text import first_run_text
 from bot.states import Auth
-from db.service import get_user_level_by_tg_id
+from db.service import get_user_level_by_telegram_id
 
 
 router = Router(name="main")
 
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
-    level = get_user_level_by_tg_id(message.from_user.id)
+    level = get_user_level_by_telegram_id(message.from_user.id)
     if level == -1:
         await state.set_state(Auth.authing)
         await message.answer(first_run_text(message.from_user.full_name))
