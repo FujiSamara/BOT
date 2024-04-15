@@ -1,14 +1,14 @@
 import uvicorn
 from configure import configure
+import pathlib
 
 
 def run():
     configure()
-    log_config = uvicorn.config.LOGGING_CONFIG
-    log_config["formatters"]["access"]["fmt"] = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
     
     from core.main import create_app
-    uvicorn.run(create_app(), port=5000, log_config=log_config)
+    log_config_path = (pathlib.Path(__file__).parent / 'log_config.yaml').resolve().as_posix()
+    uvicorn.run(create_app(), host='0.0.0.0', port=5200, log_config=log_config_path)
 
 if __name__ == "__main__":
     run()
