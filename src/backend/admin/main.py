@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from sqladmin import Admin
-from admin.configure import configure, get_admin_logger
+from admin.configure import configure
 import sys
 from db.database import engine, session
+import logging
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -15,8 +16,8 @@ def create(app: FastAPI) -> FastAPI:
     try:
         configure(admin)
     except Exception as e:
-        get_admin_logger().critical(f"Admin configuring is failed: {e}")
+        logging.critical(f"Admin configuring is failed: {e}")
         sys.exit()
-    get_admin_logger().info("Admin created")
+    logging.info("Admin created")
     return admin
 

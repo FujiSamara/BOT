@@ -6,7 +6,7 @@ from db.orm import create_tables
 def configure():
     '''Configures all backend part of app.
     '''
-    logging.basicConfig(level=logging.INFO, filename="server.log", filemode="w",
+    logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     try:
         create_tables()

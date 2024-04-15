@@ -1,13 +1,14 @@
 from fastapi import FastAPI
-from core.configure import configure, get_core_logger, global_lifespan
+from core.configure import configure, global_lifespan
 import sys
+import logging
 
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=global_lifespan)
     try:
         configure(app)
     except Exception as e:
-        get_core_logger().critical(f"Core configuring is failed: {e}")
+        logging.critical(f"Core configuring is failed: {e}")
         sys.exit()
-    get_core_logger().info("Core created")
+    logging.info("Core created")
     return app
