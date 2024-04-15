@@ -9,7 +9,7 @@ def run():
     commands: list[list] = []
 
     # Backend
-    backend_cmd = [f"{EXECUTEABLE_PATH}", f"{CURRENT_DIRECTORY}/src/backend/manage.py"]
+    backend_cmd = [f"{EXECUTEABLE_PATH}", "-Xfrozen_modules=off", f"{CURRENT_DIRECTORY}/src/backend/manage.py"]
     commands.append(backend_cmd)
 
     # Frontend
