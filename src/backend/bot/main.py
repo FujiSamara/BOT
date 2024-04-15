@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from bot.configure import configure, get_bot_logger
+from bot.configure import configure
+from bot.bot import get_bot_logger
 import sys
 
 def create(app: FastAPI) -> FastAPI:
