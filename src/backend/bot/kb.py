@@ -24,7 +24,8 @@ bid_menu = InlineKeyboardMarkup(inline_keyboard=[
 create_bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="💰 Сумма", callback_data="get_amount_form"),
     InlineKeyboardButton(text="💵 Тип оплаты", callback_data="get_paymant_from")],
-    [InlineKeyboardButton(text="🏬 Предприятие", callback_data="get_department_type")],
+    [InlineKeyboardButton(text="🏬 Предприятие", callback_data="get_department_form")],
+    [InlineKeyboardButton(text="❓ Цель платежа", callback_data="get_purpose_form")],
     # TODO: Sets remaining payment button
     #[InlineKeyboardButton(text="🕰 История заявок", callback_data="get_history_bid")],
 

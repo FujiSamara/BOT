@@ -24,6 +24,7 @@ from db.service import get_departments_names
 
 router = Router(name="bid")
 
+### Main section
 async def clear_state_with_success(message: Message, state: FSMContext, sleep_time=1):
     ans = await message.answer(hbold("Успешно!"), reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(sleep_time)
@@ -34,11 +35,13 @@ async def clear_state_with_success(message: Message, state: FSMContext, sleep_ti
 async def get_menu(callback: CallbackQuery):
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
-# Create bid section
+## Create bid section
 @router.callback_query(F.data == "create_bid")
 async def get_create_menu(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(callback.message, state, sleep_time=0)
     await callback.message.edit_text(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)
+
+
 
 # Amount section
 @router.callback_query(F.data == "get_amount_form")
@@ -60,18 +63,18 @@ async def set_amount(message: Message, state: FSMContext):
         
 # Payment type section
 @router.callback_query(F.data == "get_paymant_from")
-async def get_amoun_form(callback: CallbackQuery):
+async def get_amount_type_form(callback: CallbackQuery):
     await callback.message.edit_text(hbold("Выберите тип оплаты:"), reply_markup=payment_type_menu)
 
 @router.callback_query(F.data.in_(payment_types))
-async def set_type(callback: CallbackQuery, state: FSMContext):
+async def set_amount_type(callback: CallbackQuery, state: FSMContext):
     if callback.data in payment_types:
         await state.update_data(type=callback.data)
         await clear_state_with_success(callback.message, state)
         await callback.message.edit_text(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)
     
 # Department section
-@router.callback_query(F.data == "get_department_type")
+@router.callback_query(F.data == "get_department_from")
 async def get_create_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.department)
     dep = get_departments_names()
@@ -80,7 +83,7 @@ async def get_create_menu(callback: CallbackQuery, state: FSMContext):
                                      reply_markup=create_reply_keyboard("⏪ Назад", *dep))
 
 @router.message(BidCreating.department)
-async def set_department(message: Message, state: FSMContext):
+async def set_department_type(message: Message, state: FSMContext):
     dep = get_departments_names()
     if message.text == "⏪ Назад":
         await clear_state_with_success(message, state, sleep_time=0)
@@ -91,4 +94,16 @@ async def set_department(message: Message, state: FSMContext):
         await message.answer(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)
     else:
         await message.answer(bid_err)
+
+# Purpose section
+@router.callback_query(F.data == "get_purpose_form")
+async def get_purpose_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.payment_purpose)
+    await callback.message.edit_text(hbold("Введите цель платежа:"))
+
+@router.message(BidCreating.payment_purpose)
+async def set_purpose(message: Message, state: FSMContext):
+    await state.update_data(purpose=message.html_text)
+    await clear_state_with_success(message, state)
+    await message.answer(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)
         
