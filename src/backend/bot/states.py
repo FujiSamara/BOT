@@ -6,7 +6,6 @@ class Auth(StatesGroup):
 class BidCreating(StatesGroup):
     department = State()
     payment_amount = State()
-    payment_type = State()
     payment_purpose = State()
     agreement_existence = State()
     urgently = State()
