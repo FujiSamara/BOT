@@ -5,7 +5,7 @@ from aiogram.utils.markdown import hbold
 from bot.bot import get_bot
 
 # bot imports
-from bot.kb import bid_menu, create_bid_menu, exit_bid_menu
+from bot.kb import bid_menu, create_bid_menu, main_menu
 
 from bot.text import bid_amount_err
 
@@ -28,7 +28,7 @@ async def get_create_menu(callback: CallbackQuery):
 async def get_amount_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.payment_amount)
     await state.update_data(menu_id=callback.message.message_id)
-    await callback.message.edit_text(hbold("Введите требуемую сумму:"), reply_markup=exit_bid_menu)
+    await callback.message.edit_text(hbold("Введите требуемую сумму:"), reply_markup=main_menu)
 
 @router.message(BidCreating.payment_amount)
 async def set_amount(message: Message, state: FSMContext):
@@ -38,7 +38,7 @@ async def set_amount(message: Message, state: FSMContext):
         pr_msg_id = (await state.get_data())["menu_id"]
         await get_bot().delete_message(chat_id=message.chat.id, message_id=pr_msg_id)
         await message.answer(bid_amount_err, 
-                                reply_markup=exit_bid_menu)
+                                reply_markup=main_menu)
         return
     print(amount)
     await state.clear()

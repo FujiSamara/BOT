@@ -6,15 +6,21 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 
-exit_bid_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="🚪 Главное меню", callback_data="get_bid_menu")]
+# Buttons
+bid_menu_button = InlineKeyboardButton(text="📝 Меню создания заявки", callback_data="get_bid_menu")
+
+main_menu_button = InlineKeyboardButton(text="🚪 Главное меню", callback_data="get_menu")
+
+# Keyboards
+main_menu = InlineKeyboardMarkup(inline_keyboard=[
+    [main_menu_button]
 ])
 
 bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="📝 Создать заявку", callback_data="create_bid")],
     [InlineKeyboardButton(text="🧭 Ожидающие заявки", callback_data="get_pending_bid")],
     [InlineKeyboardButton(text="🕰 История заявок", callback_data="get_history_bid")],
-    [InlineKeyboardButton(text="🚪 Главное меню", callback_data="get_bid_menu")],
+    [main_menu_button],
 ])
 
 create_bid_menu = InlineKeyboardMarkup(inline_keyboard=[
@@ -23,5 +29,5 @@ create_bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     # TODO: Sets remaining payment button
     #[InlineKeyboardButton(text="🕰 История заявок", callback_data="get_history_bid")],
 
-    [InlineKeyboardButton(text="🚪 Главное меню", callback_data="get_bid_menu")],
+    [main_menu_button],
 ])
