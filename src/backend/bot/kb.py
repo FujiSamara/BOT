@@ -30,14 +30,25 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     agreement = data.get("agreement")
     if not amount:
         amount = "0"
+    else:
+        amount += " ✅"
     if not payment_type:
         payment_type = "Не указано"
     else:
-        payment_type = payment_type_dict[payment_type]
+        payment_type = payment_type_dict[payment_type] + " ✅"
     if not department:
         department = "Не указано"
+    else:
+        department += " ✅"
     if not agreement:
-        agreement = "Нет"
+        agreement = "Нет ✅"
+    else:
+        agreement += " ✅"
+
+    purpose_postfix = ""
+    if "purpose" in data:
+        purpose_postfix = " ✅"
+    
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
          InlineKeyboardButton(text=amount, callback_data="dummy")],
@@ -46,7 +57,9 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
          InlineKeyboardButton(text=payment_type, callback_data="dummy")],
         [InlineKeyboardButton(text="Предприятие", callback_data="get_department_form"),
          InlineKeyboardButton(text=department, callback_data="dummy")],
-        [InlineKeyboardButton(text="Цель платежа", callback_data="get_purpose_form")],
+        [InlineKeyboardButton(text="Наличие договора", callback_data="get_agreement_form"),
+         InlineKeyboardButton(text=agreement, callback_data="dummy")],
+        [InlineKeyboardButton(text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form")],
         # TODO: Sets remaining payment button
         #[InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
         [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],

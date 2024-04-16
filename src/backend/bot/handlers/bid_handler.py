@@ -39,12 +39,7 @@ async def clear_state_with_success(message: Message, state: FSMContext, sleep_ti
 
 @router.callback_query(F.data == "get_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
-    await state.update_data(
-        amount=None, 
-        type=None,
-        department=None,
-        agreement=None
-    )
+    await state.clear()
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
 ## Create bid section
@@ -78,9 +73,8 @@ async def get_amount_type_form(callback: CallbackQuery):
 
 @router.callback_query(F.data.in_(payment_types))
 async def set_amount_type(callback: CallbackQuery, state: FSMContext):
-    if callback.data in payment_types:
-        await state.update_data(type=callback.data)
-        await clear_state_with_success(callback.message, state, edit=True)
+    await state.update_data(type=callback.data)
+    await clear_state_with_success(callback.message, state, edit=True)
     
 # Department section
 @router.callback_query(F.data == "get_department_form")
@@ -116,15 +110,20 @@ async def set_purpose(message: Message, state: FSMContext):
 # Agreement existence 
 @router.callback_query(F.data == "get_agreement_form")
 async def get_agreement_form(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.comment)
-    await callback.message.edit_text(hbold("У вас есть договор?"),
+    await state.set_state(BidCreating.agreement_existence)
+    await callback.message.delete()
+    await callback.message.answer(hbold("У вас есть договор?"),
                                      reply_markup=create_reply_keyboard("Да", "Нет"))
 
-@router.callback_query(F.data.in_(payment_types))
-async def set_agreement(callback: CallbackQuery, state: FSMContext):
-    if callback.data in payment_types:
-        await state.update_data(agreement=callback.data)
-        await clear_state_with_success(callback.message, state, edit=True)
+@router.message(BidCreating.agreement_existence)
+async def set_agreement(message: Message, state: FSMContext):
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in ["Да", "Нет"]:
+        await state.update_data(agreement=message.text)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(bid_err)
 
 # Comment
 @router.callback_query(F.data == "get_comment_form")
