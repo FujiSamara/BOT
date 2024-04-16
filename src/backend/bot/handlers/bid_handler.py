@@ -153,3 +153,21 @@ async def set_agreement(message: Message, state: FSMContext):
         await clear_state_with_success(message, state)
     else:
         await message.answer(bid_err)
+
+# Need for a payment system
+@router.callback_query(F.data == "get_need_document_form")
+async def get_need_document_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.need_document)
+    await callback.message.delete()
+    await callback.message.answer(hbold("Нужна платежка?"),
+                                     reply_markup=create_reply_keyboard("Да", "Нет"))
+
+@router.message(BidCreating.need_document)
+async def set_need_document(message: Message, state: FSMContext):
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in ["Да", "Нет"]:
+        await state.update_data(need_document=message.text)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(bid_err)

@@ -12,5 +12,5 @@ class BidCreating(StatesGroup):
     payment_purpose = State()
     agreement_existence = State()
     urgently = State()
-    payment_system = State()
+    need_document = State()
     comment = State()
