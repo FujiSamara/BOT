@@ -3,11 +3,11 @@ from aiogram.filters import CommandStart
 from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-from bot.bot import get_bot
 from bot.text import first_run_text
 from bot.states import Auth
 from db.service import get_user_level_by_telegram_id
-from bot.kb import create_bid_menu_button, main_menu_button
+from bot.kb import create_bid_menu_button
+from bot.states import Base
 
 
 router = Router(name="main")
@@ -21,10 +21,12 @@ async def start(message: Message, state: FSMContext):
         return
     await send_menu_by_level(message)
 
-from bot.kb import bid_menu
+@router.message(Base.none)
+async def start(message: Message):
+    await message.delete()
 
 @router.callback_query(F.data == "get_menu")
-async def send_menu_by_level(callback: CallbackQuery):
+async def get_menu_by_level(callback: CallbackQuery):
     '''Sends specific menu for user by his role.
     '''
     await send_menu_by_level(callback.message, edit=True)

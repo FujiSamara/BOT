@@ -17,7 +17,7 @@ from bot.kb import (
 
 from bot.text import bid_err, payment_types
 
-from bot.states import BidCreating
+from bot.states import BidCreating, Base
 
 # db imports
 from db.service import get_departments_names
@@ -29,7 +29,7 @@ async def clear_state_with_success(message: Message, state: FSMContext, sleep_ti
     ans = await message.answer(hbold("Успешно!"), reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(sleep_time)
     await ans.delete()
-    await state.set_state(None)
+    await state.set_state(Base.none)
 
 @router.callback_query(F.data == "get_bid_menu")
 async def get_menu(callback: CallbackQuery):
@@ -106,4 +106,15 @@ async def set_purpose(message: Message, state: FSMContext):
     await state.update_data(purpose=message.html_text)
     await clear_state_with_success(message, state)
     await message.answer(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)
-        
+
+# Comment
+@router.callback_query(F.data == "get_comment_form")
+async def get_comment_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.comment)
+    await callback.message.edit_text(hbold("Введите комментарий:"))
+
+@router.message(BidCreating.comment)
+async def set_comment(message: Message, state: FSMContext):
+    await state.update_data(comment=message.html_text)
+    await clear_state_with_success(message, state)
+    await message.answer(hbold("Настройте вашу заявку:"), reply_markup=create_bid_menu)     
