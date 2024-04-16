@@ -43,7 +43,7 @@ async def send_menu_by_level(message: Message, edit=None):
     # TODO: finish remaining menus.
     
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
-    if edit and message.from_user.is_bot and message.from_user.id == get_bot().id:
+    if edit:
         await message.edit_text(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
     else:
         await message.answer(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
