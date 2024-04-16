@@ -28,6 +28,7 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     payment_type = data.get("type")
     department = data.get("department")
     agreement = data.get("agreement")
+    urgently = data.get("urgently")
     if not amount:
         amount = "0"
     else:
@@ -44,6 +45,10 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         agreement = "Нет ✅"
     else:
         agreement += " ✅"
+    if not urgently:
+        urgently = "Нет ✅"
+    else:
+        urgently += " ✅"
 
     purpose_postfix = ""
     if "purpose" in data:
@@ -59,6 +64,8 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
          InlineKeyboardButton(text=department, callback_data="dummy")],
         [InlineKeyboardButton(text="Наличие договора", callback_data="get_agreement_form"),
          InlineKeyboardButton(text=agreement, callback_data="dummy")],
+        [InlineKeyboardButton(text="Заявка срочная?", callback_data="get_urgently_form"),
+         InlineKeyboardButton(text=urgently, callback_data="dummy")],
         [InlineKeyboardButton(text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form")],
         # TODO: Sets remaining payment button
         #[InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],

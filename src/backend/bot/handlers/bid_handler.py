@@ -135,3 +135,21 @@ async def get_comment_form(callback: CallbackQuery, state: FSMContext):
 async def set_comment(message: Message, state: FSMContext):
     await state.update_data(comment=message.html_text)
     await clear_state_with_success(message, state)
+
+# Urgently
+@router.callback_query(F.data == "get_urgently_form")
+async def get_urgently_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.urgently)
+    await callback.message.delete()
+    await callback.message.answer(hbold("Заявка срочная?"),
+                                     reply_markup=create_reply_keyboard("Да", "Нет"))
+
+@router.message(BidCreating.urgently)
+async def set_agreement(message: Message, state: FSMContext):
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in ["Да", "Нет"]:
+        await state.update_data(urgently=message.text)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(bid_err)
