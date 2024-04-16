@@ -5,37 +5,64 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove
 )
+from aiogram.fsm.context import FSMContext
 
 # Buttons
-create_bid_menu_button = InlineKeyboardButton(text="📝 Меню настройки заявки", callback_data="create_bid")
+create_bid_menu_button = InlineKeyboardButton(text="Меню настройки заявки", callback_data="get_bid_create_menu")
 
-bid_menu_button = InlineKeyboardButton(text="📝 Меню создания заявки", callback_data="get_bid_menu")
+bid_menu_button = InlineKeyboardButton(text="Меню создания заявок", callback_data="get_bid_menu")
 
-main_menu_button = InlineKeyboardButton(text="🚪 Главное меню", callback_data="get_menu")
+main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
 
 # Keyboards
 bid_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="📝 Создать заявку", callback_data="create_bid")],
-    [InlineKeyboardButton(text="🧭 Ожидающие заявки", callback_data="get_pending_bid")],
-    [InlineKeyboardButton(text="🕰 История заявок", callback_data="get_history_bid")],
+    [InlineKeyboardButton(text="Создать заявку", callback_data="get_bid_create_menu")],
+    [InlineKeyboardButton(text="Ожидающие заявки", callback_data="get_pending_bid")],
+    [InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
     [main_menu_button],
 ])
 
-create_bid_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="💰 Сумма", callback_data="get_amount_form"),
-    InlineKeyboardButton(text="💵 Тип оплаты", callback_data="get_paymant_from")],
-    [InlineKeyboardButton(text="🏬 Предприятие", callback_data="get_department_form")],
-    [InlineKeyboardButton(text="❓ Цель платежа", callback_data="get_purpose_form")],
-    # TODO: Sets remaining payment button
-    #[InlineKeyboardButton(text="🕰 История заявок", callback_data="get_history_bid")],
-    [InlineKeyboardButton(text="💬 Комментарий", callback_data="get_comment_form")],
-    [bid_menu_button],
-])
+async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    amount = data.get("amount")
+    payment_type = data.get("type")
+    department = data.get("department")
+    agreement = data.get("agreement")
+    if not amount:
+        amount = "0"
+    if not payment_type:
+        payment_type = "Не указано"
+    else:
+        payment_type = payment_type_dict[payment_type]
+    if not department:
+        department = "Не указано"
+    if not agreement:
+        agreement = "Нет"
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
+         InlineKeyboardButton(text=amount, callback_data="dummy")],
+
+        [InlineKeyboardButton(text="Тип оплаты", callback_data="get_paymant_form"),
+         InlineKeyboardButton(text=payment_type, callback_data="dummy")],
+        [InlineKeyboardButton(text="Предприятие", callback_data="get_department_form"),
+         InlineKeyboardButton(text=department, callback_data="dummy")],
+        [InlineKeyboardButton(text="Цель платежа", callback_data="get_purpose_form")],
+        # TODO: Sets remaining payment button
+        #[InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
+        [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
+        [bid_menu_button],
+    ])
+
+payment_type_dict = {
+    "cash": "Наличная",
+    "card": "Безналичная",
+    "taxi": "Требуется такси"
+}
 
 payment_type_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text="💵 Наличная", callback_data="cash"),
-    InlineKeyboardButton(text="💳 Безналичная", callback_data="card")],
-    [InlineKeyboardButton(text="🚕 Требуется такси", callback_data="taxi")],
+    [InlineKeyboardButton(text=payment_type_dict["cash"], callback_data="cash"),
+    InlineKeyboardButton(text=payment_type_dict["card"], callback_data="card")],
+    [InlineKeyboardButton(text=payment_type_dict["taxi"], callback_data="taxi")],
     [create_bid_menu_button]
 ])
 
