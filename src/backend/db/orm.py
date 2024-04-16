@@ -1,7 +1,7 @@
 from typing import Any
 from db.database import Base, engine, session
 from db.models import *
-from db.shemas import *
+from db.schemas import *
 
 def create_tables():
     Base.metadata.create_all(engine)

@@ -7,7 +7,7 @@ from db.orm import (
 from db.models import (
     Department
 )
-from db.shemas import *
+from db.schemas import *
 import logging
 
 def get_user_level_by_telegram_id(id: str) -> int:

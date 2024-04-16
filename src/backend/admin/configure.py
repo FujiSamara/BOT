@@ -1,4 +1,4 @@
-from admin.shemas import EnterpriseView, CompanyView, PostView, EmployeeView
+from admin.schemas import EnterpriseView, CompanyView, PostView, EmployeeView
 
 # Routers
 from sqladmin import Admin
