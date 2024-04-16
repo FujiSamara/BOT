@@ -1,22 +1,10 @@
 from db.database import Base
-from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy import ForeignKey, CheckConstraint, BigInteger
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List
 import datetime
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
-
-class Role(Base):
-    __tablename__ = "roles"
-
-    def __str__(self) -> str:
-        return f"{self.name}: {self.level}"
-
-    id: Mapped[intpk]
-    name: Mapped[str] = mapped_column(nullable=False)
-    level: Mapped[int] = mapped_column(CheckConstraint("level<=10 AND level>0"), nullable=False)
-
-    posts: Mapped[List["Post"]] = relationship("Post", cascade="all,delete", back_populates="role")
 
 class Post(Base):
     __tablename__ = "posts"
@@ -26,9 +14,7 @@ class Post(Base):
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
-
-    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False)
-    role: Mapped["Role"] = relationship("Role", back_populates="posts")
+    level: Mapped[int] = mapped_column(CheckConstraint("level<=10 AND level>0"), nullable=False)
 
     workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="post")
 
@@ -70,7 +56,7 @@ class Worker(Base):
     o_name: Mapped[str] = mapped_column(nullable=False)
     b_date: Mapped[datetime.date]
     phone_number: Mapped[str] = mapped_column(nullable=False)
-    telegram_id: Mapped[int] = mapped_column(unique=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=True)
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
     post: Mapped["Post"] = relationship("Post", back_populates="workers")
