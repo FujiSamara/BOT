@@ -6,3 +6,33 @@ services:
       - 5432:5432
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    networks:
+        net:    
+          aliases:
+            - db.local
+
+  app-backend:
+    build: src/backend/
+
+    env_file:
+      - .env
+
+    depends_on:
+      app-db:
+        condition: service_healthy
+
+    ports:
+      - 80:80
+
+    networks:
+      net:
+
+
+networks:
+  net:
+
