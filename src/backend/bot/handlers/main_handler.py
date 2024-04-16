@@ -19,10 +19,11 @@ async def start(message: Message, state: FSMContext):
         await state.set_state(Auth.authing)
         await message.answer(first_run_text(message.from_user.full_name))
         return
+    await state.set_state(Base.none)
     await send_menu_by_level(message)
 
 @router.message(Base.none)
-async def start(message: Message):
+async def delete_extra(message: Message):
     await message.delete()
 
 @router.callback_query(F.data == "get_menu")
