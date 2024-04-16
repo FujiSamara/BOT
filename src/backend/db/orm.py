@@ -1,3 +1,4 @@
+from typing import Any
 from db.database import Base, engine, session
 from db.models import *
 from db.shemas import *
@@ -38,4 +39,9 @@ def update_worker(worker: WorkerShema):
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
 
-    
+def get_departments_with_columns(*columns: list[Any]) -> list[DepartmentShema]:
+    '''
+    Returns all existed departments with specified columns.
+    '''
+    with session.begin() as s:
+        return s.query(Department).with_entities(*columns).all()

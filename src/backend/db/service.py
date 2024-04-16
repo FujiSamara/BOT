@@ -1,4 +1,12 @@
-from db.orm import find_worker_by_number, find_worker_by_telegram_id, update_worker
+from db.orm import (
+    find_worker_by_number,
+    find_worker_by_telegram_id,
+    update_worker,
+    get_departments_with_columns
+)
+from db.models import (
+    Department
+)
 from db.shemas import *
 import logging
 
@@ -31,3 +39,11 @@ def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
         logging.getLogger("uvicorn.error").error(f"update_worker error: {e}")
         return False
     return True
+
+def get_departments_names() -> list[str]:
+    '''
+    Returns all existed departments.
+    '''
+    departments_raw = get_departments_with_columns(Department.name)
+    result = [column[0] for column in departments_raw]
+    return result
