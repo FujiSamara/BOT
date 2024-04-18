@@ -18,7 +18,7 @@ class CompanyShema(BaseShema):
 
 class DepartmentShema(BaseShema):
     name: str
-    address: str = ""
+    address: Optional[str]
 
     company: CompanyShema
 
@@ -26,7 +26,7 @@ class WorkerShema(BaseShema):
     f_name: str
     l_name: str
     o_name: str
-    b_date: datetime.date = datetime.date(1, 1, 1)
+    b_date: Optional[datetime.date] = datetime.date(1, 1, 1)
     phone_number: str
     telegram_id: Optional[int]
 

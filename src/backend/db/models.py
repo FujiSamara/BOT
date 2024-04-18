@@ -37,7 +37,7 @@ class Department(Base):
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
-    address: Mapped[str]
+    address: Mapped[str] = mapped_column(nullable=True)
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
     company: Mapped["Company"] = relationship("Company", back_populates="departments")
@@ -55,7 +55,7 @@ class Worker(Base):
     f_name: Mapped[str] = mapped_column(nullable=False)
     l_name: Mapped[str] = mapped_column(nullable=False)
     o_name: Mapped[str] = mapped_column(nullable=False)
-    b_date: Mapped[datetime.date]
+    b_date: Mapped[datetime.date] = mapped_column(nullable=True)
     phone_number: Mapped[str] = mapped_column(nullable=False)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=True)
 
@@ -74,10 +74,10 @@ class Bid(Base):
     amount: Mapped[int] = mapped_column(nullable=False)
     payment_type: Mapped[str] = mapped_column(nullable=False)
     purpose: Mapped[str] = mapped_column(nullable=False)
-    agreement: Mapped[str]
-    urgently: Mapped[str]
-    need_document: Mapped[str]
-    comment: Mapped[str]
+    agreement: Mapped[str] = mapped_column(nullable=True)
+    urgently: Mapped[str] = mapped_column(nullable=True)
+    need_document: Mapped[str] = mapped_column(nullable=True)
+    comment: Mapped[str] = mapped_column(nullable=True)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
