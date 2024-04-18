@@ -83,7 +83,7 @@ class WorkerView(ModelView, model=Worker):
     }
 
 class BidView(ModelView, model=Bid):
-    can_create=False,
+    can_create=False
     can_edit=False
 
     column_details_exclude_list = [Bid.worker_id, Bid.department_id]
