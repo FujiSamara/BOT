@@ -42,8 +42,8 @@ class BidShema(BaseModel):
     purpose: str
     create_date: datetime.datetime
 
-    agreement: Optional[str]
-    urgently: Optional[str]
-    need_document: Optional[str]
+    agreement: Optional[str] = "Нет"
+    urgently: Optional[str] = "Нет"
+    need_document: Optional[str] = "Нет"
     comment: Optional[str]
 # Create shemas

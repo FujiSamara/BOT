@@ -70,13 +70,16 @@ class Worker(Base):
 class Bid(Base):
     __tablename__ = "bids"
 
+    def __str__(self) -> str:
+        return f"Заявка от {self.create_date}"
+
     id: Mapped[intpk]
     amount: Mapped[int] = mapped_column(nullable=False)
     payment_type: Mapped[str] = mapped_column(nullable=False)
     purpose: Mapped[str] = mapped_column(nullable=False)
-    agreement: Mapped[str] = mapped_column(nullable=True)
-    urgently: Mapped[str] = mapped_column(nullable=True)
-    need_document: Mapped[str] = mapped_column(nullable=True)
+    agreement: Mapped[str] = mapped_column(nullable=True, default="Нет")
+    urgently: Mapped[str] = mapped_column(nullable=True, default="Нет")
+    need_document: Mapped[str] = mapped_column(nullable=True, default="Нет")
     comment: Mapped[str] = mapped_column(nullable=True)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
