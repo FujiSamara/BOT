@@ -20,7 +20,7 @@ from bot.text import bid_err, payment_types, bid_create_greet
 from bot.states import BidCreating, Base
 
 # db imports
-from db.service import get_departments_names
+from db.service import get_departments_names, create_bid
 
 router = Router(name="bid")
 
@@ -47,6 +47,34 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 async def get_create_menu(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(callback.message, state, sleep_time=0, edit=True)
 
+@router.callback_query(F.data == "send_bid")
+async def send_bid(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await state.clear()
+    amount = data.get("amount")
+    payment_type = data.get("type")
+    department = data.get("department")
+    purpose = data.get("purpose")
+    agreement = data.get("agreement")
+    urgently = data.get("urgently")
+    need_document = data.get("need_document")
+    comment = data.get("comment")
+
+    create_bid(
+        amount=amount,
+        payment_type=payment_type,
+        department=department,
+        purpose=purpose,
+        agreement=agreement,
+        urgently=urgently,
+        need_document=need_document,
+        comment=comment,
+        telegram_id=callback.message.chat.id
+    )
+
+    await callback.message.edit_text("Успешно!")
+    await asyncio.sleep(1)
+    await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
 
 # Amount section

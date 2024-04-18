@@ -42,15 +42,20 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     urgently = data.get("urgently")
     need_document = data.get("need_document")
 
+    all_field_exist = True
+
     if not amount:
+        all_field_exist = False
         amount = "0"
     else:
         amount += " ✅"
     if not payment_type:
+        all_field_exist = False
         payment_type = "Не указано"
     else:
         payment_type = payment_type_dict[payment_type] + " ✅"
     if not department:
+        all_field_exist = False
         department = "Не указано"
     else:
         department += " ✅"
@@ -70,8 +75,10 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     purpose_postfix = ""
     if "purpose" in data:
         purpose_postfix = " ✅"
-    
-    return InlineKeyboardMarkup(inline_keyboard=[
+    else:
+        all_field_exist = False
+
+    keyboard = [
         [InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
          InlineKeyboardButton(text=amount, callback_data="dummy")],
 
@@ -95,7 +102,12 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         #[InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
         [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
         [bid_menu_button],
-    ])
+    ]
+    if all_field_exist:
+        keyboard = [[InlineKeyboardButton(text="Отправить заявку", 
+                                          callback_data="send_bid")], *keyboard]
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 payment_type_dict = {
     "cash": "Наличная",

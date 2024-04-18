@@ -24,7 +24,7 @@ def find_worker_by_number(number: str) -> WorkerShema:
         if worker:
             return WorkerShema.model_validate(worker)
         return None
-
+    
 def update_worker(worker: WorkerShema):
     '''Updates worker by his id.
     '''
@@ -45,3 +45,37 @@ def get_departments_with_columns(*columns: list[Any]) -> list[DepartmentShema]:
     '''
     with session.begin() as s:
         return s.query(Department).with_entities(*columns).all()
+    
+def find_department_by_name(name: str) -> DepartmentShema:
+    '''
+    Finds and returns department by `name`.
+    '''
+    with session.begin() as s:
+        department = s.query(Department).filter(Department.name == name).first()
+        if department:
+            return DepartmentShema.model_validate(department)
+        else:
+            return None
+
+def add_bid(bid: BidShema):
+    '''
+    Adds `bid` to database.
+    '''
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.id == bid.worker.id).first()
+        department = s.query(Department).filter(Department.id == bid.department.id).first()
+
+        bid = Bid(
+            amount=bid.amount,
+            payment_type=bid.payment_type,
+            purpose=bid.purpose,
+            agreement=bid.agreement,
+            urgently=bid.urgently,
+            need_document=bid.need_document,
+            comment=bid.comment,
+            create_date=bid.create_date,
+            department=department,
+            worker=worker
+        )
+
+        s.add(bid)
