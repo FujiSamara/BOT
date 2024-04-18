@@ -43,6 +43,7 @@ class Department(Base):
     company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
     workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="department")
+    bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -63,3 +64,24 @@ class Worker(Base):
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship("Department", back_populates="workers")
+
+    bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
+
+class Bid(Base):
+    __tablename__ = "bids"
+
+    id: Mapped[intpk]
+    amount: Mapped[int] = mapped_column(nullable=False)
+    payment_type: Mapped[str] = mapped_column(nullable=False)
+    purpose: Mapped[str] = mapped_column(nullable=False)
+    agreement: Mapped[str]
+    urgently: Mapped[str]
+    need_document: Mapped[str]
+    comment: Mapped[str]
+    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    department: Mapped["Department"] = relationship("Department", back_populates="bids")
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    worker: Mapped["Worker"] = relationship("Worker", back_populates="bids")

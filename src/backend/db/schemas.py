@@ -34,4 +34,16 @@ class WorkerShema(BaseShema):
 
     department: DepartmentShema
 
+class BidShema(BaseModel):
+    amount: int
+    payment_type: str
+    department: DepartmentShema
+    worker: WorkerShema
+    purpose: str
+    create_date: datetime.datetime
+
+    agreement: Optional[str]
+    urgently: Optional[str]
+    need_document: Optional[str]
+    comment: Optional[str]
 # Create shemas
