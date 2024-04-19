@@ -39,7 +39,7 @@ async def clear_state_with_success(message: Message, state: FSMContext, sleep_ti
 
 @router.callback_query(F.data == "get_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
+    await state.set_state(Base.none)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
 ## Create bid section
@@ -50,7 +50,7 @@ async def get_create_menu(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "send_bid")
 async def send_bid(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    await state.clear()
+    await state.set_state(Base.none)
     amount = data.get("amount")
     payment_type = data.get("type")
     department = data.get("department")
