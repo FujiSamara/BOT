@@ -1,11 +1,17 @@
 # sqladmin shemas
+from io import BytesIO
+from typing import Any, List
 from sqladmin import ModelView
+from starlette.responses import StreamingResponse
 from db.models import *
+from settings import get_settings
+from xlsxwriter import Workbook
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
     column_searchable_list = [Post.name, Post.level]
     form_excluded_columns = [Post.workers]
+    can_export = False
 
     name_plural = "Должности"
     name = "Должность"
@@ -15,6 +21,7 @@ class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
     column_searchable_list = [Company.name]
     form_columns = [Company.name]
+    can_export = False
 
     name_plural = "Компании"
     name = "Компания"
@@ -25,6 +32,7 @@ class DepartmentView(ModelView, model=Department):
     column_searchable_list = [Department.name]
     column_details_exclude_list = [Department.company_id]
     form_excluded_columns = [Department.workers, Department.bids]
+    can_export = False
 
     name_plural = "Производства"
     name = "Производство"
@@ -47,6 +55,7 @@ class WorkerView(ModelView, model=Worker):
     column_searchable_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
     column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
     column_details_exclude_list = [Worker.department_id, Worker.post_id]
+    can_export = False
 
     name_plural = "Работники"
     name = "Работник"
@@ -83,11 +92,45 @@ class WorkerView(ModelView, model=Worker):
     }
 
 class BidView(ModelView, model=Bid):
-    can_create=False
-    can_edit=False
+    can_create = False
+    can_edit = False
 
     column_details_exclude_list = [Bid.worker_id, Bid.department_id]
     column_exclude_list = [Bid.worker_id, Bid.department_id]
+
+    def datetime_format(value, format="%H:%M %d-%m-%y"):
+        return value.strftime(format)
+    
+    column_type_formatters = {datetime.datetime: datetime_format}
+
+    async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
+        '''
+        Overrides `ModelView.export_date` to return `xlsx` tables instead `csv`.
+        '''
+        CELL_LENGTH = 18
+
+        output = BytesIO()
+        workbook = Workbook(output)
+        worksheet = workbook.add_worksheet()
+        worksheet.set_column(0, len(self._export_prop_names), CELL_LENGTH)
+        worksheet.write_row(0, 0, self._export_prop_names)
+        for index, elem in enumerate(data):
+            vals = []
+            for name in self._export_prop_names:
+                val = await self.get_prop_value(elem, name)
+                if type(val) == datetime.datetime:
+                    val = BidView.datetime_format(val)
+                vals.append(str(val)) 
+            
+            worksheet.write_row(index + 1, 0, vals)
+        
+        workbook.close()
+        output.seek(0)
+
+        return StreamingResponse(
+            content=output,
+            headers={"Content-Disposition": "attachment; filename=bids.xlsx"},
+        )
 
     name_plural = "Заявки"
     name = "Заявка"
