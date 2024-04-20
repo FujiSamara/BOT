@@ -54,11 +54,11 @@ class BidShema(BaseModel):
     comment: Optional[str]
 
     # States
-    kru_status: ApprovalStatus
-    owner_status: ApprovalStatus
-    accountant_card: ApprovalStatus
-    accountant_cash: ApprovalStatus
-    teller_card: ApprovalStatus
-    teller_cash: ApprovalStatus
+    kru_state: ApprovalStatus
+    owner_state: ApprovalStatus
+    accountant_card_state: ApprovalStatus
+    accountant_cash_state: ApprovalStatus
+    teller_card_state: ApprovalStatus
+    teller_cash_state: ApprovalStatus
 
 # Create shemas

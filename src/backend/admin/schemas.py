@@ -7,6 +7,7 @@ from db.models import *
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
+from bot.kb import payment_type_dict
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -114,10 +115,10 @@ class BidView(ModelView, model=Bid):
         Bid.comment,
         Bid.kru_state,
         Bid.owner_state,
-        Bid.accountant_cash,
-        Bid.accountant_card,
-        Bid.teller_cash,
-        Bid.teller_card
+        Bid.accountant_cash_state,
+        Bid.accountant_card_state,
+        Bid.teller_cash_state,
+        Bid.teller_card_state
     ]
 
     column_details_list = column_list
@@ -139,6 +140,11 @@ class BidView(ModelView, model=Bid):
 
         return {"filename": filename, "href": f"{proto}://{host}:{port}/admin/download?path={value}"}
 
+    @staticmethod
+    def payment_type_format(inst, column):
+        value = getattr(inst, "payment_type")
+
+        return payment_type_dict.get(value)
 
     @staticmethod
     def approval_status_format(inst, columm):
@@ -162,11 +168,12 @@ class BidView(ModelView, model=Bid):
     column_formatters = {
        Bid.kru_state: approval_status_format,
        Bid.owner_state: approval_status_format,
-       Bid.accountant_card: approval_status_format,
-       Bid.accountant_cash: approval_status_format,
-       Bid.teller_card: approval_status_format,
-       Bid.teller_cash: approval_status_format,
-       Bid.document: file_format
+       Bid.accountant_card_state: approval_status_format,
+       Bid.accountant_cash_state: approval_status_format,
+       Bid.teller_card_state: approval_status_format,
+       Bid.teller_cash_state: approval_status_format,
+       Bid.document: file_format,
+       Bid.payment_type: payment_type_format
     }
     column_formatters_detail = column_formatters
 
@@ -215,10 +222,10 @@ class BidView(ModelView, model=Bid):
        Bid.document: "Подтверждающий документ",
        Bid.kru_state: "КРУ",
        Bid.owner_state: "Собственник",
-       Bid.accountant_card: "Бухгалтер безнал.",
-       Bid.accountant_cash: "Бухгалтер нал.",
-       Bid.teller_card: "Кассир безнал.",
-       Bid.teller_cash: "Кассир нал.",
+       Bid.accountant_card_state: "Бухгалтер безнал.",
+       Bid.accountant_cash_state: "Бухгалтер нал.",
+       Bid.teller_card_state: "Кассир безнал.",
+       Bid.teller_cash_state: "Кассир нал.",
     }
 
     form_ajax_refs = {

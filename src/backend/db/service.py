@@ -62,12 +62,12 @@ def create_bid(
     telegram_id: int,
     file: BytesIO,
     filename: str,
-    kru_status: ApprovalStatus,
-    owner_status: ApprovalStatus,
-    accountant_cash: ApprovalStatus,
-    accountant_card: ApprovalStatus,
-    teller_cash: ApprovalStatus,
-    teller_card: ApprovalStatus,
+    kru_state: ApprovalStatus,
+    owner_state: ApprovalStatus,
+    accountant_cash_state: ApprovalStatus,
+    accountant_card_state: ApprovalStatus,
+    teller_cash_state: ApprovalStatus,
+    teller_card_state: ApprovalStatus,
     agreement: Optional[str]=None,
     urgently: Optional[str]=None,
     need_document: Optional[str]=None,
@@ -106,12 +106,12 @@ def create_bid(
         need_document=need_document,
         comment=comment,
         document=UploadFile(file=file, filename=filename),
-        kru_status=kru_status,
-        owner_status=owner_status,
-        accountant_card=accountant_card,
-        accountant_cash=accountant_cash,
-        teller_card=teller_card,
-        teller_cash=teller_cash
+        kru_state=kru_state,
+        owner_state=owner_state,
+        accountant_card_state=accountant_card_state,
+        accountant_cash_state=accountant_cash_state,
+        teller_card_state=teller_card_state,
+        teller_cash_state=teller_cash_state
     )
 
     try:

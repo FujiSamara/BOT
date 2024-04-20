@@ -66,21 +66,21 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     file = await get_bot().get_file(document.file_id)
     file: BytesIO = await get_bot().download_file(file.file_path)
 
-    kru_status = ApprovalStatus.pending_approval
-    owner_status = ApprovalStatus.pending
-    if amount < 10000:
-        owner_status = ApprovalStatus.skipped
-    accountant_card = ApprovalStatus.pending
-    accountant_cash = ApprovalStatus.pending
-    teller_card = ApprovalStatus.pending
-    teller_cash = ApprovalStatus.pending
+    kru_state = ApprovalStatus.pending_approval
+    owner_state = ApprovalStatus.pending
+    if int(amount) < 10000:
+        owner_state = ApprovalStatus.skipped
+    accountant_card_state = ApprovalStatus.pending
+    accountant_cash_state = ApprovalStatus.pending
+    teller_card_state = ApprovalStatus.pending
+    teller_cash_state = ApprovalStatus.pending
 
     if payment_type == "card":
-        accountant_cash = ApprovalStatus.skipped
-        teller_cash = ApprovalStatus.skipped
+        accountant_cash_state = ApprovalStatus.skipped
+        teller_cash_state = ApprovalStatus.skipped
     else:
-        accountant_card = ApprovalStatus.skipped
-        teller_card = ApprovalStatus.skipped
+        accountant_card_state = ApprovalStatus.skipped
+        teller_card_state = ApprovalStatus.skipped
 
     create_bid(
         amount=amount,
@@ -94,12 +94,12 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         need_document=need_document,
         comment=comment,
         telegram_id=callback.message.chat.id,
-        kru_status=kru_status,
-        owner_status=owner_status,
-        accountant_card=accountant_card,
-        accountant_cash=accountant_cash,
-        teller_card=teller_card,
-        teller_cash=teller_cash
+        kru_state=kru_state,
+        owner_state=owner_state,
+        accountant_card_state=accountant_card_state,
+        accountant_cash_state=accountant_cash_state,
+        teller_card_state=teller_card_state,
+        teller_cash_state=teller_cash_state
     )
 
     await callback.message.edit_text("Успешно!")

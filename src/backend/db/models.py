@@ -107,8 +107,8 @@ class Bid(Base):
     # States
     kru_state: Mapped[approvalstate]
     owner_state: Mapped[approvalstate]
-    accountant_cash: Mapped[approvalstate]
-    accountant_card: Mapped[approvalstate]
-    teller_cash: Mapped[approvalstate]
-    teller_card: Mapped[approvalstate]
+    accountant_cash_state: Mapped[approvalstate]
+    accountant_card_state: Mapped[approvalstate]
+    teller_cash_state: Mapped[approvalstate]
+    teller_card_state: Mapped[approvalstate]
 

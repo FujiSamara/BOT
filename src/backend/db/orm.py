@@ -77,12 +77,12 @@ def add_bid(bid: BidShema):
             department=department,
             worker=worker,
             document=bid.document,
-            kru_status=bid.kru_status,
-            owner_status=bid.owner_status,
-            accountant_card=bid.accountant_card,
-            accountant_cash=bid.accountant_cash,
-            teller_card=bid.teller_card,
-            teller_cash=bid.teller_cash
+            kru_state=bid.kru_state,
+            owner_state=bid.owner_state,
+            accountant_card_state=bid.accountant_card_state,
+            accountant_cash_state=bid.accountant_cash_state,
+            teller_card_state=bid.teller_card_state,
+            teller_cash_state=bid.teller_cash_state
         )
 
         s.add(bid)
