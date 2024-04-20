@@ -1,3 +1,4 @@
+from io import BytesIO
 from db.orm import (
     find_worker_by_number,
     find_worker_by_telegram_id,
@@ -7,11 +8,13 @@ from db.orm import (
     add_bid
 )
 from db.models import (
-    Department
+    Department,
+    ApprovalStatus
 )
 from db.schemas import *
 import logging
 from datetime import datetime
+from fastapi import UploadFile
 
 def get_user_level_by_telegram_id(id: str) -> int:
     '''
@@ -57,10 +60,18 @@ def create_bid(
     department: str,
     purpose: str,
     telegram_id: int,
+    file: BytesIO,
+    filename: str,
+    kru_status: ApprovalStatus,
+    owner_status: ApprovalStatus,
+    accountant_cash: ApprovalStatus,
+    accountant_card: ApprovalStatus,
+    teller_cash: ApprovalStatus,
+    teller_card: ApprovalStatus,
     agreement: Optional[str]=None,
     urgently: Optional[str]=None,
     need_document: Optional[str]=None,
-    comment: Optional[str]=None
+    comment: Optional[str]=None,
 ):
     '''
     Creates an bid wrapped in `BidShema` and adds it to database.
@@ -93,7 +104,14 @@ def create_bid(
         agreement=agreement,
         urgently=urgently,
         need_document=need_document,
-        comment=comment
+        comment=comment,
+        document=UploadFile(file=file, filename=filename),
+        kru_status=kru_status,
+        owner_status=owner_status,
+        accountant_card=accountant_card,
+        accountant_cash=accountant_cash,
+        teller_card=teller_card,
+        teller_cash=teller_cash
     )
 
     try:

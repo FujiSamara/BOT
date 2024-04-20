@@ -1,10 +1,12 @@
+from io import BytesIO
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, Document
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
+from bot.bot import get_bot
 from bot.kb import (
     bid_menu,
     get_create_bid_menu,
@@ -21,6 +23,7 @@ from bot.states import BidCreating, Base
 
 # db imports
 from db.service import get_departments_names, create_bid
+from db.models import ApprovalStatus
 
 router = Router(name="bid")
 
@@ -59,17 +62,44 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     urgently = data.get("urgently")
     need_document = data.get("need_document")
     comment = data.get("comment")
+    document: Document = data.get("document")
+    file = await get_bot().get_file(document.file_id)
+    file: BytesIO = await get_bot().download_file(file.file_path)
+
+    kru_status = ApprovalStatus.pending_approval
+    owner_status = ApprovalStatus.pending
+    if amount < 10000:
+        owner_status = ApprovalStatus.skipped
+    accountant_card = ApprovalStatus.pending
+    accountant_cash = ApprovalStatus.pending
+    teller_card = ApprovalStatus.pending
+    teller_cash = ApprovalStatus.pending
+
+    if payment_type == "card":
+        accountant_cash = ApprovalStatus.skipped
+        teller_cash = ApprovalStatus.skipped
+    else:
+        accountant_card = ApprovalStatus.skipped
+        teller_card = ApprovalStatus.skipped
 
     create_bid(
         amount=amount,
         payment_type=payment_type,
         department=department,
+        file=file,
+        filename=document.file_name,
         purpose=purpose,
         agreement=agreement,
         urgently=urgently,
         need_document=need_document,
         comment=comment,
-        telegram_id=callback.message.chat.id
+        telegram_id=callback.message.chat.id,
+        kru_status=kru_status,
+        owner_status=owner_status,
+        accountant_card=accountant_card,
+        accountant_cash=accountant_cash,
+        teller_card=teller_card,
+        teller_cash=teller_cash
     )
 
     await callback.message.edit_text("Успешно!")
@@ -199,3 +229,20 @@ async def set_need_document(message: Message, state: FSMContext):
         await clear_state_with_success(message, state)
     else:
         await message.answer(bid_err)
+
+# Document
+@router.callback_query(F.data == "get_document_form")
+async def get_document_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await callback.message.delete()
+    await callback.message.answer(hbold("Прикрепите документ:"),
+                                     reply_markup=create_inline_keyboard(create_bid_menu_button))
+    
+@router.message(BidCreating.document)
+async def set_need_document(message: Message, state: FSMContext):
+    if message.document:
+        await state.update_data(document=message.document)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(bid_err,
+                                     reply_markup=create_inline_keyboard(create_bid_menu_button))

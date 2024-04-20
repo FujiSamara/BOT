@@ -4,8 +4,8 @@ from typing import Any, List
 from sqladmin import ModelView
 from starlette.responses import StreamingResponse
 from db.models import *
-from settings import get_settings
 from xlsxwriter import Workbook
+import logging
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -95,13 +95,65 @@ class BidView(ModelView, model=Bid):
     can_create = False
     can_edit = False
 
-    column_details_exclude_list = [Bid.worker_id, Bid.department_id]
-    column_exclude_list = [Bid.worker_id, Bid.department_id]
+    column_list = [
+        Bid.id,
+        Bid.create_date,
+        Bid.worker,
+        Bid.amount,
+        Bid.payment_type,
+        Bid.department,
+        Bid.purpose,
+        Bid.document,
+        Bid.agreement,
+        Bid.need_document,
+        Bid.urgently,
+        Bid.comment,
+        Bid.kru_state,
+        Bid.owner_state,
+        Bid.accountant_cash,
+        Bid.accountant_card,
+        Bid.teller_cash,
+        Bid.teller_card
+    ]
 
+    column_details_list = column_list
+
+    @staticmethod
     def datetime_format(value, format="%H:%M %d-%m-%y"):
         return value.strftime(format)
     
-    column_type_formatters = {datetime.datetime: datetime_format}
+    @staticmethod
+    def file_format(value):
+        pass
+
+    @staticmethod
+    def approval_status_format(inst, columm):
+        value = getattr(inst, columm)
+
+        if value == ApprovalStatus.approved:
+            return "Согласовано"
+        elif value == ApprovalStatus.pending:
+            return "Ожидает поступления"
+        elif value == ApprovalStatus.pending_approval:
+            return "Ожидает согласования"
+        elif value == ApprovalStatus.denied:
+            return "Отклонено"
+        elif value == ApprovalStatus.skipped:
+            return "Пропущено"
+
+    
+    column_type_formatters = {
+        datetime.datetime: datetime_format,
+        FileType: file_format
+    }
+    column_formatters = {
+       Bid.kru_state: approval_status_format,
+       Bid.owner_state: approval_status_format,
+       Bid.accountant_card: approval_status_format,
+       Bid.accountant_cash: approval_status_format,
+       Bid.teller_card: approval_status_format,
+       Bid.teller_cash: approval_status_format
+    }
 
     async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
         '''
@@ -144,7 +196,14 @@ class BidView(ModelView, model=Bid):
        Bid.payment_type: "Тип оплаты",
        Bid.purpose: "Цель платежа",
        Bid.urgently: "Срочная",
-       Bid.worker: "Работник"
+       Bid.worker: "Работник",
+       Bid.document: "Подтверждающий документ",
+       Bid.kru_state: "КРУ",
+       Bid.owner_state: "Собственник",
+       Bid.accountant_card: "Бухгалтер безнал.",
+       Bid.accountant_cash: "Бухгалтер нал.",
+       Bid.teller_card: "Кассир безнал.",
+       Bid.teller_cash: "Кассир нал.",
     }
 
     form_ajax_refs = {

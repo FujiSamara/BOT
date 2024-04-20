@@ -4,6 +4,7 @@ from pydantic import Field, computed_field
 from functools import lru_cache
 import logging
 import sys
+from fastapi_storages import FileSystemStorage
 
 class Settings(BaseSettings):
     # main
@@ -11,6 +12,13 @@ class Settings(BaseSettings):
     port: int = Field(validation_alias="PORT", default=5000)
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
+    storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
+
+    @computed_field
+    @property
+    def storage(self) -> FileSystemStorage:
+        return FileSystemStorage(self.storage_path) 
+
     # psql 
     psql_pass: str = Field(validation_alias="POSTGRES_PASSWORD")
     psql_user: str = Field(validation_alias="POSTGRES_USER")

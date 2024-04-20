@@ -6,6 +6,7 @@ from aiogram.types import (
     ReplyKeyboardRemove
 )
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Document
 
 # Buttons
 create_bid_menu_button = InlineKeyboardButton(text="Меню настройки заявки", callback_data="get_bid_create_menu")
@@ -41,6 +42,8 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     agreement = data.get("agreement")
     urgently = data.get("urgently")
     need_document = data.get("need_document")
+    document: Document = data.get("document")
+    document_text = "Отсутствует"
 
     all_field_exist = True
 
@@ -78,6 +81,11 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         all_field_exist = False
 
+    if not document:
+        all_field_exist = False
+    else:
+        document_text = document.file_name + " ✅"
+
     keyboard = [
         [InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
          InlineKeyboardButton(text=amount, callback_data="dummy")],
@@ -87,6 +95,9 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
         [InlineKeyboardButton(text="Предприятие", callback_data="get_department_form"),
          InlineKeyboardButton(text=department, callback_data="dummy")],
+
+        [InlineKeyboardButton(text="Документ", callback_data="get_document_form"),
+         InlineKeyboardButton(text=document_text, callback_data="dummy")],
 
         [InlineKeyboardButton(text="Наличие договора", callback_data="get_agreement_form"),
          InlineKeyboardButton(text=agreement, callback_data="dummy")],
