@@ -194,6 +194,8 @@ class BidView(ModelView, model=Bid):
                 val = await self.get_prop_value(elem, name)
                 if type(val) == datetime.datetime:
                     val = BidView.datetime_format(val)
+                if name == "document":
+                    val = Path(val).name
                 vals.append(str(val)) 
             
             worksheet.write_row(index + 1, 0, vals)
