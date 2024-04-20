@@ -1,10 +1,12 @@
+from io import BytesIO
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, Document
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
+from bot.bot import get_bot
 from bot.kb import (
     bid_menu,
     get_create_bid_menu,
@@ -20,7 +22,8 @@ from bot.text import bid_err, payment_types, bid_create_greet
 from bot.states import BidCreating, Base
 
 # db imports
-from db.service import get_departments_names
+from db.service import get_departments_names, create_bid
+from db.models import ApprovalStatus
 
 router = Router(name="bid")
 
@@ -39,7 +42,7 @@ async def clear_state_with_success(message: Message, state: FSMContext, sleep_ti
 
 @router.callback_query(F.data == "get_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
-    await state.clear()
+    await state.set_state(Base.none)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
 ## Create bid section
@@ -47,6 +50,61 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 async def get_create_menu(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(callback.message, state, sleep_time=0, edit=True)
 
+@router.callback_query(F.data == "send_bid")
+async def send_bid(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await state.set_state(Base.none)
+    amount = data.get("amount")
+    payment_type = data.get("type")
+    department = data.get("department")
+    purpose = data.get("purpose")
+    agreement = data.get("agreement")
+    urgently = data.get("urgently")
+    need_document = data.get("need_document")
+    comment = data.get("comment")
+    document: Document = data.get("document")
+    file = await get_bot().get_file(document.file_id)
+    file: BytesIO = await get_bot().download_file(file.file_path)
+
+    kru_state = ApprovalStatus.pending_approval
+    owner_state = ApprovalStatus.pending
+    if int(amount) < 10000:
+        owner_state = ApprovalStatus.skipped
+    accountant_card_state = ApprovalStatus.pending
+    accountant_cash_state = ApprovalStatus.pending
+    teller_card_state = ApprovalStatus.pending
+    teller_cash_state = ApprovalStatus.pending
+
+    if payment_type == "card":
+        accountant_cash_state = ApprovalStatus.skipped
+        teller_cash_state = ApprovalStatus.skipped
+    else:
+        accountant_card_state = ApprovalStatus.skipped
+        teller_card_state = ApprovalStatus.skipped
+
+    create_bid(
+        amount=amount,
+        payment_type=payment_type,
+        department=department,
+        file=file,
+        filename=document.file_name,
+        purpose=purpose,
+        agreement=agreement,
+        urgently=urgently,
+        need_document=need_document,
+        comment=comment,
+        telegram_id=callback.message.chat.id,
+        kru_state=kru_state,
+        owner_state=owner_state,
+        accountant_card_state=accountant_card_state,
+        accountant_cash_state=accountant_cash_state,
+        teller_card_state=teller_card_state,
+        teller_cash_state=teller_cash_state
+    )
+
+    await callback.message.edit_text("Успешно!")
+    await asyncio.sleep(1)
+    await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
 
 # Amount section
@@ -171,3 +229,20 @@ async def set_need_document(message: Message, state: FSMContext):
         await clear_state_with_success(message, state)
     else:
         await message.answer(bid_err)
+
+# Document
+@router.callback_query(F.data == "get_document_form")
+async def get_document_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await callback.message.delete()
+    await callback.message.answer(hbold("Прикрепите документ:"),
+                                     reply_markup=create_inline_keyboard(create_bid_menu_button))
+    
+@router.message(BidCreating.document)
+async def set_need_document(message: Message, state: FSMContext):
+    if message.document:
+        await state.update_data(document=message.document)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(bid_err,
+                                     reply_markup=create_inline_keyboard(create_bid_menu_button))

@@ -1,15 +1,29 @@
+from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field, computed_field
 from functools import lru_cache
 import logging
 import sys
+from fastapi_storages import FileSystemStorage
 
 class Settings(BaseSettings):
+    # main
+    host: str = Field(validation_alias="HOST", default="127.0.0.1")
+    port: int = Field(validation_alias="PORT", default=5000)
+    ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
+    ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
+    storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
+
+    @computed_field
+    @property
+    def storage(self) -> FileSystemStorage:
+        return FileSystemStorage(self.storage_path) 
+
     # psql 
     psql_pass: str = Field(validation_alias="POSTGRES_PASSWORD")
     psql_user: str = Field(validation_alias="POSTGRES_USER")
-    psql_host: str = Field(validation_alias="POSTGRES_HOST", default="localhost")
-    psql_port: int = Field(validation_alias="POSTGRES_HOST", default=5432)
+    psql_host: str = Field(validation_alias="POSTGRES_HOST", default="127.0.0.1")
+    psql_port: int = Field(validation_alias="POSTGRES_PORT", default=5432)
     psql_db_name: str = Field(validation_alias="POSTGRES_DB_NAME", default="postgres")
 
     @computed_field

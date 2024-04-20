@@ -14,3 +14,4 @@ class BidCreating(StatesGroup):
     urgently = State()
     need_document = State()
     comment = State()
+    document = State()

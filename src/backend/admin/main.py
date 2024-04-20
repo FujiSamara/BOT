@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from sqladmin import Admin
+from admin.admin import FujiAdmin
 from admin.configure import configure
 import sys
 from db.database import engine, session
@@ -7,7 +7,7 @@ import logging
 
 
 def create(app: FastAPI) -> FastAPI:
-    admin = Admin(
+    admin = FujiAdmin(
         app,
         engine=engine,
         session_maker=session,
