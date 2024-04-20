@@ -37,7 +37,7 @@
               {% endif %}
               {% else %}
               {% if name == "document" %}
-              <td><a href="{{ formatted_value }}">Download document</a>
+              <td><a href="{{ formatted_value["href"] }}">{{ formatted_value["filename"] }}</a></td>
               {% else %}
               <td>{{ formatted_value }}</td>
               {% endif %}

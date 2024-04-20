@@ -9,6 +9,7 @@ from starlette.middleware import Middleware
 from sqladmin.authentication import login_required
 from fastapi import Request
 from fastapi.responses import FileResponse
+from pathlib import Path
 
 class FujiAdmin(Admin):
     def __init__(self, app: Starlette, engine: Engine | None = None, session_maker: sessionmaker | async_sessionmaker | None = None, base_url: str = "/admin", title: str = "Admin", logo_url: str | None = None, middlewares: Sequence[Middleware] | None = None, debug: bool = False, templates_dir: str = "templates", authentication_backend: AuthenticationBackend | None = None) -> None:
@@ -20,8 +21,6 @@ class FujiAdmin(Admin):
             name="download"
         )
 
-
-
     @login_required
     async def download_file(self, request: Request) -> FileResponse:
         '''Returns file by his path.
@@ -29,4 +28,7 @@ class FujiAdmin(Admin):
         path = request.query_params.get("path")
         if not path:
             return
-        return FileResponse(path=path, media_type='multipart/form-data')
+        
+        filename = Path(path).name
+
+        return FileResponse(path=path, filename=filename, media_type="multipart/form-data")

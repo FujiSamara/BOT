@@ -5,6 +5,8 @@ from sqladmin import ModelView
 from starlette.responses import StreamingResponse
 from db.models import *
 from xlsxwriter import Workbook
+from settings import get_settings
+from pathlib import Path
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -92,6 +94,7 @@ class WorkerView(ModelView, model=Worker):
 
 class BidView(ModelView, model=Bid):
     details_template = "bid_details.html"
+    list_template = "bid_list.html"
 
     can_create = False
     can_edit = False
@@ -126,7 +129,15 @@ class BidView(ModelView, model=Bid):
     @staticmethod
     def file_format(inst, columm):
         value = getattr(inst, columm)
-        return f"admin/download?path={value}"
+        proto = "http"
+        host = get_settings().host
+        port = get_settings().port
+        if get_settings().ssl_certfile:
+            proto = "https"
+
+        filename = Path(value).name
+
+        return {"filename": filename, "href": f"{proto}://{host}:{port}/admin/download?path={value}"}
 
 
     @staticmethod
