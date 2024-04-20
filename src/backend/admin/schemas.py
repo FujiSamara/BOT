@@ -5,7 +5,6 @@ from sqladmin import ModelView
 from starlette.responses import StreamingResponse
 from db.models import *
 from xlsxwriter import Workbook
-import logging
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -92,6 +91,8 @@ class WorkerView(ModelView, model=Worker):
     }
 
 class BidView(ModelView, model=Bid):
+    details_template = "bid_details.html"
+
     can_create = False
     can_edit = False
 
@@ -123,8 +124,10 @@ class BidView(ModelView, model=Bid):
         return value.strftime(format)
     
     @staticmethod
-    def file_format(value):
-        pass
+    def file_format(inst, columm):
+        value = getattr(inst, columm)
+        return f"admin/download?path={value}"
+
 
     @staticmethod
     def approval_status_format(inst, columm):
@@ -143,8 +146,7 @@ class BidView(ModelView, model=Bid):
 
     
     column_type_formatters = {
-        datetime.datetime: datetime_format,
-        FileType: file_format
+        datetime.datetime: datetime_format
     }
     column_formatters = {
        Bid.kru_state: approval_status_format,
@@ -152,8 +154,10 @@ class BidView(ModelView, model=Bid):
        Bid.accountant_card: approval_status_format,
        Bid.accountant_cash: approval_status_format,
        Bid.teller_card: approval_status_format,
-       Bid.teller_cash: approval_status_format
+       Bid.teller_cash: approval_status_format,
+       Bid.document: file_format
     }
+    column_formatters_detail = column_formatters
 
     async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
         '''
