@@ -21,6 +21,11 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
 
+@router.callback_query(F.data == "get_bid")
+async def get_bid(callback: CallbackQuery, state: FSMContext):
+    pass
+
+
 ### Create section
 from bot.handlers.bids import create_bid
 

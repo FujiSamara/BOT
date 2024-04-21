@@ -3,6 +3,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message, Document
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
+from pathlib import Path
 import asyncio
 
 # bot imports

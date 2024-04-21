@@ -1,5 +1,6 @@
 from aiogram.utils.markdown import hbold
 
+err = "Упс, произошла ошибка. Сейчас вы будете перенаправлены в главное меню."
 
 def first_run_text(fullname: str) -> str:
     return (hbold(f"Добро пожаловать, {fullname}!") + 
