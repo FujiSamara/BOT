@@ -114,6 +114,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     await callback.message.edit_text("Успешно!")
     await asyncio.sleep(1)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
+    await state.clear()
 
 
 # Amount section
