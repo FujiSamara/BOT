@@ -100,6 +100,14 @@ class BidView(ModelView, model=Bid):
     can_create = False
     can_edit = False
 
+    column_searchable_list = [
+        "worker.l_name",
+    ]
+    column_sortable_list = [
+        Bid.amount,
+        Bid.create_date,
+        Bid.id
+    ]
     column_list = [
         Bid.id,
         Bid.create_date,
@@ -236,6 +244,7 @@ class BidView(ModelView, model=Bid):
        Bid.accountant_cash_state: "Бухгалтер нал.",
        Bid.teller_card_state: "Кассир безнал.",
        Bid.teller_cash_state: "Кассир нал.",
+       "worker.l_name": "Фамилия работника",
     }
 
     form_ajax_refs = {
