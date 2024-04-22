@@ -95,7 +95,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         teller_card_state = ApprovalStatus.skipped
 
     create_bid(
-        amount=int(amount),
+        amount=amount,
         payment_type=payment_type,
         department=department,
         file=file,
@@ -272,7 +272,7 @@ async def get_document_form(callback: CallbackQuery, state: FSMContext):
     bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
-            text=f"Заявка от {bid.create_date}",
+            text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
             callback_data=json.dumps({
                 "type": "get_bid",
                 "bid_id": bid.id

@@ -39,8 +39,9 @@ class WorkerShema(BaseShema):
 class BidShema(BaseModel):
     class Config:
         arbitrary_types_allowed=True
+        from_attributes = True
 
-    id: Optional[int]
+    id: Optional[int] = -1
 
     amount: int
     payment_type: str
