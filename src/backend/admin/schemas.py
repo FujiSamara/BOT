@@ -142,7 +142,7 @@ class BidView(ModelView, model=Bid):
 
     @staticmethod
     def payment_type_format(inst, column):
-        value = getattr(inst, "payment_type")
+        value = getattr(inst, column)
 
         return payment_type_dict.get(value)
 
@@ -196,6 +196,10 @@ class BidView(ModelView, model=Bid):
                     val = BidView.datetime_format(val)
                 if name == "document":
                     val = Path(val).name
+                if name.split("_")[-1] == "state":
+                    val = BidView.approval_status_format(elem, name)
+                if name == "payment_type":
+                    val = BidView.payment_type_format(elem, name)
                 vals.append(str(val)) 
             
             worksheet.write_row(index + 1, 0, vals)

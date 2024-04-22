@@ -8,6 +8,10 @@ from bot.states import Auth
 from db.service import get_user_level_by_telegram_id
 from bot.kb import bid_menu_button
 from bot.states import Base
+from aiogram.types import ErrorEvent, Message
+import logging
+from bot.text import err
+import asyncio
 
 
 router = Router(name="main")
@@ -50,3 +54,15 @@ async def send_menu_by_level(message: Message, edit=None):
         await message.edit_text(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
     else:
         await message.answer(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
+
+@router.error()
+async def error_handler(event: ErrorEvent):
+    logging.getLogger("uvicorn.error").error(f"Error occurred: {event.exception}")
+    message = event.update.callback_query.message
+    try:
+        await message.edit_text(err)
+        msg = message
+    except:
+        msg = await message.answer(err)
+    await asyncio.sleep(3)
+    await send_menu_by_level(msg, edit=True)

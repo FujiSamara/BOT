@@ -1,11 +1,14 @@
 from io import BytesIO
+from pathlib import Path
 from db.orm import (
     find_worker_by_number,
     find_worker_by_telegram_id,
     update_worker,
     get_departments_with_columns,
     find_department_by_name,
-    add_bid
+    add_bid,
+    get_last_bid_id,
+    get_bids_by_worker
 )
 from db.models import (
     Department,
@@ -93,6 +96,12 @@ def create_bid(
         return
 
     cur_date = datetime.now()
+    last_bid_id = get_last_bid_id()
+    if not last_bid_id:
+        last_bid_id = 0
+
+    suffix = Path(filename).suffix
+    filename = f"document_{last_bid_id + 1}{suffix}"
 
     bid = BidShema(
         amount=amount,
@@ -118,3 +127,14 @@ def create_bid(
         add_bid(bid)
     except Exception as e:
         logging.getLogger("uvicorn.error").error(f"Added bid failed: {e}")
+
+def get_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
+    '''
+    Returns all bids own to worker with specified phone number.
+    '''
+    worker = find_worker_by_telegram_id(id)
+
+    if not worker:
+        return []
+    
+    return get_bids_by_worker(worker)

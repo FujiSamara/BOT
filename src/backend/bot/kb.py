@@ -30,7 +30,7 @@ def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
 bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Создать заявку", callback_data="get_bid_create_menu")],
     [InlineKeyboardButton(text="Ожидающие заявки", callback_data="get_pending_bid")],
-    [InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
+    [InlineKeyboardButton(text="История заявок", callback_data="get_create_history_bid")],
     [main_menu_button],
 ])
 
@@ -110,7 +110,6 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
         [InlineKeyboardButton(text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form")],
         # TODO: Sets remaining payment button
-        #[InlineKeyboardButton(text="История заявок", callback_data="get_history_bid")],
         [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
         [bid_menu_button],
     ]

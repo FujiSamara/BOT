@@ -2,6 +2,7 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import *
 from db.schemas import *
+from sqlalchemy.sql.expression import func
 
 def create_tables():
     Base.metadata.create_all(engine)
@@ -57,6 +58,14 @@ def find_department_by_name(name: str) -> DepartmentShema:
         else:
             return None
 
+def get_last_bid_id() -> int:
+    '''
+    Returns last bid id in database.
+    '''
+    with session.begin() as s:
+        return s.query(func.max(Bid.id)).first()[0]
+
+
 def add_bid(bid: BidShema):
     '''
     Adds `bid` to database.
@@ -86,3 +95,11 @@ def add_bid(bid: BidShema):
         )
 
         s.add(bid)
+
+def get_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
+    '''
+    Returns all bids in database by worker.
+    '''
+    with session.begin() as s:
+        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]

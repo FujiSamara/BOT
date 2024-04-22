@@ -2,6 +2,7 @@ from aiogram.fsm.state import StatesGroup, State
 
 class Base(StatesGroup):
     none = State()
+    bid = State()
 
 class Auth(StatesGroup):
     authing = State()
