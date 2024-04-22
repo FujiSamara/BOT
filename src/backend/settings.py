@@ -1,3 +1,4 @@
+import pathlib
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field, computed_field
@@ -9,6 +10,7 @@ from fastapi_storages import FileSystemStorage
 class Settings(BaseSettings):
     # main
     host: str = Field(validation_alias="HOST", default="127.0.0.1")
+    domain: str = Field(validation_alias="DOMAIN", default="127.0.0.1")
     port: int = Field(validation_alias="PORT", default=5000)
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
@@ -18,6 +20,11 @@ class Settings(BaseSettings):
     @property
     def storage(self) -> FileSystemStorage:
         return FileSystemStorage(self.storage_path) 
+
+    @computed_field
+    @property
+    def app_directory_path(self) -> str:
+        return (pathlib.Path(__file__).parent).resolve().as_posix()
 
     # psql 
     psql_pass: str = Field(validation_alias="POSTGRES_PASSWORD")

@@ -4,14 +4,17 @@ from admin.configure import configure
 import sys
 from db.database import engine, session
 import logging
+from settings import get_settings
 
 
 def create(app: FastAPI) -> FastAPI:
+    templates_dir = get_settings().app_directory_path + "/templates"
     admin = FujiAdmin(
         app,
         engine=engine,
         session_maker=session,
-        title='Fuji admin'
+        title='Fuji admin',
+        templates_dir=templates_dir
     )
     try:
         configure(admin)
