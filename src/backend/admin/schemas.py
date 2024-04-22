@@ -177,6 +177,12 @@ class BidView(ModelView, model=Bid):
     }
     column_formatters_detail = column_formatters
 
+    column_export_exclude_list = [
+        Bid.department_id,
+        Bid.worker_id,
+        Bid.document
+    ]
+
     async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
         '''
         Overrides `ModelView.export_date` to return `xlsx` tables instead `csv`.
@@ -187,15 +193,13 @@ class BidView(ModelView, model=Bid):
         workbook = Workbook(output)
         worksheet = workbook.add_worksheet()
         worksheet.set_column(0, len(self._export_prop_names), CELL_LENGTH)
-        worksheet.write_row(0, 0, self._export_prop_names)
+        worksheet.write_row(0, 0, [*self._export_prop_names, "Подпись"])
         for index, elem in enumerate(data):
             vals = []
             for name in self._export_prop_names:
                 val = await self.get_prop_value(elem, name)
                 if type(val) == datetime.datetime:
                     val = BidView.datetime_format(val)
-                if name == "document":
-                    val = Path(val).name
                 if name.split("_")[-1] == "state":
                     val = BidView.approval_status_format(elem, name)
                 if name == "payment_type":
