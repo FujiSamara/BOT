@@ -8,7 +8,7 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from sqladmin.authentication import login_required
 from fastapi import Request
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pathlib import Path
 
 class FujiAdmin(Admin):
@@ -22,12 +22,15 @@ class FujiAdmin(Admin):
         )
 
     @login_required
-    async def download_file(self, request: Request) -> FileResponse:
+    async def download_file(self, request: Request) -> FileResponse | Response:
         '''Returns file by his path.
         '''
         path = request.query_params.get("path")
+        if not Path(path).is_file():
+            return Response(content="File not found", status_code=400)
+        
         if not path:
-            return
+            return Response(content="Path is empty", status_code=400)
         
         filename = Path(path).name
 
