@@ -1,5 +1,6 @@
 from typing import Optional
-from pydantic import BaseModel
+from fastapi_storages import StorageFile
+from pydantic import BaseModel, field_validator
 import datetime
 from fastapi import UploadFile
 from db.models import ApprovalStatus
@@ -15,7 +16,6 @@ class PostShema(BaseShema):
     level: int
 
 class CompanyShema(BaseShema):
-    id: int
     name: str
 
 class DepartmentShema(BaseShema):
@@ -40,6 +40,8 @@ class BidShema(BaseModel):
     class Config:
         arbitrary_types_allowed=True
 
+    id: Optional[int]
+
     amount: int
     payment_type: str
     department: DepartmentShema
@@ -47,6 +49,13 @@ class BidShema(BaseModel):
     purpose: str
     create_date: datetime.datetime
     document: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            return UploadFile(val.open())
+        return val
 
     agreement: Optional[str] = "Нет"
     urgently: Optional[str] = "Нет"

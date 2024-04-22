@@ -3,8 +3,8 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message, Document
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-from pathlib import Path
 import asyncio
+import json
 
 # bot imports
 from bot.bot import get_bot
@@ -13,9 +13,11 @@ from bot.kb import (
     get_create_bid_menu,
     payment_type_menu,
     create_bid_menu_button,
+    bid_menu_button,
     create_inline_keyboard,
     create_reply_keyboard,
     ReplyKeyboardRemove,
+    InlineKeyboardButton
 )
 
 from bot.text import bid_err, payment_types, bid_create_greet
@@ -23,8 +25,9 @@ from bot.text import bid_err, payment_types, bid_create_greet
 from bot.states import BidCreating, Base
 
 # db imports
-from db.service import get_departments_names, create_bid
+from db.service import get_departments_names, create_bid, get_bids_by_worker_telegram_id
 from db.models import ApprovalStatus
+from db.schemas import BidShema
 
 
 router = Router(name="bid_create")
@@ -49,9 +52,9 @@ async def clear_state_with_success(
                              reply_markup=await get_create_bid_menu(state))
 
 
-
+## Create section
 @router.callback_query(F.data == "get_bid_create_menu")
-async def get_create_menu(callback: CallbackQuery, state: FSMContext):
+async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(
         callback.message,
         state,
@@ -92,7 +95,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         teller_card_state = ApprovalStatus.skipped
 
     create_bid(
-        amount=amount,
+        amount=int(amount),
         payment_type=payment_type,
         department=department,
         file=file,
@@ -146,7 +149,7 @@ async def set_amount_type(callback: CallbackQuery, state: FSMContext):
     
 # Department section
 @router.callback_query(F.data == "get_department_form")
-async def get_create_menu(callback: CallbackQuery, state: FSMContext):
+async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.department)
     dep = get_departments_names()
     await callback.message.delete()
@@ -256,3 +259,25 @@ async def set_need_document(message: Message, state: FSMContext):
     else:
         await message.answer(bid_err,
                                      reply_markup=create_inline_keyboard(create_bid_menu_button))
+
+## History section
+@router.callback_query(F.data ==["get_bid"])
+async def get_bid(callback: CallbackQuery, state: FSMContext, callback_data: dict):
+    decoded = json.loads(callback_data)
+    pass
+
+@router.callback_query(F.data == "get_create_history_bid")
+async def get_document_form(callback: CallbackQuery, state: FSMContext):
+    bids = get_bids_by_worker_telegram_id(callback.message.chat.id)
+    bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)
+    keyboard = create_inline_keyboard(
+        *(InlineKeyboardButton(
+            text=f"Заявка от {bid.create_date}",
+            callback_data=json.dumps({
+                "type": "get_bid",
+                "bid_id": bid.id
+            })
+        ) for bid in bids),
+        bid_menu_button
+    )
+    await callback.message.edit_text("История заявок:", reply_markup=keyboard)

@@ -2,6 +2,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
+import json
 
 # bot imports
 from bot.kb import (
@@ -20,11 +21,6 @@ router = Router(name="bid_main")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
-
-@router.callback_query(F.data == "get_bid")
-async def get_bid(callback: CallbackQuery, state: FSMContext):
-    pass
-
 
 ### Create section
 from bot.handlers.bids import create_bid
