@@ -114,8 +114,8 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         [bid_menu_button],
     ]
     if all_field_exist:
-        keyboard = [[InlineKeyboardButton(text="Отправить заявку", 
-                                          callback_data="send_bid")], *keyboard]
+        keyboard.append([InlineKeyboardButton(text="Отправить заявку", 
+                                          callback_data="send_bid")])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
