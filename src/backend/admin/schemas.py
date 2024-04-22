@@ -131,7 +131,7 @@ class BidView(ModelView, model=Bid):
     def file_format(inst, columm):
         value = getattr(inst, columm)
         proto = "http"
-        host = get_settings().host
+        host = get_settings().domain
         port = get_settings().port
         if get_settings().ssl_certfile:
             proto = "https"
