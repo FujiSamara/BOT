@@ -7,7 +7,7 @@ from db.models import *
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
-from bot.kb import payment_type_dict
+from bot.kb import payment_type_dict, approval_state_dict
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -155,31 +155,22 @@ class BidView(ModelView, model=Bid):
         return payment_type_dict.get(value)
 
     @staticmethod
-    def approval_status_format(inst, columm):
+    def approval_state_format(inst, columm):
         value = getattr(inst, columm)
 
-        if value == ApprovalStatus.approved:
-            return "Согласовано"
-        elif value == ApprovalStatus.pending:
-            return "Ожидает поступления"
-        elif value == ApprovalStatus.pending_approval:
-            return "Ожидает согласования"
-        elif value == ApprovalStatus.denied:
-            return "Отклонено"
-        elif value == ApprovalStatus.skipped:
-            return "Пропущено"
+        return approval_state_dict.get(value)
 
     
     column_type_formatters = {
         datetime.datetime: datetime_format
     }
     column_formatters = {
-       Bid.kru_state: approval_status_format,
-       Bid.owner_state: approval_status_format,
-       Bid.accountant_card_state: approval_status_format,
-       Bid.accountant_cash_state: approval_status_format,
-       Bid.teller_card_state: approval_status_format,
-       Bid.teller_cash_state: approval_status_format,
+       Bid.kru_state: approval_state_format,
+       Bid.owner_state: approval_state_format,
+       Bid.accountant_card_state: approval_state_format,
+       Bid.accountant_cash_state: approval_state_format,
+       Bid.teller_card_state: approval_state_format,
+       Bid.teller_cash_state: approval_state_format,
        Bid.document: file_format,
        Bid.payment_type: payment_type_format
     }
@@ -209,7 +200,7 @@ class BidView(ModelView, model=Bid):
                 if type(val) == datetime.datetime:
                     val = BidView.datetime_format(val)
                 if name.split("_")[-1] == "state":
-                    val = BidView.approval_status_format(elem, name)
+                    val = BidView.approval_state_format(elem, name)
                 if name == "payment_type":
                     val = BidView.payment_type_format(elem, name)
                 vals.append(str(val)) 

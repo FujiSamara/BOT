@@ -8,12 +8,16 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Document
 
+from db.models import ApprovalState
+
 # Buttons
 create_bid_menu_button = InlineKeyboardButton(text="Меню настройки заявки", callback_data="get_bid_create_menu")
 
 bid_menu_button = InlineKeyboardButton(text="Меню создания заявок", callback_data="get_bid_menu")
 
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
+
+bid_history_button = InlineKeyboardButton(text="История заявок", callback_data="get_create_history_bid")
 
 ## Keyboards
 def create_inline_keyboard(*buttons: list[InlineKeyboardButton]) -> InlineKeyboardMarkup:
@@ -30,7 +34,7 @@ def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
 bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="Создать заявку", callback_data="get_bid_create_menu")],
     [InlineKeyboardButton(text="Ожидающие заявки", callback_data="get_pending_bid")],
-    [InlineKeyboardButton(text="История заявок", callback_data="get_create_history_bid")],
+    [bid_history_button],
     [main_menu_button],
 ])
 
@@ -123,6 +127,14 @@ payment_type_dict = {
     "cash": "Наличная",
     "card": "Безналичная",
     "taxi": "Требуется такси"
+}
+
+approval_state_dict = {
+    ApprovalState.approved: "Согласовано",
+    ApprovalState.pending: "Ожидает поступления",
+    ApprovalState.pending_approval: "Ожидает согласования",
+    ApprovalState.denied: "Отклонено",
+    ApprovalState.skipped: "Пропущено"
 }
 
 payment_type_menu = InlineKeyboardMarkup(inline_keyboard=[

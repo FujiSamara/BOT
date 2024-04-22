@@ -1,10 +1,10 @@
 from io import BytesIO
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message, Document
+from aiogram.filters.callback_data import CallbackData
+from aiogram.types import CallbackQuery, Message, Document, BufferedInputFile
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
-import json
 
 # bot imports
 from bot.bot import get_bot
@@ -17,7 +17,10 @@ from bot.kb import (
     create_inline_keyboard,
     create_reply_keyboard,
     ReplyKeyboardRemove,
-    InlineKeyboardButton
+    InlineKeyboardButton,
+    payment_type_dict,
+    approval_state_dict,
+    bid_history_button
 )
 
 from bot.text import bid_err, payment_types, bid_create_greet
@@ -25,8 +28,13 @@ from bot.text import bid_err, payment_types, bid_create_greet
 from bot.states import BidCreating, Base
 
 # db imports
-from db.service import get_departments_names, create_bid, get_bids_by_worker_telegram_id
-from db.models import ApprovalStatus
+from db.service import (
+    get_departments_names,
+    create_bid,
+    get_bids_by_worker_telegram_id,
+    get_bid_by_id
+)
+from db.models import ApprovalState
 from db.schemas import BidShema
 
 
@@ -78,21 +86,21 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     file = await get_bot().get_file(document.file_id)
     file: BytesIO = await get_bot().download_file(file.file_path)
 
-    kru_state = ApprovalStatus.pending_approval
-    owner_state = ApprovalStatus.pending
+    kru_state = ApprovalState.pending_approval
+    owner_state = ApprovalState.pending
     if int(amount) < 10000:
-        owner_state = ApprovalStatus.skipped
-    accountant_card_state = ApprovalStatus.pending
-    accountant_cash_state = ApprovalStatus.pending
-    teller_card_state = ApprovalStatus.pending
-    teller_cash_state = ApprovalStatus.pending
+        owner_state = ApprovalState.skipped
+    accountant_card_state = ApprovalState.pending
+    accountant_cash_state = ApprovalState.pending
+    teller_card_state = ApprovalState.pending
+    teller_cash_state = ApprovalState.pending
 
     if payment_type == "card":
-        accountant_cash_state = ApprovalStatus.skipped
-        teller_cash_state = ApprovalStatus.skipped
+        accountant_cash_state = ApprovalState.skipped
+        teller_cash_state = ApprovalState.skipped
     else:
-        accountant_card_state = ApprovalStatus.skipped
-        teller_card_state = ApprovalStatus.skipped
+        accountant_card_state = ApprovalState.skipped
+        teller_card_state = ApprovalState.skipped
 
     create_bid(
         amount=amount,
@@ -261,10 +269,63 @@ async def set_need_document(message: Message, state: FSMContext):
                                      reply_markup=create_inline_keyboard(create_bid_menu_button))
 
 ## History section
-@router.callback_query(F.data ==["get_bid"])
-async def get_bid(callback: CallbackQuery, state: FSMContext, callback_data: dict):
-    decoded = json.loads(callback_data)
-    pass
+class BidCallbackData(CallbackData, prefix="bid"):
+    id: int
+
+def get_bid_info(bid: BidShema) -> str:
+    stage = ""
+
+    if bid.kru_state == ApprovalState.pending_approval:
+        stage += "КРУ"
+    elif bid.owner_state == ApprovalState.pending_approval:
+        stage += "Собственник"
+    elif bid.accountant_card_state ==  ApprovalState.pending_approval:
+        stage += "Бухгалтер безнал."
+    elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
+        stage += "Бухгалтер нал."
+    elif bid.teller_card_state ==  ApprovalState.pending_approval:
+        stage += "Кассир безнал."
+    elif bid.teller_cash_state ==  ApprovalState.pending_approval:
+        stage += "Кассир нал."
+    elif (
+        bid.kru_state == ApprovalState.denied or
+        bid.owner_state == ApprovalState.denied or
+        bid.accountant_card_state == ApprovalState.denied or
+        bid.accountant_cash_state == ApprovalState.denied or
+        bid.teller_card_state == ApprovalState.denied or
+        bid.teller_cash_state == ApprovalState.denied
+    ):
+        stage += "Отказано"
+    else:
+        stage += "Выплачено"
+
+    bid_info = f"""Сумма: {bid.amount}
+Тип оплаты: {payment_type_dict[bid.payment_type]}
+Предприятие: {bid.department.name}
+Документ: Прикреплен к сообщению.
+Цель платежа: {bid.purpose}
+Наличие договора: {bid.agreement}
+Заявка срочная? {bid.urgently}
+Нужна платежка? {bid.need_document}
+Комментарий: {bid.comment}
+Текущий этап: {stage}
+"""
+   
+
+    return bid_info
+
+@router.callback_query(BidCallbackData.filter())
+async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
+    bid_id = callback_data.id
+    bid = get_bid_by_id(bid_id)
+    await callback.message.delete()
+    document = BufferedInputFile(file=bid.document.file.read(), filename=bid.document.filename)
+
+    await callback.message.answer_document(
+        document=document,
+        caption=get_bid_info(bid),
+        reply_markup=create_inline_keyboard(bid_history_button)
+    )
 
 @router.callback_query(F.data == "get_create_history_bid")
 async def get_document_form(callback: CallbackQuery, state: FSMContext):
@@ -273,11 +334,9 @@ async def get_document_form(callback: CallbackQuery, state: FSMContext):
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
             text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
-            callback_data=json.dumps({
-                "type": "get_bid",
-                "bid_id": bid.id
-            })
+            callback_data=BidCallbackData(id=bid.id).pack()
         ) for bid in bids),
         bid_menu_button
     )
-    await callback.message.edit_text("История заявок:", reply_markup=keyboard)
+    await callback.message.delete()
+    await callback.message.answer("История заявок:", reply_markup=keyboard)

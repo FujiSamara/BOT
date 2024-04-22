@@ -1,20 +1,21 @@
 from io import BytesIO
 from pathlib import Path
 from db.orm import (
-    find_worker_by_number,
-    find_worker_by_telegram_id,
     update_worker,
-    get_departments_with_columns,
-    find_department_by_name,
+    get_departments_columns,
     add_bid,
     get_last_bid_id,
-    get_bids_by_worker
+    get_bids_by_worker,
+    find_bid_by_column,
+    find_department_by_column,
+    find_worker_by_column
 )
 from db.models import (
     Department,
-    ApprovalStatus
+    ApprovalState
 )
 from db.schemas import *
+from db.models import Bid, Worker, Department
 import logging
 from datetime import datetime
 from fastapi import UploadFile
@@ -25,7 +26,7 @@ def get_user_level_by_telegram_id(id: str) -> int:
 
     Return `-1`, if user doesn't exits.
     '''
-    worker = find_worker_by_telegram_id(id)
+    worker = find_worker_by_column(Worker.telegram_id, id)
     if not worker:
         return -1
 
@@ -33,11 +34,11 @@ def get_user_level_by_telegram_id(id: str) -> int:
 
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
     '''
-    Finds user by his phone number and sets him telegram id.
+    Finds worker by his phone number and sets him telegram id.
     
     Returns `True`, if user found, `False` otherwise.
     '''
-    worker = find_worker_by_number(number)
+    worker = find_worker_by_column(Worker.phone_number, number)
     if not worker:
         return False
 
@@ -53,7 +54,7 @@ def get_departments_names() -> list[str]:
     '''
     Returns all existed departments.
     '''
-    departments_raw = get_departments_with_columns(Department.name)
+    departments_raw = get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
     return result
 
@@ -65,12 +66,12 @@ def create_bid(
     telegram_id: int,
     file: BytesIO,
     filename: str,
-    kru_state: ApprovalStatus,
-    owner_state: ApprovalStatus,
-    accountant_cash_state: ApprovalStatus,
-    accountant_card_state: ApprovalStatus,
-    teller_cash_state: ApprovalStatus,
-    teller_card_state: ApprovalStatus,
+    kru_state: ApprovalState,
+    owner_state: ApprovalState,
+    accountant_cash_state: ApprovalState,
+    accountant_card_state: ApprovalState,
+    teller_cash_state: ApprovalState,
+    teller_card_state: ApprovalState,
     agreement: Optional[str]=None,
     urgently: Optional[str]=None,
     need_document: Optional[str]=None,
@@ -79,7 +80,7 @@ def create_bid(
     '''
     Creates an bid wrapped in `BidShema` and adds it to database.
     '''
-    department_inst = find_department_by_name(department)
+    department_inst = find_department_by_column(Department.name, department)
     
     if not department_inst:
         logging.getLogger("uvicorn.error").error(
@@ -87,7 +88,7 @@ def create_bid(
         )
         return
 
-    worker_inst = find_worker_by_telegram_id(telegram_id)
+    worker_inst = find_worker_by_column(Worker.telegram_id, id)
     
     if not worker_inst:
         logging.getLogger("uvicorn.error").error(
@@ -132,9 +133,15 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
     '''
     Returns all bids own to worker with specified phone number.
     '''
-    worker = find_worker_by_telegram_id(id)
+    worker = find_worker_by_column(Worker.telegram_id, id)
 
     if not worker:
         return []
     
     return get_bids_by_worker(worker)
+
+def get_bid_by_id(id: int) -> BidShema:
+    '''
+    Returns bid in database by it id.
+    '''
+    return find_bid_by_column(Bid.id, id)

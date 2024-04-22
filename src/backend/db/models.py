@@ -9,14 +9,14 @@ import enum
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
 
-class ApprovalStatus(enum.Enum):
+class ApprovalState(enum.Enum):
     pending = 1,
     approved = 2,
     denied = 3,
     pending_approval = 4,
     skipped = 5,
 
-approvalstate = Annotated[ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)]
+approvalstate = Annotated[ApprovalState, mapped_column(Enum(ApprovalState), default=ApprovalState.pending)]
 
 
 class Post(Base):

@@ -3,7 +3,7 @@ from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
 from fastapi import UploadFile
-from db.models import ApprovalStatus
+from db.models import ApprovalState
 
 # Full shemas
 class BaseShema(BaseModel):
@@ -55,7 +55,7 @@ class BidShema(BaseModel):
     @classmethod
     def upload_file_validate(cls, val):
         if isinstance(val, StorageFile):
-            return UploadFile(val.open())
+            return UploadFile(val.open(), filename=val.name)
         return val
 
     agreement: Optional[str] = "Нет"
@@ -64,11 +64,11 @@ class BidShema(BaseModel):
     comment: Optional[str]
 
     # States
-    kru_state: ApprovalStatus
-    owner_state: ApprovalStatus
-    accountant_card_state: ApprovalStatus
-    accountant_cash_state: ApprovalStatus
-    teller_card_state: ApprovalStatus
-    teller_cash_state: ApprovalStatus
+    kru_state: ApprovalState
+    owner_state: ApprovalState
+    accountant_card_state: ApprovalState
+    accountant_cash_state: ApprovalState
+    teller_card_state: ApprovalState
+    teller_cash_state: ApprovalState
 
 # Create shemas
