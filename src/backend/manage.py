@@ -1,6 +1,5 @@
 import uvicorn
 from configure import configure
-import pathlib
 from core.main import create_app
 from settings import get_settings
 
@@ -8,7 +7,7 @@ from settings import get_settings
 def run():
     configure()
     
-    log_config_path = (pathlib.Path(__file__).parent / 'log_config.yaml').resolve().as_posix()
+    log_config_path = get_settings().app_directory_path + '/log_config.yaml'
     uvicorn.run(
         app=create_app(), 
         host=get_settings().host, 

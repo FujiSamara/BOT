@@ -1,3 +1,4 @@
+import pathlib
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field, computed_field
@@ -18,6 +19,11 @@ class Settings(BaseSettings):
     @property
     def storage(self) -> FileSystemStorage:
         return FileSystemStorage(self.storage_path) 
+
+    @computed_field
+    @property
+    def app_directory_path(self) -> str:
+        return (pathlib.Path(__file__).parent).resolve().as_posix()
 
     # psql 
     psql_pass: str = Field(validation_alias="POSTGRES_PASSWORD")
