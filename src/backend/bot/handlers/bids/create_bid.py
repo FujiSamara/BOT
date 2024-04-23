@@ -25,7 +25,7 @@ from bot.kb import (
 from bot.text import bid_err, payment_types, bid_create_greet
 
 from bot.states import BidCreating, Base
-from bot.handlers.bids.model import BidCallbackData, BidViewMove
+from bot.handlers.bids.model import BidCallbackData, BidViewMode, BidViewType
 
 # db imports
 from db.service import (
@@ -39,7 +39,7 @@ from db.models import ApprovalState
 from db.schemas import BidShema
 
 
-router = Router(name="bid_create")
+router = Router(name="bid_creating")
 
 
 
@@ -334,7 +334,10 @@ def get_state_bid_info(bid: BidShema) -> str:
 
 
 # Full info
-@router.callback_query(BidCallbackData.filter(F.mode == BidViewMove.full))
+@router.callback_query(
+    BidCallbackData.filter(F.type == BidViewType.creation),
+    BidCallbackData.filter(F.mode == BidViewMode.full)
+)
 async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
@@ -356,7 +359,11 @@ async def get_bids_history(callback: CallbackQuery):
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
             text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
-            callback_data=BidCallbackData(id=bid.id, mode=BidViewMove.full).pack()
+            callback_data=BidCallbackData(
+                id=bid.id,
+                mode=BidViewMode.full,
+                type=BidViewType.creation
+            ).pack()
         ) for bid in bids),
         create_bid_menu_button
     )
@@ -364,7 +371,10 @@ async def get_bids_history(callback: CallbackQuery):
     await callback.message.answer("История заявок:", reply_markup=keyboard)
 
 # Base info with state
-@router.callback_query(BidCallbackData.filter(F.mode == BidViewMove.state_only))
+@router.callback_query(
+    BidCallbackData.filter(F.type == BidViewType.creation),
+    BidCallbackData.filter(F.mode == BidViewMode.state_only)
+)
 async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
@@ -384,7 +394,11 @@ async def get_bids_pending(callback: CallbackQuery):
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
             text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
-            callback_data=BidCallbackData(id=bid.id, mode=BidViewMove.state_only).pack()
+            callback_data=BidCallbackData(
+                id=bid.id,
+                mode=BidViewMode.state_only,
+                type=BidViewType.creation
+            ).pack()
         ) for bid in bids),
         create_bid_menu_button
     )

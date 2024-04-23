@@ -89,7 +89,7 @@ def create_bid(
         )
         return
 
-    worker_inst = find_worker_by_column(Worker.telegram_id, id)
+    worker_inst = find_worker_by_column(Worker.telegram_id, telegram_id)
     
     if not worker_inst:
         logging.getLogger("uvicorn.error").error(

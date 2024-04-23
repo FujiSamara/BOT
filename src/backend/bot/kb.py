@@ -19,6 +19,8 @@ main_menu_button = InlineKeyboardButton(text="Главное меню", callback
 
 bid_create_history_button = InlineKeyboardButton(text="История заявок", callback_data="get_create_history_bid")
 bid_create_pending_button = InlineKeyboardButton(text="Ожидающие заявки", callback_data="get_create_pending_bid")
+
+kru_menu_button = InlineKeyboardButton(text="Меню согласования КРУ", callback_data="get_kru_menu")
 ## Keyboards
 def create_inline_keyboard(*buttons: list[InlineKeyboardButton]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
