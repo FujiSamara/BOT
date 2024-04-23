@@ -1,6 +1,5 @@
 from enum import Enum
 from aiogram.filters.callback_data import CallbackData
-from aiogram.enums import ContentType
 
 class BidViewMove(str, Enum):
     full = 1
