@@ -7,7 +7,7 @@ from db.models import *
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
-from bot.kb import payment_type_dict
+from bot.kb import payment_type_dict, approval_state_dict
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -100,6 +100,14 @@ class BidView(ModelView, model=Bid):
     can_create = False
     can_edit = False
 
+    column_searchable_list = [
+        "worker.l_name",
+    ]
+    column_sortable_list = [
+        Bid.amount,
+        Bid.create_date,
+        Bid.id
+    ]
     column_list = [
         Bid.id,
         Bid.create_date,
@@ -147,35 +155,32 @@ class BidView(ModelView, model=Bid):
         return payment_type_dict.get(value)
 
     @staticmethod
-    def approval_status_format(inst, columm):
+    def approval_state_format(inst, columm):
         value = getattr(inst, columm)
 
-        if value == ApprovalStatus.approved:
-            return "Согласовано"
-        elif value == ApprovalStatus.pending:
-            return "Ожидает поступления"
-        elif value == ApprovalStatus.pending_approval:
-            return "Ожидает согласования"
-        elif value == ApprovalStatus.denied:
-            return "Отклонено"
-        elif value == ApprovalStatus.skipped:
-            return "Пропущено"
+        return approval_state_dict.get(value)
 
     
     column_type_formatters = {
         datetime.datetime: datetime_format
     }
     column_formatters = {
-       Bid.kru_state: approval_status_format,
-       Bid.owner_state: approval_status_format,
-       Bid.accountant_card_state: approval_status_format,
-       Bid.accountant_cash_state: approval_status_format,
-       Bid.teller_card_state: approval_status_format,
-       Bid.teller_cash_state: approval_status_format,
+       Bid.kru_state: approval_state_format,
+       Bid.owner_state: approval_state_format,
+       Bid.accountant_card_state: approval_state_format,
+       Bid.accountant_cash_state: approval_state_format,
+       Bid.teller_card_state: approval_state_format,
+       Bid.teller_cash_state: approval_state_format,
        Bid.document: file_format,
        Bid.payment_type: payment_type_format
     }
     column_formatters_detail = column_formatters
+
+    column_export_exclude_list = [
+        Bid.department_id,
+        Bid.worker_id,
+        Bid.document
+    ]
 
     async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
         '''
@@ -187,17 +192,15 @@ class BidView(ModelView, model=Bid):
         workbook = Workbook(output)
         worksheet = workbook.add_worksheet()
         worksheet.set_column(0, len(self._export_prop_names), CELL_LENGTH)
-        worksheet.write_row(0, 0, self._export_prop_names)
+        worksheet.write_row(0, 0, [*self._export_prop_names, "Подпись"])
         for index, elem in enumerate(data):
             vals = []
             for name in self._export_prop_names:
                 val = await self.get_prop_value(elem, name)
                 if type(val) == datetime.datetime:
                     val = BidView.datetime_format(val)
-                if name == "document":
-                    val = Path(val).name
                 if name.split("_")[-1] == "state":
-                    val = BidView.approval_status_format(elem, name)
+                    val = BidView.approval_state_format(elem, name)
                 if name == "payment_type":
                     val = BidView.payment_type_format(elem, name)
                 vals.append(str(val)) 
@@ -232,6 +235,7 @@ class BidView(ModelView, model=Bid):
        Bid.accountant_cash_state: "Бухгалтер нал.",
        Bid.teller_card_state: "Кассир безнал.",
        Bid.teller_cash_state: "Кассир нал.",
+       "worker.l_name": "Фамилия работника",
     }
 
     form_ajax_refs = {

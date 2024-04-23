@@ -7,24 +7,39 @@ from sqlalchemy.sql.expression import func
 def create_tables():
     Base.metadata.create_all(engine)
 
-
-def find_worker_by_telegram_id(id: int) -> WorkerShema:
-    '''Returns user if he exist, `None` otherwise.
+def find_worker_by_column(column: any, value: any) -> WorkerShema:
+    '''
+    Returns worker in database by `column` with `value`.
+    If worker not exist return `None`.
     '''
     with session.begin() as s:
-        worker = s.query(Worker).filter(Worker.telegram_id == id).first()
-        if worker:
-            return WorkerShema.model_validate(worker)
-        return None
-
-def find_worker_by_number(number: str) -> WorkerShema:
-    '''Returns user if he exist, `None` otherwise.
+        raw_worker = s.query(Worker).filter(column == value).first()
+        if not raw_worker:
+            return None
+        return WorkerShema.model_validate(raw_worker)
+    
+def find_department_by_column(column: any, value: any) -> DepartmentShema:
+    '''
+    Returns department in database by `column` with `value`.
+    If department not exist return `None`.
     '''
     with session.begin() as s:
-        worker = s.query(Worker).filter(Worker.phone_number == number).first()
-        if worker:
-            return WorkerShema.model_validate(worker)
-        return None
+        raw_deparment = s.query(Department).filter(column == value).first()
+        if not raw_deparment:
+            return None
+        return DepartmentShema.model_validate(raw_deparment)
+    
+def find_bid_by_column(column: any, value: any) -> BidShema:
+    '''
+    Returns bid in database by `column` with `value`.
+    If bid not exist return `None`.
+    '''
+    with session.begin() as s:
+        raw_bid = s.query(Bid).filter(column == value).first()
+        if not raw_bid:
+            return None
+        return BidShema.model_validate(raw_bid)
+
     
 def update_worker(worker: WorkerShema):
     '''Updates worker by his id.
@@ -40,31 +55,19 @@ def update_worker(worker: WorkerShema):
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
 
-def get_departments_with_columns(*columns: list[Any]) -> list[DepartmentShema]:
+def get_departments_columns(*columns: list[Any]) -> list[DepartmentShema]:
     '''
-    Returns all existed departments with specified columns.
+    Returns specified columns of all existed departments.
     '''
     with session.begin() as s:
         return s.query(Department).with_entities(*columns).all()
     
-def find_department_by_name(name: str) -> DepartmentShema:
-    '''
-    Finds and returns department by `name`.
-    '''
-    with session.begin() as s:
-        department = s.query(Department).filter(Department.name == name).first()
-        if department:
-            return DepartmentShema.model_validate(department)
-        else:
-            return None
-
 def get_last_bid_id() -> int:
     '''
     Returns last bid id in database.
     '''
     with session.begin() as s:
         return s.query(func.max(Bid.id)).first()[0]
-
 
 def add_bid(bid: BidShema):
     '''
@@ -103,3 +106,13 @@ def get_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     with session.begin() as s:
         raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
+    '''
+    Returns all bids in database by worker.
+    '''
+    with session.begin() as s:
+        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+    
+

@@ -17,7 +17,9 @@ router = Router(name="bid_main")
 
 
 ### Main section
-@router.callback_query(F.data == "get_bid_menu")
+
+## Create menu
+@router.callback_query(F.data == "get_create_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
