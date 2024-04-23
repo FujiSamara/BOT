@@ -106,4 +106,13 @@ def get_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     with session.begin() as s:
         raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
+    '''
+    Returns all bids in database by worker.
+    '''
+    with session.begin() as s:
+        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
     
+

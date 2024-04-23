@@ -6,6 +6,7 @@ from db.orm import (
     add_bid,
     get_last_bid_id,
     get_bids_by_worker,
+    get_pending_bids_by_worker,
     find_bid_by_column,
     find_department_by_column,
     find_worker_by_column
@@ -139,6 +140,17 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
         return []
     
     return get_bids_by_worker(worker)
+
+def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
+    '''
+    Returns all bids own to worker with specified phone number.
+    '''
+    worker = find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+    
+    return get_pending_bids_by_worker(worker)
 
 def get_bid_by_id(id: int) -> BidShema:
     '''

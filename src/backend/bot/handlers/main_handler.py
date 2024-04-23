@@ -6,7 +6,7 @@ from aiogram.utils.markdown import hbold
 from bot.text import first_run_text
 from bot.states import Auth
 from db.service import get_user_level_by_telegram_id
-from bot.kb import bid_menu_button
+from bot.kb import create_bid_menu_button
 from bot.states import Base
 from aiogram.types import ErrorEvent, Message
 import logging
@@ -45,7 +45,7 @@ async def send_menu_by_level(message: Message, edit=None):
     level = get_user_level_by_telegram_id(message.chat.id)
     menus = []
     if level > 3:
-        menus.append([bid_menu_button])
+        menus.append([create_bid_menu_button])
 
     # TODO: finish remaining menus.
     
