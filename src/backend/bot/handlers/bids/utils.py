@@ -50,15 +50,15 @@ def get_state_bid_info(bid: BidShema) -> str:
     if bid.kru_state == ApprovalState.pending_approval:
         stage = "КРУ"
     elif bid.owner_state == ApprovalState.pending_approval:
-        stage = "Собственник"
+        stage = "Собственника"
     elif bid.accountant_card_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер безнал."
+        stage = "Бухгалтера безнал."
     elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер нал."
+        stage = "Бухгалтера нал."
     elif bid.teller_card_state ==  ApprovalState.pending_approval:
-        stage = "Кассир безнал."
+        stage = "Кассира безнал."
     elif bid.teller_cash_state ==  ApprovalState.pending_approval:
-        stage = "Кассир нал."
+        stage = "Кассира нал."
     
     return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
 Статус: на согласовании у {stage}"""

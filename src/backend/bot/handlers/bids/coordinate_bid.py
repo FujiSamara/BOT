@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, BufferedInputFile
-from aiogram.fsm.context import FSMContext
+import asyncio
 from typing import Any
 
 from bot.kb import (
@@ -11,9 +11,11 @@ from bot.kb import (
 )
 
 from db.models import Bid
+from db.schemas import ApprovalState
 from db.service import (
-    get_kru_pending_bids,
-    get_bid_by_id
+    get_pending_bids_by_column,
+    get_bid_by_id,
+    update_bid_state
 )
 from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType, BidActionData, ActionType
 from bot.handlers.bids.utils import get_full_bid_info
@@ -37,6 +39,7 @@ class CoordinationFactory():
         self.approving_endpoint_name = f"{name}_approving"
         self.declining_endpoint_name = f"{name}_declining"
         self.decline_button = InlineKeyboardButton(text="Отказать", callback_data=f"{name}_decline")
+        self.state_column = state_column
 
         router.callback_query.register(self.get_menu, F.data == coordinator_menu_button.callback_data)
         router.callback_query.register(self.get_pendings, F.data == f"{name}_pending")
@@ -59,8 +62,13 @@ class CoordinationFactory():
         await callback.message.edit_text(text="Добро пожаловать!", reply_markup=keyboard)
 
     async def approve_bid(self, callback: CallbackQuery, callback_data: BidActionData):
-        data = callback_data.bid_id
-        pass
+        bid = get_bid_by_id(callback_data.bid_id)
+        update_bid_state(bid, self.state_column.name, ApprovalState.approved)
+        msg = await callback.message.answer(text="Успешно!")
+        await asyncio.sleep(1)
+        await msg.delete()
+        await self.get_pendings(callback)
+
 
     async def get_bid(self, callback: CallbackQuery, callback_data: BidCallbackData):
         bid = get_bid_by_id(callback_data.id)
@@ -91,7 +99,7 @@ class CoordinationFactory():
         )
 
     async def get_pendings(self, callback: CallbackQuery):
-        bids = get_kru_pending_bids()
+        bids = get_pending_bids_by_column(self.state_column)
         keyboard = create_inline_keyboard(
             *(InlineKeyboardButton(
                 text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",

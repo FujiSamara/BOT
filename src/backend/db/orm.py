@@ -135,3 +135,37 @@ def get_specified_pengind_bids(pending_column) -> list[BidShema]:
     with session.begin() as s:
         raw_bids = s.query(Bid).filter(pending_column == ApprovalState.pending_approval).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+    
+def update_bid(bid: BidShema):
+    '''Updates bid by it id.
+    '''
+    with session.begin() as s:
+        cur_bid = s.query(Bid).filter(Bid.id == bid.id).first()
+        if not cur_bid:
+            return None
+        
+        new_worker = s.query(Worker).filter(Worker.id == bid.worker.id).first()
+        if not new_worker:
+            return None
+        
+        new_department = s.query(Department).filter(Department.id == bid.department.id).first()
+        if not new_worker:
+            return None
+
+        cur_bid.amount = bid.amount
+        cur_bid.payment_type = bid.payment_type
+        cur_bid.purpose = bid.purpose
+        cur_bid.agreement = bid.agreement
+        cur_bid.urgently = bid.urgently
+        cur_bid.need_document = bid.need_document
+        cur_bid.comment = bid.comment
+        cur_bid.create_date = bid.create_date
+        cur_bid.department = new_department
+        cur_bid.worker = new_worker
+        cur_bid.document = bid.document
+        cur_bid.kru_state = bid.kru_state
+        cur_bid.owner_state = bid.owner_state
+        cur_bid.accountant_card_state = bid.accountant_card_state
+        cur_bid.accountant_cash_state = bid.accountant_cash_state
+        cur_bid.teller_card_state = bid.teller_card_state
+        cur_bid.teller_cash_state = bid.teller_cash_state

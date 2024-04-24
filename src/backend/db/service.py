@@ -10,7 +10,8 @@ from db.orm import (
     find_bid_by_column,
     find_department_by_column,
     find_worker_by_column,
-    get_specified_pengind_bids
+    get_specified_pengind_bids,
+    update_bid
 )
 from db.models import (
     Department,
@@ -21,6 +22,7 @@ from db.models import Bid, Worker, Department
 import logging
 from datetime import datetime
 from fastapi import UploadFile
+from typing import Any
 
 def get_user_level_by_telegram_id(id: str) -> int:
     '''
@@ -159,14 +161,64 @@ def get_bid_by_id(id: int) -> BidShema:
     '''
     return find_bid_by_column(Bid.id, id)
 
-def get_kru_pending_bids() -> list[BidShema]:
+def get_pending_bids_by_column(column: Any) -> list[BidShema]:
     '''
-    Returns all bids in database with pending approval state at kru.
+    Returns all bids in database with pending approval state at column.
     '''
-    return get_specified_pengind_bids(Bid.kru_state)
+    return get_specified_pengind_bids(column)
 
-def get_owner_pending_bids() -> list[BidShema]:
+def update_bid_state(bid: BidShema, state_name: str, state: ApprovalState):
     '''
-    Returns all bids in database with pending approval state at owner.
+    Updates bid state with `state_name` by specified `state`.
     '''
-    return get_specified_pengind_bids(Bid.owner_state)
+    if state_name == "kru_state":
+        if state == ApprovalState.approved:
+            bid.kru_state = ApprovalState.approved
+            if bid.owner_state == ApprovalState.skipped:
+                if bid.accountant_cash_state == ApprovalState.skipped:
+                    bid.accountant_card_state = ApprovalState.pending_approval
+                else:
+                    bid.accountant_cash_state = ApprovalState.pending_approval
+            else:
+                bid.owner_state = ApprovalState.pending_approval
+        else:
+            bid.kru_state = ApprovalState.denied
+            bid.owner_state = ApprovalState.skipped
+            bid.accountant_card_state = ApprovalState.skipped
+            bid.accountant_cash_state = ApprovalState.skipped
+            bid.teller_card_state = ApprovalState.skipped
+            bid.teller_cash_state = ApprovalState.skipped
+    elif state_name == "owner_state":
+        if state == ApprovalState.approved:
+            bid.owner_state = ApprovalState.approved
+            if bid.accountant_cash_state == ApprovalState.skipped:
+                bid.accountant_card_state = ApprovalState.pending_approval
+            else:
+                bid.accountant_cash_state = ApprovalState.pending_approval
+        else:
+            bid.owner_state = ApprovalState.denied
+            bid.accountant_card_state = ApprovalState.skipped
+            bid.accountant_cash_state = ApprovalState.skipped
+            bid.teller_card_state = ApprovalState.skipped
+            bid.teller_cash_state = ApprovalState.skipped
+    elif state_name == "accountant_card_state":
+        if state == ApprovalState.approved:
+            bid.accountant_card_state = ApprovalState.approved
+            bid.teller_card_state = ApprovalState.pending_approval
+        else:
+            bid.accountant_card_state = ApprovalState.denied
+            bid.teller_card_state = ApprovalState.skipped
+    elif state_name == "accountant_cash_state":
+        if state == ApprovalState.approved:
+            bid.accountant_cash_state = ApprovalState.approved
+            bid.teller_cash_state = ApprovalState.pending_approval
+        else:
+            bid.accountant_cash_state = ApprovalState.denied
+            bid.teller_cash_state = ApprovalState.skipped
+    elif state_name == "teller_card_state":
+        bid.teller_card_state = ApprovalState.approved
+    else:
+        bid.teller_cash_state = ApprovalState.approved
+
+    update_bid(bid)
+    
