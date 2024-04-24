@@ -277,7 +277,8 @@ async def set_need_document(message: Message, state: FSMContext):
 # Full info
 @router.callback_query(
     BidCallbackData.filter(F.type == BidViewType.creation),
-    BidCallbackData.filter(F.mode == BidViewMode.full)
+    BidCallbackData.filter(F.mode == BidViewMode.full),
+    BidCallbackData.filter(F.endpoint_name == "create_history")
 )
 async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
@@ -303,7 +304,8 @@ async def get_bids_history(callback: CallbackQuery):
             callback_data=BidCallbackData(
                 id=bid.id,
                 mode=BidViewMode.full,
-                type=BidViewType.creation
+                type=BidViewType.creation,
+                endpoint_name="create_history"
             ).pack()
         ) for bid in bids),
         create_bid_menu_button
@@ -314,7 +316,8 @@ async def get_bids_history(callback: CallbackQuery):
 # Base info with state
 @router.callback_query(
     BidCallbackData.filter(F.type == BidViewType.creation),
-    BidCallbackData.filter(F.mode == BidViewMode.state_only)
+    BidCallbackData.filter(F.mode == BidViewMode.state_only),
+    BidCallbackData.filter(F.endpoint_name == "create_pending")
 )
 async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
@@ -338,7 +341,8 @@ async def get_bids_pending(callback: CallbackQuery):
             callback_data=BidCallbackData(
                 id=bid.id,
                 mode=BidViewMode.state_only,
-                type=BidViewType.creation
+                type=BidViewType.creation,
+                endpoint_name="create_pending"
             ).pack()
         ) for bid in bids),
         create_bid_menu_button

@@ -6,7 +6,15 @@ from aiogram.utils.markdown import hbold
 from bot.text import first_run_text
 from bot.states import Auth
 from db.service import get_user_level_by_telegram_id
-from bot.kb import create_bid_menu_button, kru_menu_button
+from bot.kb import (
+    create_bid_menu_button,
+    kru_menu_button,
+    owner_menu_button,
+    accountant_cash_menu_button,
+    accountant_card_menu_button,
+    teller_card_menu_button,
+    teller_cash_menu_button
+)
 from bot.states import Base
 from aiogram.types import ErrorEvent, Message
 import logging
@@ -44,13 +52,22 @@ async def send_menu_by_level(message: Message, edit=None):
     '''
     level = get_user_level_by_telegram_id(message.chat.id)
     menus = []
-    if level > 3:
+    if level >= 3:
         menus.append([create_bid_menu_button])
     
-    if level > 4:
+    if level >= 4:
+        menus.append([teller_cash_menu_button])
+        menus.append([teller_card_menu_button])
+
+    if level >= 5:
         menus.append([kru_menu_button])
 
-    # TODO: finish remaining menus.
+    if level >= 6:
+        menus.append([accountant_card_menu_button])
+        menus.append([accountant_cash_menu_button])
+
+    if level >= 7:
+        menus.append([owner_menu_button])
     
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
     if edit:

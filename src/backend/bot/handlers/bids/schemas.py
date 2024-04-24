@@ -14,6 +14,7 @@ class BidCallbackData(CallbackData, prefix="bid"):
     id: int
     mode: BidViewMode
     type: BidViewType
+    endpoint_name: str
 
 class ActionType(str, Enum):
     approving = 1

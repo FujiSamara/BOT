@@ -7,7 +7,12 @@ from bot.kb import (
     main_menu_button,
     create_inline_keyboard,
     InlineKeyboardButton,
-    kru_menu_button
+    kru_menu_button,
+    owner_menu_button,
+    accountant_card_menu_button,
+    accountant_cash_menu_button,
+    teller_card_menu_button,
+    teller_cash_menu_button
 )
 
 from db.models import Bid
@@ -30,6 +35,7 @@ class CoordinationFactory():
             name: str,
             coordinator_menu_button: InlineKeyboardButton,
             state_column: Any,
+            without_decline: bool = False
         ):
         
         self.name = name
@@ -37,26 +43,29 @@ class CoordinationFactory():
         self.pending_button = InlineKeyboardButton(text="Ожидающие заявки", callback_data=f"{name}_pending")
         self.history_button = InlineKeyboardButton(text="История заявок", callback_data=f"{name}_history")
         self.approving_endpoint_name = f"{name}_approving"
-        self.declining_endpoint_name = f"{name}_declining"
-        self.decline_button = InlineKeyboardButton(text="Отказать", callback_data=f"{name}_decline")
+        self.without_decline = without_decline
         self.state_column = state_column
 
         router.callback_query.register(self.get_menu, F.data == coordinator_menu_button.callback_data)
         router.callback_query.register(self.get_pendings, F.data == f"{name}_pending")
         router.callback_query.register(
             self.get_bid,
-            BidCallbackData.filter(F.type == BidViewType.coordination)
+            BidCallbackData.filter(F.type == BidViewType.coordination),
+            BidCallbackData.filter(F.endpoint_name == self.name)
         )
         router.callback_query.register(
             self.approve_bid,
             BidActionData.filter(F.action == ActionType.approving),
             BidActionData.filter(F.endpoint_name == self.approving_endpoint_name)
         )
-        router.callback_query.register(
-            self.decline_button,
-            BidActionData.filter(F.action == ActionType.declining),
-            BidActionData.filter(F.endpoint_name == self.declining_endpoint_name)
-        )
+        if not without_decline:
+            self.declining_endpoint_name = f"{name}_declining"
+            self.decline_button = InlineKeyboardButton(text="Отказать", callback_data=f"{name}_decline")
+            router.callback_query.register(
+                self.decline_bid,
+                BidActionData.filter(F.action == ActionType.declining),
+                BidActionData.filter(F.endpoint_name == self.declining_endpoint_name)
+            )
 
     async def get_menu(self, callback: CallbackQuery):
         keyboard = create_inline_keyboard(
@@ -82,7 +91,6 @@ class CoordinationFactory():
         await msg.delete()
         await self.get_pendings(callback)
 
-
     async def get_bid(self, callback: CallbackQuery, callback_data: BidCallbackData):
         bid = get_bid_by_id(callback_data.id)
         await callback.message.delete()
@@ -103,7 +111,8 @@ class CoordinationFactory():
                     ).pack()
                 )
             )
-            buttons.append(self.decline_button)
+            if not self.without_decline:
+                buttons.append(self.decline_button)
 
         await callback.message.answer_document(
             document=document,
@@ -113,13 +122,15 @@ class CoordinationFactory():
 
     async def get_pendings(self, callback: CallbackQuery):
         bids = get_pending_bids_by_column(self.state_column)
+        bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)
         keyboard = create_inline_keyboard(
             *(InlineKeyboardButton(
                 text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
                 callback_data=BidCallbackData(
                     id=bid.id,
                     mode=BidViewMode.full_with_approve,
-                    type=BidViewType.coordination
+                    type=BidViewType.coordination,
+                    endpoint_name=self.name
                 ).pack()
             ) for bid in bids),
             self.coordinator_menu_button
@@ -129,6 +140,7 @@ class CoordinationFactory():
 
     async def get_history(self, callback: CallbackQuery):
         pass
+    # TODO: Complete history
 
 
 
@@ -139,4 +151,36 @@ def build_coordinations():
         coordinator_menu_button=kru_menu_button,
         state_column=Bid.kru_state,
         name="kru"
+    )
+    owner_factory = CoordinationFactory(
+        router=router,
+        coordinator_menu_button=owner_menu_button,
+        state_column=Bid.owner_state,
+        name="owner"
+    )
+    accountant_card_factory = CoordinationFactory(
+        router=router,
+        coordinator_menu_button=accountant_card_menu_button,
+        state_column=Bid.accountant_card_state,
+        name="accountant_card"
+    )
+    accountant_cash_factory = CoordinationFactory(
+        router=router,
+        coordinator_menu_button=accountant_cash_menu_button,
+        state_column=Bid.accountant_cash_state,
+        name="accountant_cash"
+    )
+    teller_card_factory = CoordinationFactory(
+        router=router,
+        coordinator_menu_button=teller_card_menu_button,
+        state_column=Bid.teller_card_state,
+        name="teller_card",
+        without_decline=True
+    )
+    teller_cash_factory = CoordinationFactory(
+        router=router,
+        coordinator_menu_button=teller_cash_menu_button,
+        state_column=Bid.teller_cash_state,
+        name="teller_cash",
+        without_decline=True
     )
