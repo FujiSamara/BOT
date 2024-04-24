@@ -52,6 +52,11 @@ class CoordinationFactory():
             BidActionData.filter(F.action == ActionType.approving),
             BidActionData.filter(F.endpoint_name == self.approving_endpoint_name)
         )
+        router.callback_query.register(
+            self.decline_button,
+            BidActionData.filter(F.action == ActionType.declining),
+            BidActionData.filter(F.endpoint_name == self.declining_endpoint_name)
+        )
 
     async def get_menu(self, callback: CallbackQuery):
         keyboard = create_inline_keyboard(
@@ -60,6 +65,14 @@ class CoordinationFactory():
         )
 
         await callback.message.edit_text(text="Добро пожаловать!", reply_markup=keyboard)
+
+    async def decline_bid(self, callback: CallbackQuery, callback_data: BidActionData):
+        bid = get_bid_by_id(callback_data.bid_id)
+        update_bid_state(bid, self.state_column.name, ApprovalState.denied)
+        msg = await callback.message.answer(text="Успешно!")
+        await asyncio.sleep(1)
+        await msg.delete()
+        await self.get_pendings(callback)
 
     async def approve_bid(self, callback: CallbackQuery, callback_data: BidActionData):
         bid = get_bid_by_id(callback_data.bid_id)
