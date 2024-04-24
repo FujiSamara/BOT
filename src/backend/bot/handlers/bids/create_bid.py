@@ -25,7 +25,7 @@ from bot.kb import (
 from bot.text import bid_err, payment_types, bid_create_greet
 
 from bot.states import BidCreating, Base
-from bot.handlers.bids.model import BidCallbackData, BidViewMode, BidViewType
+from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
 
 # db imports
 from db.service import (
