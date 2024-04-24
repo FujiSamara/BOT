@@ -52,17 +52,17 @@ async def send_menu_by_level(message: Message, edit=None):
     '''
     level = get_user_level_by_telegram_id(message.chat.id)
     menus = []
-    if level >= 3:
+    if level >= 2 and level <= 3:
         menus.append([create_bid_menu_button])
     
-    if level >= 4:
+    if level == 4:
         menus.append([teller_cash_menu_button])
         menus.append([teller_card_menu_button])
 
-    if level >= 5:
+    if level == 5:
         menus.append([kru_menu_button])
 
-    if level >= 6:
+    if level == 6:
         menus.append([accountant_card_menu_button])
         menus.append([accountant_cash_menu_button])
 
