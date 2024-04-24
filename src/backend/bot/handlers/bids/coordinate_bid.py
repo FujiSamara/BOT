@@ -35,7 +35,8 @@ class CoordinationFactory():
             name: str,
             coordinator_menu_button: InlineKeyboardButton,
             state_column: Any,
-            without_decline: bool = False
+            without_decline: bool = False,
+            approve_button_text: str = "Согласовать"
         ):
         
         self.name = name
@@ -45,6 +46,7 @@ class CoordinationFactory():
         self.approving_endpoint_name = f"{name}_approving"
         self.without_decline = without_decline
         self.state_column = state_column
+        self.approve_button_text = approve_button_text
 
         router.callback_query.register(self.get_menu, F.data == coordinator_menu_button.callback_data)
         router.callback_query.register(self.get_pendings, F.data == f"{name}_pending")
@@ -60,7 +62,6 @@ class CoordinationFactory():
         )
         if not without_decline:
             self.declining_endpoint_name = f"{name}_declining"
-            self.decline_button = InlineKeyboardButton(text="Отказать", callback_data=f"{name}_decline")
             router.callback_query.register(
                 self.decline_bid,
                 BidActionData.filter(F.action == ActionType.declining),
@@ -103,7 +104,7 @@ class CoordinationFactory():
         if callback_data.mode == BidViewMode.full_with_approve:
             buttons.append(
                 InlineKeyboardButton(
-                    text="Согласовать",
+                    text=self.approve_button_text,
                     callback_data=BidActionData(
                         bid_id=bid.id,
                         action=ActionType.approving,
@@ -112,7 +113,16 @@ class CoordinationFactory():
                 )
             )
             if not self.without_decline:
-                buttons.append(self.decline_button)
+                buttons.append(
+                    InlineKeyboardButton(
+                        text="Отказать",
+                        callback_data=BidActionData(
+                            bid_id=bid.id,
+                            action=ActionType.declining,
+                            endpoint_name=self.declining_endpoint_name
+                        ).pack()
+                    )
+                )
 
         await callback.message.answer_document(
             document=document,
@@ -175,12 +185,14 @@ def build_coordinations():
         coordinator_menu_button=teller_card_menu_button,
         state_column=Bid.teller_card_state,
         name="teller_card",
-        without_decline=True
+        without_decline=True,
+        approve_button_text="Выдать"
     )
     teller_cash_factory = CoordinationFactory(
         router=router,
         coordinator_menu_button=teller_cash_menu_button,
         state_column=Bid.teller_cash_state,
         name="teller_cash",
-        without_decline=True
+        without_decline=True,
+        approve_button_text="Выдать"
     )
