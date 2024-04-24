@@ -128,4 +128,10 @@ def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
         ).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
     
-
+def get_specified_pengind_bids(pending_column) -> list[BidShema]:
+    '''
+    Returns all bids in database with pending approval state in `pending_column`.
+    '''
+    with session.begin() as s:
+        raw_bids = s.query(Bid).filter(pending_column == ApprovalState.pending_approval).all()
+        return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]

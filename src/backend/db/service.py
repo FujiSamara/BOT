@@ -9,7 +9,8 @@ from db.orm import (
     get_pending_bids_by_worker,
     find_bid_by_column,
     find_department_by_column,
-    find_worker_by_column
+    find_worker_by_column,
+    get_specified_pengind_bids
 )
 from db.models import (
     Department,
@@ -157,3 +158,15 @@ def get_bid_by_id(id: int) -> BidShema:
     Returns bid in database by it id.
     '''
     return find_bid_by_column(Bid.id, id)
+
+def get_kru_pending_bids() -> list[BidShema]:
+    '''
+    Returns all bids in database with pending approval state at kru.
+    '''
+    return get_specified_pengind_bids(Bid.kru_state)
+
+def get_owner_pending_bids() -> list[BidShema]:
+    '''
+    Returns all bids in database with pending approval state at owner.
+    '''
+    return get_specified_pengind_bids(Bid.owner_state)
