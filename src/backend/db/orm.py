@@ -3,6 +3,7 @@ from db.database import Base, engine, session
 from db.models import *
 from db.schemas import *
 from sqlalchemy.sql.expression import func
+from sqlalchemy import or_, and_
 
 def create_tables():
     Base.metadata.create_all(engine)
@@ -112,7 +113,19 @@ def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     Returns all bids in database by worker.
     '''
     with session.begin() as s:
-        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        raw_bids = s.query(Bid).filter(
+            and_(
+                Bid.worker_id == worker.id,
+                or_(
+                    Bid.accountant_card_state == ApprovalState.pending_approval,
+                    Bid.accountant_cash_state == ApprovalState.pending_approval,
+                    Bid.teller_card_state == ApprovalState.pending_approval,
+                    Bid.teller_cash_state == ApprovalState.pending_approval,
+                    Bid.kru_state == ApprovalState.pending_approval,
+                    Bid.owner_state == ApprovalState.pending_approval,
+                )
+            )
+        ).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
     
 
