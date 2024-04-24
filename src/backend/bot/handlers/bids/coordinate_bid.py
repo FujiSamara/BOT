@@ -7,6 +7,7 @@ from bot.kb import (
     main_menu_button,
     create_inline_keyboard,
     InlineKeyboardButton,
+    InlineKeyboardMarkup,
     kru_menu_button,
     owner_menu_button,
     accountant_card_menu_button,
@@ -16,9 +17,10 @@ from bot.kb import (
 )
 
 from db.models import Bid
-from db.schemas import ApprovalState
+from db.schemas import ApprovalState, BidShema
 from db.service import (
     get_pending_bids_by_column,
+    get_history_bids_by_column,
     get_bid_by_id,
     update_bid_state
 )
@@ -50,6 +52,7 @@ class CoordinationFactory():
 
         router.callback_query.register(self.get_menu, F.data == coordinator_menu_button.callback_data)
         router.callback_query.register(self.get_pendings, F.data == f"{name}_pending")
+        router.callback_query.register(self.get_history, F.data == f"{name}_history")
         router.callback_query.register(
             self.get_bid,
             BidCallbackData.filter(F.type == BidViewType.coordination),
@@ -71,6 +74,7 @@ class CoordinationFactory():
     async def get_menu(self, callback: CallbackQuery):
         keyboard = create_inline_keyboard(
             self.pending_button,
+            self.history_button,
             main_menu_button
         )
 
@@ -130,28 +134,35 @@ class CoordinationFactory():
             reply_markup=create_inline_keyboard(*buttons)
         )
 
-    async def get_pendings(self, callback: CallbackQuery):
-        bids = get_pending_bids_by_column(self.state_column)
-        bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)
-        keyboard = create_inline_keyboard(
+    def get_specified_bids_keyboard(self, type: str) -> InlineKeyboardMarkup:
+        bids = []
+        if type == "pending":
+            bids = get_pending_bids_by_column(self.state_column)
+        else:
+            bids = get_history_bids_by_column(self.state_column)
+        bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+        return create_inline_keyboard(
             *(InlineKeyboardButton(
                 text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
                 callback_data=BidCallbackData(
                     id=bid.id,
-                    mode=BidViewMode.full_with_approve,
+                    mode=BidViewMode.full if type == "history" else BidViewMode.full_with_approve,
                     type=BidViewType.coordination,
                     endpoint_name=self.name
                 ).pack()
             ) for bid in bids),
             self.coordinator_menu_button
         )
+
+    async def get_pendings(self, callback: CallbackQuery):
+        keyboard = self.get_specified_bids_keyboard("pending")
         await callback.message.delete()
         await callback.message.answer("Ожидающие согласования:", reply_markup=keyboard)
 
     async def get_history(self, callback: CallbackQuery):
-        pass
-    # TODO: Complete history
-
+        keyboard = self.get_specified_bids_keyboard("history")
+        await callback.message.delete()
+        await callback.message.answer("История согласования:", reply_markup=keyboard)
 
 
 

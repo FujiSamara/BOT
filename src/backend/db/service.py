@@ -11,6 +11,7 @@ from db.orm import (
     find_department_by_column,
     find_worker_by_column,
     get_specified_pengind_bids,
+    get_specified_history_bids,
     update_bid
 )
 from db.models import (
@@ -166,6 +167,12 @@ def get_pending_bids_by_column(column: Any) -> list[BidShema]:
     Returns all bids in database with pending approval state at column.
     '''
     return get_specified_pengind_bids(column)
+
+def get_history_bids_by_column(column: Any) -> list[BidShema]:
+    '''
+    Returns all bids in database past through worker with `column`.
+    '''
+    return get_specified_history_bids(column)
 
 def update_bid_state(bid: BidShema, state_name: str, state: ApprovalState):
     '''

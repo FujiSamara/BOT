@@ -136,6 +136,17 @@ def get_specified_pengind_bids(pending_column) -> list[BidShema]:
         raw_bids = s.query(Bid).filter(pending_column == ApprovalState.pending_approval).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
     
+def get_specified_history_bids(pending_column) -> list[BidShema]:
+    '''
+    Returns all bids in database with approval or denied state in `pending_column`.
+    '''
+    with session.begin() as s:
+        raw_bids = s.query(Bid).filter(or_(
+                pending_column == ApprovalState.denied,
+                pending_column == ApprovalState.approved
+            )).all()
+        return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+
 def update_bid(bid: BidShema):
     '''Updates bid by it id.
     '''

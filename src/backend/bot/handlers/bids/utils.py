@@ -1,4 +1,4 @@
-
+from aiogram.utils.markdown import hbold
 from db.models import ApprovalState
 from db.schemas import BidShema
 from bot.kb import payment_type_dict
@@ -30,16 +30,16 @@ def get_full_bid_info(bid: BidShema) -> str:
     else:
         stage = "Выплачено"
 
-    bid_info = f"""Сумма: {bid.amount}
-Тип оплаты: {payment_type_dict[bid.payment_type]}
-Предприятие: {bid.department.name}
-Документ: Прикреплен к сообщению.
-Цель платежа: {bid.purpose}
-Наличие договора: {bid.agreement}
-Заявка срочная? {bid.urgently}
-Нужна платежка? {bid.need_document}
-Комментарий: {bid.comment}
-Текущий этап: {stage}
+    bid_info = f"""{hbold("Сумма")}: {bid.amount}
+{hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
+{hbold("Предприятие")}: {bid.department.name}
+{hbold("Документ")}: Прикреплен к сообщению.
+{hbold("Цель платежа")}: {bid.purpose}
+{hbold("Наличие договора")}: {bid.agreement}
+{hbold("Заявка срочная?")} {bid.urgently}
+{hbold("Нужна платежка?")} {bid.need_document}
+{hbold("Комментарий")}: {bid.comment}
+{hbold("Текущий этап")}: {stage}
 """
    
 
