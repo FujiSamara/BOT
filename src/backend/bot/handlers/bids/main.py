@@ -26,7 +26,10 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 
 ### Create section
 from bot.handlers.bids import create_bid
+from bot.handlers.bids import coordinate_bid
+coordinate_bid.build_coordinations()
 
 router.include_routers(
-    create_bid.router
+    create_bid.router,
+    coordinate_bid.router
 )

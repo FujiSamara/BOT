@@ -25,7 +25,9 @@ from bot.kb import (
 from bot.text import bid_err, payment_types, bid_create_greet
 
 from bot.states import BidCreating, Base
-from bot.handlers.bids.models import BidCallbackData, BidViewMove
+from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
+
+from bot.handlers.bids.utils import get_full_bid_info, get_state_bid_info
 
 # db imports
 from db.service import (
@@ -39,7 +41,7 @@ from db.models import ApprovalState
 from db.schemas import BidShema
 
 
-router = Router(name="bid_create")
+router = Router(name="bid_creating")
 
 
 
@@ -272,69 +274,12 @@ async def set_need_document(message: Message, state: FSMContext):
 ## History section
 
 
-def get_full_bid_info(bid: BidShema) -> str:
-    stage = ""
-
-    if bid.kru_state == ApprovalState.pending_approval:
-        stage = "КРУ"
-    elif bid.owner_state == ApprovalState.pending_approval:
-        stage = "Собственник"
-    elif bid.accountant_card_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер безнал."
-    elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер нал."
-    elif bid.teller_card_state ==  ApprovalState.pending_approval:
-        stage = "Кассир безнал."
-    elif bid.teller_cash_state ==  ApprovalState.pending_approval:
-        stage = "Кассир нал."
-    elif (
-        bid.kru_state == ApprovalState.denied or
-        bid.owner_state == ApprovalState.denied or
-        bid.accountant_card_state == ApprovalState.denied or
-        bid.accountant_cash_state == ApprovalState.denied or
-        bid.teller_card_state == ApprovalState.denied or
-        bid.teller_cash_state == ApprovalState.denied
-    ):
-        stage = "Отказано"
-    else:
-        stage = "Выплачено"
-
-    bid_info = f"""Сумма: {bid.amount}
-Тип оплаты: {payment_type_dict[bid.payment_type]}
-Предприятие: {bid.department.name}
-Документ: Прикреплен к сообщению.
-Цель платежа: {bid.purpose}
-Наличие договора: {bid.agreement}
-Заявка срочная? {bid.urgently}
-Нужна платежка? {bid.need_document}
-Комментарий: {bid.comment}
-Текущий этап: {stage}
-"""
-   
-
-    return bid_info
-
-def get_state_bid_info(bid: BidShema) -> str:
-    stage = ""
-    if bid.kru_state == ApprovalState.pending_approval:
-        stage = "КРУ"
-    elif bid.owner_state == ApprovalState.pending_approval:
-        stage = "Собственник"
-    elif bid.accountant_card_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер безнал."
-    elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
-        stage = "Бухгалтер нал."
-    elif bid.teller_card_state ==  ApprovalState.pending_approval:
-        stage = "Кассир безнал."
-    elif bid.teller_cash_state ==  ApprovalState.pending_approval:
-        stage = "Кассир нал."
-    
-    return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
-Статус: на согласовании у {stage}"""
-
-
 # Full info
-@router.callback_query(BidCallbackData.filter(F.mode == BidViewMove.full))
+@router.callback_query(
+    BidCallbackData.filter(F.type == BidViewType.creation),
+    BidCallbackData.filter(F.mode == BidViewMode.full),
+    BidCallbackData.filter(F.endpoint_name == "create_history")
+)
 async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
@@ -356,7 +301,12 @@ async def get_bids_history(callback: CallbackQuery):
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
             text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
-            callback_data=BidCallbackData(id=bid.id, mode=BidViewMove.full).pack()
+            callback_data=BidCallbackData(
+                id=bid.id,
+                mode=BidViewMode.full,
+                type=BidViewType.creation,
+                endpoint_name="create_history"
+            ).pack()
         ) for bid in bids),
         create_bid_menu_button
     )
@@ -364,7 +314,11 @@ async def get_bids_history(callback: CallbackQuery):
     await callback.message.answer("История заявок:", reply_markup=keyboard)
 
 # Base info with state
-@router.callback_query(BidCallbackData.filter(F.mode == BidViewMove.state_only))
+@router.callback_query(
+    BidCallbackData.filter(F.type == BidViewType.creation),
+    BidCallbackData.filter(F.mode == BidViewMode.state_only),
+    BidCallbackData.filter(F.endpoint_name == "create_pending")
+)
 async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
@@ -384,7 +338,12 @@ async def get_bids_pending(callback: CallbackQuery):
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
             text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
-            callback_data=BidCallbackData(id=bid.id, mode=BidViewMove.state_only).pack()
+            callback_data=BidCallbackData(
+                id=bid.id,
+                mode=BidViewMode.state_only,
+                type=BidViewType.creation,
+                endpoint_name="create_pending"
+            ).pack()
         ) for bid in bids),
         create_bid_menu_button
     )
