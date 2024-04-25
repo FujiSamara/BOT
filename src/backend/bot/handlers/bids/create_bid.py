@@ -1,6 +1,12 @@
 from io import BytesIO
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message, Document, BufferedInputFile
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+    Document,
+    BufferedInputFile,
+    ReplyKeyboardRemove
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
@@ -15,7 +21,6 @@ from bot.kb import (
     create_bid_menu_button,
     create_inline_keyboard,
     create_reply_keyboard,
-    ReplyKeyboardRemove,
     InlineKeyboardButton,
     bid_create_history_button,
     bid_create_pending_button
