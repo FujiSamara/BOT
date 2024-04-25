@@ -3,7 +3,8 @@ from admin.schemas import (
     CompanyView,
     PostView,
     WorkerView,
-    BidView
+    BidView,
+    WorkerBidView
 )
 
 
@@ -19,3 +20,4 @@ def configure(admin: FujiAdmin):
     admin.add_view(PostView)
     admin.add_view(WorkerView)
     admin.add_view(BidView)
+    admin.add_view(WorkerBidView)

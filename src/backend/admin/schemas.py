@@ -4,7 +4,7 @@ from io import BytesIO
 from typing import Any, List
 from sqladmin import ModelView
 from starlette.responses import StreamingResponse
-from db.models import Bid, Worker, Company, Department, Post
+from db.models import Bid, Worker, Company, Department, Post, WorkerBid
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
@@ -264,4 +264,68 @@ class BidView(ModelView, model=Bid):
             "fields": ("f_name", ),
             "order_by": "l_name",
         }
+    }
+
+
+class WorkerBidView(ModelView, model=WorkerBid):
+    details_template = "bid_details.html"
+    list_template = "bid_list.html"
+
+    column_labels = {
+        WorkerBid.f_name: "Имя",
+        WorkerBid.l_name: "Фамилия",
+        WorkerBid.o_name: "Отчество",
+        WorkerBid.post: "Должность",
+        WorkerBid.work_permission_document: "Разрешение на работу",
+        WorkerBid.worksheet: "Анкета",
+        WorkerBid.pasport: "Паспорт",
+        WorkerBid.state: "Статус",
+        WorkerBid.create_date: "Дата создания"
+    }
+
+    column_list = [
+        WorkerBid.id,
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.f_name,
+        WorkerBid.o_name,
+        WorkerBid.pasport,
+        WorkerBid.work_permission_document,
+        WorkerBid.worksheet,
+        WorkerBid.state
+    ]
+
+    column_details_list = column_list
+
+    column_searchable_list = [
+        WorkerBid.f_name,
+        WorkerBid.l_name,
+        WorkerBid.o_name
+    ]
+
+    column_sortable_list = [
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.id,
+        WorkerBid.o_name,
+        WorkerBid.f_name
+    ]
+
+    can_create = False
+    can_export = False
+    name_plural = "Заявки на работу"
+    name = "Заявка на работу"
+
+    form_columns = [
+        WorkerBid.state
+    ]
+
+    column_type_formatters = {
+        datetime.datetime: BidView.datetime_format
+    }
+    column_formatters = {
+       WorkerBid.state: BidView.approval_state_format,
+       WorkerBid.pasport: BidView.file_format,
+       WorkerBid.work_permission_document: BidView.file_format,
+       WorkerBid.worksheet: BidView.file_format,
     }
