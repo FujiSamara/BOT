@@ -39,6 +39,11 @@ class Post(Base):
     workers: Mapped[List["Worker"]] = relationship("Worker",
                                                    back_populates="post")
 
+    workers_bids: Mapped[List["Worker"]] = relationship(
+        "WorkerBid",
+        back_populates="post"
+    )
+
 
 class Company(Base):
     __tablename__ = "companies"
@@ -135,3 +140,25 @@ class Bid(Base):
     accountant_card_state: Mapped[approvalstate]
     teller_cash_state: Mapped[approvalstate]
     teller_card_state: Mapped[approvalstate]
+
+
+class WorkerBid(Base):
+    __tablename__ = "worker_bids"
+
+    id: Mapped[intpk]
+
+    f_name: Mapped[str] = mapped_column(nullable=False)
+    l_name: Mapped[str] = mapped_column(nullable=False)
+    o_name: Mapped[str] = mapped_column(nullable=False)
+
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")
+
+    pasport: Mapped[FileType] = mapped_column(FileType(
+        storage=get_settings().storage))
+
+    work_permission_document: Mapped[FileType] = mapped_column(FileType(
+        storage=get_settings().storage))
+
+    worksheet: Mapped[FileType] = mapped_column(FileType(
+        storage=get_settings().storage))
