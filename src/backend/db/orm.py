@@ -1,12 +1,14 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import *
-from db.schemas import *
+from db.models import Bid, Worker, Department, ApprovalState
+from db.schemas import BidShema, DepartmentShema, WorkerShema
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
 
+
 def create_tables():
     Base.metadata.create_all(engine)
+
 
 def find_worker_by_column(column: any, value: any) -> WorkerShema:
     '''
@@ -18,7 +20,8 @@ def find_worker_by_column(column: any, value: any) -> WorkerShema:
         if not raw_worker:
             return None
         return WorkerShema.model_validate(raw_worker)
-    
+
+
 def find_department_by_column(column: any, value: any) -> DepartmentShema:
     '''
     Returns department in database by `column` with `value`.
@@ -29,7 +32,8 @@ def find_department_by_column(column: any, value: any) -> DepartmentShema:
         if not raw_deparment:
             return None
         return DepartmentShema.model_validate(raw_deparment)
-    
+
+
 def find_bid_by_column(column: any, value: any) -> BidShema:
     '''
     Returns bid in database by `column` with `value`.
@@ -41,7 +45,7 @@ def find_bid_by_column(column: any, value: any) -> BidShema:
             return None
         return BidShema.model_validate(raw_bid)
 
-    
+
 def update_worker(worker: WorkerShema):
     '''Updates worker by his id.
     '''
@@ -56,13 +60,15 @@ def update_worker(worker: WorkerShema):
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
 
+
 def get_departments_columns(*columns: list[Any]) -> list[DepartmentShema]:
     '''
     Returns specified columns of all existed departments.
     '''
     with session.begin() as s:
         return s.query(Department).with_entities(*columns).all()
-    
+
+
 def get_last_bid_id() -> int:
     '''
     Returns last bid id in database.
@@ -70,13 +76,15 @@ def get_last_bid_id() -> int:
     with session.begin() as s:
         return s.query(func.max(Bid.id)).first()[0]
 
+
 def add_bid(bid: BidShema):
     '''
     Adds `bid` to database.
     '''
     with session.begin() as s:
         worker = s.query(Worker).filter(Worker.id == bid.worker.id).first()
-        department = s.query(Department).filter(Department.id == bid.department.id).first()
+        department = s.query(Department).filter(Department.id ==
+                                                bid.department.id).first()
 
         bid = Bid(
             amount=bid.amount,
@@ -100,6 +108,7 @@ def add_bid(bid: BidShema):
 
         s.add(bid)
 
+
 def get_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     '''
     Returns all bids in database by worker.
@@ -107,6 +116,7 @@ def get_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     with session.begin() as s:
         raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
+
 
 def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
     '''
@@ -117,8 +127,10 @@ def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
             and_(
                 Bid.worker_id == worker.id,
                 or_(
-                    Bid.accountant_card_state == ApprovalState.pending_approval,
-                    Bid.accountant_cash_state == ApprovalState.pending_approval,
+                    Bid.accountant_card_state ==
+                    ApprovalState.pending_approval,
+                    Bid.accountant_cash_state ==
+                    ApprovalState.pending_approval,
                     Bid.teller_card_state == ApprovalState.pending_approval,
                     Bid.teller_cash_state == ApprovalState.pending_approval,
                     Bid.kru_state == ApprovalState.pending_approval,
@@ -127,18 +139,23 @@ def get_pending_bids_by_worker(worker: WorkerShema) -> list[BidShema]:
             )
         ).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
-    
+
+
 def get_specified_pengind_bids(pending_column) -> list[BidShema]:
     '''
-    Returns all bids in database with pending approval state in `pending_column`.
+    Returns all bids in database with
+    pending approval state in `pending_column`.
     '''
     with session.begin() as s:
-        raw_bids = s.query(Bid).filter(pending_column == ApprovalState.pending_approval).all()
+        raw_bids = s.query(Bid).filter(pending_column ==
+                                       ApprovalState.pending_approval).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
-    
+
+
 def get_specified_history_bids(pending_column) -> list[BidShema]:
     '''
-    Returns all bids in database with approval or denied state in `pending_column`.
+    Returns all bids in database with approval or
+    denied state in `pending_column`.
     '''
     with session.begin() as s:
         raw_bids = s.query(Bid).filter(or_(
@@ -147,6 +164,7 @@ def get_specified_history_bids(pending_column) -> list[BidShema]:
             )).all()
         return [BidShema.model_validate(raw_bid) for raw_bid in raw_bids]
 
+
 def update_bid(bid: BidShema):
     '''Updates bid by it id.
     '''
@@ -154,12 +172,13 @@ def update_bid(bid: BidShema):
         cur_bid = s.query(Bid).filter(Bid.id == bid.id).first()
         if not cur_bid:
             return None
-        
+
         new_worker = s.query(Worker).filter(Worker.id == bid.worker.id).first()
         if not new_worker:
             return None
-        
-        new_department = s.query(Department).filter(Department.id == bid.department.id).first()
+
+        new_department = s.query(Department).filter(Department.id ==
+                                                    bid.department.id).first()
         if not new_worker:
             return None
 

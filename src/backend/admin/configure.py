@@ -1,8 +1,15 @@
-from admin.schemas import DepartmentView, CompanyView, PostView, WorkerView, BidView
+from admin.schemas import (
+    DepartmentView,
+    CompanyView,
+    PostView,
+    WorkerView,
+    BidView
+)
 
 
 # Routers
 from admin.admin import FujiAdmin
+
 
 def configure(admin: FujiAdmin):
     '''Configure fast api admin app.

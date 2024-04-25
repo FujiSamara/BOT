@@ -7,7 +7,8 @@ engine = create_engine(
     get_settings().psql_dsn
 )
 
-session =  sessionmaker(engine)
+session = sessionmaker(engine)
+
 
 class Base(DeclarativeBase):
     pass

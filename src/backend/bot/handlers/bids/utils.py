@@ -3,6 +3,7 @@ from db.models import ApprovalState
 from db.schemas import BidShema
 from bot.kb import payment_type_dict
 
+
 def get_full_bid_info(bid: BidShema) -> str:
     stage = ""
 
@@ -10,13 +11,13 @@ def get_full_bid_info(bid: BidShema) -> str:
         stage = "КРУ"
     elif bid.owner_state == ApprovalState.pending_approval:
         stage = "Собственник"
-    elif bid.accountant_card_state ==  ApprovalState.pending_approval:
+    elif bid.accountant_card_state == ApprovalState.pending_approval:
         stage = "Бухгалтер безнал."
-    elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
+    elif bid.accountant_cash_state == ApprovalState.pending_approval:
         stage = "Бухгалтер нал."
-    elif bid.teller_card_state ==  ApprovalState.pending_approval:
+    elif bid.teller_card_state == ApprovalState.pending_approval:
         stage = "Кассир безнал."
-    elif bid.teller_cash_state ==  ApprovalState.pending_approval:
+    elif bid.teller_cash_state == ApprovalState.pending_approval:
         stage = "Кассир нал."
     elif (
         bid.kru_state == ApprovalState.denied or
@@ -41,9 +42,9 @@ def get_full_bid_info(bid: BidShema) -> str:
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {stage}
 """
-   
 
     return bid_info
+
 
 def get_state_bid_info(bid: BidShema) -> str:
     stage = ""
@@ -51,15 +52,14 @@ def get_state_bid_info(bid: BidShema) -> str:
         stage = "КРУ"
     elif bid.owner_state == ApprovalState.pending_approval:
         stage = "Собственника"
-    elif bid.accountant_card_state ==  ApprovalState.pending_approval:
+    elif bid.accountant_card_state == ApprovalState.pending_approval:
         stage = "Бухгалтера безнал."
-    elif bid.accountant_cash_state ==  ApprovalState.pending_approval:
+    elif bid.accountant_cash_state == ApprovalState.pending_approval:
         stage = "Бухгалтера нал."
-    elif bid.teller_card_state ==  ApprovalState.pending_approval:
+    elif bid.teller_card_state == ApprovalState.pending_approval:
         stage = "Кассира безнал."
-    elif bid.teller_cash_state ==  ApprovalState.pending_approval:
+    elif bid.teller_cash_state == ApprovalState.pending_approval:
         stage = "Кассира нал."
-    
+
     return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
 Статус: на согласовании у {stage}"""
-

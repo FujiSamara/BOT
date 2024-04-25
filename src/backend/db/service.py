@@ -16,14 +16,16 @@ from db.orm import (
 )
 from db.models import (
     Department,
-    ApprovalState
+    ApprovalState,
+    Bid,
+    Worker
 )
-from db.schemas import *
-from db.models import Bid, Worker, Department
+from db.schemas import BidShema
 import logging
 from datetime import datetime
 from fastapi import UploadFile
-from typing import Any
+from typing import Any, Optional
+
 
 def get_user_level_by_telegram_id(id: str) -> int:
     '''
@@ -37,10 +39,11 @@ def get_user_level_by_telegram_id(id: str) -> int:
 
     return worker.post.level
 
+
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
     '''
     Finds worker by his phone number and sets him telegram id.
-    
+
     Returns `True`, if user found, `False` otherwise.
     '''
     worker = find_worker_by_column(Worker.phone_number, number)
@@ -55,6 +58,7 @@ def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
         return False
     return True
 
+
 def get_departments_names() -> list[str]:
     '''
     Returns all existed departments.
@@ -62,6 +66,7 @@ def get_departments_names() -> list[str]:
     departments_raw = get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
     return result
+
 
 def create_bid(
     amount: int,
@@ -77,16 +82,16 @@ def create_bid(
     accountant_card_state: ApprovalState,
     teller_cash_state: ApprovalState,
     teller_card_state: ApprovalState,
-    agreement: Optional[str]=None,
-    urgently: Optional[str]=None,
-    need_document: Optional[str]=None,
-    comment: Optional[str]=None,
+    agreement: Optional[str] = None,
+    urgently: Optional[str] = None,
+    need_document: Optional[str] = None,
+    comment: Optional[str] = None,
 ):
     '''
     Creates an bid wrapped in `BidShema` and adds it to database.
     '''
     department_inst = find_department_by_column(Department.name, department)
-    
+
     if not department_inst:
         logging.getLogger("uvicorn.error").error(
             f"Department with name '{department}' not found"
@@ -94,7 +99,7 @@ def create_bid(
         return
 
     worker_inst = find_worker_by_column(Worker.telegram_id, telegram_id)
-    
+
     if not worker_inst:
         logging.getLogger("uvicorn.error").error(
             f"Worker with telegram id '{telegram_id}' not found"
@@ -134,6 +139,7 @@ def create_bid(
     except Exception as e:
         logging.getLogger("uvicorn.error").error(f"Added bid failed: {e}")
 
+
 def get_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
     '''
     Returns all bids own to worker with specified phone number.
@@ -142,8 +148,9 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
 
     if not worker:
         return []
-    
+
     return get_bids_by_worker(worker)
+
 
 def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
     '''
@@ -153,8 +160,9 @@ def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidShema]:
 
     if not worker:
         return []
-    
+
     return get_pending_bids_by_worker(worker)
+
 
 def get_bid_by_id(id: int) -> BidShema:
     '''
@@ -162,17 +170,20 @@ def get_bid_by_id(id: int) -> BidShema:
     '''
     return find_bid_by_column(Bid.id, id)
 
+
 def get_pending_bids_by_column(column: Any) -> list[BidShema]:
     '''
     Returns all bids in database with pending approval state at column.
     '''
     return get_specified_pengind_bids(column)
 
+
 def get_history_bids_by_column(column: Any) -> list[BidShema]:
     '''
     Returns all bids in database past through worker with `column`.
     '''
     return get_specified_history_bids(column)
+
 
 def update_bid_state(bid: BidShema, state_name: str, state: ApprovalState):
     '''
@@ -228,4 +239,3 @@ def update_bid_state(bid: BidShema, state_name: str, state: ApprovalState):
         bid.teller_cash_state = ApprovalState.approved
 
     update_bid(bid)
-    

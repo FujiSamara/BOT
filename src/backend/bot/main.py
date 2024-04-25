@@ -3,6 +3,7 @@ from bot.configure import configure
 import sys
 import logging
 
+
 def create(app: FastAPI) -> FastAPI:
     bot = FastAPI()
     try:
@@ -13,4 +14,3 @@ def create(app: FastAPI) -> FastAPI:
     logging.info("Bot created")
     app.mount(path='/bot', app=bot)
     return bot
-

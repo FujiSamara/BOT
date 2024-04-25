@@ -1,6 +1,11 @@
 from aiogram import F, Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    CallbackQuery,
+    ErrorEvent
+)
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from bot.text import first_run_text
@@ -16,13 +21,13 @@ from bot.kb import (
     teller_cash_menu_button
 )
 from bot.states import Base
-from aiogram.types import ErrorEvent, Message
 import logging
 from bot.text import err
 import asyncio
 
 
 router = Router(name="main")
+
 
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
@@ -34,15 +39,18 @@ async def start(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     await send_menu_by_level(message)
 
+
 @router.message(Base.none)
 async def delete_extra(message: Message):
     await message.delete()
+
 
 @router.callback_query(F.data == "get_menu")
 async def get_menu_by_level(callback: CallbackQuery):
     '''Sends specific menu for user by his role.
     '''
     await send_menu_by_level(callback.message, edit=True)
+
 
 async def send_menu_by_level(message: Message, edit=None):
     '''
@@ -54,7 +62,7 @@ async def send_menu_by_level(message: Message, edit=None):
     menus = []
     if level >= 2 and level <= 3:
         menus.append([create_bid_menu_button])
-    
+
     if level == 4:
         menus.append([teller_cash_menu_button])
         menus.append([teller_card_menu_button])
@@ -68,21 +76,25 @@ async def send_menu_by_level(message: Message, edit=None):
 
     if level >= 7:
         menus.append([owner_menu_button])
-    
+
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
     if edit:
-        await message.edit_text(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
+        await message.edit_text(hbold("Выберите дальнейшее действие:"),
+                                reply_markup=menu)
     else:
-        await message.answer(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
+        await message.answer(hbold("Выберите дальнейшее действие:"),
+                             reply_markup=menu)
+
 
 @router.error()
 async def error_handler(event: ErrorEvent):
-    logging.getLogger("uvicorn.error").error(f"Error occurred: {event.exception}")
+    logging.getLogger("uvicorn.error").error(
+        f"Error occurred:{event.exception}")
     message = event.update.callback_query.message
     try:
         await message.edit_text(err)
         msg = message
-    except:
+    except Exception:
         msg = await message.answer(err)
     await asyncio.sleep(3)
     await send_menu_by_level(msg, edit=True)

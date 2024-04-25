@@ -5,24 +5,29 @@ import datetime
 from fastapi import UploadFile
 from db.models import ApprovalState
 
+
 # Full shemas
 class BaseShema(BaseModel):
     class Config:
         from_attributes = True
     id: int
 
+
 class PostShema(BaseShema):
     name: str
     level: int
 
+
 class CompanyShema(BaseShema):
     name: str
+
 
 class DepartmentShema(BaseShema):
     name: str
     address: Optional[str]
 
     company: CompanyShema
+
 
 class WorkerShema(BaseShema):
     f_name: str
@@ -36,9 +41,10 @@ class WorkerShema(BaseShema):
 
     department: DepartmentShema
 
+
 class BidShema(BaseModel):
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
         from_attributes = True
 
     id: Optional[int] = -1

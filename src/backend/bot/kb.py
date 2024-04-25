@@ -2,8 +2,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     KeyboardButton,
-    ReplyKeyboardMarkup,
-    ReplyKeyboardRemove
+    ReplyKeyboardMarkup
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Document
@@ -11,31 +10,47 @@ from aiogram.types import Document
 from db.models import ApprovalState
 
 # Buttons
-settings_bid_menu_button = InlineKeyboardButton(text="Меню настройки заявки", callback_data="get_bid_settings_menu")
+settings_bid_menu_button = InlineKeyboardButton(
+    text="Меню настройки заявки", callback_data="get_bid_settings_menu")
 
-create_bid_menu_button = InlineKeyboardButton(text="Меню создания заявок", callback_data="get_create_bid_menu")
+create_bid_menu_button = InlineKeyboardButton(
+    text="Меню создания заявок", callback_data="get_create_bid_menu")
 
-main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
+main_menu_button = InlineKeyboardButton(
+    text="Главное меню", callback_data="get_menu")
 
-bid_create_history_button = InlineKeyboardButton(text="История заявок", callback_data="get_create_history_bid")
-bid_create_pending_button = InlineKeyboardButton(text="Ожидающие заявки", callback_data="get_create_pending_bid")
+bid_create_history_button = InlineKeyboardButton(
+    text="История заявок", callback_data="get_create_history_bid")
+bid_create_pending_button = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_create_pending_bid")
 
-kru_menu_button = InlineKeyboardButton(text="Меню КРУ", callback_data="get_kru_menu")
-owner_menu_button = InlineKeyboardButton(text="Меню собственника", callback_data="get_owner_menu")
-accountant_card_menu_button = InlineKeyboardButton(text="Меню бухгалтера безнал.", callback_data="get_accountant_card_menu")
-accountant_cash_menu_button = InlineKeyboardButton(text="Меню бухгалтера нал.", callback_data="get_accountant_cash_menu")
-teller_card_menu_button = InlineKeyboardButton(text="Меню кассира безнал.", callback_data="get_teller_card_menu")
-teller_cash_menu_button = InlineKeyboardButton(text="Меню кассира нал.", callback_data="get_teller_cash_menu")
-## Keyboards
-def create_inline_keyboard(*buttons: list[InlineKeyboardButton]) -> InlineKeyboardMarkup:
+kru_menu_button = InlineKeyboardButton(
+    text="Меню КРУ", callback_data="get_kru_menu")
+owner_menu_button = InlineKeyboardButton(
+    text="Меню собственника", callback_data="get_owner_menu")
+accountant_card_menu_button = InlineKeyboardButton(
+    text="Меню бухгалтера безнал.", callback_data="get_accountant_card_menu")
+accountant_cash_menu_button = InlineKeyboardButton(
+    text="Меню бухгалтера нал.", callback_data="get_accountant_cash_menu")
+teller_card_menu_button = InlineKeyboardButton(
+    text="Меню кассира безнал.", callback_data="get_teller_card_menu")
+teller_cash_menu_button = InlineKeyboardButton(
+    text="Меню кассира нал.", callback_data="get_teller_cash_menu")
+
+
+# Keyboards
+def create_inline_keyboard(
+        *buttons: list[InlineKeyboardButton]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [button] for button in buttons
     ])
+
 
 def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=[
         [KeyboardButton(text=text)] for text in texts
     ])
+
 
 # Bid
 bid_menu = InlineKeyboardMarkup(inline_keyboard=[
@@ -44,6 +59,7 @@ bid_menu = InlineKeyboardMarkup(inline_keyboard=[
     [bid_create_history_button],
     [main_menu_button],
 ])
+
 
 async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
@@ -101,32 +117,40 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         [InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
          InlineKeyboardButton(text=amount, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Тип оплаты", callback_data="get_paymant_form"),
+        [InlineKeyboardButton(text="Тип оплаты",
+                              callback_data="get_paymant_form"),
          InlineKeyboardButton(text=payment_type, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Предприятие", callback_data="get_department_form"),
+        [InlineKeyboardButton(text="Предприятие",
+                              callback_data="get_department_form"),
          InlineKeyboardButton(text=department, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Документ", callback_data="get_document_form"),
+        [InlineKeyboardButton(text="Документ",
+                              callback_data="get_document_form"),
          InlineKeyboardButton(text=document_text, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Наличие договора", callback_data="get_agreement_form"),
+        [InlineKeyboardButton(text="Наличие договора",
+                              callback_data="get_agreement_form"),
          InlineKeyboardButton(text=agreement, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Заявка срочная?", callback_data="get_urgently_form"),
+        [InlineKeyboardButton(text="Заявка срочная?",
+                              callback_data="get_urgently_form"),
          InlineKeyboardButton(text=urgently, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Нужна платежка?", callback_data="get_need_document_form"),
+        [InlineKeyboardButton(text="Нужна платежка?",
+                              callback_data="get_need_document_form"),
          InlineKeyboardButton(text=need_document, callback_data="dummy")],
 
-        [InlineKeyboardButton(text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form")],
+        [InlineKeyboardButton(text="Цель платежа" + purpose_postfix,
+                              callback_data="get_purpose_form")],
         # TODO: Sets remaining payment button
-        [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
+        [InlineKeyboardButton(text="Комментарий",
+                              callback_data="get_comment_form")],
         [create_bid_menu_button],
     ]
     if all_field_exist:
-        keyboard.append([InlineKeyboardButton(text="Отправить заявку", 
-                                          callback_data="send_bid")])
+        keyboard.append([InlineKeyboardButton(text="Отправить заявку",
+                                              callback_data="send_bid")])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -145,12 +169,11 @@ approval_state_dict = {
 }
 
 payment_type_menu = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text=payment_type_dict["cash"], callback_data="cash"),
-    InlineKeyboardButton(text=payment_type_dict["card"], callback_data="card")],
-    [InlineKeyboardButton(text=payment_type_dict["taxi"], callback_data="taxi")],
+    [InlineKeyboardButton(text=payment_type_dict["cash"],
+                          callback_data="cash"),
+     InlineKeyboardButton(text=payment_type_dict["card"],
+                          callback_data="card")],
+    [InlineKeyboardButton(text=payment_type_dict["taxi"],
+                          callback_data="taxi")],
     [settings_bid_menu_button]
 ])
-
-
-
-

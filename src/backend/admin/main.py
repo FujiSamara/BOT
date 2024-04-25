@@ -23,4 +23,3 @@ def create(app: FastAPI) -> FastAPI:
         sys.exit()
     logging.info("Admin created")
     return admin
-
