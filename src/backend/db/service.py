@@ -112,7 +112,7 @@ def create_bid(
         last_bid_id = 0
 
     suffix = Path(filename).suffix
-    filename = f"document_{last_bid_id + 1}{suffix}"
+    filename = f"document_bid_{last_bid_id + 1}{suffix}"
 
     bid = BidShema(
         amount=amount,
