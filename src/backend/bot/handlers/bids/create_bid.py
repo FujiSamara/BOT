@@ -34,7 +34,9 @@ from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
 from bot.handlers.bids.utils import (
     get_full_bid_info,
     get_state_bid_info,
-    get_bid_list_info,
+    get_bid_list_info
+)
+from bot.handlers.utils import (
     try_delete_message,
     try_edit_message
 )
