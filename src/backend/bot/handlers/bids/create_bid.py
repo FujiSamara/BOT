@@ -31,7 +31,11 @@ from bot.text import bid_err, payment_types, bid_create_greet
 from bot.states import BidCreating, Base
 from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
 
-from bot.handlers.bids.utils import get_full_bid_info, get_state_bid_info
+from bot.handlers.bids.utils import (
+    get_full_bid_info,
+    get_state_bid_info,
+    get_bid_list_info
+)
 
 # db imports
 from db.service import (
@@ -334,7 +338,7 @@ async def get_bids_history(callback: CallbackQuery):
     bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
-            text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
+            text=get_bid_list_info(bid),
             callback_data=BidCallbackData(
                 id=bid.id,
                 mode=BidViewMode.full,
@@ -374,7 +378,7 @@ async def get_bids_pending(callback: CallbackQuery):
     bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
     keyboard = create_inline_keyboard(
         *(InlineKeyboardButton(
-            text=f"Заявка от {bid.create_date.date()} на cумму {bid.amount}",
+            text=get_bid_list_info(bid),
             callback_data=BidCallbackData(
                 id=bid.id,
                 mode=BidViewMode.state_only,

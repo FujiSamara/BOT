@@ -63,3 +63,8 @@ def get_state_bid_info(bid: BidShema) -> str:
 
     return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
 Статус: на согласовании у {stage}"""
+
+
+def get_bid_list_info(bid: BidShema) -> str:
+    return (f"{bid.worker.l_name} " +
+            f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}")

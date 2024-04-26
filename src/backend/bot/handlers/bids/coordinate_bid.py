@@ -31,7 +31,7 @@ from bot.handlers.bids.schemas import (
     BidActionData,
     ActionType
 )
-from bot.handlers.bids.utils import get_full_bid_info
+from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
 
 router = Router(name="bid_coordination")
 
@@ -162,8 +162,7 @@ class CoordinationFactory():
         bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
         return create_inline_keyboard(
             *(InlineKeyboardButton(
-                text=(f"Заявка от {bid.create_date.date()}" +
-                      f"на cумму {bid.amount}"),
+                text=get_bid_list_info(bid),
                 callback_data=BidCallbackData(
                     id=bid.id,
                     mode=BidViewMode.full if type == "history" else
