@@ -165,7 +165,7 @@ approval_state_dict = {
     ApprovalState.pending: "Ожидает поступления",
     ApprovalState.pending_approval: "Ожидает согласования",
     ApprovalState.denied: "Отклонено",
-    ApprovalState.skipped: "Пропущено"
+    ApprovalState.skipped: "Не требуется"
 }
 
 payment_type_menu = InlineKeyboardMarkup(inline_keyboard=[

@@ -6,7 +6,7 @@ router = Router(name="main")
 
 
 router.include_routers(
+    main_handler.router,
     auth_handler.router,
     bid_handler.router,
-    main_handler.router
 )

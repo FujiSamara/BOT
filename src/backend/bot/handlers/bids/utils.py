@@ -1,7 +1,9 @@
+from typing import Any
 from aiogram.utils.markdown import hbold
 from db.models import ApprovalState
 from db.schemas import BidShema
 from bot.kb import payment_type_dict
+from aiogram.types import Message
 
 
 def get_full_bid_info(bid: BidShema) -> str:
@@ -68,3 +70,31 @@ def get_state_bid_info(bid: BidShema) -> str:
 def get_bid_list_info(bid: BidShema) -> str:
     return (f"{bid.worker.l_name} " +
             f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}")
+
+
+def try_delete_message(message: Message) -> bool:
+    '''
+    Tries to delete message, return `True`
+    if the `message` successfully deleted, `False` otherwise.
+    '''
+    try:
+        message.delete()
+        return True
+    except Exception:
+        return False
+
+
+def try_edit_message(
+        message: Message,
+        text: str,
+        reply_markup: Any = None
+) -> bool:
+    '''
+    Tries to delete message, return `True`
+    if the `message` successfully deleted, `False` otherwise.
+    '''
+    try:
+        message.edit_text(text=text, reply_markup=reply_markup)
+        return True
+    except Exception:
+        return False
