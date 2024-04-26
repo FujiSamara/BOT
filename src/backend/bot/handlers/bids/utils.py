@@ -1,10 +1,10 @@
 from aiogram.utils.markdown import hbold
 from db.models import ApprovalState
-from db.schemas import BidShema
+from db.schemas import BidSchema
 from bot.kb import payment_type_dict
 
 
-def get_full_bid_info(bid: BidShema) -> str:
+def get_full_bid_info(bid: BidSchema) -> str:
     stage = ""
 
     if bid.kru_state == ApprovalState.pending_approval:
@@ -46,7 +46,7 @@ def get_full_bid_info(bid: BidShema) -> str:
     return bid_info
 
 
-def get_state_bid_info(bid: BidShema) -> str:
+def get_state_bid_info(bid: BidSchema) -> str:
     stage = ""
     if bid.kru_state == ApprovalState.pending_approval:
         stage = "КРУ"
@@ -65,6 +65,6 @@ def get_state_bid_info(bid: BidShema) -> str:
 Статус: на согласовании у {stage}"""
 
 
-def get_bid_list_info(bid: BidShema) -> str:
+def get_bid_list_info(bid: BidSchema) -> str:
     return (f"{bid.worker.l_name} " +
             f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}")

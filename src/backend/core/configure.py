@@ -7,7 +7,7 @@ import bot
 
 
 def configure(app: FastAPI):
-    '''Configure fast api core app.
+    '''Configures fast api core app.
     '''
     bot.create(app)
     admin.create(app)

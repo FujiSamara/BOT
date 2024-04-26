@@ -2,29 +2,21 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import (
     Message,
-    InlineKeyboardMarkup,
     CallbackQuery,
     ErrorEvent,
     ReplyKeyboardRemove
 )
 from aiogram.fsm.context import FSMContext
-from aiogram.utils.markdown import hbold
 from bot.text import first_run_text
 from bot.states import Auth
-from db.service import get_user_level_by_telegram_id
-from bot.kb import (
-    create_bid_menu_button,
-    kru_menu_button,
-    owner_menu_button,
-    accountant_cash_menu_button,
-    accountant_card_menu_button,
-    teller_card_menu_button,
-    teller_cash_menu_button
+from db.service import (
+    get_user_level_by_telegram_id
 )
 from bot.states import Base
 import logging
 from bot.text import err
 import asyncio
+from bot.handlers.utils import send_menu_by_level
 
 
 router = Router(name="main")
@@ -51,44 +43,6 @@ async def get_menu_by_level(callback: CallbackQuery):
     '''Sends specific menu for user by his role.
     '''
     await send_menu_by_level(callback.message, edit=True)
-
-
-async def send_menu_by_level(message: Message, edit=None):
-    '''
-    Sends specific menu for user by his role.
-
-    If `edit = True` - calling `Message.edit_text` instead `Message.answer`
-    '''
-    level = get_user_level_by_telegram_id(message.chat.id)
-    menus = []
-    if level >= 2 and level <= 3:
-        menus.append([create_bid_menu_button])
-
-    if level == 4:
-        menus.append([teller_cash_menu_button])
-
-    if level == 5:
-        menus.append([teller_card_menu_button])
-
-    if level == 6:
-        menus.append([kru_menu_button])
-
-    if level == 7:
-        menus.append([accountant_cash_menu_button])
-
-    if level == 8:
-        menus.append([accountant_card_menu_button])
-
-    if level == 10:
-        menus.append([owner_menu_button])
-
-    menu = InlineKeyboardMarkup(inline_keyboard=menus)
-    if edit:
-        await message.edit_text(hbold("Выберите дальнейшее действие:"),
-                                reply_markup=menu)
-    else:
-        await message.answer(hbold("Выберите дальнейшее действие:"),
-                             reply_markup=menu)
 
 
 @router.error()
