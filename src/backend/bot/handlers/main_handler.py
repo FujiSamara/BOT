@@ -65,16 +65,20 @@ async def send_menu_by_level(message: Message, edit=None):
 
     if level == 4:
         menus.append([teller_cash_menu_button])
-        menus.append([teller_card_menu_button])
 
     if level == 5:
-        menus.append([kru_menu_button])
+        menus.append([teller_card_menu_button])
 
     if level == 6:
-        menus.append([accountant_card_menu_button])
+        menus.append([kru_menu_button])
+
+    if level == 7:
         menus.append([accountant_cash_menu_button])
 
-    if level >= 7:
+    if level == 8:
+        menus.append([accountant_card_menu_button])
+
+    if level == 10:
         menus.append([owner_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
