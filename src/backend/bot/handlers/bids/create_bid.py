@@ -34,7 +34,9 @@ from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
 from bot.handlers.bids.utils import (
     get_full_bid_info,
     get_state_bid_info,
-    get_bid_list_info
+    get_bid_list_info,
+    try_delete_message,
+    try_edit_message
 )
 
 # db imports
@@ -63,8 +65,11 @@ async def clear_state_with_success(
     await ans.delete()
     await state.set_state(Base.none)
     if edit:
-        await message.edit_text(hbold(bid_create_greet),
-                                reply_markup=await get_create_bid_menu(state))
+        await try_edit_message(
+            message=message,
+            text=hbold(bid_create_greet),
+            reply_markup=await get_create_bid_menu(state)
+        )
     else:
         await message.answer(hbold(bid_create_greet),
                              reply_markup=await get_create_bid_menu(state))
@@ -133,10 +138,13 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         teller_cash_state=teller_cash_state
     )
 
-    await callback.message.edit_text("Успешно!")
+    await try_edit_message(message=callback.message, text="Успешно!")
     await asyncio.sleep(1)
-    await callback.message.edit_text(hbold("Добро пожаловать!"),
-                                     reply_markup=bid_menu)
+    await try_edit_message(
+        message=callback.message,
+        text=hbold("Добро пожаловать!"),
+        reply_markup=bid_menu
+    )
     await state.clear()
 
 
@@ -144,9 +152,12 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "get_amount_form")
 async def get_amount_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.payment_amount)
-    await callback.message.edit_text(hbold("Введите требуемую сумму:"),
-                                     reply_markup=create_inline_keyboard(
-                                         settings_bid_menu_button))
+    await try_edit_message(message=callback.message, text="Успешно!")
+    await try_edit_message(
+        message=callback.message,
+        text=hbold("Введите требуемую сумму:"),
+        reply_markup=create_inline_keyboard(settings_bid_menu_button)
+    )
 
 
 @router.message(BidCreating.payment_amount)
@@ -164,8 +175,11 @@ async def set_amount(message: Message, state: FSMContext):
 # Payment type section
 @router.callback_query(F.data == "get_paymant_form")
 async def get_amount_type_form(callback: CallbackQuery):
-    await callback.message.edit_text(hbold("Выберите тип оплаты:"),
-                                     reply_markup=payment_type_menu)
+    await try_edit_message(
+        message=callback.message,
+        text=hbold("Выберите тип оплаты:"),
+        reply_markup=payment_type_menu
+    )
 
 
 @router.callback_query(F.data.in_(payment_types))
@@ -179,7 +193,7 @@ async def set_amount_type(callback: CallbackQuery, state: FSMContext):
 async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.department)
     dep = get_departments_names()
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer(hbold("Выберите предприятие:"),
                                   reply_markup=create_reply_keyboard(
                                       "⏪ Назад", *dep))
@@ -201,7 +215,10 @@ async def set_department_type(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_purpose_form")
 async def get_purpose_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.payment_purpose)
-    await callback.message.edit_text(hbold("Введите цель платежа:"))
+    await try_edit_message(
+        message=callback.message,
+        text=hbold("Введите цель платежа:")
+    )
 
 
 @router.message(BidCreating.payment_purpose)
@@ -214,7 +231,7 @@ async def set_purpose(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_agreement_form")
 async def get_agreement_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.agreement_existence)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer(hbold("У вас есть договор?"),
                                   reply_markup=create_reply_keyboard(
                                       "Да", "Нет"))
@@ -235,7 +252,10 @@ async def set_agreement(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_comment_form")
 async def get_comment_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.comment)
-    await callback.message.edit_text(hbold("Введите комментарий:"))
+    await try_edit_message(
+        message=callback.message,
+        text=hbold("Введите комментарий:"),
+    )
 
 
 @router.message(BidCreating.comment)
@@ -248,7 +268,7 @@ async def set_comment(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_urgently_form")
 async def get_urgently_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.urgently)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer(hbold("Заявка срочная?"),
                                   reply_markup=create_reply_keyboard(
                                       "Да", "Нет"))
@@ -269,7 +289,7 @@ async def set_urgently(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_need_document_form")
 async def get_need_document_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.need_document)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer(hbold("Нужна платежка?"),
                                   reply_markup=create_reply_keyboard(
                                       "Да", "Нет"))
@@ -290,7 +310,7 @@ async def set_need_document(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_document_form")
 async def get_document_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.document)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer(hbold("Прикрепите документ:"),
                                   reply_markup=create_inline_keyboard(
                                       settings_bid_menu_button))
@@ -319,7 +339,7 @@ async def set_document(message: Message, state: FSMContext):
 async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     document = BufferedInputFile(file=bid.document.file.read(),
                                  filename=bid.document.filename)
 
@@ -348,7 +368,7 @@ async def get_bids_history(callback: CallbackQuery):
         ) for bid in bids),
         create_bid_menu_button
     )
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer("История заявок:", reply_markup=keyboard)
 
 
@@ -362,7 +382,7 @@ async def get_bid_state(callback: CallbackQuery,
                         callback_data: BidCallbackData):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
-    await callback.message.delete()
+    await try_delete_message(callback.message)
 
     text = get_state_bid_info(bid)
 
@@ -388,5 +408,5 @@ async def get_bids_pending(callback: CallbackQuery):
         ) for bid in bids),
         create_bid_menu_button
     )
-    await callback.message.delete()
+    await try_delete_message(callback.message)
     await callback.message.answer("Ожидающие заявки:", reply_markup=keyboard)

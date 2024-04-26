@@ -72,29 +72,30 @@ def get_bid_list_info(bid: BidShema) -> str:
             f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}")
 
 
-def try_delete_message(message: Message) -> bool:
+async def try_delete_message(message: Message) -> bool:
     '''
     Tries to delete message, return `True`
     if the `message` successfully deleted, `False` otherwise.
     '''
     try:
-        message.delete()
+        await message.delete()
         return True
     except Exception:
         return False
 
 
-def try_edit_message(
+async def try_edit_message(
         message: Message,
         text: str,
         reply_markup: Any = None
-) -> bool:
+) -> None:
     '''
-    Tries to delete message, return `True`
-    if the `message` successfully deleted, `False` otherwise.
+    Tries to edit message.
+    if the `message` unsuccessfully edited
+    then answers message.
     '''
     try:
-        message.edit_text(text=text, reply_markup=reply_markup)
-        return True
+        await message.edit_text(text=text, reply_markup=reply_markup)
     except Exception:
-        return False
+        return
+        # await message.answer(text=text, reply_markup=reply_markup)

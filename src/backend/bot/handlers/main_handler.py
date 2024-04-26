@@ -4,7 +4,8 @@ from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
     CallbackQuery,
-    ErrorEvent
+    ErrorEvent,
+    ReplyKeyboardRemove
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
@@ -96,9 +97,9 @@ async def error_handler(event: ErrorEvent):
         f"Error occurred:{event.exception}")
     message = event.update.callback_query.message
     try:
-        await message.edit_text(err)
+        await message.edit_text(err, reply_markup=ReplyKeyboardRemove())
         msg = message
     except Exception:
-        msg = await message.answer(err)
+        msg = await message.answer(err, reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(3)
     await send_menu_by_level(msg, edit=True)

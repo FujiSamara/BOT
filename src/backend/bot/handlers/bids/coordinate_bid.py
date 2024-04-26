@@ -31,7 +31,12 @@ from bot.handlers.bids.schemas import (
     BidActionData,
     ActionType
 )
-from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
+from bot.handlers.bids.utils import (
+    get_full_bid_info,
+    get_bid_list_info,
+    try_delete_message,
+    try_edit_message
+)
 
 router = Router(name="bid_coordination")
 
@@ -92,8 +97,11 @@ class CoordinationFactory():
             main_menu_button
         )
 
-        await callback.message.edit_text(text="Добро пожаловать!",
-                                         reply_markup=keyboard)
+        await try_edit_message(
+            message=callback.message,
+            text="Добро пожаловать!",
+            reply_markup=keyboard
+        )
 
     async def decline_bid(self, callback: CallbackQuery,
                           callback_data: BidActionData):
@@ -116,7 +124,7 @@ class CoordinationFactory():
     async def get_bid(self, callback: CallbackQuery,
                       callback_data: BidCallbackData):
         bid = get_bid_by_id(callback_data.id)
-        await callback.message.delete()
+        await try_delete_message(callback.message)
         document = BufferedInputFile(file=bid.document.file.read(),
                                      filename=bid.document.filename)
 
@@ -176,13 +184,15 @@ class CoordinationFactory():
 
     async def get_pendings(self, callback: CallbackQuery):
         keyboard = self.get_specified_bids_keyboard("pending")
-        await callback.message.delete()
+        await try_delete_message(callback.message)
+
         await callback.message.answer("Ожидающие согласования:",
                                       reply_markup=keyboard)
 
     async def get_history(self, callback: CallbackQuery):
         keyboard = self.get_specified_bids_keyboard("history")
-        await callback.message.delete()
+        await try_delete_message(callback.message)
+
         await callback.message.answer("История согласования:",
                                       reply_markup=keyboard)
 
