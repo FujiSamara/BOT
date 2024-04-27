@@ -7,25 +7,28 @@ from typing import Annotated
 from fastapi import Header
 import logging
 
+
 @lru_cache
 def get_dispatcher() -> Dispatcher:
     return Dispatcher()
+
 
 @lru_cache
 def get_bot() -> Bot:
     return Bot(token=get_settings().bot_token, parse_mode=ParseMode.HTML)
 
+
 async def _bot_webhook(update: dict,
-                    x_telegram_bot_api_secret_token: Annotated[str | None, Header()] = None):
+                       x_telegram_bot_api_secret_token:
+                       Annotated[str | None, Header()] = None):
     '''Registers webhook endpoint for telegram bot'''
     if x_telegram_bot_api_secret_token != get_settings().telegram_token:
         logging("uvicorn.error").error("Wrong secret token !")
         return {"status": "error", "message": "Wrong secret token !"}
-    return await get_dispatcher().feed_update(bot=get_bot(), update=Update(**update))
+    return await get_dispatcher().feed_update(bot=get_bot(),
+                                              update=Update(**update))
+
 
 async def _check_webhook() -> WebhookInfo | None:
-    try:
-        webhook_info = await get_bot().get_webhook_info()
-        return webhook_info
-    except Exception as e:
-        raise
+    webhook_info = await get_bot().get_webhook_info()
+    return webhook_info

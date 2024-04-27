@@ -1,13 +1,15 @@
 # sqladmin shemas
+import datetime
 from io import BytesIO
 from typing import Any, List
 from sqladmin import ModelView
 from starlette.responses import StreamingResponse
-from db.models import *
+from db.models import Bid, Worker, Company, Department, Post, WorkerBid
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
 from bot.kb import payment_type_dict, approval_state_dict
+
 
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
@@ -17,8 +19,13 @@ class PostView(ModelView, model=Post):
 
     name_plural = "Должности"
     name = "Должность"
-    column_labels = {Post.name: "Название", Post.level: "Уровень доступа", Post.workers: "Работники"}
-    
+    column_labels = {
+        Post.name: "Название",
+        Post.level: "Уровень доступа",
+        Post.workers: "Работники"
+    }
+
+
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
     column_searchable_list = [Company.name]
@@ -27,8 +34,12 @@ class CompanyView(ModelView, model=Company):
 
     name_plural = "Компании"
     name = "Компания"
-    column_labels = {Company.name: "Название", Company.departments: "Производства"}
-    
+    column_labels = {
+        Company.name: "Название",
+        Company.departments: "Производства"
+    }
+
+
 class DepartmentView(ModelView, model=Department):
     column_list = [Department.id, Department.name]
     column_searchable_list = [Department.name]
@@ -53,9 +64,12 @@ class DepartmentView(ModelView, model=Department):
         }
     }
 
+
 class WorkerView(ModelView, model=Worker):
-    column_searchable_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
-    column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
+    column_searchable_list = [Worker.f_name, Worker.l_name, Worker.o_name,
+                              Worker.phone_number]
+    column_list = [Worker.f_name, Worker.l_name, Worker.o_name,
+                   Worker.phone_number]
     column_details_exclude_list = [Worker.department_id, Worker.post_id]
     can_export = False
 
@@ -92,6 +106,7 @@ class WorkerView(ModelView, model=Worker):
             "order_by": "name",
         }
     }
+
 
 class BidView(ModelView, model=Bid):
     details_template = "bid_details.html"
@@ -134,7 +149,7 @@ class BidView(ModelView, model=Bid):
     @staticmethod
     def datetime_format(value, format="%H:%M %d-%m-%y"):
         return value.strftime(format)
-    
+
     @staticmethod
     def file_format(inst, columm):
         value = getattr(inst, columm)
@@ -146,7 +161,8 @@ class BidView(ModelView, model=Bid):
 
         filename = Path(value).name
 
-        return {"filename": filename, "href": f"{proto}://{host}:{port}/admin/download?path={value}"}
+        return {"filename": filename, "href":
+                f"{proto}://{host}:{port}/admin/download?path={value}"}
 
     @staticmethod
     def payment_type_format(inst, column):
@@ -160,7 +176,6 @@ class BidView(ModelView, model=Bid):
 
         return approval_state_dict.get(value)
 
-    
     column_type_formatters = {
         datetime.datetime: datetime_format
     }
@@ -182,9 +197,11 @@ class BidView(ModelView, model=Bid):
         Bid.document
     ]
 
-    async def export_data(self, data: List[Any], export_type: str = "csv") -> StreamingResponse:
+    async def export_data(self, data: List[Any],
+                          export_type: str = "csv") -> StreamingResponse:
         '''
-        Overrides `ModelView.export_date` to return `xlsx` tables instead `csv`.
+        Overrides `ModelView.export_date`
+        to return `xlsx` tables instead `csv`.
         '''
         CELL_LENGTH = 18
 
@@ -197,16 +214,16 @@ class BidView(ModelView, model=Bid):
             vals = []
             for name in self._export_prop_names:
                 val = await self.get_prop_value(elem, name)
-                if type(val) == datetime.datetime:
+                if isinstance(val, datetime.datetime):
                     val = BidView.datetime_format(val)
                 if name.split("_")[-1] == "state":
                     val = BidView.approval_state_format(elem, name)
                 if name == "payment_type":
                     val = BidView.payment_type_format(elem, name)
-                vals.append(str(val)) 
-            
+                vals.append(str(val))
+
             worksheet.write_row(index + 1, 0, vals)
-        
+
         workbook.close()
         output.seek(0)
 
@@ -247,4 +264,68 @@ class BidView(ModelView, model=Bid):
             "fields": ("f_name", ),
             "order_by": "l_name",
         }
+    }
+
+
+class WorkerBidView(ModelView, model=WorkerBid):
+    details_template = "bid_details.html"
+    list_template = "bid_list.html"
+
+    column_labels = {
+        WorkerBid.f_name: "Имя",
+        WorkerBid.l_name: "Фамилия",
+        WorkerBid.o_name: "Отчество",
+        WorkerBid.post: "Должность",
+        WorkerBid.work_permission_document: "Разрешение на работу",
+        WorkerBid.worksheet: "Анкета",
+        WorkerBid.pasport: "Паспорт",
+        WorkerBid.state: "Статус",
+        WorkerBid.create_date: "Дата создания"
+    }
+
+    column_list = [
+        WorkerBid.id,
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.f_name,
+        WorkerBid.o_name,
+        WorkerBid.pasport,
+        WorkerBid.work_permission_document,
+        WorkerBid.worksheet,
+        WorkerBid.state
+    ]
+
+    column_details_list = column_list
+
+    column_searchable_list = [
+        WorkerBid.f_name,
+        WorkerBid.l_name,
+        WorkerBid.o_name
+    ]
+
+    column_sortable_list = [
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.id,
+        WorkerBid.o_name,
+        WorkerBid.f_name
+    ]
+
+    can_create = False
+    can_export = False
+    name_plural = "Заявки на работу"
+    name = "Заявка на работу"
+
+    form_columns = [
+        WorkerBid.state
+    ]
+
+    column_type_formatters = {
+        datetime.datetime: BidView.datetime_format
+    }
+    column_formatters = {
+       WorkerBid.state: BidView.approval_state_format,
+       WorkerBid.pasport: BidView.file_format,
+       WorkerBid.work_permission_document: BidView.file_format,
+       WorkerBid.worksheet: BidView.file_format,
     }

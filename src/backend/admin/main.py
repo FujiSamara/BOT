@@ -1,10 +1,11 @@
 from fastapi import FastAPI
-from admin.admin import FujiAdmin
+from admin.admin import FujiAdmin, AdminAuth
 from admin.configure import configure
 import sys
 from db.database import engine, session
 import logging
 from settings import get_settings
+from uuid import uuid4
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -14,7 +15,8 @@ def create(app: FastAPI) -> FastAPI:
         engine=engine,
         session_maker=session,
         title='Fuji admin',
-        templates_dir=templates_dir
+        templates_dir=templates_dir,
+        authentication_backend=AdminAuth(secret_key=uuid4())
     )
     try:
         configure(admin)
@@ -23,4 +25,3 @@ def create(app: FastAPI) -> FastAPI:
         sys.exit()
     logging.info("Admin created")
     return admin
-

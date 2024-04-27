@@ -3,6 +3,7 @@ from core.configure import configure, global_lifespan
 import sys
 import logging
 
+
 def create_app() -> FastAPI:
     app = FastAPI(lifespan=global_lifespan)
     try:

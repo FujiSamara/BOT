@@ -13,8 +13,8 @@ from bot.handlers.main_handler import send_menu_by_level
 from db.service import update_user_tg_id_by_number
 
 
-
 router = Router(name="auth")
+
 
 @router.message(Auth.authing)
 @flags.chat_action("typing")
@@ -24,4 +24,3 @@ async def auth(message: Message, state: FSMContext):
         await send_menu_by_level(message)
     else:
         await message.answer(user_not_exist_text)
-        

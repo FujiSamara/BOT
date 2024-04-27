@@ -2,7 +2,8 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-import json
+from bot.handlers.bids import create_bid
+from bot.handlers.bids import coordinate_bid
 
 # bot imports
 from bot.kb import (
@@ -16,17 +17,16 @@ from bot.states import Base
 router = Router(name="bid_main")
 
 
-### Main section
+# Main section
 
-## Create menu
+# Create menu
 @router.callback_query(F.data == "get_create_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
-    await callback.message.edit_text(hbold("Добро пожаловать!"), reply_markup=bid_menu)
+    await callback.message.edit_text(hbold("Добро пожаловать!"),
+                                     reply_markup=bid_menu)
 
-### Create section
-from bot.handlers.bids import create_bid
-from bot.handlers.bids import coordinate_bid
+# Create section
 coordinate_bid.build_coordinations()
 
 router.include_routers(

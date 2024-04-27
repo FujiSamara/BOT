@@ -5,26 +5,31 @@ import datetime
 from fastapi import UploadFile
 from db.models import ApprovalState
 
+
 # Full shemas
-class BaseShema(BaseModel):
+class BaseSchema(BaseModel):
     class Config:
         from_attributes = True
     id: int
 
-class PostShema(BaseShema):
+
+class PostSchema(BaseSchema):
     name: str
     level: int
 
-class CompanyShema(BaseShema):
+
+class CompanySchema(BaseSchema):
     name: str
 
-class DepartmentShema(BaseShema):
+
+class DepartmentSchema(BaseSchema):
     name: str
     address: Optional[str]
 
-    company: CompanyShema
+    company: CompanySchema
 
-class WorkerShema(BaseShema):
+
+class WorkerSchema(BaseSchema):
     f_name: str
     l_name: str
     o_name: str
@@ -32,21 +37,22 @@ class WorkerShema(BaseShema):
     phone_number: str
     telegram_id: Optional[int]
 
-    post: PostShema
+    post: PostSchema
 
-    department: DepartmentShema
+    department: DepartmentSchema
 
-class BidShema(BaseModel):
+
+class BidSchema(BaseModel):
     class Config:
-        arbitrary_types_allowed=True
+        arbitrary_types_allowed = True
         from_attributes = True
 
     id: Optional[int] = -1
 
     amount: int
     payment_type: str
-    department: DepartmentShema
-    worker: WorkerShema
+    department: DepartmentSchema
+    worker: WorkerSchema
     purpose: str
     create_date: datetime.datetime
     document: UploadFile
