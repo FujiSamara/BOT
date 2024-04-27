@@ -10,6 +10,7 @@ from sqladmin.authentication import login_required
 from fastapi import Request
 from fastapi.responses import FileResponse, Response
 from pathlib import Path
+from hashlib import sha256
 
 
 class FujiAdmin(Admin):
@@ -60,3 +61,40 @@ class FujiAdmin(Admin):
 
         return FileResponse(path=path, filename=filename,
                             media_type="multipart/form-data")
+
+
+class AdminAuth(AuthenticationBackend):
+    '''
+    Authentication class for admin panel.
+    '''
+    async def login(self, request: Request) -> bool:
+        form = await request.form()
+        username, password = form["username"], form["password"]
+
+        if not username or not password:
+            return False
+
+        if not hasattr(self, "username"):
+            self.username = username
+            self.password = sha256(password.encode()).hexdigest()
+
+        if self.username != username:
+            return False
+
+        if sha256(password.encode()
+                  ).hexdigest() != self.password:
+            return False
+
+        request.session["username"] = username
+
+        return True
+
+    async def logout(self, request: Request) -> bool:
+        request.session.clear()
+        return True
+
+    async def authenticate(self, request: Request) -> bool:
+        if not request.session:
+            return False
+
+        return True
