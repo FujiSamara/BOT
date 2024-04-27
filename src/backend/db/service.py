@@ -5,6 +5,7 @@ from db.models import (
     Department,
     ApprovalState,
     Bid,
+    Post,
     Worker,
     Access
 )
@@ -32,7 +33,7 @@ def get_workers_by_level(level: int) -> list[WorkerSchema]:
     '''
     Returns all workers in database with `level` at column.
     '''
-    return orm.get_workers_by_column(Worker.post.level, level)
+    return orm.get_workers_with_post_by_column(Post.level, level)
 
 
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
@@ -133,7 +134,7 @@ async def create_bid(
     orm.add_bid(bid)
     from bot.handlers.utils import notify_workers_by_level
     await notify_workers_by_level(
-        level=int(Access.kru.value[0]),
+        level=int(Access.worker.value[0]),
         message="У вас новая заявка!"
     )
 

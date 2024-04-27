@@ -16,7 +16,7 @@ from bot.states import Base
 import logging
 from bot.text import err
 import asyncio
-from bot.handlers.utils import send_menu_by_level
+from bot.handlers.utils import send_menu_by_level, try_delete_message
 
 
 router = Router(name="main")
@@ -50,10 +50,8 @@ async def error_handler(event: ErrorEvent):
     logging.getLogger("uvicorn.error").error(
         f"Error occurred:{event.exception}")
     message = event.update.callback_query.message
-    try:
-        await message.edit_text(err, reply_markup=ReplyKeyboardRemove())
-        msg = message
-    except Exception:
-        msg = await message.answer(err, reply_markup=ReplyKeyboardRemove())
+    await try_delete_message(message)
+    msg = await message.answer(err, reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(3)
-    await send_menu_by_level(msg, edit=True)
+    await msg.delete()
+    await send_menu_by_level(msg)

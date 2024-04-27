@@ -1,6 +1,6 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, Worker, Department, ApprovalState
+from db.models import Bid, Post, Worker, Department, ApprovalState
 from db.schemas import BidSchema, DepartmentSchema, WorkerSchema
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
@@ -201,12 +201,17 @@ def update_bid(bid: BidSchema):
         cur_bid.teller_cash_state = bid.teller_cash_state
 
 
-def get_workers_by_column(column: Any, value: Any) -> list[WorkerSchema]:
+def get_workers_with_post_by_column(
+        column: Any,
+        value: Any
+) -> list[WorkerSchema]:
     '''
     Returns all `Worker` as `WorkerSchema` in database
     by `column` with `value`.
     '''
     with session.begin() as s:
-        raw_workers = s.query(Worker).filter(column == value).all()
-        return [BidSchema.model_validate(raw_worker)
-                for raw_worker in raw_workers]
+        raw_models = s.query(Worker, Post).filter(
+            column == value
+        ).filter(Worker.post_id == Post.id).all()
+        return [WorkerSchema.model_validate(raw_wodel[0])
+                for raw_wodel in raw_models]

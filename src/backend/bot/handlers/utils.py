@@ -45,9 +45,13 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([owner_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
+
     if edit:
-        await message.edit_text(hbold("Выберите дальнейшее действие:"),
-                                reply_markup=menu)
+        await try_edit_or_answer(
+            message=message,
+            text=hbold("Выберите дальнейшее действие:"),
+            reply_markup=menu
+        )
     else:
         await message.answer(hbold("Выберите дальнейшее действие:"),
                              reply_markup=menu)
@@ -95,16 +99,39 @@ async def try_edit_message(
         message: Message,
         text: str,
         reply_markup: Any = None
-) -> None:
+) -> bool:
     '''
-    Tries to edit message.
-    if the `message` unsuccessfully edited
-    then answers message.
+    Tries to edit message. Return `True`
+    if the `message` successfully edited, `False` otherwise.
     '''
     try:
         await message.edit_text(text=text, reply_markup=reply_markup)
+        return True
     except Exception:
-        return
+        return False
+
+
+async def try_edit_or_answer(
+    message: Message,
+    text: str,
+    reply_markup: Any = None
+):
+    '''
+    Tries to edit message.
+    if the `message` unsuccessfully edited
+    then answers message by `Message.answer_text`.
+
+    Returns: `True` if message edited, `False` otherwise.
+    '''
+    if not await try_edit_message(
+        message=message,
+        text=text,
+        reply_markup=reply_markup
+    ):
+        await message.answer(text=text, reply_markup=reply_markup)
+        return False
+
+    return True
 
 
 async def notify_workers_by_level(level: int, message: str) -> None:
