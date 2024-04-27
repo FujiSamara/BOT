@@ -141,6 +141,8 @@ async def notify_workers_by_level(level: int, message: str) -> None:
     workers: list[WorkerSchema] = get_workers_by_level(level)
 
     for worker in workers:
+        if not worker.telegram_id:
+            continue
         msg = await get_bot().send_message(
             chat_id=worker.telegram_id,
             text=message
