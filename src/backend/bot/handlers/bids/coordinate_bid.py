@@ -108,7 +108,8 @@ class CoordinationFactory():
     async def decline_bid(self, callback: CallbackQuery,
                           callback_data: BidActionData):
         bid = get_bid_by_id(callback_data.bid_id)
-        update_bid_state(bid, self.state_column.name, ApprovalState.denied)
+        await update_bid_state(bid, self.state_column.name,
+                               ApprovalState.denied)
         msg = await callback.message.answer(text="Успешно!")
         await asyncio.sleep(1)
         await msg.delete()
@@ -117,7 +118,8 @@ class CoordinationFactory():
     async def approve_bid(self, callback: CallbackQuery,
                           callback_data: BidActionData):
         bid = get_bid_by_id(callback_data.bid_id)
-        update_bid_state(bid, self.state_column.name, ApprovalState.approved)
+        await update_bid_state(bid, self.state_column.name,
+                               ApprovalState.approved)
         msg = await callback.message.answer(text="Успешно!")
         await asyncio.sleep(1)
         await msg.delete()
