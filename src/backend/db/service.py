@@ -134,7 +134,7 @@ async def create_bid(
     orm.add_bid(bid)
     from bot.handlers.utils import notify_workers_by_level
     await notify_workers_by_level(
-        level=int(Access.worker.value[0]),
+        level=int(Access.kru.value[0]),
         message="У вас новая заявка!"
     )
 
@@ -184,10 +184,15 @@ def get_history_bids_by_column(column: Any) -> list[BidSchema]:
     return orm.get_specified_history_bids(column)
 
 
-def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalState):
+async def update_bid_state(
+    bid: BidSchema,
+    state_name: str,
+    state: ApprovalState
+):
     '''
     Updates bid state with `state_name` by specified `state`.
     '''
+    from bot.handlers.utils import notify_workers_by_level
     if state_name == "kru_state":
         if state == ApprovalState.approved:
             bid.kru_state = ApprovalState.approved
@@ -236,5 +241,31 @@ def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalState):
         bid.teller_card_state = ApprovalState.approved
     else:
         bid.teller_cash_state = ApprovalState.approved
+
+    if bid.owner_state == ApprovalState.pending_approval:
+        await notify_workers_by_level(
+            level=int(Access.owner.value[0]),
+            message="У вас новая заявка!"
+        )
+    elif bid.accountant_card_state == ApprovalState.pending_approval:
+        await notify_workers_by_level(
+            level=int(Access.accountant_card.value[0]),
+            message="У вас новая заявка!"
+        )
+    elif bid.accountant_cash_state == ApprovalState.pending_approval:
+        await notify_workers_by_level(
+            level=int(Access.accountant_cash.value[0]),
+            message="У вас новая заявка!"
+        )
+    elif bid.teller_card_state == ApprovalState.pending_approval:
+        await notify_workers_by_level(
+            level=int(Access.teller_card.value[0]),
+            message="У вас новая заявка!"
+        )
+    elif bid.teller_cash_state == ApprovalState.pending_approval:
+        await notify_workers_by_level(
+            level=int(Access.teller_cash.value[0]),
+            message="У вас новая заявка!"
+        )
 
     orm.update_bid(bid)
