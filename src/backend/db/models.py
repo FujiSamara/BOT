@@ -34,6 +34,7 @@ approvalstate = Annotated[ApprovalState,
 
 
 class Post(Base):
+    """Должности у работников"""
     __tablename__ = "posts"
 
     def __str__(self) -> str:
@@ -56,6 +57,7 @@ class Post(Base):
 
 
 class Company(Base):
+    """Компания Фуджи или Сакура"""
     __tablename__ = "companies"
 
     def __str__(self) -> str:
@@ -70,8 +72,19 @@ class Company(Base):
         back_populates="company"
     )
 
+    # айдишник из биосмарта для определения компании
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+
+
 
 class Department(Base):
+    """Подразделения (рестораны)"""
     __tablename__ = "departments"
 
     def __str__(self) -> str:
@@ -81,15 +94,22 @@ class Department(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
 
-    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"),
-                                            nullable=False)
-    company: Mapped["Company"] = relationship("Company",
-                                              back_populates="departments")
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
+    company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
-    workers: Mapped[List["Worker"]] = relationship("Worker",
-                                                   back_populates="department")
-    bids: Mapped[List["Bid"]] = relationship("Bid",
-                                             back_populates="department")
+    workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="department")
+    bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
+
+    # айдишник из биосмарта для определения конкретного подразделения
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+    # Если прошлый флаг true, здесь будет описание ошибки
+    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
 
 
 class Worker(Base):
@@ -111,13 +131,27 @@ class Worker(Base):
     post: Mapped["Post"] = relationship("Post", back_populates="workers")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
-    department: Mapped["Department"] = relationship("Department",
-                                                    back_populates="workers")
+    department: Mapped["Department"] = relationship("Department", back_populates="workers")
+
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
+    company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
 
+    # айдишник из биосмарта для определения конкретного рабочего
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+    # Если прошлый флаг true, здесь будет описание ошибки
+    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+
 
 class Bid(Base):
+    """Заявки"""
     __tablename__ = "bids"
 
     def __str__(self) -> str:
@@ -153,6 +187,7 @@ class Bid(Base):
 
 
 class WorkerBid(Base):
+    """Заявки на найм?"""
     __tablename__ = "worker_bids"
 
     id: Mapped[intpk]
@@ -175,3 +210,28 @@ class WorkerBid(Base):
         storage=get_settings().storage))
 
     state: Mapped[approvalstate]
+
+
+class WorkerTimes(Base):
+    """Табель работы"""
+    __tablename__ = "work_times"
+
+    id: Mapped[intpk]
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    worker: Mapped["Worker"] = relationship("Worker", back_populates="work_times")
+
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
+    company: Mapped["Company"] = relationship("Company", back_populates="work_times")
+
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post: Mapped["Post"] = relationship("Post", back_populates="work_times")
+
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    department: Mapped["Department"] = relationship("Department", back_populates="work_times")
+
+    work_begin: Mapped[str] = mapped_column(nullable=False)
+    work_end: Mapped[str] = mapped_column(nullable=False)
+    work_duration: Mapped[float] = mapped_column(nullable=False)
+    day: Mapped[datetime.date] = mapped_column(nullable=False)
+
