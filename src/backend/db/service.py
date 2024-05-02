@@ -1,15 +1,8 @@
 from io import BytesIO
 from pathlib import Path
 import db.orm as orm
-from db.models import (
-    Department,
-    ApprovalState,
-    Bid,
-    Post,
-    Worker,
-    Access
-)
-from db.schemas import BidSchema, WorkerSchema
+from db.models import Department, ApprovalState, Bid, Post, Worker, Access, WorkTime
+from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema
 import logging
 from datetime import datetime
 from fastapi import UploadFile
@@ -17,11 +10,11 @@ from typing import Any, Optional
 
 
 def get_user_level_by_telegram_id(id: str) -> int:
-    '''
+    """
     Returns user access level by his telegram id.
 
     Return `-1`, if user doesn't exits.
-    '''
+    """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
     if not worker:
         return -1
@@ -30,18 +23,18 @@ def get_user_level_by_telegram_id(id: str) -> int:
 
 
 def get_workers_by_level(level: int) -> list[WorkerSchema]:
-    '''
+    """
     Returns all workers in database with `level` at column.
-    '''
+    """
     return orm.get_workers_with_post_by_column(Post.level, level)
 
 
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
-    '''
+    """
     Finds worker by his phone number and sets him telegram id.
 
     Returns `True`, if user found, `False` otherwise.
-    '''
+    """
     worker = orm.find_worker_by_column(Worker.phone_number, number)
     if not worker:
         return False
@@ -56,9 +49,9 @@ def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
 
 
 def get_departments_names() -> list[str]:
-    '''
+    """
     Returns all existed departments.
-    '''
+    """
     departments_raw = orm.get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
     return result
@@ -83,11 +76,10 @@ async def create_bid(
     need_document: Optional[str] = None,
     comment: Optional[str] = None,
 ):
-    '''
+    """
     Creates an bid wrapped in `BidShema` and adds it to database.
-    '''
-    department_inst = orm.find_department_by_column(Department.name,
-                                                    department)
+    """
+    department_inst = orm.find_department_by_column(Department.name, department)
 
     if not department_inst:
         logging.getLogger("uvicorn.error").error(
@@ -128,21 +120,21 @@ async def create_bid(
         accountant_card_state=accountant_card_state,
         accountant_cash_state=accountant_cash_state,
         teller_card_state=teller_card_state,
-        teller_cash_state=teller_cash_state
+        teller_cash_state=teller_cash_state,
     )
 
     orm.add_bid(bid)
     from bot.handlers.utils import notify_workers_by_level
+
     await notify_workers_by_level(
-        level=int(Access.kru.value[0]),
-        message="У вас новая заявка!"
+        level=int(Access.kru.value[0]), message="У вас новая заявка!"
     )
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
-    '''
+    """
     Returns all bids own to worker with specified phone number.
-    '''
+    """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
 
     if not worker:
@@ -152,9 +144,9 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
 
 
 def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
-    '''
+    """
     Returns all bids own to worker with specified phone number.
-    '''
+    """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
 
     if not worker:
@@ -164,35 +156,32 @@ def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
 
 
 def get_bid_by_id(id: int) -> BidSchema:
-    '''
+    """
     Returns bid in database by it id.
-    '''
+    """
     return orm.find_bid_by_column(Bid.id, id)
 
 
 def get_pending_bids_by_column(column: Any) -> list[BidSchema]:
-    '''
+    """
     Returns all bids in database with pending approval state at column.
-    '''
+    """
     return orm.get_specified_pengind_bids(column)
 
 
 def get_history_bids_by_column(column: Any) -> list[BidSchema]:
-    '''
+    """
     Returns all bids in database past through worker with `column`.
-    '''
+    """
     return orm.get_specified_history_bids(column)
 
 
-async def update_bid_state(
-    bid: BidSchema,
-    state_name: str,
-    state: ApprovalState
-):
-    '''
+async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalState):
+    """
     Updates bid state with `state_name` by specified `state`.
-    '''
+    """
     from bot.handlers.utils import notify_workers_by_level
+
     if state_name == "kru_state":
         if state == ApprovalState.approved:
             bid.kru_state = ApprovalState.approved
@@ -244,28 +233,34 @@ async def update_bid_state(
 
     if bid.owner_state == ApprovalState.pending_approval:
         await notify_workers_by_level(
-            level=int(Access.owner.value[0]),
-            message="У вас новая заявка!"
+            level=int(Access.owner.value[0]), message="У вас новая заявка!"
         )
     elif bid.accountant_card_state == ApprovalState.pending_approval:
         await notify_workers_by_level(
-            level=int(Access.accountant_card.value[0]),
-            message="У вас новая заявка!"
+            level=int(Access.accountant_card.value[0]), message="У вас новая заявка!"
         )
     elif bid.accountant_cash_state == ApprovalState.pending_approval:
         await notify_workers_by_level(
-            level=int(Access.accountant_cash.value[0]),
-            message="У вас новая заявка!"
+            level=int(Access.accountant_cash.value[0]), message="У вас новая заявка!"
         )
     elif bid.teller_card_state == ApprovalState.pending_approval:
         await notify_workers_by_level(
-            level=int(Access.teller_card.value[0]),
-            message="У вас новая заявка!"
+            level=int(Access.teller_card.value[0]), message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalState.pending_approval:
         await notify_workers_by_level(
-            level=int(Access.teller_cash.value[0]),
-            message="У вас новая заявка!"
+            level=int(Access.teller_cash.value[0]), message="У вас новая заявка!"
         )
 
     orm.update_bid(bid)
+
+
+def get_work_time_records_by_department(
+    department_id: int, count: int = 10
+) -> list[WorkTimeSchema]:
+    """
+    Returns all work times records in database by `department_id`.
+    """
+    return orm.get_work_time_records_by_column(
+        WorkTime.department_id, department_id, count
+    )

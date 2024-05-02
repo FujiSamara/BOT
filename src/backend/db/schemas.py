@@ -10,6 +10,7 @@ from db.models import ApprovalState
 class BaseSchema(BaseModel):
     class Config:
         from_attributes = True
+
     id: int
 
 
@@ -76,5 +77,14 @@ class BidSchema(BaseModel):
     accountant_cash_state: ApprovalState
     teller_card_state: ApprovalState
     teller_cash_state: ApprovalState
+
+
+class WorkTimeSchema(BaseSchema):
+    worker: WorkerSchema
+    department: DepartmentSchema
+
+    work_begin: datetime.date
+    work_end: Optional[datetime.date]
+
 
 # Create shemas
