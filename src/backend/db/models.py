@@ -212,7 +212,7 @@ class WorkerBid(Base):
     state: Mapped[approvalstate]
 
 
-class WorkerTimes(Base):
+class WorkTime(Base):
     """Табель работы"""
     __tablename__ = "work_times"
 
