@@ -184,7 +184,7 @@ payment_type_dict = {
 }
 
 
-approval_state_dict = {
+approval_status_dict = {
     ApprovalStatus.approved: "Согласовано",
     ApprovalStatus.pending: "Ожидает поступления",
     ApprovalStatus.pending_approval: "Ожидает согласования",
