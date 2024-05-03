@@ -73,6 +73,10 @@ class Company(Base):
         "Department", cascade="all,delete", back_populates="company"
     )
 
+    workers: Mapped[List["Worker"]] = relationship(
+        "Worker", cascade="all,delete", back_populates="company"
+    )
+
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="company"
     )
@@ -146,7 +150,7 @@ class Worker(Base):
     )
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
-    company: Mapped["Company"] = relationship("Company", back_populates="departments")
+    company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
 
