@@ -1,6 +1,6 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, Post, WorkTime, Worker, Department, ApprovalState
+from db.models import Bid, Post, WorkTime, Worker, Department, ApprovalStatus
 from db.schemas import BidSchema, DepartmentSchema, WorkerSchema, WorkTimeSchema
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
@@ -129,12 +129,12 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
                 and_(
                     Bid.worker_id == worker.id,
                     or_(
-                        Bid.accountant_card_state == ApprovalState.pending_approval,
-                        Bid.accountant_cash_state == ApprovalState.pending_approval,
-                        Bid.teller_card_state == ApprovalState.pending_approval,
-                        Bid.teller_cash_state == ApprovalState.pending_approval,
-                        Bid.kru_state == ApprovalState.pending_approval,
-                        Bid.owner_state == ApprovalState.pending_approval,
+                        Bid.accountant_card_state == ApprovalStatus.pending_approval,
+                        Bid.accountant_cash_state == ApprovalStatus.pending_approval,
+                        Bid.teller_card_state == ApprovalStatus.pending_approval,
+                        Bid.teller_cash_state == ApprovalStatus.pending_approval,
+                        Bid.kru_state == ApprovalStatus.pending_approval,
+                        Bid.owner_state == ApprovalStatus.pending_approval,
                     ),
                 )
             )
@@ -150,7 +150,7 @@ def get_specified_pengind_bids(pending_column) -> list[BidSchema]:
     """
     with session.begin() as s:
         raw_bids = (
-            s.query(Bid).filter(pending_column == ApprovalState.pending_approval).all()
+            s.query(Bid).filter(pending_column == ApprovalStatus.pending_approval).all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
@@ -165,8 +165,8 @@ def get_specified_history_bids(pending_column) -> list[BidSchema]:
             s.query(Bid)
             .filter(
                 or_(
-                    pending_column == ApprovalState.denied,
-                    pending_column == ApprovalState.approved,
+                    pending_column == ApprovalStatus.denied,
+                    pending_column == ApprovalStatus.approved,
                 )
             )
             .all()

@@ -10,7 +10,7 @@ import enum
 intpk = Annotated[int, mapped_column(primary_key=True)]
 
 
-class ApprovalState(enum.Enum):
+class ApprovalStatus(enum.Enum):
     pending = (1,)
     approved = (2,)
     denied = (3,)
@@ -28,8 +28,8 @@ class Access(enum.Enum):
     owner = (10,)
 
 
-approvalstate = Annotated[
-    ApprovalState, mapped_column(Enum(ApprovalState), default=ApprovalState.pending)
+approvalstatus = Annotated[
+    ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
 ]
 
 
@@ -193,12 +193,12 @@ class Bid(Base):
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
 
     # States
-    kru_state: Mapped[approvalstate]
-    owner_state: Mapped[approvalstate]
-    accountant_cash_state: Mapped[approvalstate]
-    accountant_card_state: Mapped[approvalstate]
-    teller_cash_state: Mapped[approvalstate]
-    teller_card_state: Mapped[approvalstate]
+    kru_state: Mapped[approvalstatus]
+    owner_state: Mapped[approvalstatus]
+    accountant_cash_state: Mapped[approvalstatus]
+    accountant_card_state: Mapped[approvalstatus]
+    teller_cash_state: Mapped[approvalstatus]
+    teller_card_state: Mapped[approvalstatus]
 
 
 class WorkerBid(Base):
@@ -226,7 +226,7 @@ class WorkerBid(Base):
         FileType(storage=get_settings().storage)
     )
 
-    state: Mapped[approvalstate]
+    state: Mapped[approvalstatus]
 
 
 class WorkTime(Base):

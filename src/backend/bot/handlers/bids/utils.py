@@ -1,5 +1,5 @@
 from aiogram.utils.markdown import hbold
-from db.models import ApprovalState
+from db.models import ApprovalStatus
 from db.schemas import BidSchema
 from bot.kb import payment_type_dict
 
@@ -7,25 +7,25 @@ from bot.kb import payment_type_dict
 def get_full_bid_info(bid: BidSchema) -> str:
     stage = ""
 
-    if bid.kru_state == ApprovalState.pending_approval:
+    if bid.kru_state == ApprovalStatus.pending_approval:
         stage = "КРУ"
-    elif bid.owner_state == ApprovalState.pending_approval:
+    elif bid.owner_state == ApprovalStatus.pending_approval:
         stage = "Собственник"
-    elif bid.accountant_card_state == ApprovalState.pending_approval:
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         stage = "Бухгалтер безнал."
-    elif bid.accountant_cash_state == ApprovalState.pending_approval:
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         stage = "Бухгалтер нал."
-    elif bid.teller_card_state == ApprovalState.pending_approval:
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
         stage = "Кассир безнал."
-    elif bid.teller_cash_state == ApprovalState.pending_approval:
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         stage = "Кассир нал."
     elif (
-        bid.kru_state == ApprovalState.denied or
-        bid.owner_state == ApprovalState.denied or
-        bid.accountant_card_state == ApprovalState.denied or
-        bid.accountant_cash_state == ApprovalState.denied or
-        bid.teller_card_state == ApprovalState.denied or
-        bid.teller_cash_state == ApprovalState.denied
+        bid.kru_state == ApprovalStatus.denied
+        or bid.owner_state == ApprovalStatus.denied
+        or bid.accountant_card_state == ApprovalStatus.denied
+        or bid.accountant_cash_state == ApprovalStatus.denied
+        or bid.teller_card_state == ApprovalStatus.denied
+        or bid.teller_cash_state == ApprovalStatus.denied
     ):
         stage = "Отказано"
     else:
@@ -48,17 +48,17 @@ def get_full_bid_info(bid: BidSchema) -> str:
 
 def get_state_bid_info(bid: BidSchema) -> str:
     stage = ""
-    if bid.kru_state == ApprovalState.pending_approval:
+    if bid.kru_state == ApprovalStatus.pending_approval:
         stage = "КРУ"
-    elif bid.owner_state == ApprovalState.pending_approval:
+    elif bid.owner_state == ApprovalStatus.pending_approval:
         stage = "Собственника"
-    elif bid.accountant_card_state == ApprovalState.pending_approval:
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         stage = "Бухгалтера безнал."
-    elif bid.accountant_cash_state == ApprovalState.pending_approval:
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         stage = "Бухгалтера нал."
-    elif bid.teller_card_state == ApprovalState.pending_approval:
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
         stage = "Кассира безнал."
-    elif bid.teller_cash_state == ApprovalState.pending_approval:
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         stage = "Кассира нал."
 
     return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
@@ -66,5 +66,6 @@ def get_state_bid_info(bid: BidSchema) -> str:
 
 
 def get_bid_list_info(bid: BidSchema) -> str:
-    return (f"{bid.worker.l_name} " +
-            f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}")
+    return (
+        f"{bid.worker.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}"
+    )
