@@ -83,8 +83,10 @@ class WorkTimeSchema(BaseSchema):
     worker: WorkerSchema
     department: DepartmentSchema
 
-    work_begin: datetime.date
-    work_end: Optional[datetime.date]
+    work_begin: str
+    work_end: Optional[str]
+    day: str
+    work_duration: float
 
 
 # Create shemas

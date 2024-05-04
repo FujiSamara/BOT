@@ -234,4 +234,4 @@ def get_work_time_records_by_column(
     """
     with session.begin() as s:
         raw_models = s.query(WorkTime).filter(column == value).limit(limit).all()
-        return [WorkerSchema.model_validate(raw_wodel[0]) for raw_wodel in raw_models]
+        return [WorkTimeSchema.model_validate(raw_wodel) for raw_wodel in raw_models]

@@ -2,7 +2,7 @@ from io import BytesIO
 from pathlib import Path
 import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
-from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema
+from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema, DepartmentSchema
 import logging
 from datetime import datetime
 from fastapi import UploadFile
@@ -27,6 +27,20 @@ def get_workers_by_level(level: int) -> list[WorkerSchema]:
     Returns all workers in database with `level` at column.
     """
     return orm.get_workers_with_post_by_column(Post.level, level)
+
+
+def get_worker_department_by_telegram_id(id: str) -> DepartmentSchema:
+    """
+    Returns user department by his telegram id.
+
+    If user not exist return `None`.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return None
+
+    return orm.find_department_by_column(Department.id, worker.department.id)
 
 
 def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:

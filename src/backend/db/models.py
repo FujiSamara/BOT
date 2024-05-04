@@ -257,4 +257,4 @@ class WorkTime(Base):
     work_begin: Mapped[str] = mapped_column(nullable=False)
     work_end: Mapped[str] = mapped_column(nullable=False)
     work_duration: Mapped[float] = mapped_column(nullable=False)
-    day: Mapped[datetime.date] = mapped_column(nullable=False)
+    day: Mapped[str] = mapped_column(nullable=False)
