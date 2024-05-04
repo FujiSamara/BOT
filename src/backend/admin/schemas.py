@@ -14,7 +14,8 @@ from bot.kb import payment_type_dict, approval_status_dict
 class PostView(ModelView, model=Post):
     column_list = [Post.id, Post.name, Post.level]
     column_searchable_list = [Post.name, Post.level]
-    form_excluded_columns = [Post.workers]
+    form_columns = [Post.name, Post.level]
+    column_details_exclude_list = [Post.work_times, Post.workers_bids]
     can_export = False
 
     name_plural = "Должности"
@@ -28,20 +29,44 @@ class PostView(ModelView, model=Post):
 
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
+    column_details_exclude_list = [
+        Company.biosmart_strid,
+        Company.bs_import,
+        Company.work_times,
+    ]
     column_searchable_list = [Company.name]
     form_columns = [Company.name]
     can_export = False
 
     name_plural = "Компании"
     name = "Компания"
-    column_labels = {Company.name: "Название", Company.departments: "Производства"}
+    column_labels = {
+        Company.name: "Название",
+        Company.departments: "Производства",
+        Company.workers: "Работники",
+        Company.bs_import_error: "Ошибка импорта из биосмарт",
+    }
 
 
 class DepartmentView(ModelView, model=Department):
     column_list = [Department.id, Department.name]
     column_searchable_list = [Department.name]
-    column_details_exclude_list = [Department.company_id]
-    form_excluded_columns = [Department.workers, Department.bids]
+    column_details_exclude_list = [
+        Department.company_id,
+        Department.bs_import,
+        Department.bs_import_error_text,
+        Department.work_times,
+        Department.biosmart_strid,
+    ]
+    form_excluded_columns = [
+        Department.workers,
+        Department.bids,
+        Department.bs_import,
+        Department.bs_import_error_text,
+        Department.work_times,
+        Department.bs_import_error,
+        Department.biosmart_strid,
+    ]
     can_export = False
 
     name_plural = "Производства"
@@ -52,6 +77,7 @@ class DepartmentView(ModelView, model=Department):
         Department.workers: "Работники",
         Department.bids: "Заявки",
         Department.company: "Компания",
+        Department.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
     form_ajax_refs = {
@@ -70,7 +96,15 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number,
     ]
     column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
-    column_details_exclude_list = [Worker.department_id, Worker.post_id]
+    column_details_exclude_list = [
+        Worker.department_id,
+        Worker.post_id,
+        Worker.work_times,
+        Worker.company_id,
+        Worker.biosmart_strid,
+        Worker.bs_import,
+        Worker.bs_import_error_text,
+    ]
     can_export = False
 
     name_plural = "Работники"
@@ -84,6 +118,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.b_date: "Дата рождения",
         Worker.bids: "Заявки",
         Worker.phone_number: "Номер телефона",
+        Worker.company: "Компания",
+        Worker.telegram_id: "ID телеграмм",
+        Worker.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
     form_columns = [
@@ -143,7 +180,7 @@ class BidView(ModelView, model=Bid):
     column_details_list = column_list
 
     @staticmethod
-    def datetime_format(value, format="%H:%M %d-%m-%y"):
+    def datetime_format(value, format="%H:%M %d.%m.%y"):
         return value.strftime(format)
 
     @staticmethod

@@ -176,7 +176,7 @@ class Bid(Base):
     __tablename__ = "bids"
 
     def __str__(self) -> str:
-        return f"Заявка от {self.create_date}"
+        return f"Заявка от {self.create_date.strftime('%H:%M %d.%m.%y')}"
 
     id: Mapped[intpk]
     amount: Mapped[int] = mapped_column(nullable=False)
