@@ -1,4 +1,4 @@
 from aiogram import Router
 
 
-router = Router(name="bid_coordination")
+router = Router(name="rating_main")
