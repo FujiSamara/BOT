@@ -225,13 +225,20 @@ def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchem
         return [WorkerSchema.model_validate(raw_wodel[0]) for raw_wodel in raw_models]
 
 
-def get_work_time_records_by_column(
-    column: Any, value: Any, limit: int
+def get_work_time_records_by_columns(
+    columns: list[Any], values: list[Any], limit: int = None
 ) -> list[WorkTimeSchema]:
     """
     Returns all `WorkTime` as `WorkTimeSchema` in database
-    by `column` with `value`.
+    by `columns` with `values`.
     """
     with session.begin() as s:
-        raw_models = s.query(WorkTime).filter(column == value).limit(limit).all()
+        query = s.query(WorkTime)
+        for column, value in zip(columns, values):
+            query = query.filter(column == value)
+
+        if limit:
+            query = query.limit(limit)
+
+        raw_models = query.all()
         return [WorkTimeSchema.model_validate(raw_wodel) for raw_wodel in raw_models]

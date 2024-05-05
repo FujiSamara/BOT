@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
     storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
+    date_format: str = "%d.%m.%Y"
 
     @computed_field
     @property
