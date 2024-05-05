@@ -282,3 +282,12 @@ def get_work_time_records_by_day_and_department(
         [WorkTime.department_id, WorkTime.day],
         [department_id, day.strftime(get_settings().date_format)],
     )
+
+
+def get_worker_by_id(id: int) -> WorkerSchema:
+    """
+    Returns worker in database with `id` at column.
+
+    If user not exist return `None`.
+    """
+    return orm.find_worker_by_column(Worker.id, id)

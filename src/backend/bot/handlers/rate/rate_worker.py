@@ -76,3 +76,11 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
     await try_edit_or_answer(
         message=callback.message, text="Выберите работника:", reply_markup=keyboard
     )
+
+
+@router.callback_query(RateShiftCallbackData.filter(F.worker_id != -1))
+async def get_worker_menu(
+    callback: CallbackQuery, callback_data: RateShiftCallbackData
+):
+    worker = service.get_worker_by_id(callback_data.worker_id)
+    pass
