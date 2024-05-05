@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 router = Router(name="rating")
 
 
-@router.callback_query(F.data == "get_rating_menu")
+@router.callback_query(F.data == rating_menu_button.callback_data)
 async def get_rating_list(callback: CallbackQuery):
     now = datetime.now().date()
 
@@ -42,21 +42,34 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
     date = callback_data.day
     records = service.get_work_time_records_by_day_and_department(department.id, date)
 
-    buttons = [
-        *(
-            InlineKeyboardButton(
-                text=f"{record.worker.l_name} "
+    buttons = []
+
+    for record in records:
+        time = record.work_begin.split()[1]
+        if record.worker:
+            worker_info = (
+                f"{record.worker.l_name} "
                 + f"{record.worker.f_name} "
-                + f"{record.worker.o_name} "
-                + f"{record.work_begin}",
-                callback_data=RateShiftCallbackData(
-                    day=date, worker_id=record.worker.id
-                ).pack(),
+                + f"{record.worker.o_name}"
             )
-            for record in records
-        ),
-        rating_menu_button,
-    ]
+            worker_id = record.worker.id
+            buttons.append(
+                InlineKeyboardButton(
+                    text=f"{worker_info} " + f"{time}",
+                    callback_data=RateShiftCallbackData(
+                        day=date, worker_id=worker_id
+                    ).pack(),
+                )
+            )
+        else:
+            buttons.append(
+                InlineKeyboardButton(
+                    text=f"Работник не найден {time}",
+                    callback_data=rating_menu_button.callback_data,
+                )
+            )
+
+    buttons.append(rating_menu_button)
 
     keyboard = create_inline_keyboard(*buttons)
 
