@@ -258,3 +258,6 @@ class WorkTime(Base):
     work_end: Mapped[str] = mapped_column(nullable=False)
     work_duration: Mapped[float] = mapped_column(nullable=False)
     day: Mapped[str] = mapped_column(nullable=False)
+
+    rating: Mapped[int] = mapped_column(nullable=True)
+    fine: Mapped[int] = mapped_column(nullable=True)
