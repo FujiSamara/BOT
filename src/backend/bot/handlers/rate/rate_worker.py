@@ -1,31 +1,40 @@
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton
+from datetime import datetime, timedelta
 
-from bot.kb import create_inline_keyboard, main_menu_button, rating_menu_button
 from db import service
 from settings import get_settings
 from bot.handlers.utils import try_edit_or_answer
+from bot.handlers.rate.utils import get_shift_status
+from bot.kb import create_inline_keyboard, main_menu_button, rating_menu_button
 from bot.handlers.rate.schemas import RateShiftCallbackData
-from datetime import datetime, timedelta
 
 router = Router(name="rating")
 
 
 @router.callback_query(F.data == rating_menu_button.callback_data)
 async def get_rating_list(callback: CallbackQuery):
-    now = datetime.now().date()
+    department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
+    day = datetime.now().date()
 
     buttons = []
 
-    for _ in range(10):
+    for i in range(10):
+        label = ""
+
+        if get_shift_status(day, department.id):
+            label = "✅"
+        elif i != 0:
+            label = "❗️"
+
         buttons.append(
             InlineKeyboardButton(
-                text=now.strftime(get_settings().date_format),
-                callback_data=RateShiftCallbackData(day=now, worker_id=-1).pack(),
+                text=day.strftime(get_settings().date_format) + f" {label}",
+                callback_data=RateShiftCallbackData(day=day, worker_id=-1).pack(),
             )
         )
 
-        now -= timedelta(days=1)
+        day -= timedelta(days=1)
 
     buttons.append(main_menu_button)
 
@@ -46,6 +55,11 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
 
     for record in records:
         time = record.work_begin.split()[1]
+        label = ""
+
+        if record.fine or record.rating:
+            label = "✅"
+
         if record.worker:
             worker_info = (
                 f"{record.worker.l_name} "
@@ -55,7 +69,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
             worker_id = record.worker.id
             buttons.append(
                 InlineKeyboardButton(
-                    text=f"{worker_info} " + f"{time}",
+                    text=f"{worker_info} " + f"{time}{label}",
                     callback_data=RateShiftCallbackData(
                         day=date, worker_id=worker_id
                     ).pack(),
@@ -64,7 +78,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
         else:
             buttons.append(
                 InlineKeyboardButton(
-                    text=f"Работник не найден {time}",
+                    text=f"Работник не найден {time}{label}",
                     callback_data=rating_menu_button.callback_data,
                 )
             )
