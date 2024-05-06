@@ -17,6 +17,8 @@ async def get_rating_list(callback: CallbackQuery):
     department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
     day = datetime.now().date()
 
+    day -= timedelta(days=8)
+
     buttons = []
 
     for i in range(10):
@@ -69,7 +71,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
             worker_id = record.worker.id
             buttons.append(
                 InlineKeyboardButton(
-                    text=f"{worker_info} " + f"{time}{label}",
+                    text=f"{worker_info} {time}{label}",
                     callback_data=RateShiftCallbackData(
                         day=date, worker_id=worker_id
                     ).pack(),
@@ -96,5 +98,41 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
 async def get_worker_menu(
     callback: CallbackQuery, callback_data: RateShiftCallbackData
 ):
+    # Settings data
     worker = service.get_worker_by_id(callback_data.worker_id)
-    pass
+    date = callback_data.day
+    record = service.get_work_time_record_by_day_and_worker(
+        callback_data.worker_id, date
+    )
+    time_begin = record.work_begin.split()[1]
+    fine = record.fine
+    rating = record.rating
+
+    worker_info = "Работник не найден"
+
+    if record.worker:
+        worker_info = (
+            f"{record.worker.l_name} "
+            + f"{record.worker.f_name} "
+            + f"{record.worker.o_name}"
+        )
+
+        worker_id = record.worker.id
+
+    # Settings buttons and keyboard
+    buttons = []
+
+    keyboard = create_inline_keyboard(*buttons)
+
+    buttons.append(
+        InlineKeyboardButton(
+            text=f"{worker_info} {time_begin}\n",
+            callback_data=RateShiftCallbackData(day=date, worker_id=worker_id).pack(),
+        )
+    )
+
+    await try_edit_or_answer(
+        message=callback.message,
+        text=f"{worker_info} {time_begin}" + f"На смене: {record.work_duration} часов.",
+        reply_markup=keyboard,
+    )

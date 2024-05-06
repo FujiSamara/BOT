@@ -3,7 +3,7 @@ from aiogram.types import Message, InlineKeyboardMarkup
 from aiogram.utils.markdown import hbold
 from db.models import Access
 from db.schemas import WorkerSchema
-from db.service import get_workers_by_level, get_user_level_by_telegram_id
+from db.service import get_workers_by_level, get_worker_level_by_telegram_id
 from bot.bot import get_bot
 from bot.kb import (
     create_bid_menu_button,
@@ -23,7 +23,7 @@ async def send_menu_by_level(message: Message, edit=None):
 
     If `edit = True` - calling `Message.edit_text` instead `Message.answer`
     """
-    level = get_user_level_by_telegram_id(message.chat.id)
+    level = get_worker_level_by_telegram_id(message.chat.id)
     menus = []
 
     match get_access_by_level(level):

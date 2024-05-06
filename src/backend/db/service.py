@@ -10,11 +10,11 @@ from typing import Any, Optional
 from settings import get_settings
 
 
-def get_user_level_by_telegram_id(id: str) -> int:
+def get_worker_level_by_telegram_id(id: str) -> int:
     """
-    Returns user access level by his telegram id.
+    Returns worker access level by his telegram id.
 
-    Return `-1`, if user doesn't exits.
+    Return `-1`, if worker doesn't exits.
     """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
     if not worker:
@@ -32,9 +32,9 @@ def get_workers_by_level(level: int) -> list[WorkerSchema]:
 
 def get_worker_department_by_telegram_id(id: str) -> DepartmentSchema:
     """
-    Returns user department by his telegram id.
+    Returns worker department by his telegram id.
 
-    If user not exist return `None`.
+    If worker not exist return `None`.
     """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
 
@@ -44,11 +44,11 @@ def get_worker_department_by_telegram_id(id: str) -> DepartmentSchema:
     return orm.find_department_by_column(Department.id, worker.department.id)
 
 
-def update_user_tg_id_by_number(number: str, tg_id: int) -> bool:
+def update_worker_tg_id_by_number(number: str, tg_id: int) -> bool:
     """
     Finds worker by his phone number and sets him telegram id.
 
-    Returns `True`, if user found, `False` otherwise.
+    Returns `True`, if worker found, `False` otherwise.
     """
     worker = orm.find_worker_by_column(Worker.phone_number, number)
     if not worker:
@@ -288,6 +288,20 @@ def get_worker_by_id(id: int) -> WorkerSchema:
     """
     Returns worker in database with `id` at column.
 
-    If user not exist return `None`.
+    If worker not exist return `None`.
     """
     return orm.find_worker_by_column(Worker.id, id)
+
+
+def get_work_time_record_by_day_and_worker(worker_id: int, day: date) -> WorkTimeSchema:
+    """
+    Return work time record in database by `worker_id`
+    and `day`.
+
+    If record not exist return `None`.
+    """
+
+    return orm.find_work_time_record_by_columns(
+        [WorkTime.worker_id, WorkTime.day],
+        [worker_id, day.strftime(get_settings().date_format)],
+    )

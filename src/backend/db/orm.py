@@ -242,3 +242,25 @@ def get_work_time_records_by_columns(
 
         raw_models = query.all()
         return [WorkTimeSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def find_work_time_record_by_columns(
+    columns: list[Any], values: list[Any]
+) -> WorkTimeSchema:
+    """
+    Returns `WorkTime` as `WorkTimeSchema` in database
+    by `columns` with `values`.
+
+    If record not exist return `None`.
+    """
+    with session.begin() as s:
+        query = s.query(WorkTime)
+        for column, value in zip(columns, values):
+            query = query.filter(column == value)
+
+        raw_model = query.first()
+
+        if not raw_model:
+            return None
+
+        return WorkTimeSchema.model_validate(raw_model)

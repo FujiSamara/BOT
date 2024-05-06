@@ -7,4 +7,5 @@ def get_shift_status(day: date, department_id: int) -> bool:
 
     Returns `True` if shift closed `False` otherwise.
     """
+    # TODO: Make checking status.
     return False
