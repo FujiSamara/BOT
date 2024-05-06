@@ -150,7 +150,7 @@ class Worker(Base):
         "Department", back_populates="workers"
     )
 
-    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
+    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
     company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
