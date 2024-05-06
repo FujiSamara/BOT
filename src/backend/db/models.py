@@ -247,7 +247,7 @@ class WorkTime(Base):
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
     company: Mapped["Company"] = relationship("Company", back_populates="work_times")
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)
     post: Mapped["Post"] = relationship("Post", back_populates="work_times")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
