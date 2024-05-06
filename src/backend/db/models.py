@@ -255,10 +255,10 @@ class WorkTime(Base):
         "Department", back_populates="work_times"
     )
 
-    work_begin: Mapped[str] = mapped_column(nullable=False)
-    work_end: Mapped[str] = mapped_column(nullable=False)
-    work_duration: Mapped[float] = mapped_column(nullable=False)
-    day: Mapped[str] = mapped_column(nullable=False)
+    work_begin: Mapped[str] = mapped_column(nullable=True)
+    work_end: Mapped[str] = mapped_column(nullable=True)
+    work_duration: Mapped[float] = mapped_column(nullable=True)
+    day: Mapped[str] = mapped_column(nullable=True)
 
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
