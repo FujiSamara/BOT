@@ -142,7 +142,7 @@ class Worker(Base):
     phone_number: Mapped[str] = mapped_column(nullable=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=True)
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), default=1)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
@@ -218,7 +218,7 @@ class WorkerBid(Base):
     o_name: Mapped[str] = mapped_column(nullable=False)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), default=1)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")
 
     pasport: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
@@ -247,7 +247,7 @@ class WorkTime(Base):
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
     company: Mapped["Company"] = relationship("Company", back_populates="work_times")
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), default=1)
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="work_times")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
