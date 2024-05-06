@@ -56,7 +56,7 @@ def get_settings() -> Settings:
 
     Settings will be generate only for first call.
     """
-    load_dotenv()
+    load_dotenv(override=True)
     try:
         settings = Settings()
         return settings
