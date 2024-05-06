@@ -35,10 +35,10 @@ class WorkerSchema(BaseSchema):
     l_name: str
     o_name: str
     b_date: Optional[datetime.date] = datetime.date(1, 1, 1)
-    phone_number: str
+    phone_number: Optional[str]
     telegram_id: Optional[int]
 
-    post: PostSchema
+    post: Optional[PostSchema]
 
     department: DepartmentSchema
 

@@ -95,7 +95,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
 
     kru_state = ApprovalStatus.pending_approval
     owner_state = ApprovalStatus.pending
-    if int(amount) < 10000:
+    if int(amount) <= 30000:
         owner_state = ApprovalStatus.skipped
     accountant_card_state = ApprovalStatus.pending
     accountant_cash_state = ApprovalStatus.pending
