@@ -10,7 +10,7 @@ from bot.states import Auth, Base
 from bot.handlers.main_handler import send_menu_by_level
 
 # db imports
-from db.service import update_user_tg_id_by_number
+from db.service import update_worker_tg_id_by_number
 
 
 router = Router(name="auth")
@@ -19,7 +19,7 @@ router = Router(name="auth")
 @router.message(Auth.authing)
 @flags.chat_action("typing")
 async def auth(message: Message, state: FSMContext):
-    if update_user_tg_id_by_number(message.html_text, message.from_user.id):
+    if update_worker_tg_id_by_number(message.html_text, message.from_user.id):
         await state.set_state(Base.none)
         await send_menu_by_level(message)
     else:

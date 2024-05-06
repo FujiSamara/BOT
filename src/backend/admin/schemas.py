@@ -8,13 +8,14 @@ from db.models import Bid, Worker, Company, Department, Post, WorkerBid
 from xlsxwriter import Workbook
 from settings import get_settings
 from pathlib import Path
-from bot.kb import payment_type_dict, approval_state_dict
+from bot.kb import payment_type_dict, approval_status_dict
 
 
 class PostView(ModelView, model=Post):
-    column_list = [Post.id, Post.name, Post.level]
+    column_list = [Post.id, Post.name, Post.level, Post.salary]
     column_searchable_list = [Post.name, Post.level]
-    form_excluded_columns = [Post.workers]
+    form_columns = [Post.name, Post.level, Post.salary]
+    column_details_exclude_list = [Post.work_times, Post.workers_bids]
     can_export = False
 
     name_plural = "Должности"
@@ -22,12 +23,18 @@ class PostView(ModelView, model=Post):
     column_labels = {
         Post.name: "Название",
         Post.level: "Уровень доступа",
-        Post.workers: "Работники"
+        Post.workers: "Работники",
+        Post.salary: "Зарплата",
     }
 
 
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
+    column_details_exclude_list = [
+        Company.biosmart_strid,
+        Company.bs_import,
+        Company.work_times,
+    ]
     column_searchable_list = [Company.name]
     form_columns = [Company.name]
     can_export = False
@@ -36,15 +43,31 @@ class CompanyView(ModelView, model=Company):
     name = "Компания"
     column_labels = {
         Company.name: "Название",
-        Company.departments: "Производства"
+        Company.departments: "Производства",
+        Company.workers: "Работники",
+        Company.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
 
 class DepartmentView(ModelView, model=Department):
     column_list = [Department.id, Department.name]
     column_searchable_list = [Department.name]
-    column_details_exclude_list = [Department.company_id]
-    form_excluded_columns = [Department.workers, Department.bids]
+    column_details_exclude_list = [
+        Department.company_id,
+        Department.bs_import,
+        Department.bs_import_error_text,
+        Department.work_times,
+        Department.biosmart_strid,
+    ]
+    form_excluded_columns = [
+        Department.workers,
+        Department.bids,
+        Department.bs_import,
+        Department.bs_import_error_text,
+        Department.work_times,
+        Department.bs_import_error,
+        Department.biosmart_strid,
+    ]
     can_export = False
 
     name_plural = "Производства"
@@ -55,22 +78,34 @@ class DepartmentView(ModelView, model=Department):
         Department.workers: "Работники",
         Department.bids: "Заявки",
         Department.company: "Компания",
+        Department.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
     form_ajax_refs = {
         "company": {
-            "fields": ("name", ),
+            "fields": ("name",),
             "order_by": "name",
         }
     }
 
 
 class WorkerView(ModelView, model=Worker):
-    column_searchable_list = [Worker.f_name, Worker.l_name, Worker.o_name,
-                              Worker.phone_number]
-    column_list = [Worker.f_name, Worker.l_name, Worker.o_name,
-                   Worker.phone_number]
-    column_details_exclude_list = [Worker.department_id, Worker.post_id]
+    column_searchable_list = [
+        Worker.f_name,
+        Worker.l_name,
+        Worker.o_name,
+        Worker.phone_number,
+    ]
+    column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
+    column_details_exclude_list = [
+        Worker.department_id,
+        Worker.post_id,
+        Worker.work_times,
+        Worker.company_id,
+        Worker.biosmart_strid,
+        Worker.bs_import,
+        Worker.bs_import_error_text,
+    ]
     can_export = False
 
     name_plural = "Работники"
@@ -84,6 +119,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.b_date: "Дата рождения",
         Worker.bids: "Заявки",
         Worker.phone_number: "Номер телефона",
+        Worker.company: "Компания",
+        Worker.telegram_id: "ID телеграмм",
+        Worker.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
     form_columns = [
@@ -93,18 +131,18 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number,
         Worker.department,
         Worker.post,
-        Worker.b_date
+        Worker.b_date,
     ]
 
     form_ajax_refs = {
         "department": {
-            "fields": ("name", ),
+            "fields": ("name",),
             "order_by": "name",
         },
         "post": {
-            "fields": ("name", ),
+            "fields": ("name",),
             "order_by": "name",
-        }
+        },
     }
 
 
@@ -118,11 +156,7 @@ class BidView(ModelView, model=Bid):
     column_searchable_list = [
         "worker.l_name",
     ]
-    column_sortable_list = [
-        Bid.amount,
-        Bid.create_date,
-        Bid.id
-    ]
+    column_sortable_list = [Bid.amount, Bid.create_date, Bid.id]
     column_list = [
         Bid.id,
         Bid.create_date,
@@ -141,13 +175,13 @@ class BidView(ModelView, model=Bid):
         Bid.accountant_cash_state,
         Bid.accountant_card_state,
         Bid.teller_cash_state,
-        Bid.teller_card_state
+        Bid.teller_card_state,
     ]
 
     column_details_list = column_list
 
     @staticmethod
-    def datetime_format(value, format="%H:%M %d-%m-%y"):
+    def datetime_format(value, format="%H:%M %d.%m.%y"):
         return value.strftime(format)
 
     @staticmethod
@@ -161,8 +195,10 @@ class BidView(ModelView, model=Bid):
 
         filename = Path(value).name
 
-        return {"filename": filename, "href":
-                f"{proto}://{host}:{port}/admin/download?path={value}"}
+        return {
+            "filename": filename,
+            "href": f"{proto}://{host}:{port}/admin/download?path={value}",
+        }
 
     @staticmethod
     def payment_type_format(inst, column):
@@ -171,38 +207,33 @@ class BidView(ModelView, model=Bid):
         return payment_type_dict.get(value)
 
     @staticmethod
-    def approval_state_format(inst, columm):
+    def approval_status_format(inst, columm):
         value = getattr(inst, columm)
 
-        return approval_state_dict.get(value)
+        return approval_status_dict.get(value)
 
-    column_type_formatters = {
-        datetime.datetime: datetime_format
-    }
+    column_type_formatters = {datetime.datetime: datetime_format}
     column_formatters = {
-       Bid.kru_state: approval_state_format,
-       Bid.owner_state: approval_state_format,
-       Bid.accountant_card_state: approval_state_format,
-       Bid.accountant_cash_state: approval_state_format,
-       Bid.teller_card_state: approval_state_format,
-       Bid.teller_cash_state: approval_state_format,
-       Bid.document: file_format,
-       Bid.payment_type: payment_type_format
+        Bid.kru_state: approval_status_format,
+        Bid.owner_state: approval_status_format,
+        Bid.accountant_card_state: approval_status_format,
+        Bid.accountant_cash_state: approval_status_format,
+        Bid.teller_card_state: approval_status_format,
+        Bid.teller_cash_state: approval_status_format,
+        Bid.document: file_format,
+        Bid.payment_type: payment_type_format,
     }
     column_formatters_detail = column_formatters
 
-    column_export_exclude_list = [
-        Bid.department_id,
-        Bid.worker_id,
-        Bid.document
-    ]
+    column_export_exclude_list = [Bid.department_id, Bid.worker_id, Bid.document]
 
-    async def export_data(self, data: List[Any],
-                          export_type: str = "csv") -> StreamingResponse:
-        '''
+    async def export_data(
+        self, data: List[Any], export_type: str = "csv"
+    ) -> StreamingResponse:
+        """
         Overrides `ModelView.export_date`
         to return `xlsx` tables instead `csv`.
-        '''
+        """
         CELL_LENGTH = 18
 
         output = BytesIO()
@@ -217,7 +248,7 @@ class BidView(ModelView, model=Bid):
                 if isinstance(val, datetime.datetime):
                     val = BidView.datetime_format(val)
                 if name.split("_")[-1] == "state":
-                    val = BidView.approval_state_format(elem, name)
+                    val = BidView.approval_status_format(elem, name)
                 if name == "payment_type":
                     val = BidView.payment_type_format(elem, name)
                 vals.append(str(val))
@@ -235,35 +266,35 @@ class BidView(ModelView, model=Bid):
     name_plural = "Заявки"
     name = "Заявка"
     column_labels = {
-       Bid.agreement: "Наличие соглашеия",
-       Bid.amount: "Сумма",
-       Bid.comment: "Комментарий",
-       Bid.create_date: "Дата создания",
-       Bid.department: "Производство",
-       Bid.need_document: "Необходимость документа, подтверждающего оплату",
-       Bid.payment_type: "Тип оплаты",
-       Bid.purpose: "Цель платежа",
-       Bid.urgently: "Срочная",
-       Bid.worker: "Работник",
-       Bid.document: "Подтверждающий документ",
-       Bid.kru_state: "КРУ",
-       Bid.owner_state: "Собственник",
-       Bid.accountant_card_state: "Бухгалтер безнал.",
-       Bid.accountant_cash_state: "Бухгалтер нал.",
-       Bid.teller_card_state: "Кассир безнал.",
-       Bid.teller_cash_state: "Кассир нал.",
-       "worker.l_name": "Фамилия работника",
+        Bid.agreement: "Наличие соглашеия",
+        Bid.amount: "Сумма",
+        Bid.comment: "Комментарий",
+        Bid.create_date: "Дата создания",
+        Bid.department: "Производство",
+        Bid.need_document: "Необходимость документа, подтверждающего оплату",
+        Bid.payment_type: "Тип оплаты",
+        Bid.purpose: "Цель платежа",
+        Bid.urgently: "Срочная",
+        Bid.worker: "Работник",
+        Bid.document: "Подтверждающий документ",
+        Bid.kru_state: "КРУ",
+        Bid.owner_state: "Собственник",
+        Bid.accountant_card_state: "Бухгалтер безнал.",
+        Bid.accountant_cash_state: "Бухгалтер нал.",
+        Bid.teller_card_state: "Кассир безнал.",
+        Bid.teller_cash_state: "Кассир нал.",
+        "worker.l_name": "Фамилия работника",
     }
 
     form_ajax_refs = {
         "department": {
-            "fields": ("name", ),
+            "fields": ("name",),
             "order_by": "name",
         },
         "worker": {
-            "fields": ("f_name", ),
+            "fields": ("f_name",),
             "order_by": "l_name",
-        }
+        },
     }
 
 
@@ -280,7 +311,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.worksheet: "Анкета",
         WorkerBid.pasport: "Паспорт",
         WorkerBid.state: "Статус",
-        WorkerBid.create_date: "Дата создания"
+        WorkerBid.create_date: "Дата создания",
     }
 
     column_list = [
@@ -292,23 +323,19 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.pasport,
         WorkerBid.work_permission_document,
         WorkerBid.worksheet,
-        WorkerBid.state
+        WorkerBid.state,
     ]
 
     column_details_list = column_list
 
-    column_searchable_list = [
-        WorkerBid.f_name,
-        WorkerBid.l_name,
-        WorkerBid.o_name
-    ]
+    column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
 
     column_sortable_list = [
         WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.id,
         WorkerBid.o_name,
-        WorkerBid.f_name
+        WorkerBid.f_name,
     ]
 
     can_create = False
@@ -316,16 +343,12 @@ class WorkerBidView(ModelView, model=WorkerBid):
     name_plural = "Заявки на работу"
     name = "Заявка на работу"
 
-    form_columns = [
-        WorkerBid.state
-    ]
+    form_columns = [WorkerBid.state]
 
-    column_type_formatters = {
-        datetime.datetime: BidView.datetime_format
-    }
+    column_type_formatters = {datetime.datetime: BidView.datetime_format}
     column_formatters = {
-       WorkerBid.state: BidView.approval_state_format,
-       WorkerBid.pasport: BidView.file_format,
-       WorkerBid.work_permission_document: BidView.file_format,
-       WorkerBid.worksheet: BidView.file_format,
+        WorkerBid.state: BidView.approval_status_format,
+        WorkerBid.pasport: BidView.file_format,
+        WorkerBid.work_permission_document: BidView.file_format,
+        WorkerBid.worksheet: BidView.file_format,
     }

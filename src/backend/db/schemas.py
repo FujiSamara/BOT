@@ -3,13 +3,14 @@ from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
 from fastapi import UploadFile
-from db.models import ApprovalState
+from db.models import ApprovalStatus
 
 
 # Full shemas
 class BaseSchema(BaseModel):
     class Config:
         from_attributes = True
+
     id: int
 
 
@@ -70,11 +71,25 @@ class BidSchema(BaseModel):
     comment: Optional[str]
 
     # States
-    kru_state: ApprovalState
-    owner_state: ApprovalState
-    accountant_card_state: ApprovalState
-    accountant_cash_state: ApprovalState
-    teller_card_state: ApprovalState
-    teller_cash_state: ApprovalState
+    kru_state: ApprovalStatus
+    owner_state: ApprovalStatus
+    accountant_card_state: ApprovalStatus
+    accountant_cash_state: ApprovalStatus
+    teller_card_state: ApprovalStatus
+    teller_cash_state: ApprovalStatus
+
+
+class WorkTimeSchema(BaseSchema):
+    worker: Optional[WorkerSchema]
+    department: Optional[DepartmentSchema]
+
+    work_begin: Optional[str]
+    work_end: Optional[str]
+    day: str
+    work_duration: float
+
+    rating: Optional[int]
+    fine: Optional[int]
+
 
 # Create shemas

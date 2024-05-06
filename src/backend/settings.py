@@ -6,6 +6,7 @@ from functools import lru_cache
 import logging
 import sys
 from fastapi_storages import FileSystemStorage
+from dotenv import load_dotenv
 
 
 class Settings(BaseSettings):
@@ -13,11 +14,10 @@ class Settings(BaseSettings):
     host: str = Field(validation_alias="HOST", default="127.0.0.1")
     domain: str = Field(validation_alias="DOMAIN", default="127.0.0.1")
     port: int = Field(validation_alias="PORT", default=5000)
-    ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE",
-                                       default=None)
-    ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE",
-                                        default=None)
+    ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
+    ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
     storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
+    date_format: str = "%d.%m.%Y"
 
     @computed_field
     @property
@@ -32,18 +32,16 @@ class Settings(BaseSettings):
     # psql
     psql_pass: str = Field(validation_alias="POSTGRES_PASSWORD")
     psql_user: str = Field(validation_alias="POSTGRES_USER")
-    psql_host: str = Field(validation_alias="POSTGRES_HOST",
-                           default="127.0.0.1")
+    psql_host: str = Field(validation_alias="POSTGRES_HOST", default="127.0.0.1")
     psql_port: int = Field(validation_alias="POSTGRES_PORT", default=5432)
-    psql_db_name: str = Field(validation_alias="POSTGRES_DB_NAME",
-                              default="postgres")
+    psql_db_name: str = Field(validation_alias="POSTGRES_DB_NAME", default="postgres")
 
     @computed_field
     @property
     def psql_dsn(self) -> str:
         return (
-            f"postgresql+psycopg://{self.psql_user}:{self.psql_pass}" +
-            f"@{self.psql_host}:{self.psql_port}/{self.psql_db_name}"
+            f"postgresql+psycopg://{self.psql_user}:{self.psql_pass}"
+            + f"@{self.psql_host}:{self.psql_port}/{self.psql_db_name}"
         )
 
     # bot
@@ -54,10 +52,11 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    '''Returns settings of app.
+    """Returns settings of app.
 
     Settings will be generate only for first call.
-    '''
+    """
+    load_dotenv(override=True)
     try:
         settings = Settings()
         return settings
