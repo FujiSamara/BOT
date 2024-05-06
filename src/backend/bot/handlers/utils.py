@@ -35,13 +35,13 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([teller_card_menu_button])
         case Access.kru:
             menus.append([kru_menu_button])
-            menus.append([rating_menu_button])
         case Access.accountant_cash:
             menus.append([accountant_cash_menu_button])
         case Access.accountant_card:
             menus.append([accountant_card_menu_button])
         case Access.owner:
             menus.append([owner_menu_button])
+            menus.append([rating_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
 
