@@ -59,26 +59,27 @@ def get_access_by_level(level: int) -> Access:
     """
     Returns relevant worker post by `level`.
     """
-    if level >= 2 and level <= 3:
-        return Access.worker
-
-    if level == 4:
-        return Access.teller_cash
-
-    if level == 5:
-        return Access.teller_card
-
-    if level == 6:
-        return Access.kru
 
     if level == 7:
-        return Access.accountant_cash
+        return Access.teller_cash
 
     if level == 8:
+        return Access.teller_card
+
+    if level == 16:
+        return Access.kru
+
+    if level == 17:
+        return Access.accountant_cash
+
+    if level == 18:
         return Access.accountant_card
 
-    if level == 10:
+    if level == 25:
         return Access.owner
+
+    if level >= 5:
+        return Access.worker
 
 
 async def try_delete_message(message: Message) -> bool:
