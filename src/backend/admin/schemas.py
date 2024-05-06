@@ -12,9 +12,9 @@ from bot.kb import payment_type_dict, approval_status_dict
 
 
 class PostView(ModelView, model=Post):
-    column_list = [Post.id, Post.name, Post.level]
+    column_list = [Post.id, Post.name, Post.level, Post.salary]
     column_searchable_list = [Post.name, Post.level]
-    form_columns = [Post.name, Post.level]
+    form_columns = [Post.name, Post.level, Post.salary]
     column_details_exclude_list = [Post.work_times, Post.workers_bids]
     can_export = False
 
@@ -24,6 +24,7 @@ class PostView(ModelView, model=Post):
         Post.name: "Название",
         Post.level: "Уровень доступа",
         Post.workers: "Работники",
+        Post.salary: "Зарплата",
     }
 
 

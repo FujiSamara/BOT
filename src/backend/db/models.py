@@ -43,6 +43,7 @@ class Post(Base):
 
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
+    salary: Mapped[float] = mapped_column(nullable=True)
     level: Mapped[int] = mapped_column(
         CheckConstraint("level<=10 AND level>0"), nullable=False
     )
@@ -138,10 +139,10 @@ class Worker(Base):
     l_name: Mapped[str] = mapped_column(nullable=False)
     o_name: Mapped[str] = mapped_column(nullable=False)
     b_date: Mapped[datetime.date] = mapped_column(nullable=True)
-    phone_number: Mapped[str] = mapped_column(nullable=False)
+    phone_number: Mapped[str] = mapped_column(nullable=True)
     telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True, nullable=True)
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)
     post: Mapped["Post"] = relationship("Post", back_populates="workers")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
@@ -246,7 +247,7 @@ class WorkTime(Base):
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
     company: Mapped["Company"] = relationship("Company", back_populates="work_times")
 
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)
     post: Mapped["Post"] = relationship("Post", back_populates="work_times")
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
@@ -254,10 +255,10 @@ class WorkTime(Base):
         "Department", back_populates="work_times"
     )
 
-    work_begin: Mapped[str] = mapped_column(nullable=False)
-    work_end: Mapped[str] = mapped_column(nullable=False)
-    work_duration: Mapped[float] = mapped_column(nullable=False)
-    day: Mapped[str] = mapped_column(nullable=False)
+    work_begin: Mapped[str] = mapped_column(nullable=True)
+    work_end: Mapped[str] = mapped_column(nullable=True)
+    work_duration: Mapped[float] = mapped_column(nullable=True)
+    day: Mapped[str] = mapped_column(nullable=True)
 
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
