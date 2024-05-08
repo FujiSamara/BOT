@@ -10,6 +10,7 @@ class Auth(StatesGroup):
     authing = State()
 
 
+# Bid
 class BidCreating(StatesGroup):
     department = State()
     payment_amount = State()
@@ -19,3 +20,9 @@ class BidCreating(StatesGroup):
     need_document = State()
     comment = State()
     document = State()
+
+
+# Rate
+class RateForm(StatesGroup):
+    rating = State()
+    fine = State()

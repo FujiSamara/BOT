@@ -7,7 +7,9 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Document
 
+from bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from db.models import ApprovalStatus
+from db.schemas import WorkTimeSchema
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
@@ -165,7 +167,6 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
                 text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form"
             )
         ],
-        # TODO: Sets remaining payment button
         [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
         [create_bid_menu_button],
     ]
@@ -208,3 +209,44 @@ payment_type_menu = InlineKeyboardMarkup(
 rating_menu_button = InlineKeyboardButton(
     text="Меню оценки", callback_data="get_rating_menu"
 )
+
+
+async def get_rating_worker_menu(
+    fine: int, rating: int, record: WorkTimeSchema
+) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    text="Оценка",
+                    callback_data=RateShiftCallbackData(
+                        day=record.day,
+                        record_id=record.id,
+                        rating=rating,
+                        fine=fine,
+                        form_status=RateFormStatus.GET_FORM,
+                    ).pack(),
+                ),
+                InlineKeyboardButton(
+                    text=rating,
+                    callback_data="dummy",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Штраф",
+                    callback_data=RateShiftCallbackData(
+                        day=record.day,
+                        record_id=record.id,
+                        rating=rating,
+                        fine=fine,
+                        form_status=RateFormStatus.GET_FORM,
+                    ).pack(),
+                ),
+                InlineKeyboardButton(
+                    text=fine,
+                    callback_data="dummy",
+                ),
+            ],
+        ]
+    )

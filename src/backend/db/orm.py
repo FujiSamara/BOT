@@ -264,3 +264,29 @@ def find_work_time_record_by_columns(
             return None
 
         return WorkTimeSchema.model_validate(raw_model)
+
+
+def update_work_time(record: WorkTimeSchema):
+    """Updates work time by it id."""
+    with session.begin() as s:
+        old = s.query(WorkTime).filter(WorkTime.id == record.id).first()
+
+        if not record:
+            return None
+
+        if record.worker:
+            worker = s.query(Worker).filter(Worker.id == record.worker.id)
+            old.worker = worker
+
+        if record.department:
+            department = s.query(Department).filter(
+                Department.id == record.department.id
+            )
+            old.department = department
+
+        old.day = record.day
+        old.work_begin = record.work_begin
+        old.work_end = record.work_end
+        old.work_duration = record.work_duration
+        old.rating = record.rating
+        old.fine = record.fine
