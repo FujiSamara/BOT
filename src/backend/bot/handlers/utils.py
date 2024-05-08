@@ -101,6 +101,8 @@ def get_levels_by_access(access: Access) -> list[int]:
             return [17]
         case Access.owner:
             return [25]
+        case _:
+            return []
 
 
 async def try_delete_message(message: Message) -> bool:
