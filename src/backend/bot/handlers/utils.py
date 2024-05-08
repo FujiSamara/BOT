@@ -35,13 +35,13 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([teller_card_menu_button])
         case Access.kru:
             menus.append([kru_menu_button])
-            menus.append([rating_menu_button])
         case Access.accountant_cash:
             menus.append([accountant_cash_menu_button])
         case Access.accountant_card:
             menus.append([accountant_card_menu_button])
         case Access.owner:
             menus.append([owner_menu_button])
+            menus.append([rating_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
 
@@ -80,6 +80,27 @@ def get_access_by_level(level: int) -> Access:
 
     if level >= 5:
         return Access.worker
+
+
+def get_levels_by_access(access: Access) -> list[int]:
+    """Returns level by access."""
+    match access:
+        case Access.worker:
+            return [5, 6]
+        case Access.kru:
+            return [16]
+        case Access.teller_cash:
+            return [7]
+        case Access.teller_card:
+            return [8]
+        case Access.kru:
+            return [16]
+        case Access.accountant_card:
+            return [18]
+        case Access.accountant_cash:
+            return [17]
+        case Access.owner:
+            return [25]
 
 
 async def try_delete_message(message: Message) -> bool:
@@ -136,3 +157,11 @@ async def notify_workers_by_level(level: int, message: str) -> None:
             continue
         msg = await get_bot().send_message(chat_id=worker.telegram_id, text=message)
         await send_menu_by_level(message=msg)
+
+
+async def nottify_workers_by_access(access: Access, message: str) -> None:
+    """
+    Sends notify `message` to workers by their `access`.
+    """
+    for level in get_levels_by_access(access):
+        await notify_workers_by_level(level, message)
