@@ -26,7 +26,7 @@ from bot.kb import (
     bid_create_pending_button,
 )
 
-from bot.text import bid_err, payment_types, bid_create_greet
+from bot.text import format_err, payment_types, bid_create_greet
 
 from bot.states import BidCreating, Base
 from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
@@ -157,7 +157,7 @@ async def set_amount(message: Message, state: FSMContext):
         await clear_state_with_success(message, state)
     except Exception:
         await message.answer(
-            bid_err, reply_markup=create_inline_keyboard(settings_bid_menu_button)
+            format_err, reply_markup=create_inline_keyboard(settings_bid_menu_button)
         )
 
 
@@ -198,7 +198,7 @@ async def set_department_type(message: Message, state: FSMContext):
         await state.update_data(department=message.text)
         await clear_state_with_success(message, state)
     else:
-        await message.answer(bid_err)
+        await message.answer(format_err)
 
 
 # Purpose section
@@ -234,7 +234,7 @@ async def set_agreement(message: Message, state: FSMContext):
         await state.update_data(agreement=message.text)
         await clear_state_with_success(message, state)
     else:
-        await message.answer(bid_err)
+        await message.answer(format_err)
 
 
 # Comment
@@ -271,7 +271,7 @@ async def set_urgently(message: Message, state: FSMContext):
         await state.update_data(urgently=message.text)
         await clear_state_with_success(message, state)
     else:
-        await message.answer(bid_err)
+        await message.answer(format_err)
 
 
 # Need for a payment system
@@ -292,7 +292,7 @@ async def set_need_document(message: Message, state: FSMContext):
         await state.update_data(need_document=message.text)
         await clear_state_with_success(message, state)
     else:
-        await message.answer(bid_err)
+        await message.answer(format_err)
 
 
 # Document
@@ -313,7 +313,7 @@ async def set_document(message: Message, state: FSMContext):
         await clear_state_with_success(message, state)
     else:
         await message.answer(
-            bid_err, reply_markup=create_inline_keyboard(settings_bid_menu_button)
+            format_err, reply_markup=create_inline_keyboard(settings_bid_menu_button)
         )
 
 

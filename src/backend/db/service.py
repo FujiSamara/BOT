@@ -141,9 +141,7 @@ async def create_bid(
     orm.add_bid(bid)
     from bot.handlers.utils import notify_workers_by_level
 
-    await notify_workers_by_level(
-        level=int(Access.kru.value[0]), message="У вас новая заявка!"
-    )
+    await notify_workers_by_level(level=int(Access.kru), message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -293,15 +291,21 @@ def get_worker_by_id(id: int) -> WorkerSchema:
     return orm.find_worker_by_column(Worker.id, id)
 
 
-def get_work_time_record_by_day_and_worker(worker_id: int, day: date) -> WorkTimeSchema:
+def get_work_time_record_by_id(wid) -> WorkTimeSchema:
     """
-    Return work time record in database by `worker_id`
-    and `day`.
+    Return work time record in database by `id`.
 
     If record not exist return `None`.
     """
 
     return orm.find_work_time_record_by_columns(
-        [WorkTime.worker_id, WorkTime.day],
-        [worker_id, day.strftime(get_settings().date_format)],
+        [WorkTime.id],
+        [id],
     )
+
+
+def update_work_time_record(record: WorkTimeSchema) -> None:
+    """
+    Updates work time record if it exists.
+    """
+    orm.update_work_time(record)
