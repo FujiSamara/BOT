@@ -141,7 +141,7 @@ async def create_bid(
     orm.add_bid(bid)
     from bot.handlers.utils import notify_workers_by_level
 
-    await notify_workers_by_level(level=int(Access.kru), message="У вас новая заявка!")
+    await notify_workers_by_level(level=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
