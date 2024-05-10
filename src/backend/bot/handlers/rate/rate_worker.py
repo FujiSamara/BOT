@@ -26,8 +26,6 @@ async def get_rating_list(callback: CallbackQuery):
     department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
     day = datetime.now().date()
 
-    day -= timedelta(days=8)
-
     buttons = []
 
     for i in range(10):
