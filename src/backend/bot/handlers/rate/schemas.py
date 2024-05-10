@@ -1,5 +1,5 @@
+from typing import Optional
 from aiogram.filters.callback_data import CallbackData
-from datetime import date
 from enum import Enum
 
 
@@ -10,8 +10,8 @@ class RateFormStatus(str, Enum):
 
 
 class RateShiftCallbackData(CallbackData, prefix="rate_shift"):
-    day: date
+    day: str
     record_id: int
-    rating: int = 0
-    fine: int = 0
+    rating: Optional[int] = 0
+    fine: Optional[int] = 0
     form_status: RateFormStatus = RateFormStatus.NONE

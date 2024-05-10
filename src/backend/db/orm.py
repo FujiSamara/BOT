@@ -275,12 +275,14 @@ def update_work_time(record: WorkTimeSchema):
             return None
 
         if record.worker:
-            worker = s.query(Worker).filter(Worker.id == record.worker.id)
+            worker = s.query(Worker).filter(Worker.id == record.worker.id).first()
             old.worker = worker
 
         if record.department:
-            department = s.query(Department).filter(
-                Department.id == record.department.id
+            department = (
+                s.query(Department)
+                .filter(Department.id == record.department.id)
+                .first()
             )
             old.department = department
 

@@ -1,3 +1,4 @@
+import asyncio
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.fsm.context import FSMContext
@@ -13,9 +14,9 @@ from bot.kb import (
     rating_menu_button,
     get_rating_worker_menu,
 )
-from bot.text import err
+from bot.text import format_err
 from bot.handlers.rate.schemas import RateShiftCallbackData, RateFormStatus
-from bot.states import RateForm
+from bot.states import RateForm, Base
 
 router = Router(name="rating")
 
@@ -24,8 +25,6 @@ router = Router(name="rating")
 async def get_rating_list(callback: CallbackQuery):
     department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
     day = datetime.now().date()
-
-    day -= timedelta(days=8)
 
     buttons = []
 
@@ -40,7 +39,9 @@ async def get_rating_list(callback: CallbackQuery):
         buttons.append(
             InlineKeyboardButton(
                 text=day.strftime(get_settings().date_format) + f" {label}",
-                callback_data=RateShiftCallbackData(day=day, record_id=-1).pack(),
+                callback_data=RateShiftCallbackData(
+                    day=day.strftime(get_settings().date_format), record_id=-1
+                ).pack(),
             )
         )
 
@@ -55,10 +56,9 @@ async def get_rating_list(callback: CallbackQuery):
     )
 
 
-@router.callback_query(RateShiftCallbackData.filter(F.worker_id == -1))
-async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackData):
-    department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
-    date = callback_data.day
+async def generate_shifts_menu(message: Message, day: str) -> None:
+    department = service.get_worker_department_by_telegram_id(message.chat.id)
+    date = day
     records = service.get_work_time_records_by_day_and_department(department.id, date)
 
     buttons = []
@@ -99,19 +99,21 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
     keyboard = create_inline_keyboard(*buttons)
 
     await try_edit_or_answer(
-        message=callback.message, text="Выберите работника:", reply_markup=keyboard
+        message=message, text="Выберите работника:", reply_markup=keyboard
     )
 
 
-@router.callback_query(RateShiftCallbackData.filter(F.record_id != -1))
-async def get_worker_menu(
-    callback: CallbackQuery, callback_data: RateShiftCallbackData
-):
+@router.callback_query(RateShiftCallbackData.filter(F.record_id == -1))
+async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackData):
+    await generate_shifts_menu(callback.message, callback_data.day)
+
+
+async def generate_worker_menu(message: Message, record_id: int) -> None:
     # Settings data
-    record = service.get_work_time_record_by_id(callback_data.record_id)
+    record = service.get_work_time_record_by_id(record_id)
     time_begin = record.work_begin.split()[1]
-    fine = record.fine
-    rating = record.rating
+    fine = record.fine or 0
+    rating = record.rating or 0
 
     worker_info = "Работник не найден"
 
@@ -123,13 +125,23 @@ async def get_worker_menu(
         )
 
     # Settings buttons and keyboard
-    keyboard = get_rating_worker_menu(fine, rating)
+    keyboard = get_rating_worker_menu(fine, rating, record)
 
     await try_edit_or_answer(
-        message=callback.message,
+        message=message,
         text=f"{worker_info} {time_begin}\nНа смене был: {record.work_duration} часов.",
         reply_markup=keyboard,
     )
+
+
+@router.callback_query(
+    RateShiftCallbackData.filter(F.record_id != -1),
+    RateShiftCallbackData.filter(F.form_status == RateFormStatus.NONE),
+)
+async def get_worker_menu(
+    callback: CallbackQuery, callback_data: RateShiftCallbackData
+):
+    await generate_worker_menu(callback.message, callback_data.record_id)
 
 
 @router.callback_query(
@@ -140,6 +152,7 @@ async def get_input_form(
 ):
     text = "Введите значение:"
     await state.update_data(record_id=callback_data.record_id)
+
     if callback_data.form_status == RateFormStatus.FINE:
         await state.set_state(RateForm.fine)
         text = "Введите штраф:"
@@ -154,13 +167,43 @@ async def get_input_form(
 async def set_rating(message: Message, state: FSMContext):
     try:
         rating = int(message.text)
+        if rating < 0 or rating > 5:
+            raise
     except Exception:
-        await try_edit_or_answer(
-            message,
-        )
+        await try_edit_or_answer(message, format_err)
+        return
 
-    # if fine != 0 or rating != 0:
-    #     record.rating = rating
-    #     record.fine = fine
+    data = await state.get_data()
 
-    #     service.update_work_time_record(record)
+    record_id = data.get("record_id")
+    record = service.get_work_time_record_by_id(record_id)
+    record.rating = rating
+    service.update_work_time_record(record)
+    await state.clear()
+    await state.set_state(Base.none)
+    msg = await message.answer("Успешно!")
+    await asyncio.sleep(1)
+    await generate_shifts_menu(msg, record.day)
+
+
+@router.message(RateForm.fine)
+async def set_fine(message: Message, state: FSMContext):
+    try:
+        fine = int(message.text)
+        if fine < 0:
+            raise
+    except Exception:
+        await try_edit_or_answer(message, format_err)
+        return
+
+    data = await state.get_data()
+
+    record_id = data.get("record_id")
+    record = service.get_work_time_record_by_id(record_id)
+    record.fine = fine
+    service.update_work_time_record(record)
+    await state.clear()
+    await state.set_state(Base.none)
+    msg = await message.answer("Успешно!")
+    await asyncio.sleep(1)
+    await generate_shifts_menu(msg, record.day)

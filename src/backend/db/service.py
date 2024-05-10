@@ -4,10 +4,9 @@ import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
 from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema, DepartmentSchema
 import logging
-from datetime import datetime, date
+from datetime import datetime
 from fastapi import UploadFile
 from typing import Any, Optional
-from settings import get_settings
 
 
 def get_worker_level_by_telegram_id(id: str) -> int:
@@ -269,7 +268,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
 
 
 def get_work_time_records_by_day_and_department(
-    department_id: int, day: date
+    department_id: int, day: str
 ) -> list[WorkTimeSchema]:
     """
     Returns all work times records in database by `department_id`
@@ -278,7 +277,7 @@ def get_work_time_records_by_day_and_department(
 
     return orm.get_work_time_records_by_columns(
         [WorkTime.department_id, WorkTime.day],
-        [department_id, day.strftime(get_settings().date_format)],
+        [department_id, day],
     )
 
 
@@ -291,7 +290,7 @@ def get_worker_by_id(id: int) -> WorkerSchema:
     return orm.find_worker_by_column(Worker.id, id)
 
 
-def get_work_time_record_by_id(wid) -> WorkTimeSchema:
+def get_work_time_record_by_id(id: int) -> WorkTimeSchema:
     """
     Return work time record in database by `id`.
 

@@ -7,9 +7,9 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Document
 
+from db.schemas import WorkTimeSchema
 from bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from db.models import ApprovalStatus
-from db.schemas import WorkTimeSchema
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
@@ -211,11 +211,11 @@ rating_menu_button = InlineKeyboardButton(
 )
 
 
-async def get_rating_worker_menu(
+def get_rating_worker_menu(
     fine: int, rating: int, record: WorkTimeSchema
 ) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        [
+        inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text="Оценка",
@@ -224,11 +224,11 @@ async def get_rating_worker_menu(
                         record_id=record.id,
                         rating=rating,
                         fine=fine,
-                        form_status=RateFormStatus.GET_FORM,
+                        form_status=RateFormStatus.RATING,
                     ).pack(),
                 ),
                 InlineKeyboardButton(
-                    text=rating,
+                    text=str(rating),
                     callback_data="dummy",
                 ),
             ],
@@ -240,13 +240,23 @@ async def get_rating_worker_menu(
                         record_id=record.id,
                         rating=rating,
                         fine=fine,
-                        form_status=RateFormStatus.GET_FORM,
+                        form_status=RateFormStatus.FINE,
                     ).pack(),
                 ),
                 InlineKeyboardButton(
-                    text=fine,
+                    text=str(fine),
                     callback_data="dummy",
                 ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=RateShiftCallbackData(
+                        day=record.day,
+                        record_id=-1,
+                        form_status=RateFormStatus.NONE,
+                    ).pack(),
+                )
             ],
         ]
     )
