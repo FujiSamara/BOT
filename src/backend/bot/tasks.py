@@ -16,9 +16,9 @@ def notify_with_unclosed_shift() -> None:
     departments_ids = service.get_departments_ids()
 
     for deparment_id in departments_ids:
-        day = datetime.now().date() - timedelta(days=1)
+        previous_day = datetime.now().date() - timedelta(days=1)
 
-        if shift_closed(day, deparment_id):
+        if not shift_closed(previous_day, deparment_id):
             pass
 
     logger.info("Notifying owners completed.")

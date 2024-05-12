@@ -147,9 +147,9 @@ async def create_bid(
     )
 
     orm.add_bid(bid)
-    from bot.handlers.utils import nottify_workers_by_access
+    from bot.handlers.utils import notify_workers_by_access
 
-    await nottify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
+    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -201,7 +201,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     """
     Updates bid state with `state_name` by specified `state`.
     """
-    from bot.handlers.utils import nottify_workers_by_access
+    from bot.handlers.utils import notify_workers_by_access
 
     if state_name == "kru_state":
         if state == ApprovalStatus.approved:
@@ -253,23 +253,23 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.teller_cash_state = ApprovalStatus.approved
 
     if bid.owner_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.owner, message="У вас новая заявка!"
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.accountant_card, message="У вас новая заявка!"
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.accountant_cash, message="У вас новая заявка!"
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.teller_card, message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.teller_cash, message="У вас новая заявка!"
         )
 

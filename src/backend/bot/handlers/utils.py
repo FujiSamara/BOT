@@ -161,7 +161,7 @@ async def notify_workers_by_level(level: int, message: str) -> None:
         await send_menu_by_level(message=msg)
 
 
-async def nottify_workers_by_access(access: Access, message: str) -> None:
+async def notify_workers_by_access(access: Access, message: str) -> None:
     """
     Sends notify `message` to workers by their `access`.
     """
