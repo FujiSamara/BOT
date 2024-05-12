@@ -64,9 +64,18 @@ def update_worker_tg_id_by_number(number: str, tg_id: int) -> bool:
 
 def get_departments_names() -> list[str]:
     """
-    Returns all existed departments.
+    Returns all existed departments names.
     """
     departments_raw = orm.get_departments_columns(Department.name)
+    result = [column[0] for column in departments_raw]
+    return result
+
+
+def get_departments_ids() -> list[int]:
+    """
+    Returns all existed departments ids.
+    """
+    departments_raw = orm.get_departments_columns(Department.id)
     result = [column[0] for column in departments_raw]
     return result
 
