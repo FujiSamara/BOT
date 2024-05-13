@@ -1,6 +1,6 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, Post, WorkTime, Worker, Department, ApprovalStatus
+from db.models import Bid, WorkTime, Worker, Department, ApprovalStatus
 from db.schemas import BidSchema, DepartmentSchema, WorkerSchema, WorkTimeSchema
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
@@ -214,15 +214,25 @@ def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchem
     """
     Returns all `Worker` as `WorkerSchema` in database
     by `column` with `value`.
+
+    Using `get_workers_with_post_by_columns`.
+    """
+    return get_workers_with_post_by_columns([column], [value])
+
+
+def get_workers_with_post_by_columns(
+    columns: list[Any], values: list[Any]
+) -> list[WorkerSchema]:
+    """
+    Returns all `Worker` as `WorkerSchema` in database
+    by `columns` with `values`.
     """
     with session.begin() as s:
-        raw_models = (
-            s.query(Worker, Post)
-            .filter(column == value)
-            .filter(Worker.post_id == Post.id)
-            .all()
-        )
-        return [WorkerSchema.model_validate(raw_wodel[0]) for raw_wodel in raw_models]
+        query = s.query(Worker).join(Worker.post)
+        for column, value in zip(columns, values):
+            query = query.filter(column == value)
+        raw_models = query.all()
+        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
 
 
 def get_work_time_records_by_columns(
