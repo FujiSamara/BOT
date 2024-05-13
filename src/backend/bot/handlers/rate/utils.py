@@ -14,6 +14,8 @@ def shift_closed(day: date, department_id: int) -> bool:
     )
 
     for record in records:
+        if not record.work_begin or not record.work_end:
+            continue
         if not record.fine and not record.rating:
             return False
 

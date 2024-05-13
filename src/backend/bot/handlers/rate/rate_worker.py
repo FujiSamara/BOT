@@ -64,6 +64,9 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
     buttons = []
 
     for record in records:
+        if not record.work_begin or not record.work_end:
+            continue
+
         time = record.work_begin.split()[1]
         label = ""
 
