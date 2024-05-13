@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import FastAPI
 from typing import AsyncGenerator
 from aiogram import Dispatcher
@@ -6,13 +7,12 @@ from settings import get_settings
 from bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
 import logging
 from aiogram.loggers import dispatcher, event, middlewares, scene, webhook
+from bot.tasks import notify_with_unclosed_shift
 
 
 def configure(bot_api: FastAPI):
-    '''Configures fast api admin app.
-    '''
-    bot_api.add_api_route(path="/webhook", endpoint=_bot_webhook,
-                          methods=["POST"])
+    """Configures fast api admin app."""
+    bot_api.add_api_route(path="/webhook", endpoint=_bot_webhook, methods=["POST"])
     _configure_dispatcher(get_dispatcher())
 
     # Disables aiogram loggers
@@ -24,21 +24,28 @@ def configure(bot_api: FastAPI):
 
 
 async def lifespan(_: FastAPI) -> AsyncGenerator:
+    # Bot webhooks
     await get_bot().delete_webhook(drop_pending_updates=True)
     await get_bot().set_webhook(
         url=get_settings().bot_webhook_url,
         secret_token=get_settings().telegram_token,
         allowed_updates=get_dispatcher().resolve_used_update_types(),
-        drop_pending_updates=True
+        drop_pending_updates=True,
     )
     logging.getLogger("uvicorn.error").info(
-        "Webhook info: " + str(await _check_webhook()))
+        "Webhook info: " + str(await _check_webhook()).split()[0]
+    )
+    # Tasks
+    tasks: list[asyncio.Task] = []
+    tasks.append(asyncio.create_task(notify_with_unclosed_shift()))
+
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
+    for task in tasks:
+        task.cancel()
     yield
 
 
 def _configure_dispatcher(dp: Dispatcher):
-    '''Configures telegram dispatcher
-    '''
+    """Configures telegram dispatcher"""
     dp.include_router(router)

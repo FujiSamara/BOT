@@ -157,13 +157,22 @@ async def notify_workers_by_level(level: int, message: str) -> None:
     for worker in workers:
         if not worker.telegram_id:
             continue
-        msg = await get_bot().send_message(chat_id=worker.telegram_id, text=message)
+        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
         await send_menu_by_level(message=msg)
 
 
-async def nottify_workers_by_access(access: Access, message: str) -> None:
+async def notify_workers_by_access(access: Access, message: str) -> None:
     """
     Sends notify `message` to workers by their `access`.
     """
     for level in get_levels_by_access(access):
         await notify_workers_by_level(level, message)
+
+
+async def notify_worker_by_telegram_id(id: int, message: str) -> Message:
+    """
+    Sends notify `message` to worker by their `id`.
+
+    Returns sended `Message`.
+    """
+    return await get_bot().send_message(chat_id=id, text=message)

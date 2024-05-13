@@ -64,9 +64,18 @@ def update_worker_tg_id_by_number(number: str, tg_id: int) -> bool:
 
 def get_departments_names() -> list[str]:
     """
-    Returns all existed departments.
+    Returns all existed departments names.
     """
     departments_raw = orm.get_departments_columns(Department.name)
+    result = [column[0] for column in departments_raw]
+    return result
+
+
+def get_departments_ids() -> list[int]:
+    """
+    Returns all existed departments ids.
+    """
+    departments_raw = orm.get_departments_columns(Department.id)
     result = [column[0] for column in departments_raw]
     return result
 
@@ -138,9 +147,9 @@ async def create_bid(
     )
 
     orm.add_bid(bid)
-    from bot.handlers.utils import nottify_workers_by_access
+    from bot.handlers.utils import notify_workers_by_access
 
-    await nottify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
+    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -192,7 +201,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     """
     Updates bid state with `state_name` by specified `state`.
     """
-    from bot.handlers.utils import nottify_workers_by_access
+    from bot.handlers.utils import notify_workers_by_access
 
     if state_name == "kru_state":
         if state == ApprovalStatus.approved:
@@ -244,23 +253,23 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.teller_cash_state = ApprovalStatus.approved
 
     if bid.owner_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.owner, message="У вас новая заявка!"
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.accountant_card, message="У вас новая заявка!"
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.accountant_cash, message="У вас новая заявка!"
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.teller_card, message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await nottify_workers_by_access(
+        await notify_workers_by_access(
             access=Access.teller_cash, message="У вас новая заявка!"
         )
 
@@ -308,3 +317,22 @@ def update_work_time_record(record: WorkTimeSchema) -> None:
     Updates work time record if it exists.
     """
     orm.update_work_time(record)
+
+
+def get_owner_by_department_id(id: int) -> WorkerSchema:
+    """
+    Return first owner in database by owner department`id`.
+
+    If record not exist returns `None`.
+    """
+    from bot.handlers.utils import get_levels_by_access
+
+    owner_levels = get_levels_by_access(Access.owner)
+    if len(owner_levels) > 0:
+        owner_level = owner_levels[0]
+
+    owners = orm.get_workers_with_post_by_columns(
+        [Worker.department_id, Post.level], [id, owner_level]
+    )
+    if len(owners) > 0:
+        return owners[0]

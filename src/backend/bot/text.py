@@ -25,3 +25,6 @@ bid_create_greet = "Заполните вашу заявку:"
 
 
 format_err = "Введен не верный формат.\nПожалуйста, введите верный:"
+
+unclosed_shift_notify = "У вас осталась не закрытая смена!"
+unclosed_shift_request = "Закройте смену!"

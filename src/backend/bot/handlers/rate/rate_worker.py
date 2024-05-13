@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from db import service
 from settings import get_settings
 from bot.handlers.utils import try_edit_or_answer
-from bot.handlers.rate.utils import get_shift_status
+from bot.handlers.rate.utils import shift_closed
 from bot.kb import (
     create_inline_keyboard,
     main_menu_button,
@@ -31,7 +31,7 @@ async def get_rating_list(callback: CallbackQuery):
     for i in range(10):
         label = ""
 
-        if get_shift_status(day, department.id):
+        if shift_closed(day, department.id):
             label = "✅"
         elif i != 0:
             label = "❗️"

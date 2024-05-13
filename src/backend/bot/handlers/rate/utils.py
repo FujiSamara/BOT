@@ -3,7 +3,7 @@ from db import service
 from settings import get_settings
 
 
-def get_shift_status(day: date, department_id: int) -> bool:
+def shift_closed(day: date, department_id: int) -> bool:
     """
     Checks shift status (pending/closed).
 
