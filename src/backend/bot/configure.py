@@ -24,10 +24,6 @@ def configure(bot_api: FastAPI):
 
 
 async def lifespan(_: FastAPI) -> AsyncGenerator:
-    # Tasks
-    tasks: list[asyncio.Task] = []
-    tasks.append(asyncio.create_task(notify_with_unclosed_shift()))
-
     # Bot webhooks
     await get_bot().delete_webhook(drop_pending_updates=True)
     await get_bot().set_webhook(
@@ -39,6 +35,10 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     logging.getLogger("uvicorn.error").info(
         "Webhook info: " + str(await _check_webhook()).split()[0]
     )
+    # Tasks
+    tasks: list[asyncio.Task] = []
+    tasks.append(asyncio.create_task(notify_with_unclosed_shift()))
+
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
     for task in tasks:
