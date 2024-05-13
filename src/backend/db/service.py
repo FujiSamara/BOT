@@ -317,3 +317,22 @@ def update_work_time_record(record: WorkTimeSchema) -> None:
     Updates work time record if it exists.
     """
     orm.update_work_time(record)
+
+
+def get_owner_by_department_id(id: int) -> WorkerSchema:
+    """
+    Return first owner in database by owner department`id`.
+
+    If record not exist returns `None`.
+    """
+    from bot.handlers.utils import get_levels_by_access
+
+    owner_levels = get_levels_by_access(Access.owner)
+    if len(owner_levels) > 0:
+        owner_level = owner_levels[0]
+
+    owners = orm.get_workers_with_post_by_columns(
+        [Worker.department_id, Post.level], [id, owner_level]
+    )
+    if len(owners) > 0:
+        return owners[0]
