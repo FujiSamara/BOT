@@ -48,11 +48,11 @@ async def send_menu_by_level(message: Message, edit=None):
     if edit:
         await try_edit_or_answer(
             message=message,
-            text=hbold("Выберите дальнейшее действие:"),
+            text=hbold("Фуджи team"),
             reply_markup=menu,
         )
     else:
-        await message.answer(hbold("Выберите дальнейшее действие:"), reply_markup=menu)
+        await message.answer(hbold("Фуджи team"), reply_markup=menu)
 
 
 def get_access_by_level(level: int) -> Access:

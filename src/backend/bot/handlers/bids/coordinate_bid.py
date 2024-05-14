@@ -89,7 +89,9 @@ class CoordinationFactory:
         )
 
         await try_edit_message(
-            message=callback.message, text="Добро пожаловать!", reply_markup=keyboard
+            message=callback.message,
+            text="Согласование платежей",
+            reply_markup=keyboard,
         )
 
     async def decline_bid(self, callback: CallbackQuery, callback_data: BidActionData):

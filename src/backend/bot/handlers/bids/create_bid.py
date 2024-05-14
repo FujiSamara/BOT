@@ -132,7 +132,9 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     await try_edit_message(message=callback.message, text="Успешно!")
     await asyncio.sleep(1)
     await try_edit_message(
-        message=callback.message, text=hbold("Добро пожаловать!"), reply_markup=bid_menu
+        message=callback.message,
+        text=hbold("Согласование платежей"),
+        reply_markup=bid_menu,
     )
     await state.clear()
 

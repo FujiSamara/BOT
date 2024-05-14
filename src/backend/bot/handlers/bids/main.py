@@ -6,9 +6,7 @@ from bot.handlers.bids import create_bid
 from bot.handlers.bids import coordinate_bid
 
 # bot imports
-from bot.kb import (
-    bid_menu
-)
+from bot.kb import bid_menu
 
 
 from bot.states import Base
@@ -19,17 +17,17 @@ router = Router(name="bid_main")
 
 # Main section
 
+
 # Create menu
 @router.callback_query(F.data == "get_create_bid_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
-    await callback.message.edit_text(hbold("Добро пожаловать!"),
-                                     reply_markup=bid_menu)
+    await callback.message.edit_text(
+        hbold("Согласование платежей"), reply_markup=bid_menu
+    )
+
 
 # Create section
 coordinate_bid.build_coordinations()
 
-router.include_routers(
-    create_bid.router,
-    coordinate_bid.router
-)
+router.include_routers(create_bid.router, coordinate_bid.router)
