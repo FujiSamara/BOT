@@ -82,6 +82,7 @@ class BidSchema(BaseModel):
 class WorkTimeSchema(BaseSchema):
     worker: Optional[WorkerSchema]
     department: Optional[DepartmentSchema]
+    post: Optional[PostSchema]
 
     work_begin: Optional[str]
     work_end: Optional[str]
