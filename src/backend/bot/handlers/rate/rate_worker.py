@@ -64,12 +64,7 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
     buttons = []
 
     for record in records:
-        if (
-            not record.work_begin
-            or not record.work_end
-            or not record.post
-            or (record.post.level != 4 and record.post.level != 6)
-        ):
+        if not record.work_begin or not record.work_end:
             continue
 
         time = record.work_begin.split()[1]
@@ -79,6 +74,9 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
             label = "✅"
 
         if record.worker:
+            if record.worker.post.level != 4 and record.worker.post.level != 6:
+                continue
+
             worker_info = (
                 f"{record.worker.l_name} "
                 + f"{record.worker.f_name} "
