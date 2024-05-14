@@ -16,11 +16,11 @@ main_menu_button = InlineKeyboardButton(text="Главное меню", callback
 
 # Bid
 settings_bid_menu_button = InlineKeyboardButton(
-    text="Меню настройки заявки", callback_data="get_bid_settings_menu"
+    text="Создать заявку", callback_data="get_bid_settings_menu"
 )
 
 create_bid_menu_button = InlineKeyboardButton(
-    text="Меню создания заявок", callback_data="get_create_bid_menu"
+    text="Согласование платежей", callback_data="get_create_bid_menu"
 )
 
 
