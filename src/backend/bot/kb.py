@@ -31,21 +31,23 @@ bid_create_pending_button = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_create_pending_bid"
 )
 
-kru_menu_button = InlineKeyboardButton(text="Меню КРУ", callback_data="get_kru_menu")
+kru_menu_button = InlineKeyboardButton(
+    text="Согласование платежей", callback_data="get_kru_menu"
+)
 owner_menu_button = InlineKeyboardButton(
-    text="Меню собственника", callback_data="get_owner_menu"
+    text="Согласование платежей", callback_data="get_owner_menu"
 )
 accountant_card_menu_button = InlineKeyboardButton(
-    text="Меню бухгалтера безнал.", callback_data="get_accountant_card_menu"
+    text="Согласование платежей", callback_data="get_accountant_card_menu"
 )
 accountant_cash_menu_button = InlineKeyboardButton(
-    text="Меню бухгалтера нал.", callback_data="get_accountant_cash_menu"
+    text="Согласование платежей", callback_data="get_accountant_cash_menu"
 )
 teller_card_menu_button = InlineKeyboardButton(
-    text="Меню кассира безнал.", callback_data="get_teller_card_menu"
+    text="Согласование платежей", callback_data="get_teller_card_menu"
 )
 teller_cash_menu_button = InlineKeyboardButton(
-    text="Меню кассира нал.", callback_data="get_teller_cash_menu"
+    text="Согласование платежей", callback_data="get_teller_cash_menu"
 )
 
 # Rating
