@@ -20,11 +20,11 @@ async def notify_with_unclosed_shift() -> None:
 
     for deparment_id in departments_ids:
         if not shift_closed(previous_day, deparment_id):
-            owner = service.get_owner_by_department_id(deparment_id)
-            if owner and owner.telegram_id:
-                logger.info(f"Notifying {owner.l_name} {owner.f_name}...")
+            chef = service.get_chef_by_department_id(deparment_id)
+            if chef and chef.telegram_id:
+                logger.info(f"Notifying {chef.l_name} {chef.f_name}...")
                 msg = await notify_worker_by_telegram_id(
-                    id=owner.telegram_id, message=unclosed_shift_notify
+                    id=chef.telegram_id, message=unclosed_shift_notify
                 )
                 await msg.answer(
                     text=unclosed_shift_request,
