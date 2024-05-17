@@ -29,6 +29,8 @@ async def send_menu_by_level(message: Message, edit=None):
     match get_access_by_level(level):
         case Access.worker:
             menus.append([create_bid_menu_button])
+            if level == 6:
+                menus.append([rating_menu_button])
         case Access.teller_cash:
             menus.append([teller_cash_menu_button])
         case Access.teller_card:
@@ -41,7 +43,6 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([accountant_card_menu_button])
         case Access.owner:
             menus.append([owner_menu_button])
-            menus.append([rating_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
 
