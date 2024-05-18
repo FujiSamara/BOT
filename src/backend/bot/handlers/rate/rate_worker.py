@@ -105,7 +105,7 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
     keyboard = create_inline_keyboard(*buttons)
 
     await try_edit_or_answer(
-        message=message, text="Выберите работника:", reply_markup=keyboard
+        message=message, text=f"Выберите работника ({date}):", reply_markup=keyboard
     )
 
 
@@ -135,7 +135,9 @@ async def generate_worker_menu(message: Message, record_id: int) -> None:
 
     await try_edit_or_answer(
         message=message,
-        text=f"{worker_info} {time_begin}\nНа смене был: {record.work_duration} часов.",
+        text=f"""{worker_info}
+На смену вышел в: {time_begin} {record.day}
+На смене был: {record.work_duration} часов.""",
         reply_markup=keyboard,
     )
 
