@@ -298,9 +298,32 @@ async def set_need_document(message: Message, state: FSMContext):
 
 
 # Document
-@router.callback_query(F.data == "get_document_form")
-async def get_document_form(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "get_document_form1")
+async def get_document_form1(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.document)
+    await state.update_data(document_num=1)
+    await try_delete_message(callback.message)
+    await callback.message.answer(
+        hbold("Прикрепите документ:"),
+        reply_markup=create_inline_keyboard(settings_bid_menu_button),
+    )
+
+
+@router.callback_query(F.data == "get_document_form2")
+async def get_document_form2(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await state.update_data(document_num=2)
+    await try_delete_message(callback.message)
+    await callback.message.answer(
+        hbold("Прикрепите документ:"),
+        reply_markup=create_inline_keyboard(settings_bid_menu_button),
+    )
+
+
+@router.callback_query(F.data == "get_document_form3")
+async def get_document_form3(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await state.update_data(document_num=3)
     await try_delete_message(callback.message)
     await callback.message.answer(
         hbold("Прикрепите документ:"),
@@ -311,7 +334,20 @@ async def get_document_form(callback: CallbackQuery, state: FSMContext):
 @router.message(BidCreating.document)
 async def set_document(message: Message, state: FSMContext):
     if message.document:
-        await state.update_data(document=message.document)
+        data = await state.get_data()
+        num = data.get("document_num")
+        kwargs = {}
+        match num:
+            case 1:
+                kwargs["document1"] = message.document
+            case 2:
+                kwargs["document2"] = message.document
+            case 3:
+                kwargs["document3"] = message.document
+            case _:
+                raise ValueError("Document_num not provided.")
+        await state.update_data(document_num=None)
+        await state.update_data(**kwargs)
         await clear_state_with_success(message, state)
     else:
         await message.answer(
