@@ -87,6 +87,8 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     document2: Document = data.get("document2")
     document3: Document = data.get("document3")
     document_text1 = "Отсутствует"
+    document_text2 = "Отсутствует"
+    document_text3 = "Отсутствует"
 
     all_field_exist = True
 
