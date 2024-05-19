@@ -196,6 +196,12 @@ class Bid(Base):
     worker: Mapped["Worker"] = relationship("Worker", back_populates="bids")
 
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    document1: Mapped[FileType] = mapped_column(
+        FileType(storage=get_settings().storage), nullable=True
+    )
+    document2: Mapped[FileType] = mapped_column(
+        FileType(storage=get_settings().storage), nullable=True
+    )
 
     # States
     kru_state: Mapped[approvalstatus]

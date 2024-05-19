@@ -151,7 +151,7 @@
             <td><a href="{{ model_view._url_for_details_with_prop(request, row, name) }}">{{ formatted_value }}</a></td>
             {% endif %}
             {% else %}
-            {% if name == "document" %}
+            {% if name == "document" or name == "document1" or name == "document2" %}
             <td><a href="{{ formatted_value["href"] }}">{{ formatted_value["filename"] }}</a></td>
             {% else %}
             <td>{{ formatted_value }}</td>

@@ -57,8 +57,10 @@ class BidSchema(BaseModel):
     purpose: str
     create_date: datetime.datetime
     document: UploadFile
+    document1: Optional[UploadFile]
+    document2: Optional[UploadFile]
 
-    @field_validator("document", mode="before")
+    @field_validator("document", "document1", "document2", mode="before")
     @classmethod
     def upload_file_validate(cls, val):
         if isinstance(val, StorageFile):

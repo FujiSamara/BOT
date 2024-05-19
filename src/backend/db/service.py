@@ -1,4 +1,3 @@
-from io import BytesIO
 from pathlib import Path
 import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
@@ -86,8 +85,9 @@ async def create_bid(
     department: str,
     purpose: str,
     telegram_id: int,
-    file: BytesIO,
-    filename: str,
+    file: UploadFile,
+    file1: Optional[UploadFile],
+    file2: Optional[UploadFile],
     kru_state: ApprovalStatus,
     owner_state: ApprovalStatus,
     accountant_cash_state: ApprovalStatus,
@@ -123,8 +123,18 @@ async def create_bid(
     if not last_bid_id:
         last_bid_id = 0
 
-    suffix = Path(filename).suffix
-    filename = f"document_bid_{last_bid_id + 1}{suffix}"
+    if file:
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_{last_bid_id + 1}{suffix}"
+        file.filename = filename
+    if file1:
+        suffix = Path(file1.filename).suffix
+        filename = f"document_bid_{last_bid_id + 1}_1{suffix}"
+        file1.filename = filename
+    if file2:
+        suffix = Path(file2.filename).suffix
+        filename = f"document_bid_{last_bid_id + 1}_2{suffix}"
+        file2.filename = filename
 
     bid = BidSchema(
         amount=amount,
@@ -137,7 +147,9 @@ async def create_bid(
         urgently=urgently,
         need_document=need_document,
         comment=comment,
-        document=UploadFile(file=file, filename=filename),
+        document=file,
+        document1=file1,
+        document2=file2,
         kru_state=kru_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,

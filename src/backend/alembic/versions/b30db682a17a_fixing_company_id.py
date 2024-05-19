@@ -1,7 +1,7 @@
 """Fixing company id
 
 Revision ID: b30db682a17a
-Revises:
+Revises: 76586c886d0d
 Create Date: 2024-05-06 16:42:10.469394
 
 """
@@ -10,11 +10,10 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "b30db682a17a"
-down_revision: Union[str, None] = None
+down_revision: Union[str, None] = "76586c886d0d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

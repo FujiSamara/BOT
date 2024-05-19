@@ -98,6 +98,8 @@ def add_bid(bid: BidSchema):
             department=department,
             worker=worker,
             document=bid.document,
+            document1=bid.document1,
+            document2=bid.document2,
             kru_state=bid.kru_state,
             owner_state=bid.owner_state,
             accountant_card_state=bid.accountant_card_state,

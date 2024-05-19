@@ -3,13 +3,16 @@ from aiogram import F, Router
 from aiogram.types import (
     CallbackQuery,
     Message,
+    PhotoSize,
     Document,
+    File,
     BufferedInputFile,
     ReplyKeyboardRemove,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
+from fastapi import UploadFile
 
 # bot imports
 from bot.bot import get_bot
@@ -77,6 +80,13 @@ async def get_settings_form(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(callback.message, state, sleep_time=0, edit=True)
 
 
+async def download_file(file: Document | PhotoSize) -> UploadFile:
+    """Download the file (photo or document)"""
+    raw_file: File = await get_bot().get_file(file.file_id)
+    byte_file = await get_bot().download_file(raw_file.file_path)
+    return UploadFile(file=byte_file, filename=raw_file.file_path.split("/")[-1])
+
+
 @router.callback_query(F.data == "send_bid")
 async def send_bid(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
@@ -89,9 +99,18 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     urgently = data.get("urgently")
     need_document = data.get("need_document")
     comment = data.get("comment")
-    document: Document = data.get("document")
-    file = await get_bot().get_file(document.file_id)
-    file: BytesIO = await get_bot().download_file(file.file_path)
+    document = data.get("document1")
+    document1 = data.get("document2")
+    document2 = data.get("document3")
+
+    files: list[BytesIO] = []
+
+    if document:
+        files.append(await download_file(document))
+    if document1:
+        files.append(await download_file(document1))
+    if document2:
+        files.append(await download_file(document2))
 
     kru_state = ApprovalStatus.pending_approval
     owner_state = ApprovalStatus.pending
@@ -113,8 +132,9 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         amount=amount,
         payment_type=payment_type,
         department=department,
-        file=file,
-        filename=document.file_name,
+        file=files[0],
+        file1=files[1] if len(files) > 1 else None,
+        file2=files[2] if len(files) > 2 else None,
         purpose=purpose,
         agreement=agreement,
         urgently=urgently,
@@ -298,9 +318,32 @@ async def set_need_document(message: Message, state: FSMContext):
 
 
 # Document
-@router.callback_query(F.data == "get_document_form")
-async def get_document_form(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == "get_document_form1")
+async def get_document_form1(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.document)
+    await state.update_data(document_num=1)
+    await try_delete_message(callback.message)
+    await callback.message.answer(
+        hbold("Прикрепите документ:"),
+        reply_markup=create_inline_keyboard(settings_bid_menu_button),
+    )
+
+
+@router.callback_query(F.data == "get_document_form2")
+async def get_document_form2(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await state.update_data(document_num=2)
+    await try_delete_message(callback.message)
+    await callback.message.answer(
+        hbold("Прикрепите документ:"),
+        reply_markup=create_inline_keyboard(settings_bid_menu_button),
+    )
+
+
+@router.callback_query(F.data == "get_document_form3")
+async def get_document_form3(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.document)
+    await state.update_data(document_num=3)
     await try_delete_message(callback.message)
     await callback.message.answer(
         hbold("Прикрепите документ:"),
@@ -310,8 +353,26 @@ async def get_document_form(callback: CallbackQuery, state: FSMContext):
 
 @router.message(BidCreating.document)
 async def set_document(message: Message, state: FSMContext):
-    if message.document:
-        await state.update_data(document=message.document)
+    if message.document or message.photo:
+        data = await state.get_data()
+        num = data.get("document_num")
+        content = None
+        kwargs = {}
+        if message.content_type == "photo":
+            content = message.photo[-1]
+        elif message.content_type == "document":
+            content = message.document
+        match num:
+            case 1:
+                kwargs["document1"] = content
+            case 2:
+                kwargs["document2"] = content
+            case 3:
+                kwargs["document3"] = content
+            case _:
+                raise ValueError("Document_num not provided.")
+        await state.update_data(document_num=None)
+        await state.update_data(**kwargs)
         await clear_state_with_success(message, state)
     else:
         await message.answer(

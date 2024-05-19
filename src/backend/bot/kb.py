@@ -83,8 +83,12 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     agreement = data.get("agreement")
     urgently = data.get("urgently")
     need_document = data.get("need_document")
-    document: Document = data.get("document")
-    document_text = "Отсутствует"
+    document1: Document = data.get("document1")
+    document2: Document = data.get("document2")
+    document3: Document = data.get("document3")
+    document_text1 = "Отсутствует"
+    document_text2 = "Отсутствует"
+    document_text3 = "Отсутствует"
 
     all_field_exist = True
 
@@ -122,10 +126,23 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         all_field_exist = False
 
-    if not document:
+    if not document1 and not document2 and not document3:
         all_field_exist = False
-    else:
-        document_text = document.file_name + " ✅"
+    if document1:
+        if hasattr(document1, "file_name"):
+            document_text1 = document1.file_name + " ✅"
+        else:
+            document_text1 = "Фотография" + " ✅"
+    if document2:
+        if hasattr(document2, "file_name"):
+            document_text2 = document2.file_name + " ✅"
+        else:
+            document_text2 = "Фотография" + " ✅"
+    if document3:
+        if hasattr(document3, "file_name"):
+            document_text3 = document3.file_name + " ✅"
+        else:
+            document_text3 = "Фотография" + " ✅"
 
     keyboard = [
         [
@@ -143,8 +160,16 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=department, callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Документ", callback_data="get_document_form"),
-            InlineKeyboardButton(text=document_text, callback_data="dummy"),
+            InlineKeyboardButton(text="Документ 1", callback_data="get_document_form1"),
+            InlineKeyboardButton(text=document_text1, callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Документ 2", callback_data="get_document_form2"),
+            InlineKeyboardButton(text=document_text2, callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Документ 3", callback_data="get_document_form3"),
+            InlineKeyboardButton(text=document_text3, callback_data="dummy"),
         ],
         [
             InlineKeyboardButton(
