@@ -129,11 +129,20 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     if not document1 and not document2 and not document3:
         all_field_exist = False
     if document1:
-        document_text1 = document1.file_name + " ✅"
+        if hasattr(document1, "file_name"):
+            document_text1 = document1.file_name + " ✅"
+        else:
+            document_text1 = "Фотография" + " ✅"
     if document2:
-        document_text2 = document2.file_name + " ✅"
+        if hasattr(document2, "file_name"):
+            document_text2 = document2.file_name + " ✅"
+        else:
+            document_text2 = "Фотография" + " ✅"
     if document3:
-        document_text3 = document3.file_name + " ✅"
+        if hasattr(document3, "file_name"):
+            document_text3 = document3.file_name + " ✅"
+        else:
+            document_text3 = "Фотография" + " ✅"
 
     keyboard = [
         [

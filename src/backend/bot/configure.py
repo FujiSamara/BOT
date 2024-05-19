@@ -7,6 +7,7 @@ from settings import get_settings
 from bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
 import logging
 from aiogram.loggers import dispatcher, event, middlewares, scene, webhook
+from aiogram.types import BotCommand
 from bot.tasks import notify_with_unclosed_shift
 
 
@@ -31,6 +32,9 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         secret_token=get_settings().telegram_token,
         allowed_updates=get_dispatcher().resolve_used_update_types(),
         drop_pending_updates=True,
+    )
+    await get_bot().set_my_commands(
+        [BotCommand(command="start", description="Запускает бота")]
     )
     logging.getLogger("uvicorn.error").info(
         "Webhook info: " + str(await _check_webhook()).split()[0]
