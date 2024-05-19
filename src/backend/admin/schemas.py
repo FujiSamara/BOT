@@ -166,6 +166,8 @@ class BidView(ModelView, model=Bid):
         Bid.department,
         Bid.purpose,
         Bid.document,
+        Bid.document1,
+        Bid.document2,
         Bid.agreement,
         Bid.need_document,
         Bid.urgently,
@@ -187,6 +189,8 @@ class BidView(ModelView, model=Bid):
     @staticmethod
     def file_format(inst, columm):
         value = getattr(inst, columm)
+        if not value:
+            return None
         proto = "http"
         host = get_settings().domain
         port = get_settings().port
@@ -221,6 +225,8 @@ class BidView(ModelView, model=Bid):
         Bid.teller_card_state: approval_status_format,
         Bid.teller_cash_state: approval_status_format,
         Bid.document: file_format,
+        Bid.document1: file_format,
+        Bid.document2: file_format,
         Bid.payment_type: payment_type_format,
     }
     column_formatters_detail = column_formatters
@@ -277,6 +283,8 @@ class BidView(ModelView, model=Bid):
         Bid.urgently: "Срочная",
         Bid.worker: "Работник",
         Bid.document: "Подтверждающий документ",
+        Bid.document1: "Подтверждающий документ 1",
+        Bid.document2: "Подтверждающий документ 2",
         Bid.kru_state: "КРУ",
         Bid.owner_state: "Собственник",
         Bid.accountant_card_state: "Бухгалтер безнал.",
