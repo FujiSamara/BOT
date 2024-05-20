@@ -34,7 +34,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
     bid_info = f"""{hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
 {hbold("Предприятие")}: {bid.department.name}
-{hbold("Документ")}: Прикреплен к сообщению.
+{hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Наличие договора")}: {bid.agreement}
 {hbold("Заявка срочная?")} {bid.urgently}
