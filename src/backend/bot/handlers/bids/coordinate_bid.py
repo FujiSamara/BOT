@@ -167,7 +167,6 @@ class CoordinationFactory:
         self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
     ):
         bid = get_bid_by_id(callback_data.id)
-        await try_delete_message(callback.message)
         data = await state.get_data()
         if "msgs_for_delete" in data:
             for msg in data["msgs_for_delete"]:
@@ -212,8 +211,10 @@ class CoordinationFactory:
                         ).pack(),
                     )
                 )
-        await callback.message.answer(
-            text=caption, reply_markup=create_inline_keyboard(*buttons)
+        await try_edit_message(
+            message=callback.message,
+            text=caption,
+            reply_markup=create_inline_keyboard(*buttons),
         )
 
     def get_specified_bids_keyboard(self, type: str) -> InlineKeyboardMarkup:
