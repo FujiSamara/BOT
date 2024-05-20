@@ -58,6 +58,7 @@ class CoordinationFactory:
             text="История заявок", callback_data=f"{name}_history"
         )
         self.approving_endpoint_name = f"{name}_approving"
+        self.documents_endpoint_name = f"{name}_documents"
         self.without_decline = without_decline
         self.state_column = state_column
         self.approve_button_text = approve_button_text
@@ -74,8 +75,8 @@ class CoordinationFactory:
         )
         router.callback_query.register(
             self.get_documents,
-            BidActionData.filter(F.endpoint_name == self.name),
-            BidActionData.filter(F.action == ActionType.get_documents),
+            BidCallbackData.filter(F.type == BidViewType.coordination),
+            BidCallbackData.filter(F.endpoint_name == self.documents_endpoint_name),
         )
         router.callback_query.register(
             self.approve_bid,
@@ -118,9 +119,9 @@ class CoordinationFactory:
         await self.get_pendings(callback)
 
     async def get_documents(
-        self, callback: CallbackQuery, callback_data: BidActionData, state: FSMContext
+        self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
     ):
-        bid = get_bid_by_id(callback_data.bid_id)
+        bid = get_bid_by_id(callback_data.id)
         media: list[InputMediaDocument] = [
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -154,9 +155,7 @@ class CoordinationFactory:
                     text="Назад",
                     callback_data=BidCallbackData(
                         id=bid.id,
-                        mode=BidViewMode.full
-                        if type == "history"
-                        else BidViewMode.full_with_approve,
+                        mode=callback_data.mode,
                         type=BidViewType.coordination,
                         endpoint_name=self.name,
                     ).pack(),
@@ -173,6 +172,7 @@ class CoordinationFactory:
         if "msgs_for_delete" in data:
             for msg in data["msgs_for_delete"]:
                 await try_delete_message(msg)
+            await state.update_data(msgs_for_delete=[])
 
         caption = get_full_bid_info(bid)
 
@@ -181,10 +181,11 @@ class CoordinationFactory:
             self.history_button,
             InlineKeyboardButton(
                 text="Показать документы",
-                callback_data=BidActionData(
-                    bid_id=bid.id,
-                    action=ActionType.get_documents,
-                    endpoint_name=self.name,
+                callback_data=BidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidViewType.coordination,
+                    endpoint_name=self.documents_endpoint_name,
                 ).pack(),
             ),
         ]

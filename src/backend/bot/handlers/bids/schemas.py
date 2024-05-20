@@ -23,7 +23,6 @@ class BidCallbackData(CallbackData, prefix="bid"):
 class ActionType(str, Enum):
     approving = 1
     declining = 2
-    get_documents = 3
 
 
 class BidActionData(CallbackData, prefix="bid_action"):
