@@ -1,5 +1,7 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, BufferedInputFile
+from aiogram.types import CallbackQuery, BufferedInputFile, InputMediaDocument
+from aiogram.utils.markdown import hbold
+from aiogram.fsm.context import FSMContext
 import asyncio
 from typing import Any
 
@@ -56,6 +58,7 @@ class CoordinationFactory:
             text="История заявок", callback_data=f"{name}_history"
         )
         self.approving_endpoint_name = f"{name}_approving"
+        self.documents_endpoint_name = f"{name}_documents"
         self.without_decline = without_decline
         self.state_column = state_column
         self.approve_button_text = approve_button_text
@@ -69,6 +72,11 @@ class CoordinationFactory:
             self.get_bid,
             BidCallbackData.filter(F.type == BidViewType.coordination),
             BidCallbackData.filter(F.endpoint_name == self.name),
+        )
+        router.callback_query.register(
+            self.get_documents,
+            BidCallbackData.filter(F.type == BidViewType.coordination),
+            BidCallbackData.filter(F.endpoint_name == self.documents_endpoint_name),
         )
         router.callback_query.register(
             self.approve_bid,
@@ -110,16 +118,77 @@ class CoordinationFactory:
         await msg.delete()
         await self.get_pendings(callback)
 
-    async def get_bid(self, callback: CallbackQuery, callback_data: BidCallbackData):
+    async def get_documents(
+        self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+    ):
+        bid = get_bid_by_id(callback_data.id)
+        media: list[InputMediaDocument] = [
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=bid.document.file.read(), filename=bid.document.filename
+                ),
+            )
+        ]
+        if bid.document1:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=bid.document1.file.read(), filename=bid.document1.filename
+                    )
+                )
+            )
+        if bid.document2:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=bid.document2.file.read(), filename=bid.document2.filename
+                    )
+                )
+            )
+        await try_delete_message(callback.message)
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs_for_delete=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:"),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        type=BidViewType.coordination,
+                        endpoint_name=self.name,
+                    ).pack(),
+                )
+            ),
+        )
+
+    async def get_bid(
+        self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+    ):
         bid = get_bid_by_id(callback_data.id)
         await try_delete_message(callback.message)
-        document = BufferedInputFile(
-            file=bid.document.file.read(), filename=bid.document.filename
-        )
+        data = await state.get_data()
+        if "msgs_for_delete" in data:
+            for msg in data["msgs_for_delete"]:
+                await try_delete_message(msg)
+            await state.update_data(msgs_for_delete=[])
 
         caption = get_full_bid_info(bid)
 
-        buttons = [self.pending_button, self.history_button]
+        buttons = [
+            self.pending_button,
+            self.history_button,
+            InlineKeyboardButton(
+                text="Показать документы",
+                callback_data=BidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidViewType.coordination,
+                    endpoint_name=self.documents_endpoint_name,
+                ).pack(),
+            ),
+        ]
 
         if callback_data.mode == BidViewMode.full_with_approve:
             buttons.append(
@@ -143,11 +212,8 @@ class CoordinationFactory:
                         ).pack(),
                     )
                 )
-
-        await callback.message.answer_document(
-            document=document,
-            caption=caption,
-            reply_markup=create_inline_keyboard(*buttons),
+        await callback.message.answer(
+            text=caption, reply_markup=create_inline_keyboard(*buttons)
         )
 
     def get_specified_bids_keyboard(self, type: str) -> InlineKeyboardMarkup:
