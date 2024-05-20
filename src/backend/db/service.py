@@ -213,7 +213,10 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     """
     Updates bid state with `state_name` by specified `state`.
     """
-    from bot.handlers.utils import notify_workers_by_access
+    from bot.handlers.utils import (
+        notify_workers_by_access,
+        notify_worker_by_telegram_id,
+    )
 
     if state_name == "kru_state":
         if state == ApprovalStatus.approved:
@@ -283,6 +286,14 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_access(
             access=Access.teller_cash, message="У вас новая заявка!"
+        )
+    if state == ApprovalStatus.approved:
+        await notify_worker_by_telegram_id(
+            bid.worker.telegram_id, "Ваша заявка принята!"
+        )
+    elif state == ApprovalStatus.denied:
+        await notify_worker_by_telegram_id(
+            bid.worker.telegram_id, "Ваша заявка отклонена!"
         )
 
     orm.update_bid(bid)
