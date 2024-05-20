@@ -8,6 +8,7 @@ from aiogram.types import (
     File,
     BufferedInputFile,
     ReplyKeyboardRemove,
+    InputMediaDocument,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
@@ -32,7 +33,11 @@ from bot.kb import (
 from bot.text import format_err, payment_types, bid_create_greet
 
 from bot.states import BidCreating, Base
-from bot.handlers.bids.schemas import BidCallbackData, BidViewMode, BidViewType
+from bot.handlers.bids.schemas import (
+    BidCallbackData,
+    BidViewMode,
+    BidViewType,
+)
 
 from bot.handlers.bids.utils import (
     get_full_bid_info,
@@ -383,26 +388,90 @@ async def set_document(message: Message, state: FSMContext):
 # History section
 
 
+@router.callback_query(
+    BidCallbackData.filter(F.type == BidViewType.creation),
+    BidCallbackData.filter(F.endpoint_name == "create_documents"),
+)
+async def get_documents(
+    callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+):
+    bid = get_bid_by_id(callback_data.id)
+    media: list[InputMediaDocument] = [
+        InputMediaDocument(
+            media=BufferedInputFile(
+                file=bid.document.file.read(), filename=bid.document.filename
+            ),
+        )
+    ]
+    if bid.document1:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=bid.document1.file.read(), filename=bid.document1.filename
+                )
+            )
+        )
+    if bid.document2:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=bid.document2.file.read(), filename=bid.document2.filename
+                )
+            )
+        )
+    await try_delete_message(callback.message)
+    msgs = await callback.message.answer_media_group(media=media)
+    await state.update_data(msgs_for_delete=msgs)
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=BidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidViewType.creation,
+                    endpoint_name="create_bid_info",
+                ).pack(),
+            )
+        ),
+    )
+
+
 # Full info
 @router.callback_query(
     BidCallbackData.filter(F.type == BidViewType.creation),
     BidCallbackData.filter(F.mode == BidViewMode.full),
-    BidCallbackData.filter(F.endpoint_name == "create_history"),
+    BidCallbackData.filter(F.endpoint_name == "create_bid_info"),
 )
-async def get_bid(callback: CallbackQuery, callback_data: BidCallbackData):
+async def get_bid(
+    callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+):
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
-    await try_delete_message(callback.message)
-    document = BufferedInputFile(
-        file=bid.document.file.read(), filename=bid.document.filename
-    )
+    data = await state.get_data()
+    if "msgs_for_delete" in data:
+        for msg in data["msgs_for_delete"]:
+            await try_delete_message(msg)
+        await state.update_data(msgs_for_delete=[])
 
     caption = get_full_bid_info(bid)
 
-    await callback.message.answer_document(
-        document=document,
-        caption=caption,
-        reply_markup=create_inline_keyboard(bid_create_history_button),
+    await try_edit_message(
+        message=callback.message,
+        text=caption,
+        reply_markup=create_inline_keyboard(
+            bid_create_history_button,
+            InlineKeyboardButton(
+                text="Показать документы",
+                callback_data=BidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidViewType.creation,
+                    endpoint_name="create_documents",
+                ).pack(),
+            ),
+        ),
     )
 
 
@@ -418,7 +487,7 @@ async def get_bids_history(callback: CallbackQuery):
                     id=bid.id,
                     mode=BidViewMode.full,
                     type=BidViewType.creation,
-                    endpoint_name="create_history",
+                    endpoint_name="create_bid_info",
                 ).pack(),
             )
             for bid in bids
@@ -433,7 +502,7 @@ async def get_bids_history(callback: CallbackQuery):
 @router.callback_query(
     BidCallbackData.filter(F.type == BidViewType.creation),
     BidCallbackData.filter(F.mode == BidViewMode.state_only),
-    BidCallbackData.filter(F.endpoint_name == "create_pending"),
+    BidCallbackData.filter(F.endpoint_name == "create_bid_info"),
 )
 async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData):
     bid_id = callback_data.id
@@ -459,7 +528,7 @@ async def get_bids_pending(callback: CallbackQuery):
                     id=bid.id,
                     mode=BidViewMode.state_only,
                     type=BidViewType.creation,
-                    endpoint_name="create_pending",
+                    endpoint_name="create_bid_info",
                 ).pack(),
             )
             for bid in bids
