@@ -56,6 +56,7 @@ class BidSchema(BaseModel):
     worker: WorkerSchema
     purpose: str
     create_date: datetime.datetime
+    close_date: Optional[datetime.datetime]
     document: UploadFile
     document1: Optional[UploadFile]
     document2: Optional[UploadFile]
