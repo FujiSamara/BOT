@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from db.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
 from fastapi_storages.integrations.sqlalchemy import FileType
@@ -126,6 +128,11 @@ class Department(Base):
     bs_import_error: Mapped[bool] = mapped_column(nullable=True)
     # Если прошлый флаг true, здесь будет описание ошибки
     bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+
+    #Данные из iiko для связи с таблицей orders
+    uuid: Mapped[UUID] = mapped_column(nullable=True)
+    inn: Mapped[str] = mapped_column(nullable=True)
+    code: Mapped[str] = mapped_column(nullable=True)
 
 
 class Worker(Base):
