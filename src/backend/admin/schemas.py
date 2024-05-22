@@ -184,7 +184,9 @@ class BidView(ModelView, model=Bid):
     column_details_list = column_list
 
     @staticmethod
-    def datetime_format(value, format="%H:%M %d.%m.%y"):
+    def datetime_format(inst, columm):
+        format = "%H:%M %d.%m.%y"
+        value = getattr(inst, columm)
         if value:
             return value.strftime(format)
         else:
@@ -220,8 +222,9 @@ class BidView(ModelView, model=Bid):
 
         return approval_status_dict.get(value)
 
-    column_type_formatters = {datetime.datetime: datetime_format}
     column_formatters = {
+        Bid.create_date: datetime_format,
+        Bid.close_date: datetime_format,
         Bid.kru_state: approval_status_format,
         Bid.owner_state: approval_status_format,
         Bid.accountant_card_state: approval_status_format,
