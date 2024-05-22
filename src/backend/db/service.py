@@ -143,6 +143,7 @@ async def create_bid(
         worker=worker_inst,
         purpose=purpose,
         create_date=cur_date,
+        close_date=None,
         agreement=agreement,
         urgently=urgently,
         need_document=need_document,
@@ -291,10 +292,12 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         await notify_worker_by_telegram_id(
             bid.worker.telegram_id, "Ваша заявка принята!"
         )
+        bid.close_date = datetime.now()
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
             bid.worker.telegram_id, "Ваша заявка отклонена!"
         )
+        bid.close_date = datetime.now()
 
     orm.update_bid(bid)
 

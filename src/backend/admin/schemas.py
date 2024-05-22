@@ -156,10 +156,11 @@ class BidView(ModelView, model=Bid):
     column_searchable_list = [
         "worker.l_name",
     ]
-    column_sortable_list = [Bid.amount, Bid.create_date, Bid.id]
+    column_sortable_list = [Bid.amount, Bid.create_date, Bid.close_date, Bid.id]
     column_list = [
         Bid.id,
         Bid.create_date,
+        Bid.close_date,
         Bid.worker,
         Bid.amount,
         Bid.payment_type,
@@ -183,8 +184,13 @@ class BidView(ModelView, model=Bid):
     column_details_list = column_list
 
     @staticmethod
-    def datetime_format(value, format="%H:%M %d.%m.%y"):
-        return value.strftime(format)
+    def datetime_format(inst, columm):
+        format = "%H:%M %d.%m.%y"
+        value = getattr(inst, columm)
+        if value:
+            return value.strftime(format)
+        else:
+            return "Заявка не закрыта"
 
     @staticmethod
     def file_format(inst, columm):
@@ -216,8 +222,9 @@ class BidView(ModelView, model=Bid):
 
         return approval_status_dict.get(value)
 
-    column_type_formatters = {datetime.datetime: datetime_format}
     column_formatters = {
+        Bid.create_date: datetime_format,
+        Bid.close_date: datetime_format,
         Bid.kru_state: approval_status_format,
         Bid.owner_state: approval_status_format,
         Bid.accountant_card_state: approval_status_format,
@@ -231,7 +238,13 @@ class BidView(ModelView, model=Bid):
     }
     column_formatters_detail = column_formatters
 
-    column_export_exclude_list = [Bid.department_id, Bid.worker_id, Bid.document]
+    column_export_exclude_list = [
+        Bid.department_id,
+        Bid.worker_id,
+        Bid.document,
+        Bid.document1,
+        Bid.document2,
+    ]
 
     async def export_data(
         self, data: List[Any], export_type: str = "csv"
@@ -276,6 +289,7 @@ class BidView(ModelView, model=Bid):
         Bid.amount: "Сумма",
         Bid.comment: "Комментарий",
         Bid.create_date: "Дата создания",
+        Bid.close_date: "Дата закрытия",
         Bid.department: "Производство",
         Bid.need_document: "Необходимость документа, подтверждающего оплату",
         Bid.payment_type: "Тип оплаты",
