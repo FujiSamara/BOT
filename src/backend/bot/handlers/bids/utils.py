@@ -31,7 +31,8 @@ def get_full_bid_info(bid: BidSchema) -> str:
     else:
         stage = "Выплачено"
 
-    bid_info = f"""{hbold("Сумма")}: {bid.amount}
+    bid_info = f"""{hbold("Номер заявки")}: {bid.id}
+{hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
 {hbold("Предприятие")}: {bid.department.name}
 {hbold("Документы")}: Прикреплены к сообщению.
@@ -61,11 +62,12 @@ def get_state_bid_info(bid: BidSchema) -> str:
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         stage = "Кассира нал."
 
-    return f"""Заявка от {bid.create_date.date()} на сумму: {bid.amount}.
+    return f"""Заявка {bid.id} от {bid.create_date.date()} на сумму: {bid.amount}.
 Статус: на согласовании у {stage}"""
 
 
 def get_bid_list_info(bid: BidSchema) -> str:
     return (
-        f"{bid.worker.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}"
+        f"{bid.id}: {bid.worker.l_name} "
+        + f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}"
     )
