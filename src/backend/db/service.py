@@ -148,6 +148,7 @@ async def create_bid(
         urgently=urgently,
         need_document=need_document,
         comment=comment,
+        denying_reason=None,
         document=file,
         document1=file1,
         document2=file2,

@@ -200,6 +200,7 @@ def update_bid(bid: BidSchema):
         cur_bid.urgently = bid.urgently
         cur_bid.need_document = bid.need_document
         cur_bid.comment = bid.comment
+        cur_bid.denying_reason = bid.denying_reason
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
