@@ -129,7 +129,7 @@ class Department(Base):
     # Если прошлый флаг true, здесь будет описание ошибки
     bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
 
-    #Данные из iiko для связи с таблицей orders
+    # Данные из iiko для связи с таблицей orders
     uuid: Mapped[UUID] = mapped_column(nullable=True)
     inn: Mapped[str] = mapped_column(nullable=True)
     code: Mapped[str] = mapped_column(nullable=True)
@@ -194,6 +194,7 @@ class Bid(Base):
     urgently: Mapped[str] = mapped_column(nullable=True, default="Нет")
     need_document: Mapped[str] = mapped_column(nullable=True, default="Нет")
     comment: Mapped[str] = mapped_column(nullable=True, default="")
+    denying_reason: Mapped[str] = mapped_column(nullable=True, default="")
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 

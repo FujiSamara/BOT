@@ -72,6 +72,7 @@ class BidSchema(BaseModel):
     urgently: Optional[str] = "Нет"
     need_document: Optional[str] = "Нет"
     comment: Optional[str]
+    denying_reason: Optional[str]
 
     # States
     kru_state: ApprovalStatus
