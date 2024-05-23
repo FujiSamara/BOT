@@ -22,6 +22,10 @@ class BidCreating(StatesGroup):
     document = State()
 
 
+class BidCoordination(StatesGroup):
+    comment = State()
+
+
 # Rate
 class RateForm(StatesGroup):
     rating = State()

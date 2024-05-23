@@ -295,10 +295,15 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.close_date = datetime.now()
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
-            bid.worker.telegram_id, "Ваша заявка отклонена!"
+            bid.worker.telegram_id, "Ваша заявка отклонена!\nПричина: " + bid.comment
         )
         bid.close_date = datetime.now()
 
+    orm.update_bid(bid)
+
+
+def update_bid(bid: BidSchema):
+    """Updated bid in database by `bid`"""
     orm.update_bid(bid)
 
 

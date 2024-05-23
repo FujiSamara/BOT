@@ -1,9 +1,9 @@
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, BufferedInputFile, InputMediaDocument
+from aiogram.types import CallbackQuery, BufferedInputFile, InputMediaDocument, Message
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 import asyncio
-from typing import Any
+from typing import Any, Callable
 
 from bot.kb import (
     main_menu_button,
@@ -19,12 +19,13 @@ from bot.kb import (
 )
 
 from db.models import Bid
-from db.schemas import ApprovalStatus
+from db.schemas import ApprovalStatus, BidSchema
 from db.service import (
     get_pending_bids_by_column,
     get_history_bids_by_column,
     get_bid_by_id,
     update_bid_state,
+    update_bid,
 )
 from bot.handlers.bids.schemas import (
     BidCallbackData,
@@ -33,6 +34,7 @@ from bot.handlers.bids.schemas import (
     BidActionData,
     ActionType,
 )
+from bot.states import BidCoordination
 from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
 from bot.handlers.utils import try_delete_message, try_edit_message
 
@@ -102,13 +104,18 @@ class CoordinationFactory:
             reply_markup=keyboard,
         )
 
-    async def decline_bid(self, callback: CallbackQuery, callback_data: BidActionData):
+    async def decline_bid(
+        self, callback: CallbackQuery, callback_data: BidActionData, state: FSMContext
+    ):
         bid = get_bid_by_id(callback_data.bid_id)
-        await update_bid_state(bid, self.state_column.name, ApprovalStatus.denied)
-        msg = await callback.message.answer(text="Успешно!")
-        await asyncio.sleep(1)
-        await msg.delete()
-        await self.get_pendings(callback)
+        await try_edit_message(callback.message, hbold("Введите причину отказа:"))
+        await state.set_state(BidCoordination.comment)
+        await state.update_data(
+            generator=self.get_pendings,
+            callback=callback,
+            bid=bid,
+            column_name=self.state_column.name,
+        )
 
     async def approve_bid(self, callback: CallbackQuery, callback_data: BidActionData):
         bid = get_bid_by_id(callback_data.bid_id)
@@ -253,6 +260,30 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
 
         await callback.message.answer("История согласования:", reply_markup=keyboard)
+
+
+@router.message(BidCoordination.comment)
+async def set_comment_after_decline(message: Message, state: FSMContext):
+    data = await state.get_data()
+    if "generator" not in data:
+        raise KeyError("Pending generator not exist")
+    if "callback" not in data:
+        raise KeyError("Callback not exist")
+    if "bid" not in data:
+        raise KeyError("Bid not exist")
+    if "column_name" not in data:
+        raise KeyError("Column name not exist")
+
+    generator: Callable = data["generator"]
+    callback: CallbackQuery = data["callback"]
+    bid: BidSchema = data["bid"]
+    column_name = data["column_name"]
+    bid.comment = message.text
+    update_bid(bid)
+    await update_bid_state(bid, column_name, ApprovalStatus.denied)
+
+    await try_delete_message(message)
+    await generator(callback)
 
 
 def build_coordinations():
