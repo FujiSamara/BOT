@@ -278,7 +278,7 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
     callback: CallbackQuery = data["callback"]
     bid: BidSchema = data["bid"]
     column_name = data["column_name"]
-    bid.comment = message.text
+    bid.denying_reason = message.text
     update_bid(bid)
     await update_bid_state(bid, column_name, ApprovalStatus.denied)
 
