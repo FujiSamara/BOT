@@ -39,7 +39,7 @@ async def get_menu_by_level(callback: CallbackQuery):
 
 @router.error()
 async def error_handler(event: ErrorEvent):
-    logging.getLogger("uvicorn.error").error(f"Error occurred:{event.exception}")
+    logging.getLogger("uvicorn.error").error(f"Error occurred: {event.exception}")
     message = event.update.callback_query.message
     await try_delete_message(message)
     msg = await message.answer(err, reply_markup=ReplyKeyboardRemove())
