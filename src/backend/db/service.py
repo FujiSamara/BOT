@@ -302,6 +302,11 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     orm.update_bid(bid)
 
 
+def update_bid(bid: BidSchema):
+    """Updated bid in database by `bid`"""
+    orm.update_bid(bid)
+
+
 def get_work_time_records_by_day_and_department(
     department_id: int, day: str
 ) -> list[WorkTimeSchema]:

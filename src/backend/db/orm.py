@@ -204,7 +204,10 @@ def update_bid(bid: BidSchema):
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
         cur_bid.worker = new_worker
-        cur_bid.document = bid.document
+        # TODO: Update documents
+        # cur_bid.document = bid.document
+        # cur_bid.document1 = bid.document1
+        # cur_bid.document2 = bid.document2
         cur_bid.kru_state = bid.kru_state
         cur_bid.owner_state = bid.owner_state
         cur_bid.accountant_card_state = bid.accountant_card_state
