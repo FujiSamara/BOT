@@ -290,8 +290,20 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             access=Access.teller_cash, message="У вас новая заявка!"
         )
     if state == ApprovalStatus.approved:
+        stage = ""
+        match state_name:
+            case "kru_state":
+                stage = "Ваша заявка согласована КРУ!"
+            case "owner_state":
+                stage = "Ваша заявка согласована собственником!"
+            case "accountant_card_state":
+                stage = "Ваша заявка согласована бухгалтерией!"
+            case "accountant_cash_state":
+                stage = "Денежные средства по вашей заявки готовы к выдачи!"
+            case _:
+                stage = "Ваша заявка принята!"
         await notify_worker_by_telegram_id(
-            bid.worker.telegram_id, "Ваша заявка принята!"
+            bid.worker.telegram_id, f"{stage}\nНомер заявки: {bid.id}."
         )
         bid.close_date = datetime.now()
     elif state == ApprovalStatus.denied:
