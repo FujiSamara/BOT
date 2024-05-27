@@ -97,4 +97,37 @@ class WorkTimeSchema(BaseSchema):
     fine: Optional[int]
 
 
+class WorkerBidSchema(BaseSchema):
+    f_name: str
+    l_name: str
+    o_name: Optional[str]
+    create_date: datetime.datetime
+
+    post: PostSchema
+
+    worksheet: list["WorkerBidWorksheetSchema"]
+
+    pasport: list["WorkerBidPassportSchema"]
+
+    work_permission: list["WorkerBidWorkPermissionSchema"]
+
+    state: ApprovalStatus
+
+
+class WorkerBidDocumentSchema(BaseSchema):
+    document: UploadFile
+
+
+class WorkerBidWorksheetSchema(WorkerBidDocumentSchema):
+    pass
+
+
+class WorkerBidPassportSchema(WorkerBidDocumentSchema):
+    pass
+
+
+class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
+    pass
+
+
 # Create shemas

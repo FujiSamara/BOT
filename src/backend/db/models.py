@@ -236,17 +236,59 @@ class WorkerBid(Base):
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")
 
-    pasport: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-
-    work_permission_document: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage)
+    worksheet: Mapped[List["WorkerBidWorksheet"]] = relationship(
+        "WorkerBidWorksheet", back_populates="worker_bid"
     )
 
-    worksheet: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage)
+    pasport: Mapped[List["WorkerBidPassport"]] = relationship(
+        "WorkerBidPassport", back_populates="worker_bid"
+    )
+
+    work_permission: Mapped[List["WorkerBidWorkPermission"]] = relationship(
+        "WorkerBidWorkPermission", back_populates="worker_bid"
     )
 
     state: Mapped[approvalstatus]
+
+
+class WorkerBidDocument(Base):
+    """Общий класс для документов анкеты на найм"""
+
+    __abstract__ = True
+
+    id: Mapped[intpk]
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    worker_bid_id: Mapped[int] = mapped_column(ForeignKey("worker_bids.id"))
+
+
+class WorkerBidWorksheet(WorkerBidDocument):
+    """Анкеты найма"""
+
+    __tablename__ = "worker_bids_worksheets"
+
+    worker_bid: Mapped["Department"] = relationship(
+        "WorkerBid", back_populates="worksheet"
+    )
+
+
+class WorkerBidPassport(WorkerBidDocument):
+    """Паспортные данные заявок на найм"""
+
+    __tablename__ = "worker_bids_passports"
+
+    worker_bid: Mapped["Department"] = relationship(
+        "WorkerBid", back_populates="pasport"
+    )
+
+
+class WorkerBidWorkPermission(WorkerBidDocument):
+    """Разрешения на работу в заявках на найм"""
+
+    __tablename__ = "worker_work_permissions"
+
+    worker_bid: Mapped["Department"] = relationship(
+        "WorkerBid", back_populates="work_permission"
+    )
 
 
 class WorkTime(Base):
