@@ -22,6 +22,7 @@ async def start(message: Message, state: FSMContext):
         await state.set_state(Auth.authing)
         await message.answer(first_run_text(message.from_user.full_name))
         return
+    await state.clear()
     await state.set_state(Base.none)
     await send_menu_by_level(message)
 

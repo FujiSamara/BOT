@@ -1,5 +1,5 @@
 from typing import Any
-from aiogram.types import Message, InlineKeyboardMarkup
+from aiogram.types import Message, InlineKeyboardMarkup, ReplyKeyboardRemove
 from aiogram.utils.markdown import hbold
 from db.models import Access
 from db.schemas import WorkerSchema
@@ -47,6 +47,9 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([owner_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
+
+    msg = await message.answer("Загрузка...", reply_markup=ReplyKeyboardRemove())
+    await try_delete_message(msg)
 
     if edit:
         await try_edit_or_answer(
