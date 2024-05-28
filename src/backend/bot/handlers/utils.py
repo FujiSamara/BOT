@@ -14,6 +14,7 @@ from bot.kb import (
     owner_menu_button,
     kru_menu_button,
     rating_menu_button,
+    worker_bid_menu_button,
 )
 
 
@@ -29,6 +30,7 @@ async def send_menu_by_level(message: Message, edit=None):
     match get_access_by_level(level):
         case Access.worker:
             menus.append([create_bid_menu_button])
+            menus.append([worker_bid_menu_button])
             if level == 6:
                 menus.append([rating_menu_button])
         case Access.teller_cash:

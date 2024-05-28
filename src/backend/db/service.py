@@ -1,7 +1,13 @@
 from pathlib import Path
 import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
-from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema, DepartmentSchema
+from db.schemas import (
+    BidSchema,
+    PostSchema,
+    WorkerSchema,
+    WorkTimeSchema,
+    DepartmentSchema,
+)
 import logging
 from datetime import datetime
 from fastapi import UploadFile
@@ -377,3 +383,8 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
     )
     if len(owners) > 0:
         return owners[0]
+
+
+def get_posts() -> list[PostSchema]:
+    """Returns all posts in db."""
+    return orm.get_posts()

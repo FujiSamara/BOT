@@ -50,8 +50,6 @@ teller_cash_menu_button = InlineKeyboardButton(
     text="Согласование платежей", callback_data="get_teller_cash_menu"
 )
 
-# Rating
-
 
 # Keyboards
 def create_inline_keyboard(
@@ -287,3 +285,116 @@ def get_rating_worker_menu(
             ],
         ]
     )
+
+
+# Worker bid
+worker_bid_menu_button = InlineKeyboardButton(
+    text="Согласование кандидатов", callback_data="get_worker_bid_menu"
+)
+
+create_worker_bid_menu_button = InlineKeyboardButton(
+    text="Согласовать кандидата", callback_data="get_create_worker_bid_menu"
+)
+worker_bid__history_button = InlineKeyboardButton(
+    text="История согласования", callback_data="get_bid_settings_menu"
+)
+
+
+worker_bid_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [create_worker_bid_menu_button],
+        [worker_bid__history_button],
+        [main_menu_button],
+    ]
+)
+
+
+async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+
+    l_name = data.get("l_name")
+    f_name = data.get("f_name")
+    o_name = data.get("o_name")
+    post = data.get("post")
+
+    if not l_name:
+        l_name = ""
+        form_complete = False
+    else:
+        l_name += " ✅"
+
+    if not f_name:
+        f_name = ""
+        form_complete = False
+    else:
+        f_name += " ✅"
+
+    if not o_name:
+        o_name = ""
+        form_complete = False
+    else:
+        o_name += " ✅"
+
+    if not post:
+        post = ""
+        form_complete = False
+    else:
+        post += " ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(text="Имя", callback_data="get_worker_bid_fname_form"),
+            InlineKeyboardButton(
+                text=str(f_name),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Фамилия",
+                callback_data="get_worker_bid_lname_form",
+            ),
+            InlineKeyboardButton(
+                text=str(l_name),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Отчество",
+                callback_data="get_worker_bid_oname_form",
+            ),
+            InlineKeyboardButton(
+                text=str(o_name),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Должность",
+                callback_data="get_worker_bid_post_form",
+            ),
+            InlineKeyboardButton(
+                text=str(post),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="get_worker_bid_menu",
+            )
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить заявку", callback_data="send_worker_bid"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)

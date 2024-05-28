@@ -1,7 +1,13 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, WorkTime, Worker, Department, ApprovalStatus
-from db.schemas import BidSchema, DepartmentSchema, WorkerSchema, WorkTimeSchema
+from db.models import Bid, Post, WorkTime, Worker, Department, ApprovalStatus
+from db.schemas import (
+    BidSchema,
+    DepartmentSchema,
+    WorkerSchema,
+    WorkTimeSchema,
+    PostSchema,
+)
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
 
@@ -309,3 +315,10 @@ def update_work_time(record: WorkTimeSchema):
         old.work_duration = record.work_duration
         old.rating = record.rating
         old.fine = record.fine
+
+
+def get_posts() -> list[PostSchema]:
+    """Returns all posts in database."""
+    with session.begin() as s:
+        raw_models = s.query(Post).all()
+        return [PostSchema.model_validate(raw_wodel) for raw_wodel in raw_models]

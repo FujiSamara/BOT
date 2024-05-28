@@ -26,6 +26,13 @@ class BidCoordination(StatesGroup):
     comment = State()
 
 
+class WorkerBidCreating(StatesGroup):
+    f_name = State()
+    l_name = State()
+    o_name = State()
+    post = State()
+
+
 # Rate
 class RateForm(StatesGroup):
     rating = State()
