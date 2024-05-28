@@ -12,7 +12,9 @@ router = Router(name="worker_bid")
 
 
 @router.callback_query(F.data == "get_worker_bid_menu")
-async def get_worker_bid_form(callback: CallbackQuery):
+async def get_worker_bid_form(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
+    await state.set_state(Base.none)
     await utils.try_edit_or_answer(
         message=callback.message,
         text=hbold("Согласование кандидатов"),
