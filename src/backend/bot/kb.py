@@ -317,6 +317,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     f_name = data.get("f_name")
     o_name = data.get("o_name")
     post = data.get("post")
+    department = data.get("department")
 
     if not l_name:
         l_name = ""
@@ -341,6 +342,12 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         form_complete = False
     else:
         post += " ✅"
+
+    if not department:
+        department = ""
+        form_complete = False
+    else:
+        department += " ✅"
 
     buttons = [
         [
@@ -377,6 +384,16 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(
                 text=str(post),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Предприятие",
+                callback_data="get_worker_bid_department_form",
+            ),
+            InlineKeyboardButton(
+                text=str(department),
                 callback_data="dummy",
             ),
         ],

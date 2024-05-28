@@ -31,6 +31,7 @@ class WorkerBidCreating(StatesGroup):
     l_name = State()
     o_name = State()
     post = State()
+    department = State()
 
 
 # Rate
