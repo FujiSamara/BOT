@@ -105,6 +105,8 @@ class WorkerBidSchema(BaseSchema):
 
     post: PostSchema
 
+    department: DepartmentSchema
+
     worksheet: list["WorkerBidWorksheetSchema"]
 
     pasport: list["WorkerBidPassportSchema"]

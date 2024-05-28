@@ -113,6 +113,9 @@ class Department(Base):
         "Worker", back_populates="department"
     )
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
+    workers_bids: Mapped[List["WorkerBid"]] = relationship(
+        "WorkerBid", back_populates="department"
+    )
 
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="department"
@@ -235,6 +238,13 @@ class WorkerBid(Base):
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")
+
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id"), nullable=False
+    )
+    department: Mapped["Department"] = relationship(
+        "Department", back_populates="workers_bids"
+    )
 
     worksheet: Mapped[List["WorkerBidWorksheet"]] = relationship(
         "WorkerBidWorksheet", back_populates="worker_bid"
