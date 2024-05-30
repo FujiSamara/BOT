@@ -305,6 +305,10 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 stage = "Ваша заявка согласована бухгалтерией!"
             case "accountant_cash_state":
                 stage = "Денежные средства по вашей заявке готовы к выдачи!"
+            case "teller_card_state":
+                stage = "Денежные средства выданы."
+            case "teller_cash_state":
+                stage = "Денежные средства выданы."
             case _:
                 stage = "Ваша заявка принята!"
         await notify_worker_by_telegram_id(
