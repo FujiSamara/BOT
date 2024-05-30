@@ -3,7 +3,6 @@ import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
 from db.schemas import (
     BidSchema,
-    PostSchema,
     WorkerSchema,
     WorkTimeSchema,
     DepartmentSchema,
@@ -385,6 +384,6 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
         return owners[0]
 
 
-def get_posts() -> list[PostSchema]:
-    """Returns all posts in db."""
-    return orm.get_posts()
+def get_posts_names() -> list[str]:
+    """Returns all posts names in db."""
+    return [post.name for post in orm.get_posts()]
