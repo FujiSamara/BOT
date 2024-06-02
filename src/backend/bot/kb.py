@@ -318,6 +318,9 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     o_name = data.get("o_name")
     post = data.get("post")
     department = data.get("department")
+    worksheet = data.get("worksheet")
+    passport = data.get("passport")
+    work_permission = data.get("work_permission")
 
     if not l_name:
         l_name = ""
@@ -348,6 +351,23 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         form_complete = False
     else:
         department += " ✅"
+
+    if not worksheet or len(worksheet) == 0:
+        worksheet = ""
+        form_complete = False
+    else:
+        worksheet = f"{len(worksheet)} ✅"
+
+    if not passport or len(passport) == 0:
+        passport = ""
+        form_complete = False
+    else:
+        passport = f"{len(passport)} ✅"
+
+    if not work_permission or len(work_permission) == 0:
+        work_permission = ""
+    else:
+        work_permission = f"{len(work_permission)}"
 
     buttons = [
         [
@@ -394,6 +414,36 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(
                 text=str(department),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Анкета",
+                callback_data="get_worker_bid_worksheet_form",
+            ),
+            InlineKeyboardButton(
+                text=str(worksheet),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Пасспорт",
+                callback_data="get_worker_bid_passport_form",
+            ),
+            InlineKeyboardButton(
+                text=str(passport),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Разрешение на работу",
+                callback_data="get_worker_bid_work_permission_form",
+            ),
+            InlineKeyboardButton(
+                text=str(work_permission),
                 callback_data="dummy",
             ),
         ],

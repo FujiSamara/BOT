@@ -32,6 +32,9 @@ class WorkerBidCreating(StatesGroup):
     o_name = State()
     post = State()
     department = State()
+    worksheet = State()
+    passport = State()
+    work_permission = State()
 
 
 # Rate

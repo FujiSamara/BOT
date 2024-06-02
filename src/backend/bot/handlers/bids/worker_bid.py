@@ -13,7 +13,7 @@ router = Router(name="worker_bid")
 
 
 @router.callback_query(F.data == "get_worker_bid_menu")
-async def get_worker_bid_form(callback: CallbackQuery, state: FSMContext):
+async def get_form(callback: CallbackQuery, state: FSMContext):
     await state.clear()
     await state.set_state(Base.none)
     await utils.try_edit_or_answer(
@@ -23,7 +23,7 @@ async def get_worker_bid_form(callback: CallbackQuery, state: FSMContext):
     )
 
 
-async def send_create_worker_bid_menu(message: Message, state: FSMContext):
+async def send_create_menu(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     await utils.try_edit_or_answer(
         message=message,
@@ -33,13 +33,18 @@ async def send_create_worker_bid_menu(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == "get_create_worker_bid_menu")
-async def get_create_worker_bid_menu(callback: CallbackQuery, state: FSMContext):
-    await send_create_worker_bid_menu(callback.message, state)
+async def get_menu(callback: CallbackQuery, state: FSMContext):
+    await send_create_menu(callback.message, state)
+
+
+@router.callback_query(F.data == "send_worker_bid")
+async def send(callback: CallbackQuery, state: FSMContext):
+    pass
 
 
 # First name
 @router.callback_query(F.data == "get_worker_bid_fname_form")
-async def get_worker_bid_fname_form(callback: CallbackQuery, state: FSMContext):
+async def get_fname_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.f_name)
     await utils.try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Введите имя:"))
@@ -47,19 +52,19 @@ async def get_worker_bid_fname_form(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(WorkerBidCreating.f_name)
-async def set_worker_bid_fname(message: Message, state: FSMContext):
+async def set_fname(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     if msg:
         await utils.try_delete_message(msg)
     await state.update_data(f_name=message.text)
     await utils.try_delete_message(message)
-    await send_create_worker_bid_menu(message, state)
+    await send_create_menu(message, state)
 
 
 # Last name
 @router.callback_query(F.data == "get_worker_bid_lname_form")
-async def get_worker_bid_lname_form(callback: CallbackQuery, state: FSMContext):
+async def get_lname_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.l_name)
     await utils.try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Введите фамилию:"))
@@ -67,19 +72,19 @@ async def get_worker_bid_lname_form(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(WorkerBidCreating.l_name)
-async def set_worker_bid_lname(message: Message, state: FSMContext):
+async def set_lname(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     if msg:
         await utils.try_delete_message(msg)
     await state.update_data(l_name=message.text)
     await utils.try_delete_message(message)
-    await send_create_worker_bid_menu(message, state)
+    await send_create_menu(message, state)
 
 
 # Patronymic
 @router.callback_query(F.data == "get_worker_bid_oname_form")
-async def get_worker_bid_oname_form(callback: CallbackQuery, state: FSMContext):
+async def get_oname_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.o_name)
     await utils.try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Введите отчество:"))
@@ -87,19 +92,19 @@ async def get_worker_bid_oname_form(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(WorkerBidCreating.o_name)
-async def set_worker_bid_oname(message: Message, state: FSMContext):
+async def set_oname(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     if msg:
         await utils.try_delete_message(msg)
     await state.update_data(o_name=message.text)
     await utils.try_delete_message(message)
-    await send_create_worker_bid_menu(message, state)
+    await send_create_menu(message, state)
 
 
 # Post
 @router.callback_query(F.data == "get_worker_bid_post_form")
-async def get_worker_bid_post_form(callback: CallbackQuery, state: FSMContext):
+async def get_post_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.post)
     posts = service.get_posts_names()
     posts.sort()
@@ -112,7 +117,7 @@ async def get_worker_bid_post_form(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(WorkerBidCreating.post)
-async def set_worker_bid_post(message: Message, state: FSMContext):
+async def set_post(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     if msg:
@@ -128,12 +133,12 @@ async def set_worker_bid_post(message: Message, state: FSMContext):
         await state.update_data(msg=msg)
         return
     await state.update_data(post=message.text)
-    await send_create_worker_bid_menu(message, state)
+    await send_create_menu(message, state)
 
 
 # Departments
 @router.callback_query(F.data == "get_worker_bid_department_form")
-async def get_worker_bid_department_form(callback: CallbackQuery, state: FSMContext):
+async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.department)
     departments = service.get_departments_names()
     departments.sort()
@@ -146,7 +151,7 @@ async def get_worker_bid_department_form(callback: CallbackQuery, state: FSMCont
 
 
 @router.message(WorkerBidCreating.department)
-async def set_worker_bid_department(message: Message, state: FSMContext):
+async def set_department(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     if msg:
@@ -162,4 +167,46 @@ async def set_worker_bid_department(message: Message, state: FSMContext):
         await state.update_data(msg=msg)
         return
     await state.update_data(department=message.text)
-    await send_create_worker_bid_menu(message, state)
+    await send_create_menu(message, state)
+
+
+# Documents
+
+
+# Worksheet
+@router.callback_query(F.data == "get_worker_bid_worksheet_form")
+async def get_worksheet_form(callback: CallbackQuery, state: FSMContext):
+    await utils.handle_documents_form(
+        callback.message, state, WorkerBidCreating.worksheet
+    )
+
+
+@router.message(WorkerBidCreating.worksheet)
+async def set_worksheet(message: Message, state: FSMContext):
+    await utils.handle_documents(message, state, "worksheet", send_create_menu)
+
+
+# Passport
+@router.callback_query(F.data == "get_worker_bid_passport_form")
+async def get_passport_form(callback: CallbackQuery, state: FSMContext):
+    await utils.handle_documents_form(
+        callback.message, state, WorkerBidCreating.passport
+    )
+
+
+@router.message(WorkerBidCreating.passport)
+async def set_passport(message: Message, state: FSMContext):
+    await utils.handle_documents(message, state, "passport", send_create_menu)
+
+
+# Work permission
+@router.callback_query(F.data == "get_worker_bid_work_permission_form")
+async def get_work_permission_form(callback: CallbackQuery, state: FSMContext):
+    await utils.handle_documents_form(
+        callback.message, state, WorkerBidCreating.work_permission
+    )
+
+
+@router.message(WorkerBidCreating.work_permission)
+async def set_work_permission(message: Message, state: FSMContext):
+    await utils.handle_documents(message, state, "work_permission", send_create_menu)
