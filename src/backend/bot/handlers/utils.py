@@ -4,10 +4,14 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     ReplyKeyboardRemove,
     ContentType,
+    Document,
+    PhotoSize,
+    File,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
+from fastapi import UploadFile
 from db.models import Access
 from db.schemas import WorkerSchema
 from db.service import get_workers_by_level, get_worker_level_by_telegram_id
@@ -276,7 +280,8 @@ async def handle_documents_form(
     await state.update_data(msg=msg)
 
 
-async def handle_save_documents(
-    message: Message, state: FSMContext, document_name: str
-):
-    pass
+async def download_file(file: Document | PhotoSize) -> UploadFile:
+    """Download the file (photo or document)"""
+    raw_file: File = await get_bot().get_file(file.file_id)
+    byte_file = await get_bot().download_file(raw_file.file_path)
+    return UploadFile(file=byte_file, filename=raw_file.file_path.split("/")[-1])

@@ -3,9 +3,6 @@ from aiogram import F, Router
 from aiogram.types import (
     CallbackQuery,
     Message,
-    PhotoSize,
-    Document,
-    File,
     BufferedInputFile,
     ReplyKeyboardRemove,
     InputMediaDocument,
@@ -13,10 +10,8 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
-from fastapi import UploadFile
 
 # bot imports
-from bot.bot import get_bot
 from bot.kb import (
     bid_menu,
     get_create_bid_menu,
@@ -44,7 +39,7 @@ from bot.handlers.bids.utils import (
     get_state_bid_info,
     get_bid_list_info,
 )
-from bot.handlers.utils import try_delete_message, try_edit_message
+from bot.handlers.utils import try_delete_message, try_edit_message, download_file
 
 # db imports
 from db.service import (
@@ -83,13 +78,6 @@ async def clear_state_with_success(
 @router.callback_query(F.data == "get_bid_settings_menu")
 async def get_settings_form(callback: CallbackQuery, state: FSMContext):
     await clear_state_with_success(callback.message, state, sleep_time=0, edit=True)
-
-
-async def download_file(file: Document | PhotoSize) -> UploadFile:
-    """Download the file (photo or document)"""
-    raw_file: File = await get_bot().get_file(file.file_id)
-    byte_file = await get_bot().download_file(raw_file.file_path)
-    return UploadFile(file=byte_file, filename=raw_file.file_path.split("/")[-1])
 
 
 @router.callback_query(F.data == "send_bid")
