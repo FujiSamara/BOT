@@ -109,7 +109,7 @@ class WorkerBidSchema(BaseSchema):
 
     worksheet: list["WorkerBidWorksheetSchema"]
 
-    pasport: list["WorkerBidPassportSchema"]
+    passport: list["WorkerBidPassportSchema"]
 
     work_permission: list["WorkerBidWorkPermissionSchema"]
 

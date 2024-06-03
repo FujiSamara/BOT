@@ -250,7 +250,7 @@ class WorkerBid(Base):
         "WorkerBidWorksheet", back_populates="worker_bid"
     )
 
-    pasport: Mapped[List["WorkerBidPassport"]] = relationship(
+    passport: Mapped[List["WorkerBidPassport"]] = relationship(
         "WorkerBidPassport", back_populates="worker_bid"
     )
 
@@ -276,7 +276,7 @@ class WorkerBidWorksheet(WorkerBidDocument):
 
     __tablename__ = "worker_bids_worksheets"
 
-    worker_bid: Mapped["Department"] = relationship(
+    worker_bid: Mapped["WorkerBid"] = relationship(
         "WorkerBid", back_populates="worksheet"
     )
 
@@ -286,8 +286,8 @@ class WorkerBidPassport(WorkerBidDocument):
 
     __tablename__ = "worker_bids_passports"
 
-    worker_bid: Mapped["Department"] = relationship(
-        "WorkerBid", back_populates="pasport"
+    worker_bid: Mapped["WorkerBid"] = relationship(
+        "WorkerBid", back_populates="passport"
     )
 
 
@@ -296,7 +296,7 @@ class WorkerBidWorkPermission(WorkerBidDocument):
 
     __tablename__ = "worker_work_permissions"
 
-    worker_bid: Mapped["Department"] = relationship(
+    worker_bid: Mapped["WorkerBid"] = relationship(
         "WorkerBid", back_populates="work_permission"
     )
 

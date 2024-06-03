@@ -1,9 +1,21 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, Post, WorkTime, Worker, Department, ApprovalStatus
+from db.models import (
+    Bid,
+    Post,
+    WorkTime,
+    Worker,
+    Department,
+    ApprovalStatus,
+    WorkerBid,
+    WorkerBidWorksheet,
+    WorkerBidPassport,
+    WorkerBidWorkPermission,
+)
 from db.schemas import (
     BidSchema,
     DepartmentSchema,
+    WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
     PostSchema,
@@ -38,6 +50,18 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
         if not raw_deparment:
             return None
         return DepartmentSchema.model_validate(raw_deparment)
+
+
+def find_post_by_column(column: any, value: any) -> PostSchema:
+    """
+    Returns post in database by `column` with `value`.
+    If post not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_post = s.query(Post).filter(column == value).first()
+        if not raw_post:
+            return None
+        return PostSchema.model_validate(raw_post)
 
 
 def find_bid_by_column(column: any, value: any) -> BidSchema:
@@ -322,3 +346,36 @@ def get_posts() -> list[PostSchema]:
     with session.begin() as s:
         raw_models = s.query(Post).all()
         return [PostSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def add_worker_bid(bid: WorkerBidSchema):
+    """
+    Adds `bid` to database.
+    """
+    with session.begin() as s:
+        department = (
+            s.query(Department).filter(Department.id == bid.department.id).first()
+        )
+        post = s.query(Post).filter(Post.id == bid.post.id).first()
+
+        worker_bid = WorkerBid(
+            f_name=bid.f_name,
+            l_name=bid.l_name,
+            o_name=bid.o_name,
+            post=post,
+            department=department,
+        )
+
+        s.add(worker_bid)
+
+        for doc in bid.worksheet:
+            file = WorkerBidWorksheet(worker_bid=worker_bid, document=doc.document)
+            s.add(file)
+
+        for doc in bid.passport:
+            file = WorkerBidPassport(worker_bid=worker_bid, document=doc.document)
+            s.add(file)
+
+        for doc in bid.work_permission:
+            file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
+            s.add(file)

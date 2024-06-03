@@ -334,7 +334,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.department: "Предприятия",
         WorkerBid.work_permission: "Разрешение на работу",
         WorkerBid.worksheet: "Анкета",
-        WorkerBid.pasport: "Паспорт",
+        WorkerBid.passport: "Паспорт",
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
     }
@@ -347,7 +347,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.o_name,
         WorkerBid.post,
         WorkerBid.department,
-        WorkerBid.pasport,
+        WorkerBid.passport,
         WorkerBid.work_permission,
         WorkerBid.worksheet,
         WorkerBid.state,
@@ -375,7 +375,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
     column_type_formatters = {datetime.datetime: BidView.datetime_format}
     column_formatters = {
         WorkerBid.state: BidView.approval_status_format,
-        WorkerBid.pasport: BidView.file_format,
+        WorkerBid.passport: BidView.file_format,
         WorkerBid.work_permission: BidView.file_format,
         WorkerBid.worksheet: BidView.file_format,
     }
