@@ -82,7 +82,7 @@ def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     If worker bid not exist return `None`.
     """
     with session.begin() as s:
-        raw_bid = s.query(Bid).filter(column == value).first()
+        raw_bid = s.query(WorkerBid).filter(column == value).first()
         if not raw_bid:
             return None
         return WorkerBidSchema.model_validate(raw_bid)
@@ -116,6 +116,14 @@ def get_last_bid_id() -> int:
     """
     with session.begin() as s:
         return s.query(func.max(Bid.id)).first()[0]
+
+
+def get_last_worker_bid_id() -> int:
+    """
+    Returns last worker bid id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(WorkerBid.id)).first()[0]
 
 
 def add_bid(bid: BidSchema):
@@ -369,7 +377,7 @@ def add_worker_bid(bid: WorkerBidSchema):
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
         post = s.query(Post).filter(Post.id == bid.post.id).first()
-        sender = s.query(Worker).filter(Worker.id == bid.sender.id)
+        sender = s.query(Worker).filter(Worker.id == bid.sender.id).first()
 
         worker_bid = WorkerBid(
             f_name=bid.f_name,

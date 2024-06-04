@@ -441,21 +441,34 @@ def create_worker_bid(
         )
         return
 
+    last_bid_id = orm.get_last_worker_bid_id()
+    if not last_bid_id:
+        last_bid_id = 0
+
     worksheet_insts: list[WorkerBidWorksheetSchema] = []
 
-    for doc in worksheet:
+    for index, doc in enumerate(worksheet):
+        suffix = Path(doc.filename).suffix
+        filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
         worksheet_inst = WorkerBidWorksheetSchema(document=doc)
         worksheet_insts.append(worksheet_inst)
 
     passport_insts: list[WorkerBidPassportSchema] = []
 
-    for doc in passport:
+    for index, doc in enumerate(passport):
+        suffix = Path(doc.filename).suffix
+        filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
         passport_inst = WorkerBidPassportSchema(document=doc)
         passport_insts.append(passport_inst)
 
     work_permission_insts: list[WorkerBidWorkPermissionSchema] = []
 
-    for doc in work_permission:
+    for index, doc in enumerate(work_permission):
+        suffix = Path(doc.filename).suffix
+        filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
         work_permission_inst = WorkerBidWorkPermissionSchema(document=doc)
         work_permission_insts.append(work_permission_inst)
 
@@ -476,7 +489,7 @@ def create_worker_bid(
     orm.add_worker_bid(worker_bid)
 
 
-def get_file_data(filename: str) -> FileSchema:
+def get_file_data(file_path: str) -> FileSchema:
     """Returns file `FileSchema` with file href and name."""
     proto = "http"
     host = get_settings().domain
@@ -484,10 +497,10 @@ def get_file_data(filename: str) -> FileSchema:
     if get_settings().ssl_certfile:
         proto = "https"
 
-    filename = Path(filename).name
+    filename = Path(file_path).name
 
     return FileSchema(
-        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={filename}"
+        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={file_path}"
     )
 
 
