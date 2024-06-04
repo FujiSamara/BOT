@@ -2,13 +2,24 @@
 import datetime
 from io import BytesIO
 from typing import Any, List
-from sqladmin import ModelView
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+from sqladmin import ModelView, action
 from starlette.responses import StreamingResponse
-from db.models import Bid, Worker, Company, Department, Post, WorkerBid
+from db.models import (
+    Bid,
+    Worker,
+    Company,
+    Department,
+    Post,
+    WorkerBid,
+    WorkerBidDocument,
+    ApprovalStatus,
+)
 from xlsxwriter import Workbook
-from settings import get_settings
-from pathlib import Path
 from bot.kb import payment_type_dict, approval_status_dict
+from db.schemas import FileSchema
+from db import service
 
 
 class PostView(ModelView, model=Post):
@@ -198,18 +209,8 @@ class BidView(ModelView, model=Bid):
         value = getattr(inst, columm)
         if not value:
             return None
-        proto = "http"
-        host = get_settings().domain
-        port = get_settings().port
-        if get_settings().ssl_certfile:
-            proto = "https"
-
-        filename = Path(value).name
-
-        return {
-            "filename": filename,
-            "href": f"{proto}://{host}:{port}/admin/download?path={value}",
-        }
+        data = service.get_file_data(value)
+        return data
 
     @staticmethod
     def payment_type_format(inst, column):
@@ -323,17 +324,17 @@ class BidView(ModelView, model=Bid):
 
 
 class WorkerBidView(ModelView, model=WorkerBid):
-    details_template = "bid_details.html"
-    list_template = "bid_list.html"
+    details_template = "worker_bid_details.html"
 
     column_labels = {
         WorkerBid.f_name: "Имя",
         WorkerBid.l_name: "Фамилия",
         WorkerBid.o_name: "Отчество",
         WorkerBid.post: "Должность",
+        WorkerBid.department: "Предприятия",
         WorkerBid.work_permission: "Разрешение на работу",
-        WorkerBid.work_permission: "Анкета",
-        WorkerBid.pasport: "Паспорт",
+        WorkerBid.worksheet: "Анкета",
+        WorkerBid.passport: "Паспорт",
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
     }
@@ -344,13 +345,24 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.l_name,
         WorkerBid.f_name,
         WorkerBid.o_name,
-        WorkerBid.pasport,
-        WorkerBid.work_permission,
-        WorkerBid.worksheet,
+        WorkerBid.post,
+        WorkerBid.department,
         WorkerBid.state,
     ]
 
-    column_details_list = column_list
+    column_details_list = [
+        WorkerBid.id,
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.f_name,
+        WorkerBid.o_name,
+        WorkerBid.worksheet,
+        WorkerBid.passport,
+        WorkerBid.work_permission,
+        WorkerBid.post,
+        WorkerBid.department,
+        WorkerBid.state,
+    ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
 
@@ -362,17 +374,51 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.f_name,
     ]
 
+    @action(
+        name="approve_worker_bid",
+        label="Согласовать",
+        add_in_detail=True,
+    )
+    async def approve_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await service.update_worker_bid_state(ApprovalStatus.approved, pk)
+
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
+
+    @action(
+        name="decline_worker_bid",
+        label="Отказать",
+        add_in_detail=True,
+    )
+    async def decline_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await service.update_worker_bid_state(ApprovalStatus.denied, pk)
+
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
+
+    @staticmethod
+    def files_format(inst, column):
+        documents: list[WorkerBidDocument] = getattr(inst, column)
+        urls: list[FileSchema] = []
+        for doc in documents:
+            url = service.get_file_data(doc.document)
+            if url:
+                urls.append(url)
+
+        return urls
+
     can_create = False
     can_export = False
+    can_edit = False
     name_plural = "Заявки на работу"
     name = "Заявка на работу"
 
-    form_columns = [WorkerBid.state]
-
-    column_type_formatters = {datetime.datetime: BidView.datetime_format}
     column_formatters = {
         WorkerBid.state: BidView.approval_status_format,
-        WorkerBid.pasport: BidView.file_format,
-        WorkerBid.work_permission: BidView.file_format,
-        WorkerBid.worksheet: BidView.file_format,
+        WorkerBid.passport: files_format,
+        WorkerBid.work_permission: files_format,
+        WorkerBid.worksheet: files_format,
+        WorkerBid.create_date: BidView.datetime_format,
     }
+
+    column_formatters_detail = column_formatters

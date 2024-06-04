@@ -1,6 +1,17 @@
-from typing import Any
-from aiogram.types import Message, InlineKeyboardMarkup
+from typing import Any, Awaitable, Callable
+from aiogram.types import (
+    Message,
+    InlineKeyboardMarkup,
+    ReplyKeyboardRemove,
+    ContentType,
+    Document,
+    PhotoSize,
+    File,
+)
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
+from fastapi import UploadFile
 from db.models import Access
 from db.schemas import WorkerSchema
 from db.service import get_workers_by_level, get_worker_level_by_telegram_id
@@ -14,7 +25,10 @@ from bot.kb import (
     owner_menu_button,
     kru_menu_button,
     rating_menu_button,
+    worker_bid_menu_button,
+    create_reply_keyboard,
 )
+import asyncio
 
 
 async def send_menu_by_level(message: Message, edit=None):
@@ -29,6 +43,7 @@ async def send_menu_by_level(message: Message, edit=None):
     match get_access_by_level(level):
         case Access.worker:
             menus.append([create_bid_menu_button])
+            menus.append([worker_bid_menu_button])
             if level == 6:
                 menus.append([rating_menu_button])
         case Access.teller_cash:
@@ -45,6 +60,9 @@ async def send_menu_by_level(message: Message, edit=None):
             menus.append([owner_menu_button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
+
+    msg = await message.answer("Загрузка...", reply_markup=ReplyKeyboardRemove())
+    await try_delete_message(msg)
 
     if edit:
         await try_edit_or_answer(
@@ -177,3 +195,93 @@ async def notify_worker_by_telegram_id(id: int, message: str) -> Message:
     Returns sended `Message`.
     """
     return await get_bot().send_message(chat_id=id, text=message)
+
+
+async def handle_documents(
+    message: Message,
+    state: FSMContext,
+    document_name: str,
+    on_complete: Callable[[Any, Any], Awaitable[Any]],
+):
+    if message.content_type == ContentType.TEXT:
+        if message.text == "Готово":
+            data = await state.get_data()
+            msgs = data.get("msgs")
+            documents = data.get("documents")
+            if msgs:
+                for msg in msgs:
+                    await try_delete_message(msg)
+                await state.update_data(msgs=[])
+            if documents:
+                specified_documents = data.get(document_name)
+                if not specified_documents:
+                    specified_documents = []
+                specified_documents.extend(documents)
+                await state.update_data(documents=[])
+                await state.update_data({document_name: specified_documents})
+            msg = data.get("msg")
+            if msg:
+                await try_delete_message(msg)
+            await try_delete_message(message)
+            await on_complete(message, state)
+        elif message.text == "Сбросить":
+            data = await state.get_data()
+            msgs = data.get("msgs")
+            documents = data.get("documents")
+            if msgs:
+                for msg in msgs:
+                    await try_delete_message(msg)
+                await state.update_data(msgs=[])
+            await state.update_data(documents=[])
+            await state.update_data({document_name: []})
+            msg = data.get("msg")
+            if msg:
+                await try_delete_message(msg)
+            await try_delete_message(message)
+            await on_complete(message, state)
+        else:
+            await try_delete_message(message)
+            msg = await message.answer("Отправьте документ или фото!")
+            await asyncio.sleep(1)
+            await try_delete_message(msg)
+    elif (
+        message.content_type == ContentType.DOCUMENT
+        or message.content_type == ContentType.PHOTO
+    ):
+        data = await state.get_data()
+        documents: list = data.get("documents")
+        msgs: list = data.get("msgs")
+        if not documents:
+            documents = []
+        if message.content_type == ContentType.PHOTO:
+            documents.append(message.photo[-1])
+        else:
+            documents.append(message.document)
+        if not msgs:
+            msgs = []
+        msgs.append(message)
+        await state.update_data(msgs=msgs, documents=documents)
+    else:
+        await try_delete_message(message)
+        msg = await message.answer("Отправьте документ или фото!")
+        await asyncio.sleep(1)
+        await try_delete_message(msg)
+
+
+async def handle_documents_form(
+    message: Message, state: FSMContext, document_type: StatesGroup
+):
+    await state.set_state(document_type)
+    await try_delete_message(message)
+    msg = await message.answer(
+        text=hbold("Прикрепите документы:"),
+        reply_markup=create_reply_keyboard("Готово", "Сбросить"),
+    )
+    await state.update_data(msg=msg)
+
+
+async def download_file(file: Document | PhotoSize) -> UploadFile:
+    """Download the file (photo or document)"""
+    raw_file: File = await get_bot().get_file(file.file_id)
+    byte_file = await get_bot().download_file(raw_file.file_path)
+    return UploadFile(file=byte_file, filename=raw_file.file_path.split("/")[-1])

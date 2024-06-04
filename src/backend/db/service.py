@@ -1,7 +1,27 @@
 from pathlib import Path
+from settings import get_settings
 import db.orm as orm
-from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
-from db.schemas import BidSchema, WorkerSchema, WorkTimeSchema, DepartmentSchema
+from db.models import (
+    Department,
+    ApprovalStatus,
+    Bid,
+    Post,
+    Worker,
+    Access,
+    WorkTime,
+    WorkerBid,
+)
+from db.schemas import (
+    BidSchema,
+    WorkerSchema,
+    WorkTimeSchema,
+    DepartmentSchema,
+    WorkerBidSchema,
+    WorkerBidPassportSchema,
+    WorkerBidWorksheetSchema,
+    WorkerBidWorkPermissionSchema,
+    FileSchema,
+)
 import logging
 from datetime import datetime
 from fastapi import UploadFile
@@ -381,3 +401,134 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
     )
     if len(owners) > 0:
         return owners[0]
+
+
+def get_posts_names() -> list[str]:
+    """Returns all posts names in db."""
+    return [post.name for post in orm.get_posts()]
+
+
+def create_worker_bid(
+    f_name: str,
+    l_name: str,
+    o_name: str,
+    post_name: str,
+    department_name: str,
+    worksheet: list[UploadFile],
+    passport: list[UploadFile],
+    work_permission: list[UploadFile],
+    sender_telegram_id: str,
+):
+    """Creates worker bid"""
+    department = orm.find_department_by_column(Department.name, department_name)
+    if not department:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department_name}' not found"
+        )
+        return
+
+    post = orm.find_post_by_column(Post.name, post_name)
+    if not post:
+        logging.getLogger("uvicorn.error").error(
+            f"Post with name '{post_name}' not found"
+        )
+        return
+
+    sender = orm.find_worker_by_column(Worker.telegram_id, sender_telegram_id)
+    if not sender:
+        logging.getLogger("uvicorn.error").error(
+            f"Sender with telegram id '{sender_telegram_id}' not found"
+        )
+        return
+
+    last_bid_id = orm.get_last_worker_bid_id()
+    if not last_bid_id:
+        last_bid_id = 0
+
+    worksheet_insts: list[WorkerBidWorksheetSchema] = []
+
+    for index, doc in enumerate(worksheet):
+        suffix = Path(doc.filename).suffix
+        filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        worksheet_inst = WorkerBidWorksheetSchema(document=doc)
+        worksheet_insts.append(worksheet_inst)
+
+    passport_insts: list[WorkerBidPassportSchema] = []
+
+    for index, doc in enumerate(passport):
+        suffix = Path(doc.filename).suffix
+        filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        passport_inst = WorkerBidPassportSchema(document=doc)
+        passport_insts.append(passport_inst)
+
+    work_permission_insts: list[WorkerBidWorkPermissionSchema] = []
+
+    for index, doc in enumerate(work_permission):
+        suffix = Path(doc.filename).suffix
+        filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        work_permission_inst = WorkerBidWorkPermissionSchema(document=doc)
+        work_permission_insts.append(work_permission_inst)
+
+    worker_bid = WorkerBidSchema(
+        f_name=f_name,
+        l_name=l_name,
+        o_name=o_name,
+        post=post,
+        department=department,
+        worksheet=worksheet_insts,
+        passport=passport_insts,
+        work_permission=work_permission_insts,
+        create_date=datetime.now(),
+        state=ApprovalStatus.pending_approval,
+        sender=sender,
+    )
+
+    orm.add_worker_bid(worker_bid)
+
+
+def get_file_data(file_path: str) -> FileSchema:
+    """Returns file `FileSchema` with file href and name."""
+    proto = "http"
+    host = get_settings().domain
+    port = get_settings().port
+    if get_settings().ssl_certfile:
+        proto = "https"
+
+    filename = Path(file_path).name
+
+    return FileSchema(
+        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={file_path}"
+    )
+
+
+async def update_worker_bid_state(state: ApprovalStatus, bid_id):
+    """
+    Updates worker bid state to specified `state` by `bid_id` if bid exist.
+    """
+    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+
+    if not worker_bid:
+        return
+
+    worker_bid.state = state
+    orm.update_worker_bid(worker_bid)
+
+    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_level
+
+    worker = get_worker_by_id(worker_bid.sender.id)
+    if not worker:
+        return
+    msg = None
+    if state == ApprovalStatus.approved:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id, f"Ваша заявка принята!\nНомер заявки: {worker_bid.id}."
+        )
+    elif state == ApprovalStatus.denied:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id,
+            f"Ваша заявка отклонена!\nНомер заявки: {worker_bid.id}.",
+        )
+    await send_menu_by_level(msg)

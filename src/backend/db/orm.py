@@ -1,7 +1,25 @@
 from typing import Any
 from db.database import Base, engine, session
-from db.models import Bid, WorkTime, Worker, Department, ApprovalStatus
-from db.schemas import BidSchema, DepartmentSchema, WorkerSchema, WorkTimeSchema
+from db.models import (
+    Bid,
+    Post,
+    WorkTime,
+    Worker,
+    Department,
+    ApprovalStatus,
+    WorkerBid,
+    WorkerBidWorksheet,
+    WorkerBidPassport,
+    WorkerBidWorkPermission,
+)
+from db.schemas import (
+    BidSchema,
+    DepartmentSchema,
+    WorkerBidSchema,
+    WorkerSchema,
+    WorkTimeSchema,
+    PostSchema,
+)
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_
 
@@ -34,6 +52,18 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
         return DepartmentSchema.model_validate(raw_deparment)
 
 
+def find_post_by_column(column: any, value: any) -> PostSchema:
+    """
+    Returns post in database by `column` with `value`.
+    If post not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_post = s.query(Post).filter(column == value).first()
+        if not raw_post:
+            return None
+        return PostSchema.model_validate(raw_post)
+
+
 def find_bid_by_column(column: any, value: any) -> BidSchema:
     """
     Returns bid in database by `column` with `value`.
@@ -44,6 +74,18 @@ def find_bid_by_column(column: any, value: any) -> BidSchema:
         if not raw_bid:
             return None
         return BidSchema.model_validate(raw_bid)
+
+
+def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
+    """
+    Returns worker bid in database by `column` with `value`.
+    If worker bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bid = s.query(WorkerBid).filter(column == value).first()
+        if not raw_bid:
+            return None
+        return WorkerBidSchema.model_validate(raw_bid)
 
 
 def update_worker(worker: WorkerSchema):
@@ -74,6 +116,14 @@ def get_last_bid_id() -> int:
     """
     with session.begin() as s:
         return s.query(func.max(Bid.id)).first()[0]
+
+
+def get_last_worker_bid_id() -> int:
+    """
+    Returns last worker bid id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(WorkerBid.id)).first()[0]
 
 
 def add_bid(bid: BidSchema):
@@ -309,3 +359,79 @@ def update_work_time(record: WorkTimeSchema):
         old.work_duration = record.work_duration
         old.rating = record.rating
         old.fine = record.fine
+
+
+def get_posts() -> list[PostSchema]:
+    """Returns all posts in database."""
+    with session.begin() as s:
+        raw_models = s.query(Post).all()
+        return [PostSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def add_worker_bid(bid: WorkerBidSchema):
+    """
+    Adds `bid` to database.
+    """
+    with session.begin() as s:
+        department = (
+            s.query(Department).filter(Department.id == bid.department.id).first()
+        )
+        post = s.query(Post).filter(Post.id == bid.post.id).first()
+        sender = s.query(Worker).filter(Worker.id == bid.sender.id).first()
+
+        worker_bid = WorkerBid(
+            f_name=bid.f_name,
+            l_name=bid.l_name,
+            o_name=bid.o_name,
+            post=post,
+            department=department,
+            state=bid.state,
+            create_date=bid.create_date,
+            sender=sender,
+        )
+
+        s.add(worker_bid)
+
+        for doc in bid.worksheet:
+            file = WorkerBidWorksheet(worker_bid=worker_bid, document=doc.document)
+            s.add(file)
+
+        for doc in bid.passport:
+            file = WorkerBidPassport(worker_bid=worker_bid, document=doc.document)
+            s.add(file)
+
+        for doc in bid.work_permission:
+            file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
+            s.add(file)
+
+
+def update_worker_bid(bid: WorkerBidSchema):
+    """Updates worker bid by it id."""
+    with session.begin() as s:
+        cur_bid = s.query(WorkerBid).filter(WorkerBid.id == bid.id).first()
+        if not cur_bid:
+            return
+
+        new_post = s.query(Post).filter(Post.id == bid.post.id).first()
+        if not new_post:
+            return
+
+        sender = s.query(Worker).filter(Worker.id == bid.sender.id).first()
+        if not sender:
+            return None
+
+        new_department = (
+            s.query(Department).filter(Department.id == bid.department.id).first()
+        )
+        if not new_department:
+            return
+
+        cur_bid.create_date = bid.create_date
+        cur_bid.department = new_department
+        cur_bid.post = new_post
+        # TODO: Update documents
+        cur_bid.state = bid.state
+        cur_bid.f_name = bid.f_name
+        cur_bid.l_name = bid.l_name
+        cur_bid.o_name = bid.o_name
+        cur_bid.sender = sender

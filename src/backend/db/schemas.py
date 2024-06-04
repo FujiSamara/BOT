@@ -97,7 +97,13 @@ class WorkTimeSchema(BaseSchema):
     fine: Optional[int]
 
 
-class WorkerBidSchema(BaseSchema):
+class WorkerBidSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
     f_name: str
     l_name: str
     o_name: Optional[str]
@@ -105,17 +111,33 @@ class WorkerBidSchema(BaseSchema):
 
     post: PostSchema
 
+    department: DepartmentSchema
+
     worksheet: list["WorkerBidWorksheetSchema"]
 
-    pasport: list["WorkerBidPassportSchema"]
+    passport: list["WorkerBidPassportSchema"]
 
     work_permission: list["WorkerBidWorkPermissionSchema"]
 
     state: ApprovalStatus
 
+    sender: WorkerSchema
 
-class WorkerBidDocumentSchema(BaseSchema):
+
+class WorkerBidDocumentSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
     document: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            return UploadFile(val.open(), filename=val.name)
+        return val
 
 
 class WorkerBidWorksheetSchema(WorkerBidDocumentSchema):
@@ -131,3 +153,6 @@ class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
 
 
 # Create shemas
+class FileSchema(BaseModel):
+    name: str
+    href: str
