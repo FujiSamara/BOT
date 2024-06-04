@@ -364,6 +364,8 @@ def add_worker_bid(bid: WorkerBidSchema):
             o_name=bid.o_name,
             post=post,
             department=department,
+            state=bid.state,
+            create_date=bid.create_date,
         )
 
         s.add(worker_bid)

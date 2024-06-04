@@ -6,6 +6,10 @@ from db.schemas import (
     WorkerSchema,
     WorkTimeSchema,
     DepartmentSchema,
+    WorkerBidSchema,
+    WorkerBidPassportSchema,
+    WorkerBidWorksheetSchema,
+    WorkerBidWorkPermissionSchema,
 )
 import logging
 from datetime import datetime
@@ -391,3 +395,62 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
 def get_posts_names() -> list[str]:
     """Returns all posts names in db."""
     return [post.name for post in orm.get_posts()]
+
+
+def create_worker_bid(
+    f_name: str,
+    l_name: str,
+    o_name: str,
+    post_name: str,
+    department_name: str,
+    worksheet: list[UploadFile],
+    passport: list[UploadFile],
+    work_permission: list[UploadFile],
+):
+    """Creates worker bid"""
+    department = orm.find_department_by_column(Department.name, department_name)
+    if not department:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department_name}' not found"
+        )
+        return
+
+    post = orm.find_post_by_column(Post.name, post_name)
+    if not post:
+        logging.getLogger("uvicorn.error").error(
+            f"Post with name '{post_name}' not found"
+        )
+        return
+
+    worksheet_insts: list[WorkerBidWorksheetSchema] = []
+
+    for doc in worksheet:
+        worksheet_inst = WorkerBidWorksheetSchema(document=doc)
+        worksheet_insts.append(worksheet_inst)
+
+    passport_insts: list[WorkerBidPassportSchema] = []
+
+    for doc in passport:
+        passport_inst = WorkerBidPassportSchema(document=doc)
+        passport_insts.append(passport_inst)
+
+    work_permission_insts: list[WorkerBidWorkPermissionSchema] = []
+
+    for doc in work_permission:
+        work_permission_inst = WorkerBidWorkPermissionSchema(document=doc)
+        work_permission_insts.append(work_permission_inst)
+
+    worker_bid = WorkerBidSchema(
+        f_name=f_name,
+        l_name=l_name,
+        o_name=o_name,
+        post=post,
+        department=department,
+        worksheet=worksheet_insts,
+        passport=passport_insts,
+        work_permission=work_permission_insts,
+        create_date=datetime.now(),
+        state=ApprovalStatus.pending_approval,
+    )
+
+    orm.add_worker_bid(worker_bid)
