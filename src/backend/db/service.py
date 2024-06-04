@@ -1,4 +1,5 @@
 from pathlib import Path
+from settings import get_settings
 import db.orm as orm
 from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
 from db.schemas import (
@@ -10,6 +11,7 @@ from db.schemas import (
     WorkerBidPassportSchema,
     WorkerBidWorksheetSchema,
     WorkerBidWorkPermissionSchema,
+    FileSchema,
 )
 import logging
 from datetime import datetime
@@ -454,3 +456,18 @@ def create_worker_bid(
     )
 
     orm.add_worker_bid(worker_bid)
+
+
+def get_file_data(filename: str) -> FileSchema:
+    """Returns file `FileSchema` with file href and name."""
+    proto = "http"
+    host = get_settings().domain
+    port = get_settings().port
+    if get_settings().ssl_certfile:
+        proto = "https"
+
+    filename = Path(filename).name
+
+    return FileSchema(
+        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={filename}"
+    )

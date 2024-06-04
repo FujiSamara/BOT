@@ -144,3 +144,6 @@ class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
 
 
 # Create shemas
+class FileSchema(BaseModel):
+    name: str
+    href: str
