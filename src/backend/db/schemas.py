@@ -132,6 +132,13 @@ class WorkerBidDocumentSchema(BaseModel):
     id: Optional[int] = -1
     document: UploadFile
 
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            return UploadFile(val.open(), filename=val.name)
+        return val
+
 
 class WorkerBidWorksheetSchema(WorkerBidDocumentSchema):
     pass

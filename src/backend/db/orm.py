@@ -416,8 +416,8 @@ def update_worker_bid(bid: WorkerBidSchema):
         if not new_post:
             return
 
-        new_worker = s.query(Worker).filter(Worker.id == bid.sender.id).first()
-        if not new_worker:
+        sender = s.query(Worker).filter(Worker.id == bid.sender.id).first()
+        if not sender:
             return None
 
         new_department = (
@@ -434,4 +434,4 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.f_name = bid.f_name
         cur_bid.l_name = bid.l_name
         cur_bid.o_name = bid.o_name
-        cur_bid.sender = bid.sender
+        cur_bid.sender = sender
