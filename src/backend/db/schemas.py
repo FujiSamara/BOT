@@ -97,7 +97,13 @@ class WorkTimeSchema(BaseSchema):
     fine: Optional[int]
 
 
-class WorkerBidSchema(BaseSchema):
+class WorkerBidSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
     f_name: str
     l_name: str
     o_name: Optional[str]
@@ -116,7 +122,12 @@ class WorkerBidSchema(BaseSchema):
     state: ApprovalStatus
 
 
-class WorkerBidDocumentSchema(BaseSchema):
+class WorkerBidDocumentSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
     document: UploadFile
 
 
