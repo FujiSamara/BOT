@@ -164,6 +164,9 @@ class Worker(Base):
     company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
+    worker_bids: Mapped[List["WorkerBid"]] = relationship(
+        "WorkerBid", back_populates="sender"
+    )
 
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="worker"
@@ -247,18 +250,21 @@ class WorkerBid(Base):
     )
 
     worksheet: Mapped[List["WorkerBidWorksheet"]] = relationship(
-        "WorkerBidWorksheet", back_populates="worker_bid"
+        "WorkerBidWorksheet", cascade="all,delete", back_populates="worker_bid"
     )
 
     passport: Mapped[List["WorkerBidPassport"]] = relationship(
-        "WorkerBidPassport", back_populates="worker_bid"
+        "WorkerBidPassport", cascade="all,delete", back_populates="worker_bid"
     )
 
     work_permission: Mapped[List["WorkerBidWorkPermission"]] = relationship(
-        "WorkerBidWorkPermission", back_populates="worker_bid"
+        "WorkerBidWorkPermission", cascade="all,delete", back_populates="worker_bid"
     )
 
     state: Mapped[approvalstatus]
+
+    sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
 
 
 class WorkerBidDocument(Base):

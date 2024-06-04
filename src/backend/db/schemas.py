@@ -121,6 +121,8 @@ class WorkerBidSchema(BaseModel):
 
     state: ApprovalStatus
 
+    sender: WorkerSchema
+
 
 class WorkerBidDocumentSchema(BaseModel):
     class Config:
