@@ -37,7 +37,7 @@
               {% endif %}
               {% else %}
               {% if name == "document" or name == "document1" or name == "document2" %}
-              <td><a href="{{ formatted_value["href"] }}">{{ formatted_value["filename"] }}</a></td>
+              <td><a href="{{ formatted_value.href }}">{{ formatted_value.name }}</a></td>
               {% else %}
               <td>{{ formatted_value }}</td>
               {% endif %}
