@@ -2,6 +2,8 @@ from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
+
+from fastapi import UploadFile
 import bot.kb as kb
 from bot.handlers import utils
 from bot.states import WorkerBidCreating, Base
@@ -39,7 +41,46 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "send_worker_bid")
 async def send(callback: CallbackQuery, state: FSMContext):
-    pass
+    data = await state.get_data()
+    f_name = data["f_name"]
+    l_name = data["l_name"]
+    o_name = data["o_name"]
+    post = data["post"]
+    department = data["department"]
+    worksheet = data["worksheet"]
+    passport = data["passport"]
+    work_permission = data.get("work_permission")
+    if not work_permission:
+        work_permission = []
+
+    worksheet_files: list[UploadFile] = []
+    passport_files: list[UploadFile] = []
+    work_permission_files: list[UploadFile] = []
+
+    for doc in worksheet:
+        worksheet_files.append(await utils.download_file(doc))
+    for doc in passport:
+        passport_files.append(await utils.download_file(doc))
+    for doc in work_permission:
+        work_permission_files.append(await utils.download_file(doc))
+
+    service.create_worker_bid(
+        f_name,
+        l_name,
+        o_name,
+        post,
+        department,
+        worksheet_files,
+        passport_files,
+        work_permission_files,
+    )
+    await state.clear()
+    await state.set_state(Base.none)
+    await utils.try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Согласование кандидатов"),
+        reply_markup=kb.worker_bid_menu,
+    )
 
 
 # First name
