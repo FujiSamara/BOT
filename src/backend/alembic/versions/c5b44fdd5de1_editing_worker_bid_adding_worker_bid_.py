@@ -35,8 +35,7 @@ def upgrade() -> None:
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["worker_bid_id"],
-            ["worker_bids.id"],
+            ["worker_bid_id"], ["worker_bids.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -52,8 +51,7 @@ def upgrade() -> None:
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["worker_bid_id"],
-            ["worker_bids.id"],
+            ["worker_bid_id"], ["worker_bids.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -69,8 +67,7 @@ def upgrade() -> None:
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(
-            ["worker_bid_id"],
-            ["worker_bids.id"],
+            ["worker_bid_id"], ["worker_bids.id"], ondelete="CASCADE"
         ),
         sa.PrimaryKeyConstraint("id"),
     )
