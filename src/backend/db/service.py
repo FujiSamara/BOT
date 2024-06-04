@@ -516,18 +516,19 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     worker_bid.state = state
     orm.update_worker_bid(worker_bid)
 
-    from bot.handlers.utils import notify_worker_by_telegram_id
+    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_level
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
         return
-
+    msg = None
     if state == ApprovalStatus.approved:
-        await notify_worker_by_telegram_id(
+        msg = await notify_worker_by_telegram_id(
             worker.telegram_id, f"Ваша заявка принята!\nНомер заявки: {worker_bid.id}."
         )
     elif state == ApprovalStatus.denied:
-        await notify_worker_by_telegram_id(
+        msg = await notify_worker_by_telegram_id(
             worker.telegram_id,
             f"Ваша заявка отклонена!\nНомер заявки: {worker_bid.id}.",
         )
+    await send_menu_by_level(msg)
