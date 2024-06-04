@@ -212,8 +212,6 @@ async def set_department(message: Message, state: FSMContext):
 
 
 # Documents
-
-
 # Worksheet
 @router.callback_query(F.data == "get_worker_bid_worksheet_form")
 async def get_worksheet_form(callback: CallbackQuery, state: FSMContext):
