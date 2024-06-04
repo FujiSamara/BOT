@@ -76,6 +76,18 @@ def find_bid_by_column(column: any, value: any) -> BidSchema:
         return BidSchema.model_validate(raw_bid)
 
 
+def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
+    """
+    Returns worker bid in database by `column` with `value`.
+    If worker bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bid = s.query(Bid).filter(column == value).first()
+        if not raw_bid:
+            return None
+        return WorkerBidSchema.model_validate(raw_bid)
+
+
 def update_worker(worker: WorkerSchema):
     """Updates worker by his id."""
     with session.begin() as s:
@@ -357,6 +369,7 @@ def add_worker_bid(bid: WorkerBidSchema):
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
         post = s.query(Post).filter(Post.id == bid.post.id).first()
+        sender = s.query(Worker).filter(Worker.id == bid.sender.id)
 
         worker_bid = WorkerBid(
             f_name=bid.f_name,
@@ -366,6 +379,7 @@ def add_worker_bid(bid: WorkerBidSchema):
             department=department,
             state=bid.state,
             create_date=bid.create_date,
+            sender=sender,
         )
 
         s.add(worker_bid)
@@ -381,3 +395,35 @@ def add_worker_bid(bid: WorkerBidSchema):
         for doc in bid.work_permission:
             file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
             s.add(file)
+
+
+def update_worker_bid(bid: WorkerBidSchema):
+    """Updates worker bid by it id."""
+    with session.begin() as s:
+        cur_bid = s.query(WorkerBid).filter(WorkerBid.id == bid.id).first()
+        if not cur_bid:
+            return
+
+        new_post = s.query(Post).filter(Post.id == bid.post.id).first()
+        if not new_post:
+            return
+
+        new_worker = s.query(Worker).filter(Worker.id == bid.sender.id).first()
+        if not new_worker:
+            return None
+
+        new_department = (
+            s.query(Department).filter(Department.id == bid.department.id).first()
+        )
+        if not new_department:
+            return
+
+        cur_bid.create_date = bid.create_date
+        cur_bid.department = new_department
+        cur_bid.post = new_post
+        # TODO: Update documents
+        cur_bid.state = bid.state
+        cur_bid.f_name = bid.f_name
+        cur_bid.l_name = bid.l_name
+        cur_bid.o_name = bid.o_name
+        cur_bid.sender = bid.sender

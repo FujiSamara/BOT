@@ -1,7 +1,16 @@
 from pathlib import Path
 from settings import get_settings
 import db.orm as orm
-from db.models import Department, ApprovalStatus, Bid, Post, Worker, Access, WorkTime
+from db.models import (
+    Department,
+    ApprovalStatus,
+    Bid,
+    Post,
+    Worker,
+    Access,
+    WorkTime,
+    WorkerBid,
+)
 from db.schemas import (
     BidSchema,
     WorkerSchema,
@@ -408,6 +417,7 @@ def create_worker_bid(
     worksheet: list[UploadFile],
     passport: list[UploadFile],
     work_permission: list[UploadFile],
+    sender_telegram_id: str,
 ):
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
@@ -421,6 +431,13 @@ def create_worker_bid(
     if not post:
         logging.getLogger("uvicorn.error").error(
             f"Post with name '{post_name}' not found"
+        )
+        return
+
+    sender = orm.find_worker_by_column(Worker.telegram_id, sender_telegram_id)
+    if not sender:
+        logging.getLogger("uvicorn.error").error(
+            f"Sender with telegram id '{sender_telegram_id}' not found"
         )
         return
 
@@ -453,6 +470,7 @@ def create_worker_bid(
         work_permission=work_permission_insts,
         create_date=datetime.now(),
         state=ApprovalStatus.pending_approval,
+        sender=sender,
     )
 
     orm.add_worker_bid(worker_bid)
@@ -471,3 +489,32 @@ def get_file_data(filename: str) -> FileSchema:
     return FileSchema(
         name=filename, href=f"{proto}://{host}:{port}/admin/download?path={filename}"
     )
+
+
+async def update_worker_bid_state(state: ApprovalStatus, bid_id):
+    """
+    Updates worker bid state to specified `state` by `bid_id` if bid exist.
+    """
+    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+
+    if not worker_bid:
+        return
+
+    worker_bid.state = state
+    orm.update_worker_bid(worker_bid)
+
+    from bot.handlers.utils import notify_worker_by_telegram_id
+
+    worker = get_worker_by_id(worker_bid.sender.id)
+    if not worker:
+        return
+
+    if state == ApprovalStatus.approved:
+        await notify_worker_by_telegram_id(
+            worker.telegram_id, f"Ваша заявка принята!\nНомер заявки: {worker_bid.id}."
+        )
+    elif state == ApprovalStatus.denied:
+        await notify_worker_by_telegram_id(
+            worker.telegram_id,
+            f"Ваша заявка отклонена!\nНомер заявки: {worker_bid.id}.",
+        )

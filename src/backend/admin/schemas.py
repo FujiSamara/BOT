@@ -14,6 +14,7 @@ from db.models import (
     Post,
     WorkerBid,
     WorkerBidDocument,
+    ApprovalStatus,
 )
 from xlsxwriter import Workbook
 from bot.kb import payment_type_dict, approval_status_dict
@@ -374,21 +375,26 @@ class WorkerBidView(ModelView, model=WorkerBid):
     ]
 
     @action(
-        name="approve_users",
+        name="approve_worker_bid",
         label="Согласовать",
-        confirmation_message="Are you sure?",
         add_in_detail=True,
     )
-    async def approve_users(self, request: Request):
-        pks = request.query_params.get("pks", "").split(",")
+    async def approve_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await service.update_worker_bid_state(ApprovalStatus.approved, pk)
 
-        referer = request.headers.get("Referer")
-        if referer:
-            return RedirectResponse(referer)
-        else:
-            return RedirectResponse(
-                request.url_for("admin:list", identity=self.identity)
-            )
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
+
+    @action(
+        name="decline_worker_bid",
+        label="Отказать",
+        add_in_detail=True,
+    )
+    async def decline_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await service.update_worker_bid_state(ApprovalStatus.denied, pk)
+
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
 
     @staticmethod
     def files_format(inst, column):
@@ -403,10 +409,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
     can_create = False
     can_export = False
+    can_edit = False
     name_plural = "Заявки на работу"
     name = "Заявка на работу"
-
-    form_columns = [WorkerBid.state]
 
     column_formatters = {
         WorkerBid.state: BidView.approval_status_format,

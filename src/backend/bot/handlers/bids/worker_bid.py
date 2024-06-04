@@ -40,7 +40,7 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "send_worker_bid")
-async def send(callback: CallbackQuery, state: FSMContext):
+async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     f_name = data["f_name"]
     l_name = data["l_name"]
@@ -73,6 +73,7 @@ async def send(callback: CallbackQuery, state: FSMContext):
         worksheet_files,
         passport_files,
         work_permission_files,
+        callback.message.chat.id,
     )
     await state.clear()
     await state.set_state(Base.none)
