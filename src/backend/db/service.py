@@ -188,7 +188,7 @@ async def create_bid(
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
     """
-    Returns all bids own to worker with specified phone number.
+    Returns all bids own to worker with specified telegram id.
     """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
 
@@ -196,6 +196,18 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
         return []
 
     return orm.get_bids_by_worker(worker)
+
+
+def get_workers_bids_by_sender_telegram_id(id: str) -> list[BidSchema]:
+    """
+    Returns all workers bids own to sender with specified telegram id.
+    """
+    sender = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not sender:
+        return []
+
+    return orm.get_workers_bids_by_sender(sender)
 
 
 def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -215,6 +227,13 @@ def get_bid_by_id(id: int) -> BidSchema:
     Returns bid in database by it id.
     """
     return orm.find_bid_by_column(Bid.id, id)
+
+
+def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
+    """
+    Returns worker bid in database by it id.
+    """
+    return orm.find_worker_bid_by_column(WorkerBid.id, id)
 
 
 def get_pending_bids_by_column(column: Any) -> list[BidSchema]:

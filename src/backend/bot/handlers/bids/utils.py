@@ -1,6 +1,6 @@
 from aiogram.utils.markdown import hbold
 from db.models import ApprovalStatus
-from db.schemas import BidSchema
+from db.schemas import BidSchema, WorkerBidSchema
 from bot.kb import payment_type_dict
 
 
@@ -47,6 +47,29 @@ def get_full_bid_info(bid: BidSchema) -> str:
     return bid_info
 
 
+def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
+    stage = ""
+
+    if bid.state == ApprovalStatus.pending_approval:
+        stage = "Ожидает согласования"
+    elif bid.state == ApprovalStatus.approved:
+        stage = "Согласована"
+    else:
+        stage = "Отказано"
+
+    bid_info = f"""{hbold("Номер заявки")}: {bid.id}
+{hbold("Имя")}: {bid.f_name}
+{hbold("Фамилия")}: {bid.l_name}
+{hbold("Отчество")}: {bid.o_name}
+{hbold("Предприятие")}: {bid.department.name}
+{hbold("Документы")}: Прикреплены к сообщению.
+{hbold("Должность")}: {bid.post.name}
+{hbold("Статус")}: {stage}
+"""
+
+    return bid_info
+
+
 def get_state_bid_info(bid: BidSchema) -> str:
     stage = ""
     if bid.kru_state == ApprovalStatus.pending_approval:
@@ -71,3 +94,7 @@ def get_bid_list_info(bid: BidSchema) -> str:
         f"{bid.id}: {bid.worker.l_name} "
         + f"{bid.create_date.strftime('%d.%m.%Y')} {bid.amount}"
     )
+
+
+def get_worker_bid_list_info(bid: WorkerBidSchema) -> str:
+    return f"{bid.id}: {bid.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')}"

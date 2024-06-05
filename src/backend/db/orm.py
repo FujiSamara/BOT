@@ -170,6 +170,15 @@ def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
+def get_workers_bids_by_sender(sender: WorkerSchema) -> list[BidSchema]:
+    """
+    Returns all bids in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = s.query(WorkerBid).filter(WorkerBid.sender_id == sender.id).all()
+        return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
 def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
     """
     Returns all bids in database by worker.
