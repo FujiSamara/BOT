@@ -273,19 +273,25 @@ async def get_documents(
     for doc in bid.worksheet:
         media.append(
             InputMediaDocument(
-                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
             )
         )
     for doc in bid.passport:
         media.append(
             InputMediaDocument(
-                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
             )
         )
     for doc in bid.work_permission:
         media.append(
             InputMediaDocument(
-                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
             )
         )
 
