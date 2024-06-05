@@ -295,15 +295,15 @@ worker_bid_menu_button = InlineKeyboardButton(
 create_worker_bid_menu_button = InlineKeyboardButton(
     text="Согласовать кандидата", callback_data="get_create_worker_bid_menu"
 )
-worker_bid__history_button = InlineKeyboardButton(
-    text="История согласования", callback_data="get_bid_settings_menu"
+worker_bid_history_button = InlineKeyboardButton(
+    text="История согласования", callback_data="get_worker_bid_history"
 )
 
 
 worker_bid_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [create_worker_bid_menu_button],
-        [worker_bid__history_button],
+        [worker_bid_history_button],
         [main_menu_button],
     ]
 )
@@ -429,7 +429,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="Пасспорт",
+                text="Паспорт",
                 callback_data="get_worker_bid_passport_form",
             ),
             InlineKeyboardButton(
