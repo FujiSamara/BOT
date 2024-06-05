@@ -1,5 +1,11 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+    InlineKeyboardButton,
+    BufferedInputFile,
+    InputMediaDocument,
+)
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 
@@ -8,6 +14,8 @@ import bot.kb as kb
 from bot.handlers import utils
 from bot.states import WorkerBidCreating, Base
 from db import service
+from bot.handlers.bids.schemas import BidViewMode, WorkerBidCallbackData
+from bot.handlers.bids.utils import get_worker_bid_list_info, get_full_worker_bid_info
 import bot.text as text
 
 
@@ -250,3 +258,104 @@ async def get_work_permission_form(callback: CallbackQuery, state: FSMContext):
 @router.message(WorkerBidCreating.work_permission)
 async def set_work_permission(message: Message, state: FSMContext):
     await utils.handle_documents(message, state, "work_permission", send_create_menu)
+
+
+# History
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full),
+    WorkerBidCallbackData.filter(F.endpoint_name == "documents"),
+)
+async def get_documents(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    bid = service.get_worker_bid_by_id(callback_data.id)
+    media: list[InputMediaDocument] = []
+    for doc in bid.worksheet:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+            )
+        )
+    for doc in bid.passport:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+            )
+        )
+    for doc in bid.work_permission:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(file=doc.file.read(), filename=doc.filename)
+            )
+        )
+
+    await utils.try_delete_message(callback.message)
+    msgs = await callback.message.answer_media_group(media=media)
+    await state.update_data(msgs=msgs)
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=kb.create_inline_keyboard(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    endpoint_name="bid",
+                ).pack(),
+            )
+        ),
+    )
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full),
+    WorkerBidCallbackData.filter(F.endpoint_name == "bid"),
+)
+async def get_worker_bid(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    bid_id = callback_data.id
+    bid = service.get_worker_bid_by_id(bid_id)
+    data = await state.get_data()
+    if "msgs" in data:
+        for msg in data["msgs"]:
+            await utils.try_delete_message(msg)
+        await state.update_data(msgs=[])
+
+    caption = get_full_worker_bid_info(bid)
+
+    await utils.try_edit_message(
+        message=callback.message,
+        text=caption,
+        reply_markup=kb.create_inline_keyboard(
+            kb.worker_bid_history_button,
+            InlineKeyboardButton(
+                text="Показать документы",
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    endpoint_name="documents",
+                ).pack(),
+            ),
+        ),
+    )
+
+
+@router.callback_query(F.data == "get_worker_bid_history")
+async def get_workers_bids_history(callback: CallbackQuery):
+    bids = service.get_workers_bids_by_sender_telegram_id(callback.message.chat.id)
+    bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+    keyboard = kb.create_inline_keyboard(
+        *(
+            InlineKeyboardButton(
+                text=get_worker_bid_list_info(bid),
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id, mode=BidViewMode.full, endpoint_name="bid"
+                ).pack(),
+            )
+            for bid in bids
+        ),
+        kb.worker_bid_menu_button,
+    )
+    await utils.try_delete_message(callback.message)
+    await callback.message.answer("История заявок:", reply_markup=keyboard)
