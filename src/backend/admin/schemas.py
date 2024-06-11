@@ -374,6 +374,8 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.f_name,
     ]
 
+    form_columns = [WorkerBid.comment]
+
     @action(
         name="approve_worker_bid",
         label="Согласовать",
@@ -409,7 +411,6 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
     can_create = False
     can_export = False
-    can_edit = False
     name_plural = "Заявки на работу"
     name = "Заявка на работу"
 

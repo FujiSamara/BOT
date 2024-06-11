@@ -123,6 +123,8 @@ class WorkerBidSchema(BaseModel):
 
     sender: WorkerSchema
 
+    comment: Optional[str]
+
 
 class WorkerBidDocumentSchema(BaseModel):
     class Config:

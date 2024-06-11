@@ -266,6 +266,8 @@ class WorkerBid(Base):
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
 
+    comment: Mapped[str] = mapped_column(nullable=True, default="")
+
 
 class WorkerBidDocument(Base):
     """Общий класс для документов анкеты на найм"""
