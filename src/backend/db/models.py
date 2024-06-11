@@ -20,6 +20,11 @@ class ApprovalStatus(enum.Enum):
     skipped = (5,)
 
 
+class Gender(enum.Enum):
+    man = (1,)
+    woman = (2,)
+
+
 class Access(enum.Enum):
     kru = (6,)
     worker = (3,)
@@ -182,6 +187,11 @@ class Worker(Base):
     bs_import_error: Mapped[bool] = mapped_column(nullable=True)
     # Если прошлый флаг true, здесь будет описание ошибки
     bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+
+    gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
+    employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
 
 
 class Bid(Base):

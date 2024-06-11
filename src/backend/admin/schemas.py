@@ -15,6 +15,7 @@ from db.models import (
     WorkerBid,
     WorkerBidDocument,
     ApprovalStatus,
+    Gender,
 )
 from xlsxwriter import Workbook
 from bot.kb import payment_type_dict, approval_status_dict
@@ -111,11 +112,13 @@ class WorkerView(ModelView, model=Worker):
     column_details_exclude_list = [
         Worker.department_id,
         Worker.post_id,
+        Worker.bids,
         Worker.work_times,
         Worker.company_id,
         Worker.biosmart_strid,
         Worker.bs_import,
         Worker.bs_import_error_text,
+        Worker.worker_bids,
     ]
     can_export = False
 
@@ -133,6 +136,10 @@ class WorkerView(ModelView, model=Worker):
         Worker.company: "Компания",
         Worker.telegram_id: "ID телеграмм",
         Worker.bs_import_error: "Ошибка импорта из биосмарт",
+        Worker.employment_date: "Дата приема",
+        Worker.dismissal_date: "Дата увольнения",
+        Worker.medical_records_availability: "Наличие медицинской книжки",
+        Worker.gender: "Пол",
     }
 
     form_columns = [
@@ -143,6 +150,10 @@ class WorkerView(ModelView, model=Worker):
         Worker.department,
         Worker.post,
         Worker.b_date,
+        Worker.employment_date,
+        Worker.dismissal_date,
+        Worker.medical_records_availability,
+        Worker.gender,
     ]
 
     form_ajax_refs = {
@@ -155,6 +166,18 @@ class WorkerView(ModelView, model=Worker):
             "order_by": "name",
         },
     }
+
+    @staticmethod
+    def gender_format(inst, columm):
+        value = getattr(inst, columm)
+
+        if value == Gender.man:
+            return "Мужчина"
+        else:
+            return "Женщина"
+
+    column_formatters = {Worker.gender: gender_format}
+    column_formatters_detail = column_formatters
 
 
 class BidView(ModelView, model=Bid):
@@ -337,6 +360,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.passport: "Паспорт",
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
+        WorkerBid.comment: "Комментарий",
     }
 
     column_list = [
@@ -348,6 +372,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.post,
         WorkerBid.department,
         WorkerBid.state,
+        WorkerBid.comment,
     ]
 
     column_details_list = [
@@ -362,6 +387,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.post,
         WorkerBid.department,
         WorkerBid.state,
+        WorkerBid.comment,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
