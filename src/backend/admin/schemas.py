@@ -70,6 +70,12 @@ class DepartmentView(ModelView, model=Department):
         Department.bs_import_error_text,
         Department.work_times,
         Department.biosmart_strid,
+        Department.workers_bids,
+        Department.bids,
+        Department.delivery_manager_id,
+        Department.territorial_manager_id,
+        Department.territorial_director_id,
+        Department.territorial_brand_chef_id,
     ]
     form_excluded_columns = [
         Department.workers,
@@ -79,6 +85,7 @@ class DepartmentView(ModelView, model=Department):
         Department.work_times,
         Department.bs_import_error,
         Department.biosmart_strid,
+        Department.workers_bids,
     ]
     can_export = False
 
@@ -91,13 +98,38 @@ class DepartmentView(ModelView, model=Department):
         Department.bids: "Заявки",
         Department.company: "Компания",
         Department.bs_import_error: "Ошибка импорта из биосмарт",
+        Department.type: "Формат",
+        Department.city: "Город",
+        Department.opening_date: "Дата открытия",
+        Department.closing_date: "Дата закрытия",
+        Department.area: "Общая площадь",
+        Department.territorial_manager: "Территориальный управляющий",
+        Department.territorial_brand_chef: "Территориальный брендшеф",
+        Department.delivery_manager: "Менеджер доставки",
+        Department.territorial_director: "Территориальный директор",
     }
 
     form_ajax_refs = {
         "company": {
             "fields": ("name",),
             "order_by": "name",
-        }
+        },
+        "delivery_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_director": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_brand_chef": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
     }
 
 

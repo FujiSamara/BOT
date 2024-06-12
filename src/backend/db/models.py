@@ -35,6 +35,12 @@ class Access(enum.Enum):
     owner = (10,)
 
 
+class DepartmentType(enum.Enum):
+    dark_store = (1,)
+    restaurant = (2,)
+    fast_casual = (3,)
+
+
 approvalstatus = Annotated[
     ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
 ]
@@ -110,12 +116,17 @@ class Department(Base):
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
+    city: Mapped[str] = mapped_column(nullable=True)
+    type: Mapped[DepartmentType] = mapped_column(Enum(DepartmentType), nullable=True)
+    opening_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    closing_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    area: Mapped[float] = mapped_column(nullable=True)
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
     company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
     workers: Mapped[List["Worker"]] = relationship(
-        "Worker", back_populates="department"
+        "Worker", back_populates="department", foreign_keys="Worker.department_id"
     )
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
     workers_bids: Mapped[List["WorkerBid"]] = relationship(
@@ -142,6 +153,34 @@ class Department(Base):
     inn: Mapped[str] = mapped_column(nullable=True)
     code: Mapped[str] = mapped_column(nullable=True)
 
+    territorial_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_manager: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_manager_id]
+    )
+
+    territorial_brand_chef_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_brand_chef: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_brand_chef_id]
+    )
+
+    delivery_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    delivery_manager: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[delivery_manager_id]
+    )
+
+    territorial_director_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_director: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_director_id]
+    )
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -162,7 +201,7 @@ class Worker(Base):
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship(
-        "Department", back_populates="workers"
+        "Department", back_populates="workers", foreign_keys=[department_id]
     )
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
