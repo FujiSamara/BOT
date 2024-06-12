@@ -20,6 +20,11 @@ class ApprovalStatus(enum.Enum):
     skipped = (5,)
 
 
+class Gender(enum.Enum):
+    man = (1,)
+    woman = (2,)
+
+
 class Access(enum.Enum):
     kru = (6,)
     worker = (3,)
@@ -28,6 +33,12 @@ class Access(enum.Enum):
     accountant_cash = (7,)
     accountant_card = (8,)
     owner = (10,)
+
+
+class DepartmentType(enum.Enum):
+    dark_store = (1,)
+    restaurant = (2,)
+    fast_casual = (3,)
 
 
 approvalstatus = Annotated[
@@ -105,12 +116,17 @@ class Department(Base):
     id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
+    city: Mapped[str] = mapped_column(nullable=True)
+    type: Mapped[DepartmentType] = mapped_column(Enum(DepartmentType), nullable=True)
+    opening_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    closing_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    area: Mapped[float] = mapped_column(nullable=True)
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=False)
     company: Mapped["Company"] = relationship("Company", back_populates="departments")
 
     workers: Mapped[List["Worker"]] = relationship(
-        "Worker", back_populates="department"
+        "Worker", back_populates="department", foreign_keys="Worker.department_id"
     )
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
     workers_bids: Mapped[List["WorkerBid"]] = relationship(
@@ -137,6 +153,34 @@ class Department(Base):
     inn: Mapped[str] = mapped_column(nullable=True)
     code: Mapped[str] = mapped_column(nullable=True)
 
+    territorial_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_manager: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_manager_id]
+    )
+
+    territorial_brand_chef_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_brand_chef: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_brand_chef_id]
+    )
+
+    delivery_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    delivery_manager: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[delivery_manager_id]
+    )
+
+    territorial_director_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_director: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[territorial_director_id]
+    )
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -157,7 +201,7 @@ class Worker(Base):
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship(
-        "Department", back_populates="workers"
+        "Department", back_populates="workers", foreign_keys=[department_id]
     )
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
@@ -182,6 +226,11 @@ class Worker(Base):
     bs_import_error: Mapped[bool] = mapped_column(nullable=True)
     # Если прошлый флаг true, здесь будет описание ошибки
     bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+
+    gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
+    employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
 
 
 class Bid(Base):
@@ -265,6 +314,8 @@ class WorkerBid(Base):
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
+
+    comment: Mapped[str] = mapped_column(nullable=True, default="")
 
 
 class WorkerBidDocument(Base):

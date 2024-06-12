@@ -528,6 +528,8 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     Updates worker bid state to specified `state` by `bid_id` if bid exist.
     """
     worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+    if not worker_bid.comment:
+        return
 
     if not worker_bid:
         return
@@ -548,6 +550,6 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     elif state == ApprovalStatus.denied:
         msg = await notify_worker_by_telegram_id(
             worker.telegram_id,
-            f"Ваша заявка отклонена!\nНомер заявки: {worker_bid.id}.",
+            f"Ваша заявка отклонена!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
         )
     await send_menu_by_level(msg)

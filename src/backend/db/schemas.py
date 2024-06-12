@@ -3,7 +3,7 @@ from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
 from fastapi import UploadFile
-from db.models import ApprovalStatus
+from db.models import ApprovalStatus, Gender
 
 
 # Full shemas
@@ -41,6 +41,11 @@ class WorkerSchema(BaseSchema):
     post: Optional[PostSchema]
 
     department: DepartmentSchema
+
+    gender: Optional[Gender]
+    employment_date: Optional[datetime.date]
+    dismissal_date: Optional[datetime.date]
+    medical_records_availability: Optional[bool]
 
 
 class BidSchema(BaseModel):
@@ -122,6 +127,8 @@ class WorkerBidSchema(BaseModel):
     state: ApprovalStatus
 
     sender: WorkerSchema
+
+    comment: Optional[str]
 
 
 class WorkerBidDocumentSchema(BaseModel):
