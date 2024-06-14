@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "paths": {
+      "@/*": ["./src/*"],
+    },
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-
-    "paths": {
-      "@/*": ["./src/*"],
-    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -24,6 +24,6 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/static/js/termynal.js"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
