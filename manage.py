@@ -7,6 +7,10 @@ EXECUTEABLE_PATH = sys.executable
 
 
 def run():
+    run_type = "APP"
+    if len(sys.argv) > 1:
+        run_type = sys.argv[1]
+
     commands: list[list] = []
 
     # Backend
@@ -15,7 +19,8 @@ def run():
         "-Xfrozen_modules=off",
         f"{CURRENT_DIRECTORY}/src/backend/manage.py",
     ]
-    commands.append(backend_cmd)
+    if run_type != "FRONTEND":
+        commands.append(backend_cmd)
 
     # Frontend
     frontend_cmd = [
