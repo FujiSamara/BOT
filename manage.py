@@ -7,15 +7,30 @@ EXECUTEABLE_PATH = sys.executable
 
 
 def run():
+    run_type = "APP"
+    if len(sys.argv) > 1:
+        run_type = sys.argv[1]
+
     commands: list[list] = []
 
     # Backend
-    backend_cmd = [f"{EXECUTEABLE_PATH}", "-Xfrozen_modules=off",
-                   f"{CURRENT_DIRECTORY}/src/backend/manage.py"]
-    commands.append(backend_cmd)
+    backend_cmd = [
+        f"{EXECUTEABLE_PATH}",
+        "-Xfrozen_modules=off",
+        f"{CURRENT_DIRECTORY}/src/backend/manage.py",
+    ]
+    if run_type != "FRONTEND":
+        commands.append(backend_cmd)
 
     # Frontend
-    # ...
+    frontend_cmd = [
+        "npm",
+        "--prefix",
+        f"{CURRENT_DIRECTORY}/src/frontend",
+        "run",
+        "dev",
+    ]
+    commands.append(frontend_cmd)
 
     procs: list[sub.Popen] = []
     for cmd in commands:
