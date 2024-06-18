@@ -172,6 +172,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.dismissal_date: "Дата увольнения",
         Worker.medical_records_availability: "Наличие медицинской книжки",
         Worker.gender: "Пол",
+        Worker.citizenship: "Гражданство",
     }
 
     form_columns = [
@@ -186,6 +187,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.dismissal_date,
         Worker.medical_records_availability,
         Worker.gender,
+        Worker.citizenship,
     ]
 
     form_ajax_refs = {

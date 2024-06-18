@@ -231,6 +231,7 @@ class Worker(Base):
     employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
     dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
     medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
+    citizenship: Mapped[str] = mapped_column(nullable=True)
 
 
 class Bid(Base):

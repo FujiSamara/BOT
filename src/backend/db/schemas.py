@@ -46,6 +46,7 @@ class WorkerSchema(BaseSchema):
     employment_date: Optional[datetime.date]
     dismissal_date: Optional[datetime.date]
     medical_records_availability: Optional[bool]
+    citizenship: Optional[str]
 
 
 class BidSchema(BaseModel):
