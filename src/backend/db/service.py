@@ -503,6 +503,7 @@ def create_worker_bid(
         create_date=datetime.now(),
         state=ApprovalStatus.pending_approval,
         sender=sender,
+        comment=None,
     )
 
     orm.add_worker_bid(worker_bid)
