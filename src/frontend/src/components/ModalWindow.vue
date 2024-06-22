@@ -24,14 +24,16 @@ export default {
 
 .window {
   background-color: white;
-  border-radius: 29px;
-  width: 500px;
-  height: 300px;
+  border-radius: 40px;
+  width: 560px;
+  height: 480px;
+  padding: 50px;
+  position: relative;
 }
 
 .cross {
-  margin-left: auto;
-  margin-right: 10px;
-  margin-top: 10px;
+  position: absolute;  
+  top: 32px;
+  right: 32px;
 }
 </style>
