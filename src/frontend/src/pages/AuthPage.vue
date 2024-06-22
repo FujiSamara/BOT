@@ -6,6 +6,11 @@
 <script setup lang="ts">
 import ModalWindow from '@/components/ModalWindow.vue'
 </script>
-<style lang="">
-    
+<style scoped>
+.content {
+    background-image: url('img/auth-bg.jpg');
+    background-size: cover;
+    width: 100%;
+    height: 100%;
+}
 </style>
