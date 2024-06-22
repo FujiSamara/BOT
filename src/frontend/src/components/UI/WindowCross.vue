@@ -11,10 +11,8 @@ export default {
 </script>
 <style>
     .cross-wrapper {
-        width: 30px;
-        height: 30px;
-        background-color: rgb(223, 223, 223);
-        border-radius: 15px;
+        width: 18px;
+        height: 18px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -23,10 +21,13 @@ export default {
     .c {
         position: absolute;
         width: 1.5px;
-        height: 40%;
-        background-color: black;
+        height: 100%;
+        background-color: #993CA6;
     }
-    .c:nth-child(0) {
-        transform: rotate(90);
+    .c:nth-child(1) {
+        transform: rotate(45deg)
+    }
+    .c:nth-child(2) {
+        transform: rotate(-45deg)
     }
 </style>
