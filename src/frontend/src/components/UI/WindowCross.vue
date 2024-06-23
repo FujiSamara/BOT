@@ -11,8 +11,8 @@ export default {
 </script>
 <style>
     .cross-wrapper {
-        width: 18px;
-        height: 18px;
+        width: 24px;
+        height: 24px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -20,7 +20,7 @@ export default {
     }
     .c {
         position: absolute;
-        width: 1.5px;
+        width: 2px;
         height: 100%;
         background-color: #993CA6;
     }
