@@ -2,18 +2,16 @@
   <div class="wrapper">
     <div class="window">
       <window-cross class="cross"></window-cross>
-      <div class="label">
-        <div class="keys"></div>
-        <p>Авторизуйтесь</p>
+      <div class="content">
+        <slot></slot>
       </div>
-      <div></div>
     </div>
   </div>
 </template>
 <script setup lang="ts"></script>
 <script>
 export default {
-  name: "modal-window",
+  name: "modal-window"
 };
 </script>
 <style scoped>
@@ -33,10 +31,7 @@ export default {
   width: 560px;
   height: 480px;
   padding: 50px;
-  gap: 40px;
   position: relative;
-  flex-direction: column;
-  display: flex;
 }
 
 .cross {
@@ -45,32 +40,11 @@ export default {
   right: 27px;
 }
 
-.label {
-  width: 460px;
-  height: 140px;
+.content {
+  width: 100%;
+  height: 100%;
   display: flex;
-  gap: 20px;
   flex-direction: column;
-  align-items: center;
-}
-
-.label .keys {
-  width: 96px;
-  height: 96px;
-  background-image: url('img/auth-keys.gif');
-  background-size: cover;
-}
-
-@font-face {
-  font-family: benzin-regular;
-  src: url('font/benzin-regular.ttf') format('truetype');
-}
-
-.label p {
-  font-weight: 600;
-  font-size: 28px;
-  font-family: benzin-regular;
-  margin: 0;
-  color: #292929;
+  gap: 40px;
 }
 </style>
