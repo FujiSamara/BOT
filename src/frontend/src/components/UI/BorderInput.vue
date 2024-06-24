@@ -1,5 +1,5 @@
 <template>
-    <input :placeholder="placeholder" :value="value">
+    <input :placeholder="placeholder" v-model="value">
 </template>
 <script setup>
 import { defineModel } from 'vue';
