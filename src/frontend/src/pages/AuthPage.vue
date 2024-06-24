@@ -6,14 +6,20 @@
                 <p>Авторизуйтесь</p>
             </div>
             <form>
-                <border-input placeholder="Логин"></border-input>
-                <border-input placeholder="Пароль"></border-input>  
+              <div class="inputs">
+                <border-input :value="login" placeholder="Логин"></border-input>
+                <border-input :value="password"  placeholder="Пароль"></border-input>  
+              </div>
+              <purple-button label="Войти"></purple-button>
             </form>
         </modal-window>
     </div>
 </template>
 <script setup lang="ts">
 import ModalWindow from '@/components/ModalWindow.vue'
+import { ref } from 'vue';
+const login = ref()
+const password = ref()
 </script>
 <style scoped>
 .content {
@@ -25,18 +31,20 @@ import ModalWindow from '@/components/ModalWindow.vue'
 
 .label {
   width: 460px;
-  height: 145px;
+  height: 116px;
   display: flex;
-  gap: 20px;
   flex-direction: column;
   align-items: center;
+  position: relative;
 }
 
 .label .keys {
-  width: 96px;
-  height: 96px;
+  width: 90px;
+  height: 90px;
   background-image: url('img/auth-keys.gif');
   background-size: cover;
+  position: relative;
+  top: -10px;
 }
 
 @font-face {
@@ -46,7 +54,7 @@ import ModalWindow from '@/components/ModalWindow.vue'
 
 .label p {
   font-weight: 600;
-  font-size: 28px;
+  font-size: 24px;
   font-family: benzin-regular;
   margin: 0;
   color: #292929;
@@ -54,7 +62,14 @@ import ModalWindow from '@/components/ModalWindow.vue'
 
 form {
   width: 100%;
-  height: 90px;
+  height: 224px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.inputs {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;

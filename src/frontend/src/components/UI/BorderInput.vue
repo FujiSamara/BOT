@@ -1,9 +1,10 @@
 <template>
-    <input :placeholder="placeholder">
+    <input :placeholder="placeholder" :value="value">
 </template>
 <script setup>
 import { defineModel } from 'vue';
-const placeholder = defineModel()
+const placeholder = defineModel('placeholder')
+const value = defineModel('value')
 </script>
 <script>
 export default {
@@ -14,7 +15,7 @@ export default {
 input {
     border: 1px solid #E8E8E8;
     border-radius: 10px;
-    height: 50px;
+    height: 40px;
     padding: 10px 20px 10px 20px;
     -webkit-transition: 0.5s;
     transition: 0.5s;
