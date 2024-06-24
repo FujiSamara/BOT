@@ -1,15 +1,17 @@
 <template>
   <div class="wrapper">
     <div class="window">
-      <window-cross class="cross"></window-cross>
+      <window-cross class="cross" @click="emit('close')"></window-cross>
       <div class="content">
         <slot></slot>
       </div>
     </div>
   </div>
 </template>
-<script setup lang="ts"></script>
-<script>
+<script setup lang="ts">
+const emit = defineEmits(['close'])
+</script>
+<script lang="ts">
 export default {
   name: "modal-window"
 };

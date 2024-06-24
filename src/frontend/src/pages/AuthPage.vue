@@ -1,14 +1,14 @@
 <template>
     <div class="content">
-        <modal-window class="modal-window">
+        <modal-window @close="onClose" class="modal-window">
             <div class="label">
                 <div class="keys"></div>
                 <p>Авторизуйтесь</p>
             </div>
-            <form>
+            <form @submit.prevent="onSubmit">
               <div class="inputs">
-                <border-input :value="login" placeholder="Логин"></border-input>
-                <border-input :value="password"  placeholder="Пароль"></border-input>  
+                <border-input v-model:value="login" placeholder="Логин"></border-input>
+                <border-input v-model:value="password"  placeholder="Пароль"></border-input>  
               </div>
               <purple-button label="Войти"></purple-button>
             </form>
@@ -17,9 +17,32 @@
 </template>
 <script setup lang="ts">
 import ModalWindow from '@/components/ModalWindow.vue'
+import router from '@/router';
+import { useAuthStore } from '@/store/auth';
 import { ref } from 'vue';
-const login = ref()
-const password = ref()
+
+const onAuth = async () => {
+  await router.push('/')
+}
+
+const authStore = useAuthStore()
+
+const login = ref("")
+const password = ref("")
+
+
+const onSubmit = async () => {
+  if (await authStore.login(login.value, password.value)) {
+    await onAuth()
+  }
+  else {
+    login.value = ""
+    password.value = ""
+  }
+}
+const onClose = () => {
+  window.location.href="https://fuji.ru"
+}
 </script>
 <style scoped>
 .content {
