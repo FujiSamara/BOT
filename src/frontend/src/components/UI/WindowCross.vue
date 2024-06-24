@@ -1,12 +1,13 @@
 <template>
-    <div class="cross-wrapper">
+    <div class="cross-wrapper" @click="$emit('click')">
         <div class="c"></div>
         <div class="c"></div>
     </div>
 </template>
 <script>
 export default {
-    name: "window-cross"
+    name: "window-cross",
+    emits: ['click']
 }
 </script>
 <style>
@@ -17,6 +18,13 @@ export default {
         justify-content: center;
         align-items: center;
         position: relative;
+        -webkit-transition: 0.5s;
+        transition: 0.5s;
+    }
+    .cross-wrapper:hover {
+        transform: rotate(90deg);
+        -webkit-transition: 0.5s;
+        transition: 0.5s;
     }
     .c {
         position: absolute;

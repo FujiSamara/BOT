@@ -23,5 +23,12 @@ export default {
     font-family: benzin-regular;
     font-size: 14px;
     font-weight: 400;
+    transition: 0.5s;
+    -webkit-transition: 0.5s;
+}
+.button:hover {
+    transform: scale(1.02);
+    -webkit-transition: 0.5s;
+    transition: 0.5s;
 }
 </style>
