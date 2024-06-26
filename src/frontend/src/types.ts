@@ -4,3 +4,12 @@ export interface NavigationButton {
     label: string,
     isActive: boolean
 }
+
+export enum Access {
+    Bid,
+}
+
+export interface PanelData {
+    panel: any,
+    access: Access
+}
