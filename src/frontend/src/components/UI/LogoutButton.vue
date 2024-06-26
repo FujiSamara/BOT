@@ -17,6 +17,15 @@ export default {
     justify-content: center;
     flex-direction: column;
     gap: 2px;
+    cursor: pointer;
+    user-select: none;
+    transition: 0.5s;
+    -webkit-transition: 0.5s;
+}
+.button-wrapper:hover {
+    transition: 0.5s;
+    -webkit-transition: 0.5s;
+    transform: scale(1.05);
 }
 .button-wrapper p {
     font-size: 18px;
