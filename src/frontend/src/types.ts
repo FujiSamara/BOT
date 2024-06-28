@@ -1,3 +1,5 @@
+import { ShallowRef } from "vue"
+
 export interface NavigationData {
     id: number,
     imageSrc: string,
@@ -11,6 +13,6 @@ export enum Access {
 }
 
 export interface PanelData extends NavigationData {
-    panel: any,
+    panel: ShallowRef<any>,
     access: Access
 }

@@ -1,37 +1,37 @@
 <template>
-    <div class="panel-wrapper">
-        <img src="/img/logo.svg">
-        <div class="menu">
-            <div
-            class="nav-button"
-            v-for="data in props.navigationButtons"
-            >
-                <named-button
-                :img-src="data.imageSrc"
-                :label="data.label"
-                :is-active="data.isActive"
-                :key="data.id"
-                @click="$emit('click', data.id)"
-                ></named-button>
-                <div v-if="data.isActive" class="button-decoration"></div>
-            </div>
-            
-        </div>
-        <div class="logout">
-            <logout-button
-            @click="$emit('logout')"
-            ></logout-button>
-        </div>
-   </div>
+	<div class="panel-wrapper">
+		<img src="/img/logo.svg">
+		<div class="menu">
+			<div
+			class="nav-button"
+			v-for="data in props.navigationButtons"
+			v-memo="[data.isActive]"
+			>
+				<named-button
+				:img-src="data.imageSrc"
+				:label="data.label"
+				:is-active="data.isActive"
+				:key="data.id"
+				@click="$emit('click', data.id)"
+				></named-button>
+				<div v-if="data.isActive" class="button-decoration"></div>
+			</div>
+		</div>
+		<div class="logout">
+			<logout-button
+			@click="$emit('logout')"
+			></logout-button>
+		</div>
+	</div>
 </template>
 <script setup lang="ts">
 import { NavigationData } from '@/types';
 
 const props = defineProps({
-    navigationButtons: {
-        type: Array<NavigationData>,
-        required: true
-    }
+	navigationButtons: {
+		type: Array<NavigationData>,
+		required: true
+	}
 })
 const emit = defineEmits(["click", "logout"])
 </script>
@@ -39,7 +39,7 @@ const emit = defineEmits(["click", "logout"])
 .panel-wrapper {
     display: flex;
     flex-direction: column;
-    width: 128px;
+    width: 140px;
     gap: 50px;
     padding: 40px 10px 40px 10px;
     align-items: center;

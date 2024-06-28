@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="panel-content">
         
     </div>
 </template>
@@ -9,5 +9,9 @@ export default {
 }
 </script>
 <style scoped>
-
+.panel-content {
+	width: 100%;
+	height: 100%;
+	display: flex;
+}
 </style>

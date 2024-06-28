@@ -5,7 +5,7 @@
 		class="panel"
 		@click="onNavButtonClicked"
 		></NavigationPanel>
-		<panel></panel>
+		<panel class="panel-content"></panel>
 	</div>
 </template>
 <script setup lang="ts">
@@ -13,16 +13,21 @@ import NavigationPanel from '@/components/NavigationPanel.vue'
 import DefaultPanel from '@/panels/DefaultPanel.vue';
 import { getPanelsByAccesses } from '@/panels';
 import { useAuthStore } from '@/store/auth';
-import { shallowRef } from 'vue';
+import { ref, shallowRef } from 'vue';
 
 const authStore = useAuthStore()
-const panelsData = getPanelsByAccesses(authStore.accesses)
-const panel = shallowRef(panelsData.length > 0? panelsData[0].panel: DefaultPanel)
+
+const panelsData = ref(getPanelsByAccesses(authStore.accesses))
+const panel = shallowRef(DefaultPanel)
+if (panelsData.value.length > 0) {
+	panel.value = panelsData.value[0].panel
+	panelsData.value[0].isActive = true
+}
 
 const onNavButtonClicked = async (id: number) => {
-	const activePanelData = panelsData.find((panelData) => panelData.isActive)
+	const activePanelData = panelsData.value.find((panelData) => panelData.isActive)
 
-	const panelData = panelsData.find((panelData) => panelData.id === id)
+	const panelData = panelsData.value.find((panelData) => panelData.id === id)
 	if (!panelData)
 		return
 
@@ -40,5 +45,10 @@ const onNavButtonClicked = async (id: number) => {
 	height: 100%;
 	gap: 40px;
 	background-color: #F6F6F6;
+}
+
+.panel-content {
+	width: 100%;
+	height: 100%;
 }
 </style>
