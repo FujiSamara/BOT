@@ -546,11 +546,11 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     msg = None
     if state == ApprovalStatus.approved:
         msg = await notify_worker_by_telegram_id(
-            worker.telegram_id, f"Ваша заявка принята!\nНомер заявки: {worker_bid.id}."
+            worker.telegram_id, f"Кандидат согласован!\nНомер заявки: {worker_bid.id}."
         )
     elif state == ApprovalStatus.denied:
         msg = await notify_worker_by_telegram_id(
             worker.telegram_id,
-            f"Ваша заявка отклонена!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
+            f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
         )
     await send_menu_by_level(msg)
