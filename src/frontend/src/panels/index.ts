@@ -1,11 +1,24 @@
 import { Access, PanelData } from "@/types"
-import BidPanel from "./BidPanel.vue"
+import BidPanel from "@/panels/BidPanel.vue"
+import BudgetPanel from '@/panels/BudgetPanel.vue'
 
 const panels: Array<PanelData> = [
     {
-        panel: BidPanel,
-        access: Access.Bid
+			id: 1,
+			imageSrc: "/img/bid_logo.svg",
+			label: "Заявки",
+			isActive: false,
+			panel: BidPanel,
+			access: Access.Bid
     },
+		{
+			id: 2,
+			imageSrc: "/img/bid_logo.svg",
+			label: "Бюджет",
+			isActive: false,
+			panel: BudgetPanel,
+			access: Access.Budget
+		}
 ]
 
 export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {

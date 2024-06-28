@@ -25,11 +25,11 @@
    </div>
 </template>
 <script setup lang="ts">
-import { NavigationButton } from '@/types';
+import { NavigationData } from '@/types';
 
 const props = defineProps({
     navigationButtons: {
-        type: Array<NavigationButton>,
+        type: Array<NavigationData>,
         required: true
     }
 })

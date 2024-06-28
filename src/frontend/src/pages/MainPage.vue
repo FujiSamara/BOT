@@ -1,49 +1,44 @@
 <template>
-    <div class="wrapper">
-        <NavigationPanel
-        :navigation-buttons="navigationButtons"
-        class="panel"
-        @click="onButtonClicked"
-        ></NavigationPanel>
-        <PanelHandler class="panel-handler"></PanelHandler>
-    </div>
+	<div class="wrapper">
+		<NavigationPanel
+		:navigation-buttons="panelsData"
+		class="panel"
+		@click="onNavButtonClicked"
+		></NavigationPanel>
+		<panel></panel>
+	</div>
 </template>
 <script setup lang="ts">
 import NavigationPanel from '@/components/NavigationPanel.vue'
-import PanelHandler from '@/components/PanelHandler.vue'
-import { NavigationButton } from '@/types';
+import DefaultPanel from '@/panels/DefaultPanel.vue';
+import { getPanelsByAccesses } from '@/panels';
+import { useAuthStore } from '@/store/auth';
+import { shallowRef } from 'vue';
 
-const navigationButtons: Array<NavigationButton> = [
-    {
-        id: 1,
-        imageSrc: "/img/bid_logo.svg",
-        label: "Заявки",
-        isActive: false
-    },
-    {
-        id: 2,
-        imageSrc: "/img/bid_logo.svg",
-        label: "Заявки",
-        isActive: true
-    }
-]
+const authStore = useAuthStore()
+const panelsData = getPanelsByAccesses(authStore.accesses)
+const panel = shallowRef(panelsData.length > 0? panelsData[0].panel: DefaultPanel)
 
-const onButtonClicked = async (id: number) => {
-    console.log(id)
+const onNavButtonClicked = async (id: number) => {
+	const activePanelData = panelsData.find((panelData) => panelData.isActive)
+
+	const panelData = panelsData.find((panelData) => panelData.id === id)
+	if (!panelData)
+		return
+
+	if (activePanelData)
+		activePanelData.isActive = false
+
+	panel.value = panelData.panel
+	panelData.isActive = true;
 }
 </script>
 <style scoped>
 .wrapper {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    gap: 40px;
-    background-color: #F6F6F6;
-}
-
-.panel-handler {
-    border: 1px solid black;
-    width: 100%;
-    height: 100%;
+	display: flex;
+	width: 100%;
+	height: 100%;
+	gap: 40px;
+	background-color: #F6F6F6;
 }
 </style>

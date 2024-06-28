@@ -21,7 +21,7 @@ export const useAuthStore = defineStore('auth', {
         },
         async getUserAccesses(): Promise<Array<Access>> {
             // TODO: Make getting accesses.
-            return [Access.Bid]
+            return [Access.Bid, Access.Budget]
         }
     }
 })

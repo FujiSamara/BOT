@@ -1,4 +1,4 @@
-export interface NavigationButton {
+export interface NavigationData {
     id: number,
     imageSrc: string,
     label: string,
@@ -7,9 +7,10 @@ export interface NavigationButton {
 
 export enum Access {
     Bid,
+		Budget
 }
 
-export interface PanelData {
+export interface PanelData extends NavigationData {
     panel: any,
     access: Access
 }

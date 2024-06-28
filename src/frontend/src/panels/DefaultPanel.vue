@@ -1,7 +1,7 @@
 <template>
-    <div>
-        
-    </div>
+	<h1>
+		Запросите доступ у вашего администратора.
+	</h1>
 </template>
 <script lang="ts">
 export default {
