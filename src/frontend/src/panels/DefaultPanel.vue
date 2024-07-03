@@ -1,13 +1,7 @@
 <template>
-	<h1>
-		Запросите доступ у вашего администратора.
-	</h1>
+	<h1>Запросите доступ у вашего администратора.</h1>
 </template>
 <script lang="ts">
-export default {
-	
-}
+export default {};
 </script>
-<style scoped>
-
-</style>
+<style scoped></style>

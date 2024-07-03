@@ -1,42 +1,42 @@
 <template>
 	<div class="wrapper">
 		<NavigationPanel
-		:navigation-buttons="panelsData"
-		class="panel"
-		@click="onNavButtonClicked"
+			:navigation-buttons="panelsData"
+			class="panel"
+			@click="onNavButtonClicked"
 		></NavigationPanel>
 		<panel class="panel-content"></panel>
 	</div>
 </template>
 <script setup lang="ts">
-import NavigationPanel from '@/components/NavigationPanel.vue'
-import DefaultPanel from '@/panels/DefaultPanel.vue';
-import { getPanelsByAccesses } from '@/panels';
-import { useAuthStore } from '@/store/auth';
-import { ref, shallowRef } from 'vue';
+import NavigationPanel from "@/components/NavigationPanel.vue";
+import DefaultPanel from "@/panels/DefaultPanel.vue";
+import { getPanelsByAccesses } from "@/panels";
+import { useAuthStore } from "@/store/auth";
+import { ref, shallowRef } from "vue";
 
-const authStore = useAuthStore()
+const authStore = useAuthStore();
 
-const panelsData = ref(getPanelsByAccesses(authStore.accesses))
-const panel = shallowRef(DefaultPanel)
+const panelsData = ref(getPanelsByAccesses(authStore.accesses));
+const panel = shallowRef(DefaultPanel);
 if (panelsData.value.length > 0) {
-	panel.value = panelsData.value[0].panel
-	panelsData.value[0].isActive = true
+	panel.value = panelsData.value[0].panel;
+	panelsData.value[0].isActive = true;
 }
 
 const onNavButtonClicked = async (id: number) => {
-	const activePanelData = panelsData.value.find((panelData) => panelData.isActive)
+	const activePanelData = panelsData.value.find(
+		(panelData) => panelData.isActive
+	);
 
-	const panelData = panelsData.value.find((panelData) => panelData.id === id)
-	if (!panelData)
-		return
+	const panelData = panelsData.value.find((panelData) => panelData.id === id);
+	if (!panelData) return;
 
-	if (activePanelData)
-		activePanelData.isActive = false
+	if (activePanelData) activePanelData.isActive = false;
 
-	panel.value = panelData.panel
+	panel.value = panelData.panel;
 	panelData.isActive = true;
-}
+};
 </script>
 <style scoped>
 .wrapper {
@@ -44,7 +44,7 @@ const onNavButtonClicked = async (id: number) => {
 	width: 100%;
 	height: 100%;
 	gap: 40px;
-	background-color: #F6F6F6;
+	background-color: #f6f6f6;
 }
 
 .panel-content {

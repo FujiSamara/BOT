@@ -1,12 +1,8 @@
 <template>
-    <div class="panel-content">
-        
-    </div>
+	<div class="panel-content"></div>
 </template>
 <script lang="ts">
-export default {
-	
-}
+export default {};
 </script>
 <style scoped>
 .panel-content {

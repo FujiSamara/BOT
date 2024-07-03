@@ -1,37 +1,37 @@
 <template>
-    <input :placeholder="placeholder" v-model="value">
+	<input :placeholder="placeholder" v-model="value" />
 </template>
 <script setup>
-import { defineModel } from 'vue';
-const placeholder = defineModel('placeholder')
-const value = defineModel('value')
+import { defineModel } from "vue";
+const placeholder = defineModel("placeholder");
+const value = defineModel("value");
 </script>
 <script>
 export default {
-    name: 'border-input'
-}
+	name: "border-input",
+};
 </script>
 <style scoped>
 input {
-    border: 1px solid #E8E8E8;
-    border-radius: 10px;
-    height: 40px;
-    padding: 10px 20px 10px 20px;
-    -webkit-transition: 0.5s;
-    transition: 0.5s;
+	border: 1px solid #e8e8e8;
+	border-radius: 10px;
+	height: 40px;
+	padding: 10px 20px 10px 20px;
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
 }
 
 input::placeholder {
-    color: #D0D0D0;
-    font-weight: 400;
-    font-size: 18px;
-    font-family: Stolzl;
+	color: #d0d0d0;
+	font-weight: 400;
+	font-size: 18px;
+	font-family: Stolzl;
 }
 
 input:focus {
-    border-color: #c1c1c1;
-    -webkit-transition: 0.5s;
-    transition: 0.5s;
-    outline: none;
+	border-color: #c1c1c1;
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
+	outline: none;
 }
 </style>
