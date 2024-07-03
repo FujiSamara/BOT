@@ -26,7 +26,7 @@ if (panelsData.value.length > 0) {
 
 const onNavButtonClicked = async (id: number) => {
 	const activePanelData = panelsData.value.find(
-		(panelData) => panelData.isActive
+		(panelData) => panelData.isActive,
 	);
 
 	const panelData = panelsData.value.find((panelData) => panelData.id === id);
