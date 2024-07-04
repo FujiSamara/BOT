@@ -2,7 +2,6 @@
 	<input :placeholder="placeholder" v-model="value" />
 </template>
 <script setup>
-import { defineModel } from "vue";
 const placeholder = defineModel("placeholder");
 const value = defineModel("value");
 </script>
