@@ -3,6 +3,7 @@ import BorderInput from "@/components/UI/BorderInput.vue";
 import PurpleButton from "@/components/UI/PurpleButton.vue";
 import NamedButton from "@/components/UI/NamedButton.vue";
 import LogoutButton from "@/components/UI/LogoutButton.vue";
+import TableCheckbox from "@/components/UI/TableCheckbox.vue";
 
 export default [
 	WindowCross,
@@ -10,4 +11,5 @@ export default [
 	PurpleButton,
 	NamedButton,
 	LogoutButton,
+	TableCheckbox,
 ];
