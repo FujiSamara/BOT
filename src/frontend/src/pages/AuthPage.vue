@@ -7,14 +7,8 @@
 			</div>
 			<form @submit.prevent="onSubmit">
 				<div class="inputs">
-					<border-input
-						v-model:value="login"
-						placeholder="Логин"
-					></border-input>
-					<border-input
-						v-model:value="password"
-						placeholder="Пароль"
-					></border-input>
+					<border-input :value="login" placeholder="Логин"></border-input>
+					<border-input :value="password" placeholder="Пароль"></border-input>
 				</div>
 				<purple-button label="Войти"></purple-button>
 			</form>
