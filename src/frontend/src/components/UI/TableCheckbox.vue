@@ -1,6 +1,6 @@
 <template>
 	<div class="checkbox-wrapper">
-		<input type="checkbox" v-model="checked" />
+		<input type="checkbox" v-model="checked" @click.stop />
 	</div>
 </template>
 <script lang="ts">
