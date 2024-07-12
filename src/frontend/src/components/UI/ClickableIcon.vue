@@ -1,5 +1,5 @@
 <template>
-	<div class="button-wrapper" @click="$emit('click')">
+	<div class="button-wrapper" @click.prevent>
 		<img :src="props.imgSrc" />
 	</div>
 </template>
