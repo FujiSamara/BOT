@@ -4,6 +4,7 @@ import PurpleButton from "@/components/UI/PurpleButton.vue";
 import NamedButton from "@/components/UI/NamedButton.vue";
 import LogoutButton from "@/components/UI/LogoutButton.vue";
 import TableCheckbox from "@/components/UI/TableCheckbox.vue";
+import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 
 export default [
 	WindowCross,
@@ -12,4 +13,5 @@ export default [
 	NamedButton,
 	LogoutButton,
 	TableCheckbox,
+	ClickableIcon,
 ];
