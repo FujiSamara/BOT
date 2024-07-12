@@ -24,7 +24,7 @@ input {
 	width: 17px;
 	height: 17px;
 	border: 2px solid #7f7f7f;
-	border-radius: 3px;
+	border-radius: 3.5px;
 	-webkit-appearance: none;
 	appearance: none;
 }
