@@ -4,10 +4,25 @@
 			<thead>
 				<tr>
 					<th>
-						<table-checkbox
-							v-model:checked="mainCheckboxChecked"
-							class="checkbox"
-						></table-checkbox>
+						<div class="table-tools">
+							<table-checkbox
+								v-model:checked="mainCheckboxChecked"
+								class="checkbox"
+							></table-checkbox>
+							<div class="table-actions">
+								<clickable-icon
+									v-show="mainCheckboxChecked"
+									v-if="canDelete"
+									class="icons"
+									img-src="/img/trash.svg"
+								></clickable-icon>
+								<clickable-icon
+									v-if="canCreate"
+									class="icons"
+									img-src="/img/add-plus.svg"
+								></clickable-icon>
+							</div>
+						</div>
 					</th>
 					<th
 						v-for="(columnValue, rowIndex) in props.tableHead"
@@ -30,13 +45,23 @@
 					}"
 				>
 					<th>
-						<table-checkbox
-							:checked="rowsChecked[rowIndex].checked"
-							@update:checked="
-								(value: boolean) => (rowsChecked[rowIndex].checked = value)
-							"
-							class="checkbox"
-						></table-checkbox>
+						<div class="table-tools">
+							<table-checkbox
+								:checked="rowsChecked[rowIndex].checked"
+								@update:checked="
+									(value: boolean) => (rowsChecked[rowIndex].checked = value)
+								"
+								class="checkbox"
+							></table-checkbox>
+							<div class="table-actions">
+								<clickable-icon
+									v-show="!mainCheckboxChecked && rowsChecked[rowIndex].checked"
+									v-if="canDelete"
+									class="icons"
+									img-src="/img/trash.svg"
+								></clickable-icon>
+							</div>
+						</div>
 					</th>
 					<th
 						v-for="(columnValue, columnIndex) in row.columns"
@@ -54,6 +79,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, onUnmounted, Ref, ref, watch } from "vue";
+import ClickableIcon from "./UI/ClickableIcon.vue";
 
 const props = defineProps({
 	tableHead: {
@@ -63,6 +89,14 @@ const props = defineProps({
 	tableBody: {
 		type: Array<{ id: number; columns: Array<String> }>,
 		required: true,
+	},
+	canCreate: {
+		type: Boolean,
+		required: false,
+	},
+	canDelete: {
+		type: Boolean,
+		required: false,
 	},
 });
 
@@ -250,12 +284,27 @@ th {
 	position: relative;
 }
 
-.checkbox {
-	position: relative;
-	top: -1px;
-}
-
 .highlighted {
 	background-color: #fdf7fd;
+}
+
+.table-tools {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 20px;
+}
+
+.table-actions {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+}
+
+.icons {
+	width: 20px;
 }
 </style>
