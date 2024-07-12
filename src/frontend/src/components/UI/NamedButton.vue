@@ -1,5 +1,5 @@
 <template>
-	<div class="button-wrapper" @click.prevent>
+	<div class="button-wrapper" @click.prevent="emit('click')">
 		<img :class="{ active: props.isActive }" :src="props.imgSrc" />
 		<p :class="{ active: props.isActive }">{{ props.label }}</p>
 	</div>
