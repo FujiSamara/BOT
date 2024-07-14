@@ -21,6 +21,7 @@
 									v-if="canCreate"
 									class="icons"
 									img-src="/img/add-plus.svg"
+									@click="emit('create')"
 								></clickable-icon>
 							</div>
 						</div>
@@ -38,7 +39,7 @@
 					v-for="row in table.data.value"
 					:key="row.id"
 					@click.prevent="$emit('click', row.id)"
-					@mouseleave=""
+					@mouseleave="table.isHighlighted(row.id).value = false"
 					:class="{
 						highlighted:
 							table.isChecked(row.id).value ||
