@@ -11,10 +11,11 @@
 							></table-checkbox>
 							<div class="table-actions">
 								<clickable-icon
-									v-show="mainCheckboxChecked"
+									v-show="mainCheckboxChecked || props.table.isAnyChecked()"
 									v-if="canDelete"
 									class="icons"
 									img-src="/img/trash.svg"
+									@click="onDelete"
 								></clickable-icon>
 								<clickable-icon
 									v-if="canCreate"
@@ -34,33 +35,22 @@
 			</thead>
 			<tbody>
 				<tr
-					v-for="(row, rowIndex) in tableBody"
+					v-for="row in table.data.value"
 					:key="row.id"
 					@click.prevent="$emit('click', row.id)"
-					@mouseleave="rowsHighlighted[rowIndex].highlighted = false"
+					@mouseleave=""
 					:class="{
 						highlighted:
-							rowsChecked[rowIndex].checked ||
-							rowsHighlighted[rowIndex].highlighted,
+							table.isChecked(row.id).value ||
+							table.isHighlighted(row.id).value,
 					}"
 				>
 					<th>
 						<div class="table-tools">
 							<table-checkbox
-								:checked="rowsChecked[rowIndex].checked"
-								@update:checked="
-									(value: boolean) => (rowsChecked[rowIndex].checked = value)
-								"
+								v-model:checked="table.isChecked(row.id).value"
 								class="checkbox"
 							></table-checkbox>
-							<div class="table-actions">
-								<clickable-icon
-									v-show="!mainCheckboxChecked && rowsChecked[rowIndex].checked"
-									v-if="canDelete"
-									class="icons"
-									img-src="/img/trash.svg"
-								></clickable-icon>
-							</div>
 						</div>
 					</th>
 					<th
@@ -78,16 +68,17 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, Ref, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
+import { Table } from "@/types";
 
 const props = defineProps({
 	tableHead: {
 		type: Array<String>,
 		required: true,
 	},
-	tableBody: {
-		type: Array<{ id: number; columns: Array<String> }>,
+	table: {
+		type: Table,
 		required: true,
 	},
 	canCreate: {
@@ -100,52 +91,11 @@ const props = defineProps({
 	},
 });
 
-const emit = defineEmits(["click", "checked", "highlighted"]);
+const emit = defineEmits(["click", "create", "delete"]);
 
 const tableWrapper: any = ref(null);
 
-const rowsChecked: Ref<Array<{ checked: boolean; id: number }>> = ref([]);
-const rowsHighlighted: Ref<Array<{ highlighted: boolean; id: number }>> = ref(
-	[],
-);
-const updateRowsChecked = () => {
-	const newRowsChecked: Array<{ checked: boolean; id: number }> = [];
-
-	for (let index = 0; index < props.tableBody.length; index++) {
-		const row = props.tableBody[index];
-
-		newRowsChecked.push({ checked: false, id: row.id });
-
-		for (const value of rowsChecked.value) {
-			if (value.id === row.id) {
-				newRowsChecked[index].checked = value.checked;
-				break;
-			}
-		}
-	}
-
-	rowsChecked.value = newRowsChecked;
-};
-const updateRowsHighlighted = () => {
-	const newRowsHighlighted: Array<{ highlighted: boolean; id: number }> = [];
-
-	for (let index = 0; index < props.tableBody.length; index++) {
-		const row = props.tableBody[index];
-
-		newRowsHighlighted.push({ highlighted: false, id: row.id });
-
-		for (const value of rowsHighlighted.value) {
-			if (value.id === row.id) {
-				newRowsHighlighted[index].highlighted = value.highlighted;
-				break;
-			}
-		}
-	}
-
-	rowsHighlighted.value = newRowsHighlighted;
-};
-updateRowsChecked();
-updateRowsHighlighted();
+const mainCheckboxChecked = ref(false);
 
 // Setted table width by all parent container width
 const resizeTable = () => {
@@ -153,21 +103,18 @@ const resizeTable = () => {
 	tableWrapper.value.style.width =
 		tableWrapper.value.parentElement.getBoundingClientRect().width + "px";
 };
-const mainCheckboxChecked = ref(false);
 
 watch(mainCheckboxChecked, () => {
-	for (let index = 0; index < rowsChecked.value.length; index++) {
-		rowsChecked.value[index].checked = mainCheckboxChecked.value;
+	for (let index = 0; index < props.table.data.value.length; index++) {
+		props.table.isChecked(props.table.data.value[index].id).value =
+			mainCheckboxChecked.value;
 	}
 });
-watch(props.tableBody, () => {
-	updateRowsChecked();
-	updateRowsHighlighted();
-});
-watch(rowsChecked, () => emit("checked", rowsChecked.value), { deep: true });
-watch(rowsHighlighted, () => emit("checked", rowsHighlighted.value), {
-	deep: true,
-});
+
+const onDelete = () => {
+	props.table.deleteChecked();
+	emit("delete");
+};
 
 onMounted(() => {
 	window.addEventListener("resize", resizeTable);
