@@ -11,6 +11,7 @@
 			:table="table"
 			:tableHead="tableHead"
 			@click="onRowClicked"
+			@create="onCreateClicked"
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
@@ -117,6 +118,10 @@ const table = new Table(tableBody);
 
 const onRowClicked = (rowIndex: number) => {
 	console.log(rowIndex);
+	editingElement.value = true;
+};
+const onCreateClicked = () => {
+	editingElement.value = true;
 };
 </script>
 <style scoped>
