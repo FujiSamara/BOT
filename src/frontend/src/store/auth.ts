@@ -1,5 +1,4 @@
 import { defineStore } from "pinia";
-import axios from "axios";
 import { Access } from "@/types";
 
 export const useAuthStore = defineStore("auth", {
@@ -14,7 +13,7 @@ export const useAuthStore = defineStore("auth", {
 			this.accesses = await this.getUserAccesses();
 			return true;
 		},
-		async login(login: string, password: string): Promise<boolean> {
+		async login(_1: string, _2: string): Promise<boolean> {
 			// TODO: Make login
 			this.accesses = await this.getUserAccesses();
 			return true;
