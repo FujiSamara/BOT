@@ -4,7 +4,7 @@ FROM node:lts-alpine as build-stage
 ADD . /app
 WORKDIR /app
 RUN npm install
-CMD ["npx", "vite", "build", "."]
+RUN npx vite build .
 
 # Production stage
 FROM nginx:stable-alpine as production-stage
