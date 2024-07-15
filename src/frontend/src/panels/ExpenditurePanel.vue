@@ -1,10 +1,12 @@
 <template>
-	<div class="budget-content">
+	<div class="expenditure-content">
 		<div class="header-content">
-			<div class="top-tools">
-				<h1>Заявки</h1>
-			</div>
-			<div class="fast-tools"></div>
+			<h1>Заявки</h1>
+			<PanelTools class="top-tools">
+				<PeriodTool></PeriodTool>
+				<SeacrhTool></SeacrhTool>
+				<ExportTool></ExportTool>
+			</PanelTools>
 		</div>
 		<PanelTable
 			v-if="!editingElement"
@@ -26,6 +28,11 @@
 <script setup lang="ts">
 import PanelTable from "@/components/PanelTable.vue";
 import EditPanelElement from "@/components/EditPanelElement.vue";
+import PanelTools from "@/components/PanelTools.vue";
+import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
+import ExportTool from "@/components/PanelTools/ExportTool.vue";
+import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
+
 import { ref } from "vue";
 import { Table } from "@/types";
 
@@ -44,6 +51,7 @@ const onSubmit = (inputs: Array<string>) => {
 	editingElement.value = false;
 	console.log(inputs);
 };
+
 // Table
 const tableHead = [
 	"ID",
@@ -144,7 +152,7 @@ const onCreateClicked = () => {
 };
 </script>
 <style scoped>
-.budget-content {
+.expenditure-content {
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -153,12 +161,19 @@ const onCreateClicked = () => {
 }
 .header-content {
 	width: 100%;
-	height: 130px;
-	border: 1px solid black;
+	padding-top: 20px;
+	padding-right: 20px;
+	display: flex;
+	align-items: center;
+	flex-direction: row;
 }
 .header-content h1 {
 	font-family: Stolzl;
 	font-size: 36px;
-	font-weight: 600;
+	font-weight: 550;
+	margin: 0;
+}
+.top-tools {
+	margin-left: auto;
 }
 </style>
