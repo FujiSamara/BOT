@@ -44,7 +44,7 @@ const onClose = () => {
 </script>
 <style scoped>
 .content {
-	background-image: url("img/auth-bg.jpg");
+	background-image: url("/img/auth-bg.jpg");
 	background-size: cover;
 	width: 100%;
 	height: 100%;
@@ -62,7 +62,7 @@ const onClose = () => {
 .label .keys {
 	width: 90px;
 	height: 90px;
-	background-image: url("img/auth-keys.gif");
+	background-image: url("/img/auth-keys.gif");
 	background-size: cover;
 	position: relative;
 	top: -10px;
@@ -70,7 +70,7 @@ const onClose = () => {
 
 @font-face {
 	font-family: benzin-regular;
-	src: url("font/benzin-regular.ttf") format("truetype");
+	src: url("/font/benzin-regular.ttf") format("truetype");
 }
 
 .label p {

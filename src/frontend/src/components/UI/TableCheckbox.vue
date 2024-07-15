@@ -30,7 +30,7 @@ input {
 }
 
 input[type="checkbox"]:checked {
-	background-image: url("img/check-box-checked.svg");
+	background-image: url("/img/check-box-checked.svg");
 	background-size: cover;
 	/* background-color: #993ca6; */
 	border-color: #993ca6;
