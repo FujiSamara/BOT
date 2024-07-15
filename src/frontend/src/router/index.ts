@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 
-const pageLoader = (pagePath: string) => {
+const pageLoader = (pageImport: any) => {
 	return async () => {
 		const authStore = useAuthStore();
 		const isAuthed = await authStore.auth();
-		if (isAuthed) return await import(/* @vite-ignore */ pagePath);
+		if (isAuthed) return await pageImport;
 		else return await import("@/pages/AuthPage.vue");
 	};
 };
@@ -13,7 +13,7 @@ const pageLoader = (pagePath: string) => {
 const routes = [
 	{
 		path: "/",
-		component: pageLoader("../pages/MainPage.vue"),
+		component: pageLoader(import("@/pages/MainPage.vue")),
 	},
 ];
 
