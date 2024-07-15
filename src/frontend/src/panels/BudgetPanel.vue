@@ -15,7 +15,10 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<EditPanelElement v-if="editingElement"></EditPanelElement>
+		<EditPanelElement
+			v-if="editingElement"
+			:inputHeaders="inputHeaders"
+		></EditPanelElement>
 	</div>
 </template>
 <script setup lang="ts">
@@ -24,8 +27,16 @@ import EditPanelElement from "@/components/EditPanelElement.vue";
 import { ref } from "vue";
 import { Table } from "@/types";
 
-const editingElement = ref(false);
+const editingElement = ref(true);
 
+// Edit page
+const inputHeaders: Array<string> = [
+	"Расстояние завершения заказа",
+	"Время сгорания заказа",
+	"Количество заказов в одни руки",
+];
+
+// Table
 const tableHead = [
 	"ID",
 	"Дата создания",
