@@ -18,7 +18,7 @@ const panels: Array<PanelData> = [
 		label: "Статьи",
 		isActive: false,
 		panel: shallowRef(ExpenditurePanel),
-		access: Access.Budget,
+		access: Access.Expenditure,
 	},
 ];
 
