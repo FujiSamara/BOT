@@ -18,6 +18,8 @@
 		<EditPanelElement
 			v-if="editingElement"
 			:inputHeaders="inputHeaders"
+			:default-inputs="defaultInputs"
+			@submit="onSubmit"
 		></EditPanelElement>
 	</div>
 </template>
@@ -27,7 +29,7 @@ import EditPanelElement from "@/components/EditPanelElement.vue";
 import { ref } from "vue";
 import { Table } from "@/types";
 
-const editingElement = ref(true);
+const editingElement = ref(false);
 
 // Edit page
 const inputHeaders: Array<string> = [
@@ -36,6 +38,12 @@ const inputHeaders: Array<string> = [
 	"Количество заказов в одни руки",
 ];
 
+const defaultInputs: Array<string> = ["100 м.", "", "123"];
+
+const onSubmit = (inputs: Array<string>) => {
+	editingElement.value = false;
+	console.log(inputs);
+};
 // Table
 const tableHead = [
 	"ID",
