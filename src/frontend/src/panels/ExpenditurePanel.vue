@@ -4,7 +4,9 @@
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool></PeriodTool>
+				<ToolSeparator></ToolSeparator>
 				<SeacrhTool></SeacrhTool>
+				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
 		</div>
@@ -32,6 +34,7 @@ import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
+import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { ref } from "vue";
 import { Table } from "@/types";
