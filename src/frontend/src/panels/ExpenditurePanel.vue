@@ -5,7 +5,7 @@
 			<PanelTools class="top-tools">
 				<PeriodTool></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool></SeacrhTool>
+				<SeacrhTool v-model:value="table.searchString.value"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -144,7 +144,7 @@ const tableBody: Array<Array<string>> = [
 	],
 ];
 
-const table = new Table(tableBody);
+const table = new Table(tableBody, [0, 4]);
 
 const onRowClicked = (rowIndex: number) => {
 	console.log(rowIndex);

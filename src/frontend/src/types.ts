@@ -44,7 +44,16 @@ export class Table {
 		[],
 	);
 
-	constructor(tableContent: Array<Array<string>>) {
+	constructor(
+		tableContent: Array<Array<string>>,
+		private _searchColumnIndexes: Array<number> = [],
+	) {
+		for (const columnIndex of _searchColumnIndexes) {
+			if (columnIndex < 0 || columnIndex >= tableContent[0].length) {
+				throw new Error(`Invalid column index: ${columnIndex}`);
+			}
+		}
+
 		for (let index = 0; index < tableContent.length; index++) {
 			const row = tableContent[index];
 			this.push(row);
@@ -69,8 +78,27 @@ export class Table {
 	}
 
 	// Public fields
+	public searchString: Ref<string> = ref("");
+
 	public data = computed(() => {
-		return this._content.value;
+		const searchResult: Array<{ id: number; columns: Array<string> }> = [];
+
+		for (let index = 0; index < this._content.value.length; index++) {
+			const columns = this._content.value[index];
+
+			for (const columnIndex of this._searchColumnIndexes) {
+				const entry = this.searchString.value.toLowerCase();
+				const talbeElement = columns.columns[columnIndex].toLowerCase();
+				if (
+					columns.columns[columnIndex].indexOf(this.searchString.value) !== -1
+				) {
+					searchResult.push(columns);
+					break;
+				}
+			}
+		}
+
+		return searchResult;
 	});
 
 	public isChecked(id: number): TableElementObserver<boolean> {
