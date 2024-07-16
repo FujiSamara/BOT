@@ -15,7 +15,4 @@
 	background-color: #ffffff;
 	border-radius: 2000px;
 }
-.tools-wrapper::slotted {
-	margin-right: 20px;
-}
 </style>
