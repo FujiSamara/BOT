@@ -10,7 +10,7 @@
 					<border-input :value="login" placeholder="Логин"></border-input>
 					<border-input :value="password" placeholder="Пароль"></border-input>
 				</div>
-				<purple-button label="Войти"></purple-button>
+				<purple-button><p style="margin: 0">Войти</p></purple-button>
 			</form>
 		</modal-window>
 	</div>
