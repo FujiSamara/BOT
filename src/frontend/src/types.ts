@@ -87,11 +87,9 @@ export class Table {
 			const columns = this._content.value[index];
 
 			for (const columnIndex of this._searchColumnIndexes) {
-				const entry = this.searchString.value.toLowerCase();
+				const searchString = this.searchString.value.toLowerCase();
 				const talbeElement = columns.columns[columnIndex].toLowerCase();
-				if (
-					columns.columns[columnIndex].indexOf(this.searchString.value) !== -1
-				) {
+				if (talbeElement.indexOf(searchString) !== -1) {
 					searchResult.push(columns);
 					break;
 				}
