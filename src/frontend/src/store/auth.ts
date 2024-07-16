@@ -11,7 +11,7 @@ export const useAuthStore = defineStore("auth", {
 		async auth(): Promise<boolean> {
 			// TODO: Make auth
 			this.accesses = await this.getUserAccesses();
-			return false;
+			return true;
 		},
 		async login(_1: string, _2: string): Promise<boolean> {
 			// TODO: Make login
