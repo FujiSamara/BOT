@@ -11,7 +11,7 @@ export const useAuthStore = defineStore("auth", {
 		async auth(): Promise<boolean> {
 			// TODO: Make auth
 			this.accesses = await this.getUserAccesses();
-			return true;
+			return false;
 		},
 		async login(_1: string, _2: string): Promise<boolean> {
 			// TODO: Make login
@@ -21,6 +21,9 @@ export const useAuthStore = defineStore("auth", {
 		async getUserAccesses(): Promise<Array<Access>> {
 			// TODO: Make getting accesses.
 			return [Access.Bid, Access.Expenditure];
+		},
+		async logout(): Promise<void> {
+			return;
 		},
 	},
 });

@@ -4,6 +4,7 @@
 			:navigation-buttons="panelsData"
 			class="panel"
 			@click="onNavButtonClicked"
+			@logout="onLogout"
 		></NavigationPanel>
 		<panel class="panel-content"></panel>
 	</div>
@@ -36,6 +37,10 @@ const onNavButtonClicked = async (id: number) => {
 
 	panel.value = panelData.panel;
 	panelData.isActive = true;
+};
+
+const onLogout = async () => {
+	await authStore.logout();
 };
 </script>
 <style scoped>
