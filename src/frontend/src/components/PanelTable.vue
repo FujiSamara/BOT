@@ -101,8 +101,11 @@ const mainCheckboxChecked = ref(false);
 // Setted table width by all parent container width
 const resizeTable = () => {
 	tableWrapper.value.style.width = 0;
-	tableWrapper.value.style.width =
-		tableWrapper.value.parentElement.getBoundingClientRect().width + "px";
+	const parentWidth =
+		tableWrapper.value.parentElement.getBoundingClientRect().width;
+	const tableWidth = tableWrapper.value.children[0].offsetWidth;
+	const width = Math.min(parentWidth, tableWidth);
+	tableWrapper.value.style.width = width + "px";
 };
 
 watch(mainCheckboxChecked, () => {
