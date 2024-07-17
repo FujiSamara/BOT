@@ -62,7 +62,7 @@
 					</th>
 				</tr>
 				<tr>
-					<th></th>
+					<th style="border: none"></th>
 				</tr>
 			</tbody>
 		</table>
