@@ -46,14 +46,15 @@ const onLogout = async () => {
 <style scoped>
 .wrapper {
 	display: flex;
-	width: 100%;
+	flex-shrink: 1;
+	flex-grow: 1;
+	flex-direction: row;
 	height: 100%;
 	gap: 40px;
 	background-color: #f6f6f6;
 }
 
 .panel-content {
-	width: 100%;
-	height: 100%;
+	min-width: 0;
 }
 </style>

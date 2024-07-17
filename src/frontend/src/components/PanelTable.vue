@@ -1,5 +1,5 @@
 <template>
-	<div class="table-wrapper" ref="tableWrapper">
+	<div class="table-wrapper">
 		<table>
 			<thead>
 				<tr>
@@ -69,7 +69,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
 import { Table } from "@/types";
 
@@ -94,19 +94,7 @@ const props = defineProps({
 
 const emit = defineEmits(["click", "create", "delete"]);
 
-const tableWrapper: any = ref(null);
-
 const mainCheckboxChecked = ref(false);
-
-// Setted table width by all parent container width
-const resizeTable = () => {
-	tableWrapper.value.style.width = 0;
-	const parentWidth =
-		tableWrapper.value.parentElement.getBoundingClientRect().width;
-	const tableWidth = tableWrapper.value.children[0].offsetWidth;
-	const width = Math.min(parentWidth, tableWidth);
-	tableWrapper.value.style.width = width + "px";
-};
 
 watch(mainCheckboxChecked, () => {
 	for (let index = 0; index < props.table.data.value.length; index++) {
@@ -119,14 +107,6 @@ const onDelete = () => {
 	props.table.deleteChecked();
 	emit("delete");
 };
-
-onMounted(() => {
-	window.addEventListener("resize", resizeTable);
-	resizeTable();
-});
-onUnmounted(() => {
-	window.removeEventListener("resize", resizeTable);
-});
 </script>
 <style scoped>
 .table-wrapper {

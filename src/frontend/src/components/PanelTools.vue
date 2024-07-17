@@ -11,8 +11,10 @@
 	justify-content: center;
 	flex-direction: row;
 	gap: 20px;
-	padding: 12px 12px 12px 12px;
+	padding: 12px 12px 12px 20px;
 	background-color: #ffffff;
 	border-radius: 2000px;
+	white-space: nowrap;
+	overflow: hidden;
 }
 </style>
