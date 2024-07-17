@@ -2,29 +2,22 @@
 	<div class="period-tool-wrapper">
 		<p>Период:</p>
 		<span>с</span>
-		<input
-			type="date"
-			class="from-input"
-			:value="fromValue"
-			min="2018-01-01"
-			max="2018-12-31"
-		/>
+		<input type="date" class="from-input" v-model="fromValue" />
 		<span>по</span>
-		<input
-			type="date"
-			class="to-input"
-			:value="toValue"
-			min="2018-01-01"
-			max="2018-12-31"
-		/>
+		<input type="date" class="to-input" v-model="toValue" />
 	</div>
 </template>
 <script setup lang="ts">
-const fromValue = defineModel("fromDate", { type: String });
-fromValue.value = "0001-01-01";
+import { onMounted } from "vue";
 
-const toValue = defineModel("toValue", { type: String });
-toValue.value = "3001-01-01";
+const fromValue = defineModel("fromDate", { type: String, required: true });
+
+const toValue = defineModel("toDate", { type: String, required: true });
+
+onMounted(() => {
+	fromValue.value = "0001-01-01";
+	toValue.value = "3001-01-01";
+});
 </script>
 <style scoped>
 .period-tool-wrapper {

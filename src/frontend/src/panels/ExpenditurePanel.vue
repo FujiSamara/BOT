@@ -3,7 +3,10 @@
 		<div class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
-				<PeriodTool></PeriodTool>
+				<PeriodTool
+					v-model:from-date="fromDateString"
+					v-model:to-date="toDateString"
+				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
 				<SeacrhTool v-model:value="table.searchString.value"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
@@ -36,7 +39,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { Table } from "@/types";
 
 const editingElement = ref(false);
@@ -82,7 +85,7 @@ const tableBody: Array<Array<string>> = [
 		"2",
 		"Контрольные закупки ОКК",
 		"Контрольные закупки",
-		"2014.06.09",
+		"2015.06.09",
 		"Саркисян А.",
 		"Марданов И.",
 		"Сайгина О.",
@@ -92,7 +95,27 @@ const tableBody: Array<Array<string>> = [
 		"3",
 		"Контрольные закупки ОКК",
 		"Контрольные закупки",
-		"2014.06.09",
+		"2016.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
+	],
+	[
+		"4",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2013.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
+	],
+	[
+		"5",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2012.06.09",
 		"Саркисян А.",
 		"Марданов И.",
 		"Сайгина О.",
@@ -102,11 +125,24 @@ const tableBody: Array<Array<string>> = [
 
 const table = new Table(tableBody, [0, 4]);
 
-const periodFilter = (row: { id: number; columns: Array<string> }): boolean => {
-	return true;
-};
+const fromDateString = ref("");
+const toDateString = ref("");
 
-table.filters.value = [periodFilter];
+table.filters.value = computed(
+	(): Array<(row: { id: number; columns: Array<string> }) => boolean> => {
+		const periodFilter = (row: {
+			id: number;
+			columns: Array<string>;
+		}): boolean => {
+			const rowDate = new Date(row.columns[3]);
+			const fromDate = new Date(fromDateString.value);
+			const toDate = new Date(toDateString.value);
+
+			return rowDate <= toDate && rowDate >= fromDate;
+		};
+		return [periodFilter];
+	},
+).value;
 
 const onRowClicked = (rowIndex: number) => {
 	console.log(rowIndex);
