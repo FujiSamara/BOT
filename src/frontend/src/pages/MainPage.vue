@@ -52,9 +52,11 @@ const onLogout = async () => {
 	height: 100%;
 	gap: 40px;
 	background-color: #f6f6f6;
+	width: 100%;
 }
 
 .panel-content {
 	min-width: 0;
+	flex-grow: 1;
 }
 </style>

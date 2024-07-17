@@ -118,6 +118,8 @@ const onDelete = () => {
 
 	border-radius: 20px;
 	border: 1px solid #e6e6e6;
+	max-width: 100%;
+	width: min-content;
 }
 
 .table-wrapper::-webkit-scrollbar {
