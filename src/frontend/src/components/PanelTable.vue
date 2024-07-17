@@ -110,8 +110,8 @@ const onDelete = () => {
 </script>
 <style scoped>
 .table-wrapper {
-	overflow-y: scroll;
-	overflow-x: scroll;
+	overflow-y: auto;
+	overflow-x: auto;
 	white-space: nowrap;
 	overscroll-behavior: none;
 	height: fit-content;
