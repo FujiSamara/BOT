@@ -39,7 +39,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { Table } from "@/types";
 
 const editingElement = ref(false);
