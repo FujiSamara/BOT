@@ -1,5 +1,5 @@
 <template>
-	<div class="table-wrapper" ref="tableWrapper">
+	<div class="table-wrapper">
 		<table>
 			<thead>
 				<tr>
@@ -62,14 +62,14 @@
 					</th>
 				</tr>
 				<tr>
-					<th></th>
+					<th style="border: none"></th>
 				</tr>
 			</tbody>
 		</table>
 	</div>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
 import { Table } from "@/types";
 
@@ -94,16 +94,7 @@ const props = defineProps({
 
 const emit = defineEmits(["click", "create", "delete"]);
 
-const tableWrapper: any = ref(null);
-
 const mainCheckboxChecked = ref(false);
-
-// Setted table width by all parent container width
-const resizeTable = () => {
-	tableWrapper.value.style.width = 0;
-	tableWrapper.value.style.width =
-		tableWrapper.value.parentElement.getBoundingClientRect().width + "px";
-};
 
 watch(mainCheckboxChecked, () => {
 	for (let index = 0; index < props.table.data.value.length; index++) {
@@ -116,25 +107,19 @@ const onDelete = () => {
 	props.table.deleteChecked();
 	emit("delete");
 };
-
-onMounted(() => {
-	window.addEventListener("resize", resizeTable);
-	resizeTable();
-});
-onUnmounted(() => {
-	window.removeEventListener("resize", resizeTable);
-});
 </script>
 <style scoped>
 .table-wrapper {
-	overflow-y: scroll;
-	overflow-x: scroll;
+	overflow-y: auto;
+	overflow-x: auto;
 	white-space: nowrap;
 	overscroll-behavior: none;
 	height: fit-content;
 
 	border-radius: 20px;
 	border: 1px solid #e6e6e6;
+	max-width: 100%;
+	width: min-content;
 }
 
 .table-wrapper::-webkit-scrollbar {

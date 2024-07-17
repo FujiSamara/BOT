@@ -37,14 +37,27 @@ class TableElementObserver<T> {
 export class Table {
 	private _highlighted: Array<boolean> = [];
 	private _checked: Array<boolean> = [];
-	// Key - ID, Value - index in internal arrays.
+	/**  Key - ID, Value - index in internal arrays. */
 	private _indexes: Map<number, number> = new Map();
 	private _nextID: number = 0;
 	private _content: Ref<Array<{ id: number; columns: Array<string> }>> = ref(
 		[],
 	);
 
-	constructor(tableContent: Array<Array<string>>) {
+	/**
+	 * @param tableContent
+	 * @param _searchColumnIndexes Indexes of columns for searching.
+	 */
+	constructor(
+		tableContent: Array<Array<string>>,
+		private _searchColumnIndexes: Array<number> = [],
+	) {
+		for (const columnIndex of _searchColumnIndexes) {
+			if (columnIndex < 0 || columnIndex >= tableContent[0].length) {
+				throw new Error(`Invalid column index: ${columnIndex}`);
+			}
+		}
+
 		for (let index = 0; index < tableContent.length; index++) {
 			const row = tableContent[index];
 			this.push(row);
@@ -68,9 +81,48 @@ export class Table {
 		this._nextID++;
 	}
 
+	private _searchedRows = computed(() => {
+		const searchResult: Array<{ id: number; columns: Array<string> }> = [];
+
+		for (let index = 0; index < this._content.value.length; index++) {
+			const columns = this._content.value[index];
+
+			for (const columnIndex of this._searchColumnIndexes) {
+				const searchString = this.searchString.value.toLowerCase();
+				const talbeElement = columns.columns[columnIndex].toLowerCase();
+				if (talbeElement.indexOf(searchString) !== -1) {
+					searchResult.push(columns);
+					break;
+				}
+			}
+		}
+
+		return searchResult;
+	});
+
+	private _filteredRows = computed(() => {
+		const filterResult: Array<{ id: number; columns: Array<string> }> =
+			this._searchedRows.value.filter(
+				(row: { id: number; columns: Array<string> }) => {
+					for (const filter of this.filters.value) {
+						if (!filter(row)) return false;
+					}
+					return true;
+				},
+			);
+
+		return filterResult;
+	});
+
 	// Public fields
+	public searchString: Ref<string> = ref("");
+	/** Filters for rows. Must returns **true** if row need be shown. */
+	public filters: Ref<
+		Array<(row: { id: number; columns: Array<string> }) => boolean>
+	> = ref([]);
+
 	public data = computed(() => {
-		return this._content.value;
+		return this._filteredRows.value;
 	});
 
 	public isChecked(id: number): TableElementObserver<boolean> {

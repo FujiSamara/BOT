@@ -3,8 +3,13 @@
 		<div class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
-				<PeriodTool></PeriodTool>
-				<SeacrhTool></SeacrhTool>
+				<PeriodTool
+					v-model:from-date="fromDateString"
+					v-model:to-date="toDateString"
+				></PeriodTool>
+				<ToolSeparator></ToolSeparator>
+				<SeacrhTool v-model:value="table.searchString.value"></SeacrhTool>
+				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
 		</div>
@@ -32,8 +37,9 @@ import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
+import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { Table } from "@/types";
 
 const editingElement = ref(false);
@@ -55,93 +61,88 @@ const onSubmit = (inputs: Array<string>) => {
 // Table
 const tableHead = [
 	"ID",
+	"Статья",
+	"Раздел",
 	"Дата создания",
-	"Дата закрытия",
-	"Работник",
-	"Сумма",
-	"Тип оплаты",
-	"Производство",
-	"Цель платежа",
-	"Статус",
-	"Комментарий",
+	"ЦФО",
+	"ЦЗ",
+	"Руководитель ЦЗ",
+	"Лимит",
 ];
 
 const tableBody: Array<Array<string>> = [
 	[
-		"90",
+		"1",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
 		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
 	],
 	[
-		"91",
-		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
+		"2",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2015.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
 	],
 	[
-		"92",
-		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
+		"3",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2016.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
 	],
 	[
-		"93",
-		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
+		"4",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2013.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
 	],
 	[
-		"94",
-		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
-	],
-	[
-		"95",
-		"2014.06.09",
-		"2014.08.09",
-		"9999",
-		"Инфа на Сотку",
-		"Безналичная",
-		"Тольятти Автостроителей 56 Сайгина",
-		"Оплата работ",
-		"Согласовано КРУ",
-		"Когда будет написано много текста, то он скорее всего будет просто пропадать и будут стоять точки, после 2-х строк",
+		"5",
+		"Контрольные закупки ОКК",
+		"Контрольные закупки",
+		"2012.06.09",
+		"Саркисян А.",
+		"Марданов И.",
+		"Сайгина О.",
+		"100000",
 	],
 ];
 
-const table = new Table(tableBody);
+const table = new Table(tableBody, [0, 4]);
+
+const fromDateString = ref("");
+const toDateString = ref("");
+
+table.filters.value = computed(
+	(): Array<(row: { id: number; columns: Array<string> }) => boolean> => {
+		const periodFilter = (row: {
+			id: number;
+			columns: Array<string>;
+		}): boolean => {
+			const rowDate = new Date(row.columns[3]);
+			const fromDate = new Date(fromDateString.value);
+			const toDate = new Date(toDateString.value);
+
+			return rowDate <= toDate && rowDate >= fromDate;
+		};
+		return [periodFilter];
+	},
+).value;
 
 const onRowClicked = (rowIndex: number) => {
 	console.log(rowIndex);
@@ -153,19 +154,18 @@ const onCreateClicked = () => {
 </script>
 <style scoped>
 .expenditure-content {
-	width: 100%;
 	height: 100%;
 	display: flex;
 	flex-direction: column;
 	gap: 30px;
 }
 .header-content {
-	width: 100%;
 	padding-top: 20px;
 	padding-right: 20px;
 	display: flex;
 	align-items: center;
 	flex-direction: row;
+	overflow: hidden;
 }
 .header-content h1 {
 	font-family: Stolzl;

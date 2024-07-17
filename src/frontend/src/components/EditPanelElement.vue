@@ -19,7 +19,9 @@
 				v-model:value="inputs[index].value"
 			></border-input>
 		</div>
-		<purple-button label="Сохранить" class="button"></purple-button>
+		<purple-button class="button"
+			><p style="margin: 0">Сохранить</p></purple-button
+		>
 	</form>
 </template>
 <script setup lang="ts">

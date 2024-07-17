@@ -22,5 +22,8 @@ export const useAuthStore = defineStore("auth", {
 			// TODO: Make getting accesses.
 			return [Access.Bid, Access.Expenditure];
 		},
+		async logout(): Promise<void> {
+			return;
+		},
 	},
 });

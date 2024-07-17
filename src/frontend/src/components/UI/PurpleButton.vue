@@ -1,11 +1,8 @@
 <template>
 	<button class="button">
-		{{ label }}
+		<slot></slot>
 	</button>
 </template>
-<script setup>
-const label = defineModel("label");
-</script>
 <script>
 export default {
 	name: "purple-button",
