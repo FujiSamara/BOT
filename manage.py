@@ -30,7 +30,8 @@ def run():
         "run",
         "dev",
     ]
-    commands.append(frontend_cmd)
+    if run_type != "BACKEND":
+        commands.append(frontend_cmd)
 
     procs: list[sub.Popen] = []
     for cmd in commands:

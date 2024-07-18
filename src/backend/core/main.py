@@ -5,7 +5,7 @@ import logging
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(lifespan=global_lifespan)
+    app = FastAPI(lifespan=global_lifespan, docs_url=None, redoc_url=None)
     try:
         configure(app)
     except Exception as e:
