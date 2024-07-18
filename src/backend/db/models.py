@@ -216,6 +216,18 @@ class Worker(Base):
         "WorkTime", back_populates="worker"
     )
 
+    facs: Mapped[List["Expenditure"]] = relationship(
+        "Expenditure", back_populates="fac", foreign_keys="Expenditure.fac_id"
+    )
+    ccs: Mapped[List["Expenditure"]] = relationship(
+        "Expenditure", back_populates="cc", foreign_keys="Expenditure.cc_id"
+    )
+    cc_supervisors: Mapped[List["Expenditure"]] = relationship(
+        "Expenditure",
+        back_populates="cc_supervisor",
+        foreign_keys="Expenditure.cc_supervisor_id",
+    )
+
     # айдишник из биосмарта для определения конкретного рабочего
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
     biosmart_strid: Mapped[str] = mapped_column(nullable=True)
@@ -388,3 +400,32 @@ class WorkTime(Base):
 
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
+
+
+class Expenditure(Base):
+    """Статьи"""
+
+    __tablename__ = "expenditures"
+
+    id: Mapped[intpk]
+    name: Mapped[str] = mapped_column(nullable=False)
+    chapter: Mapped[str] = mapped_column(nullable=False)
+    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+    # financial responsibility center
+    fac_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    fac: Mapped["Worker"] = relationship(
+        "Worker", back_populates="facs", foreign_keys=[fac_id]
+    )
+
+    # cost center
+    cc_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    cc: Mapped["Worker"] = relationship(
+        "Worker", back_populates="ccs", foreign_keys=[cc_id]
+    )
+
+    # cost center supervisor
+    cc_supervisor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    cc_supervisor: Mapped["Worker"] = relationship(
+        "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
+    )
