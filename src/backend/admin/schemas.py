@@ -151,6 +151,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.bs_import,
         Worker.bs_import_error_text,
         Worker.worker_bids,
+        Worker.facs,
+        Worker.ccs,
+        Worker.cc_supervisors,
     ]
     can_export = False
 
