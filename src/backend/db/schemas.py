@@ -164,3 +164,9 @@ class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
 class FileSchema(BaseModel):
     name: str
     href: str
+
+
+class PanelSchema(BaseModel):
+    name: str
+    header: list[str]
+    body: list[list[str]]

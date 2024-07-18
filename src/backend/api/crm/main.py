@@ -5,7 +5,7 @@ import sys
 
 
 def create(api: FastAPI) -> FastAPI:
-    crm = FastAPI(docs_url=None, redoc_url=None)
+    crm = FastAPI()
     try:
         configure(crm)
     except Exception as e:
