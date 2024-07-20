@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
@@ -167,6 +167,19 @@ class FileSchema(BaseModel):
 
 
 class PanelSchema(BaseModel):
+    dumps: list[dict[str, Any]]
+
+
+class ExpenditureSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
     name: str
-    header: list[str]
-    body: list[list[str]]
+    chapter: str
+    create_date: datetime.datetime
+    limit: float
+    fac: WorkerSchema
+    cc: WorkerSchema
+    cc_supervisor: WorkerSchema
