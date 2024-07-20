@@ -22,10 +22,9 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<div class="edit-panel-element-wrapper">
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelElement
 				class="edit-page"
-				v-if="editingElement"
 				:inputHeaders="inputHeaders"
 				:default-inputs="defaultInputs"
 				@submit="onSubmit"
