@@ -35,7 +35,8 @@ async def create_panel_row(
             schema = ExpenditureSchema.model_validate(row)
             create_schema = service.create_expenditure
 
-    create_schema(schema)
+    if schema and create_schema:
+        create_schema(schema)
 
 
 @router.delete("/{panel_name}/delete")
@@ -44,6 +45,14 @@ async def delete_panel_row(
     rowID: int,
 ) -> None:
     pass
+    remove_schema: Callable[[int]] | None = None
+
+    match panel_name:
+        case "expenditure":
+            remove_schema = service.remove_expenditure
+
+    if remove_schema:
+        remove_schema(rowID)
 
 
 @router.patch("/{panel_name}/update")

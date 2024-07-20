@@ -478,3 +478,9 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
         )
 
         s.add(expenditure_model)
+
+
+def remove_expenditure(id: int) -> None:
+    """Removes expenditure"""
+    with session.begin() as s:
+        s.query(Expenditure).filter(Expenditure.id == id).delete()

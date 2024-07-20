@@ -565,3 +565,7 @@ def get_expenditures() -> list[ExpenditureSchema]:
 def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
     orm.create_expenditure(expenditure)
+
+
+def remove_expenditure(id: int) -> None:
+    orm.remove_expenditure(id)
