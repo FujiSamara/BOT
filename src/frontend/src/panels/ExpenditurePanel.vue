@@ -1,6 +1,6 @@
 <template>
 	<div class="expenditure-content">
-		<div class="header-content">
+		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
@@ -22,12 +22,15 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<EditPanelElement
-			v-if="editingElement"
-			:inputHeaders="inputHeaders"
-			:default-inputs="defaultInputs"
-			@submit="onSubmit"
-		></EditPanelElement>
+		<div class="edit-panel-element-wrapper">
+			<EditPanelElement
+				class="edit-page"
+				v-if="editingElement"
+				:inputHeaders="inputHeaders"
+				:default-inputs="defaultInputs"
+				@submit="onSubmit"
+			></EditPanelElement>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -47,6 +50,12 @@ const editingElement = ref(false);
 
 // Edit page
 const inputHeaders: Array<string> = [
+	"Статья",
+	"Раздел",
+	"ЦФО",
+	"ЦЗ",
+	"Руководитель ЦЗ",
+	"Лимит",
 	"Статья",
 	"Раздел",
 	"ЦФО",
@@ -107,6 +116,7 @@ const onRowClicked = (rowID: number) => {
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
+	defaultInputs.value = [];
 	editingElement.value = true;
 };
 onMounted(async () => {
@@ -136,5 +146,12 @@ onMounted(async () => {
 }
 .top-tools {
 	margin-left: auto;
+}
+.edit-panel-element-wrapper {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding-top: 56px;
+	padding-bottom: 56px;
 }
 </style>
