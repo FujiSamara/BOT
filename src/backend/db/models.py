@@ -411,6 +411,7 @@ class Expenditure(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     chapter: Mapped[str] = mapped_column(nullable=False)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    limit: Mapped[float] = mapped_column(nullable=False)
 
     # financial responsibility center
     fac_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
