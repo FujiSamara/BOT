@@ -455,8 +455,10 @@ def get_expenditures() -> list[ExpenditureSchema]:
         return [ExpenditureSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
 
 
-def create_expenditure(expenditure: ExpenditureSchema) -> None:
-    """Creates expenditure"""
+def create_expenditure(expenditure: ExpenditureSchema) -> bool:
+    """Creates expenditure
+    Returns: `True` if expenditure created, `False` otherwise.
+    """
     with session.begin() as s:
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
@@ -465,7 +467,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
         )
 
         if not cc or not fac or not cc_supervisor:
-            return
+            return False
 
         expenditure_model = Expenditure(
             name=expenditure.name,
@@ -479,8 +481,37 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
 
         s.add(expenditure_model)
 
+    return True
+
 
 def remove_expenditure(id: int) -> None:
     """Removes expenditure"""
     with session.begin() as s:
         s.query(Expenditure).filter(Expenditure.id == id).delete()
+
+
+def update_expenditure(expenditure: ExpenditureSchema) -> bool:
+    """Updates expenditure
+    Returns: `True` if expenditure updated, `False` otherwise.
+    """
+    with session.begin() as s:
+        old = s.query(Expenditure).filter(Expenditure.id == expenditure.id).first()
+
+        fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
+        cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
+        cc_supervisor = (
+            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        )
+
+        if not old or not cc or not fac or not cc_supervisor:
+            return False
+
+        old.name = expenditure.name
+        old.chapter = expenditure.chapter
+        old.create_date = expenditure.create_date
+        old.limit = expenditure.limit
+        old.fac = fac
+        old.cc = cc
+        old.cc_supervisor = cc_supervisor
+
+    return True

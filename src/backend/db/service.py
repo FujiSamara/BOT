@@ -564,8 +564,15 @@ def get_expenditures() -> list[ExpenditureSchema]:
 
 def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
-    orm.create_expenditure(expenditure)
+    if not orm.create_expenditure(expenditure):
+        logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
 
 
 def remove_expenditure(id: int) -> None:
     orm.remove_expenditure(id)
+
+
+def update_expenditure(expenditure: ExpenditureSchema) -> None:
+    """Updates expenditure by `ExpenditureSchema.id`"""
+    if not orm.update_expenditure(expenditure):
+        logging.getLogger("uvicorn.error").error("Expenditure wasn't updated.")

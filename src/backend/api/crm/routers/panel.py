@@ -58,7 +58,15 @@ async def delete_panel_row(
 @router.patch("/{panel_name}/update")
 async def update_panel_row(
     panel_name: str,
-    rowID: int,
-    row: dict[str, str],
+    row: dict[str, Any],
 ) -> None:
-    pass
+    update_schema: Callable[[BaseSchema], None] | None = None
+    schema: BaseSchema | None = None
+
+    match panel_name:
+        case "expenditure":
+            schema = ExpenditureSchema.model_validate(row)
+            update_schema = service.update_expenditure
+
+    if schema and update_schema:
+        update_schema(schema)
