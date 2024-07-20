@@ -1,5 +1,6 @@
 import { computed, ref, Ref } from "vue";
 import * as config from "@/config";
+import * as parser from "@/parser";
 import axios from "axios";
 
 class TableElementObserver<T> {
@@ -63,7 +64,7 @@ export class Table {
 		this._nextKey++;
 	}
 
-	private _parsedRows = computed(
+	private _formattedRows = computed(
 		(): Array<{ key: number; columns: Array<string> }> => {
 			const result: Array<{ key: number; columns: Array<string> }> = [];
 
@@ -92,8 +93,8 @@ export class Table {
 	private _searchedRows = computed(() => {
 		const searchResult: Array<{ key: number; columns: Array<string> }> = [];
 
-		for (let index = 0; index < this._parsedRows.value.length; index++) {
-			const row = this._parsedRows.value[index];
+		for (let index = 0; index < this._formattedRows.value.length; index++) {
+			const row = this._formattedRows.value[index];
 
 			for (const columnIndex of this._searchColumnIndexes) {
 				if (columnIndex >= row.columns.length) {
@@ -159,7 +160,7 @@ export class Table {
 
 		const result: Array<string> = [];
 
-		for (const elem of this._parsedRows.value[index].columns) {
+		for (const elem of this._formattedRows.value[index].columns) {
 			result.push(elem.slice());
 		}
 
@@ -228,5 +229,10 @@ export class ExpenditureTable extends Table {
 		searchColumnIndexes: Array<number> = [],
 	) {
 		super(tableContent, tableName, searchColumnIndexes);
+
+		this._formatters.set("fac", parser.formatWorker);
+		this._formatters.set("cc", parser.formatWorker);
+		this._formatters.set("cc_supervisor", parser.formatWorker);
+		this._formatters.set("create_date", parser.formatDate);
 	}
 }

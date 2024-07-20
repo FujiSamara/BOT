@@ -42,7 +42,7 @@ import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { computed, onMounted, Ref, ref } from "vue";
-import { Table } from "@/table";
+import { ExpenditureTable } from "@/table";
 
 const editingElement = ref(false);
 
@@ -75,8 +75,7 @@ const tableHead = [
 	"Лимит",
 ];
 
-const table = new Table([], "expenditure", [0, 4]);
-
+const table = new ExpenditureTable([], "expenditure", [0, 4]);
 const fromDateString = ref("");
 const toDateString = ref("");
 
