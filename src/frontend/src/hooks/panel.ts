@@ -55,7 +55,7 @@ function toExpenditureSchema(expenditure: any): ExpenditureSchema {
 		id: expenditure.id,
 		name: expenditure.name,
 		chapter: expenditure.chapter,
-		createDate: expenditure.create_date,
+		create_date: expenditure.create_date,
 		limit: expenditure.limit,
 		fac: {
 			id: expenditure.fac.id,
@@ -83,7 +83,7 @@ function expenditureToRow(expenditure: ExpenditureSchema): Array<string> {
 		`${expenditure.id}`,
 		`${expenditure.name}`,
 		`${expenditure.chapter}`,
-		`${expenditure.createDate}`,
+		`${expenditure.create_date}`,
 		`${expenditure.fac.l_name} ${expenditure.fac.f_name}`,
 		`${expenditure.cc.l_name} ${expenditure.cc.f_name}`,
 		`${expenditure.cc_supervisor.l_name} ${expenditure.cc_supervisor.f_name}`,
