@@ -26,8 +26,8 @@ class PanelDataHandler<T> {
 			}
 		}
 	}
-	public async deleteRow(rowID: number) {}
-	public async updateRow(rowID: number, row: Object) {}
+	public async deleteRow(rowKey: number) {}
+	public async updateRow(rowKey: number, row: Object) {}
 	public async addRow(row: Array<string>) {}
 }
 

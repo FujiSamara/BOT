@@ -39,8 +39,8 @@ export class Table {
 	private _checked: Array<boolean> = [];
 	/**  Key - ID, Value - index in internal arrays. */
 	private _indexes: Map<number, number> = new Map();
-	private _nextID: number = 0;
-	private _content: Ref<Array<{ id: number; columns: Array<string> }>> = ref(
+	private _nextKey: number = 0;
+	private _content: Ref<Array<{ key: number; columns: Array<string> }>> = ref(
 		[],
 	);
 
@@ -58,25 +58,25 @@ export class Table {
 		}
 	}
 
-	private elementChecked(id: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(id)!;
+	private elementChecked(key: number, newValue: boolean): void {
+		const curIndex = this._indexes.get(key)!;
 		this._checked[curIndex] = newValue;
-		this._content.value[curIndex].id = this._nextID;
-		this._indexes.delete(id);
-		this._indexes.set(this._nextID, curIndex);
-		this._nextID++;
+		this._content.value[curIndex].key = this._nextKey;
+		this._indexes.delete(key);
+		this._indexes.set(this._nextKey, curIndex);
+		this._nextKey++;
 	}
-	private elementHighlighted(id: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(id)!;
+	private elementHighlighted(key: number, newValue: boolean): void {
+		const curIndex = this._indexes.get(key)!;
 		this._highlighted[curIndex] = newValue;
-		this._content.value[curIndex].id = this._nextID;
-		this._indexes.delete(id);
-		this._indexes.set(this._nextID, curIndex);
-		this._nextID++;
+		this._content.value[curIndex].key = this._nextKey;
+		this._indexes.delete(key);
+		this._indexes.set(this._nextKey, curIndex);
+		this._nextKey++;
 	}
 
 	private _searchedRows = computed(() => {
-		const searchResult: Array<{ id: number; columns: Array<string> }> = [];
+		const searchResult: Array<{ key: number; columns: Array<string> }> = [];
 
 		for (let index = 0; index < this._content.value.length; index++) {
 			const row = this._content.value[index];
@@ -98,9 +98,9 @@ export class Table {
 	});
 
 	private _filteredRows = computed(() => {
-		const filterResult: Array<{ id: number; columns: Array<string> }> =
+		const filterResult: Array<{ key: number; columns: Array<string> }> =
 			this._searchedRows.value.filter(
-				(row: { id: number; columns: Array<string> }) => {
+				(row: { key: number; columns: Array<string> }) => {
 					for (const filter of this.filters.value) {
 						if (!filter(row)) return false;
 					}
@@ -115,16 +115,16 @@ export class Table {
 	public searchString: Ref<string> = ref("");
 	/** Filters for rows. Must returns **true** if row need be shown. */
 	public filters: Ref<
-		Array<(row: { id: number; columns: Array<string> }) => boolean>
+		Array<(row: { key: number; columns: Array<string> }) => boolean>
 	> = ref([]);
 
 	public data = computed(() => {
 		return this._filteredRows.value;
 	});
 
-	public cloneRow(id: number): Array<string> {
-		const index = this._indexes.get(id);
-		if (index === undefined) throw new Error(`ID ${id} not exist`);
+	public cloneRow(key: number): Array<string> {
+		const index = this._indexes.get(key);
+		if (index === undefined) throw new Error(`Key ${key} not exist`);
 
 		const result: Array<string> = [];
 
@@ -135,18 +135,18 @@ export class Table {
 		return result;
 	}
 
-	public isChecked(id: number): TableElementObserver<boolean> {
+	public isChecked(key: number): TableElementObserver<boolean> {
 		return new TableElementObserver(
-			this._checked[this._indexes.get(id)!],
-			id,
+			this._checked[this._indexes.get(key)!],
+			key,
 			this.elementChecked.bind(this),
 		);
 	}
 
-	public isHighlighted(id: number): TableElementObserver<boolean> {
+	public isHighlighted(key: number): TableElementObserver<boolean> {
 		return new TableElementObserver(
-			this._highlighted[this._indexes.get(id)!],
-			id,
+			this._highlighted[this._indexes.get(key)!],
+			key,
 			this.elementHighlighted.bind(this),
 		);
 	}
@@ -159,31 +159,31 @@ export class Table {
 	}
 
 	public push(row: Array<string>): void {
-		this._content.value.push({ columns: row, id: this._nextID });
-		this._indexes.set(this._nextID, this._checked.length);
+		this._content.value.push({ columns: row, key: this._nextKey });
+		this._indexes.set(this._nextKey, this._checked.length);
 		this._checked.push(false);
 		this._highlighted.push(false);
-		this._nextID++;
+		this._nextKey++;
 	}
 
-	public erase(id: number): void {
-		const deleteIndex = this._indexes.get(id)!;
-		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
+	public erase(key: number): void {
+		const deleteIndex = this._indexes.get(key)!;
+		if (!this._indexes.delete(key)) throw new Error(`Key ${key} not exist`);
 		this._checked.splice(deleteIndex, 1);
 		this._highlighted.splice(deleteIndex, 1);
 		this._content.value.splice(deleteIndex, 1);
 		for (let index = deleteIndex; index < this._content.value.length; index++) {
 			const element = this._content.value[index];
-			this._indexes.set(element.id, this._indexes.get(element.id)! - 1);
+			this._indexes.set(element.key, this._indexes.get(element.key)! - 1);
 		}
 	}
 
 	public deleteChecked(): void {
 		for (let index = 0; index < this._content.value.length; index++) {
-			const id = this._content.value[index].id;
+			const key = this._content.value[index].key;
 
 			if (this._checked[index]) {
-				this.erase(id);
+				this.erase(key);
 				index--;
 			}
 		}

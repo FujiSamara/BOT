@@ -55,12 +55,6 @@ const inputHeaders: Array<string> = [
 	"ЦЗ",
 	"Руководитель ЦЗ",
 	"Лимит",
-	"Статья",
-	"Раздел",
-	"ЦФО",
-	"ЦЗ",
-	"Руководитель ЦЗ",
-	"Лимит",
 ];
 
 const defaultInputs: Ref<Array<string>> = ref([]);
@@ -93,9 +87,9 @@ const fromDateString = ref("");
 const toDateString = ref("");
 
 table.filters.value = computed(
-	(): Array<(row: { id: number; columns: Array<string> }) => boolean> => {
+	(): Array<(row: { key: number; columns: Array<string> }) => boolean> => {
 		const periodFilter = (row: {
-			id: number;
+			key: number;
 			columns: Array<string>;
 		}): boolean => {
 			const rowDate = new Date(row.columns[3]);
@@ -108,8 +102,8 @@ table.filters.value = computed(
 	},
 ).value;
 
-const onRowClicked = (rowID: number) => {
-	defaultInputs.value = table.cloneRow(rowID);
+const onRowClicked = (rowKey: number) => {
+	defaultInputs.value = table.cloneRow(rowKey);
 	defaultInputs.value.splice(0, 1);
 	defaultInputs.value.splice(2, 1);
 	editingElement.value = true;

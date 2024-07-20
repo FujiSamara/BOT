@@ -37,19 +37,19 @@
 			<tbody>
 				<tr
 					v-for="row in table.data.value"
-					:key="row.id"
-					@click.prevent="$emit('click', row.id)"
-					@mouseleave="table.isHighlighted(row.id).value = false"
+					:key="row.key"
+					@click.prevent="$emit('click', row.key)"
+					@mouseleave="table.isHighlighted(row.key).value = false"
 					:class="{
 						highlighted:
-							table.isChecked(row.id).value ||
-							table.isHighlighted(row.id).value,
+							table.isChecked(row.key).value ||
+							table.isHighlighted(row.key).value,
 					}"
 				>
 					<th>
 						<div class="table-tools">
 							<table-checkbox
-								v-model:checked="table.isChecked(row.id).value"
+								v-model:checked="table.isChecked(row.key).value"
 								class="checkbox"
 							></table-checkbox>
 						</div>
@@ -98,7 +98,7 @@ const mainCheckboxChecked = ref(false);
 
 watch(mainCheckboxChecked, () => {
 	for (let index = 0; index < props.table.data.value.length; index++) {
-		props.table.isChecked(props.table.data.value[index].id).value =
+		props.table.isChecked(props.table.data.value[index].key).value =
 			mainCheckboxChecked.value;
 	}
 });
