@@ -71,7 +71,8 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
-import { Table } from "@/table";
+import type { Table } from "@/table";
+import type { PropType } from "vue";
 
 const props = defineProps({
 	tableHead: {
@@ -79,7 +80,7 @@ const props = defineProps({
 		required: true,
 	},
 	table: {
-		type: Table,
+		type: Object as PropType<Table>,
 		required: true,
 	},
 	canCreate: {
