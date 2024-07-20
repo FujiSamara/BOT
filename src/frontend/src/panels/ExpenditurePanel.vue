@@ -41,6 +41,7 @@ import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { computed, ref } from "vue";
 import { Table } from "@/types";
+import usePanelDataHandler from "@/hooks/panel";
 
 const editingElement = ref(false);
 
@@ -124,6 +125,8 @@ const tableBody: Array<Array<string>> = [
 ];
 
 const table = new Table(tableBody, [0, 4]);
+
+const panelDataHandler = usePanelDataHandler(table, "expenditure");
 
 const fromDateString = ref("");
 const toDateString = ref("");

@@ -9,7 +9,7 @@ import api
 
 def configure(app: FastAPI):
     """Configures fast api core app."""
-    bot.create(app)
+    # bot.create(app)
     admin.create(app)
     api.create(app)
 

@@ -52,12 +52,6 @@ export class Table {
 		tableContent: Array<Array<string>>,
 		private _searchColumnIndexes: Array<number> = [],
 	) {
-		for (const columnIndex of _searchColumnIndexes) {
-			if (columnIndex < 0 || columnIndex >= tableContent[0].length) {
-				throw new Error(`Invalid column index: ${columnIndex}`);
-			}
-		}
-
 		for (let index = 0; index < tableContent.length; index++) {
 			const row = tableContent[index];
 			this.push(row);
@@ -85,13 +79,16 @@ export class Table {
 		const searchResult: Array<{ id: number; columns: Array<string> }> = [];
 
 		for (let index = 0; index < this._content.value.length; index++) {
-			const columns = this._content.value[index];
+			const row = this._content.value[index];
 
 			for (const columnIndex of this._searchColumnIndexes) {
+				if (columnIndex >= row.columns.length) {
+					break;
+				}
 				const searchString = this.searchString.value.toLowerCase();
-				const talbeElement = columns.columns[columnIndex].toLowerCase();
+				const talbeElement = row.columns[columnIndex].toLowerCase();
 				if (talbeElement.indexOf(searchString) !== -1) {
-					searchResult.push(columns);
+					searchResult.push(row);
 					break;
 				}
 			}
