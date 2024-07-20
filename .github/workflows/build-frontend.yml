@@ -4,15 +4,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout repo
+      - name: checkout
         uses: actions/checkout@v4
-        with:
-          sparse-checkout: "src/frontend"
-          sparse-checkout-cone-mode: false
       - name: use node.js
         uses: actions/setup-node@v4
         with:
           node-version: "22.2.x"
-      - run: npm install
+      - name: npm install
+        working-directory: ./src/frontend
+        run: npm install
       - name: build frontend
+        working-directory: ./src/frontend
         run: npm run build
