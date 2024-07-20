@@ -1,5 +1,6 @@
 from typing import Any, Callable
 from fastapi.routing import APIRouter
+from fastapi.exceptions import HTTPException
 
 from db import service
 from db.schemas import BaseSchema, PanelSchema, ExpenditureSchema
@@ -15,11 +16,10 @@ async def get_panel_rows(panel_name: str) -> PanelSchema:
     match panel_name:
         case "expenditure":
             get_schemas = service.get_expenditures
+        case _:
+            return HTTPException(400)
 
-    if get_schemas:
-        return PanelSchema(dumps=[model.model_dump() for model in get_schemas()])
-    else:
-        return PanelSchema(dumps=[])
+    return PanelSchema(dumps=[model.model_dump() for model in get_schemas()])
 
 
 @router.post("/{panel_name}/create")
@@ -34,9 +34,10 @@ async def create_panel_row(
         case "expenditure":
             schema = ExpenditureSchema.model_validate(row)
             create_schema = service.create_expenditure
+        case _:
+            return HTTPException(400)
 
-    if schema and create_schema:
-        create_schema(schema)
+    create_schema(schema)
 
 
 @router.delete("/{panel_name}/delete")
@@ -50,9 +51,10 @@ async def delete_panel_row(
     match panel_name:
         case "expenditure":
             remove_schema = service.remove_expenditure
+        case _:
+            return HTTPException(400)
 
-    if remove_schema:
-        remove_schema(rowID)
+    remove_schema(rowID)
 
 
 @router.patch("/{panel_name}/update")
@@ -67,6 +69,7 @@ async def update_panel_row(
         case "expenditure":
             schema = ExpenditureSchema.model_validate(row)
             update_schema = service.update_expenditure
+        case _:
+            return HTTPException(400)
 
-    if schema and update_schema:
-        update_schema(schema)
+    update_schema(schema)
