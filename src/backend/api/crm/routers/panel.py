@@ -1,50 +1,55 @@
-from typing import Annotated, Callable
-from fastapi import Depends
+from typing import Any, Callable
 from fastapi.routing import APIRouter
 
-from db.schemas import PanelSchema
+from db import service
+from db.schemas import BaseSchema, PanelSchema, ExpenditureSchema
 
-from api.crm.dependency import PanelParser
 
 router = APIRouter()
 
 
 @router.get("/{panel_name}s")
-async def get_panel_rows(
-    get_rows: Annotated[
-        Callable[[], PanelSchema], Depends(PanelParser.build_getting_panels)
-    ],
-) -> PanelSchema:
-    return get_rows()
+async def get_panel_rows(panel_name: str) -> PanelSchema:
+    get_schemas: Callable[[], list[BaseSchema]] | None = None
+
+    match panel_name:
+        case "expenditure":
+            get_schemas = service.get_expenditures
+
+    if get_schemas:
+        return PanelSchema(dumps=[model.model_dump() for model in get_schemas()])
+    else:
+        return PanelSchema(dumps=[])
 
 
 @router.post("/{panel_name}/create")
 async def create_panel_row(
-    row: dict[str, str],
-    create_row: Annotated[
-        Callable[[dict[str, str]], None], Depends(PanelParser.build_creating_panel_row)
-    ],
+    panel_name: str,
+    row: dict[str, Any],
 ) -> None:
-    create_row(row)
+    create_schema: Callable[[BaseSchema], None] | None = None
+    schema: BaseSchema | None = None
+
+    match panel_name:
+        case "expenditure":
+            schema = ExpenditureSchema.model_validate(row)
+            create_schema = service.create_expenditure
+
+    create_schema(schema)
 
 
 @router.delete("/{panel_name}/delete")
 async def delete_panel_row(
+    panel_name: str,
     rowID: int,
-    delete_row: Annotated[
-        Callable[[int], None], Depends(PanelParser.build_deleting_panel_row)
-    ],
 ) -> None:
-    delete_row(rowID)
+    pass
 
 
 @router.patch("/{panel_name}/update")
 async def update_panel_row(
+    panel_name: str,
     rowID: int,
     row: dict[str, str],
-    create_row: Annotated[
-        Callable[[int, dict[str, str]], None],
-        Depends(PanelParser.build_updating_panel_row),
-    ],
 ) -> None:
-    create_row(rowID, row)
+    pass

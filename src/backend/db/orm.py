@@ -2,6 +2,7 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    Expenditure,
     Post,
     WorkTime,
     Worker,
@@ -15,6 +16,7 @@ from db.models import (
 from db.schemas import (
     BidSchema,
     DepartmentSchema,
+    ExpenditureSchema,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -444,3 +446,35 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.l_name = bid.l_name
         cur_bid.o_name = bid.o_name
         cur_bid.sender = sender
+
+
+def get_expenditures() -> list[ExpenditureSchema]:
+    """Returns all expenditures in database."""
+    with session.begin() as s:
+        raw_models = s.query(Expenditure).all()
+        return [ExpenditureSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def create_expenditure(expenditure: ExpenditureSchema) -> None:
+    """Creates expenditure"""
+    with session.begin() as s:
+        fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
+        cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
+        cc_supervisor = (
+            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        )
+
+        if not cc or not fac or not cc_supervisor:
+            return
+
+        expenditure_model = Expenditure(
+            name=expenditure.name,
+            chapter=expenditure.chapter,
+            create_date=expenditure.create_date,
+            limit=expenditure.limit,
+            fac=fac,
+            cc=cc,
+            cc_supervisor=cc_supervisor,
+        )
+
+        s.add(expenditure_model)

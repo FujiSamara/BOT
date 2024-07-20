@@ -13,6 +13,7 @@ from db.models import (
 )
 from db.schemas import (
     BidSchema,
+    ExpenditureSchema,
     WorkerSchema,
     WorkTimeSchema,
     DepartmentSchema,
@@ -554,3 +555,13 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
             f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
         )
     await send_menu_by_level(msg)
+
+
+def get_expenditures() -> list[ExpenditureSchema]:
+    """Returns all expenditures in database."""
+    return orm.get_expenditures()
+
+
+def create_expenditure(expenditure: ExpenditureSchema) -> None:
+    """Creates expenditure"""
+    orm.create_expenditure(expenditure)
