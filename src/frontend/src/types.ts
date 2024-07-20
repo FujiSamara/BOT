@@ -122,6 +122,19 @@ export class Table {
 		return this._filteredRows.value;
 	});
 
+	public cloneRow(id: number): Array<string> {
+		const index = this._indexes.get(id);
+		if (index === undefined) throw new Error(`ID ${id} not exist`);
+
+		const result: Array<string> = [];
+
+		for (const elem of this._content.value[index].columns) {
+			result.push(elem.slice());
+		}
+
+		return result;
+	}
+
 	public isChecked(id: number): TableElementObserver<boolean> {
 		return new TableElementObserver(
 			this._checked[this._indexes.get(id)!],
@@ -175,4 +188,24 @@ export class Table {
 			}
 		}
 	}
+}
+
+export interface BaseSchema {
+	id: number;
+}
+
+export interface WorkerSchema extends BaseSchema {
+	f_name: string;
+	l_name: string;
+	o_name: string;
+}
+
+export interface ExpenditureSchema extends BaseSchema {
+	name: string;
+	chapter: string;
+	limit: number;
+	createDate: Date;
+	fac: WorkerSchema;
+	cc: WorkerSchema;
+	cc_supervisor: WorkerSchema;
 }

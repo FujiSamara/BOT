@@ -39,7 +39,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, ref } from "vue";
+import { computed, onMounted, Ref, ref } from "vue";
 import { Table } from "@/types";
 import usePanelDataHandler from "@/hooks/panel";
 
@@ -47,12 +47,15 @@ const editingElement = ref(false);
 
 // Edit page
 const inputHeaders: Array<string> = [
-	"Расстояние завершения заказа",
-	"Время сгорания заказа",
-	"Количество заказов в одни руки",
+	"Статья",
+	"Раздел",
+	"ЦФО",
+	"ЦЗ",
+	"Руководитель ЦЗ",
+	"Лимит",
 ];
 
-const defaultInputs: Array<string> = ["100 м.", "", "123"];
+const defaultInputs: Ref<Array<string>> = ref([]);
 
 const onSubmit = (inputs: Array<string>) => {
 	editingElement.value = false;
@@ -71,62 +74,12 @@ const tableHead = [
 	"Лимит",
 ];
 
-const tableBody: Array<Array<string>> = [
-	[
-		"1",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2014.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"2",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2015.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"3",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2016.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"4",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2013.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"5",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2012.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-];
-
-const table = new Table(tableBody, [0, 4]);
+const table = new Table([], [0, 4]);
 
 const panelDataHandler = usePanelDataHandler(table, "expenditure");
+if (!panelDataHandler) {
+	throw Error("Panel not exist");
+}
 
 const fromDateString = ref("");
 const toDateString = ref("");
@@ -147,13 +100,18 @@ table.filters.value = computed(
 	},
 ).value;
 
-const onRowClicked = (rowIndex: number) => {
-	console.log(rowIndex);
+const onRowClicked = (rowID: number) => {
+	defaultInputs.value = table.cloneRow(rowID);
+	defaultInputs.value.splice(0, 1);
+	defaultInputs.value.splice(2, 1);
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
 	editingElement.value = true;
 };
+onMounted(async () => {
+	await panelDataHandler.loadData();
+});
 </script>
 <style scoped>
 .expenditure-content {
