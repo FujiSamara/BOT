@@ -71,7 +71,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
-import { Table } from "@/types";
+import { Table } from "@/table";
 
 const props = defineProps({
 	tableHead: {

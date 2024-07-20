@@ -42,8 +42,7 @@ import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { computed, onMounted, Ref, ref } from "vue";
-import { Table } from "@/types";
-import usePanelDataHandler from "@/hooks/panel";
+import { Table } from "@/table";
 
 const editingElement = ref(false);
 
@@ -76,12 +75,7 @@ const tableHead = [
 	"Лимит",
 ];
 
-const table = new Table([], [0, 4]);
-
-const panelDataHandler = usePanelDataHandler(table, "expenditure");
-if (!panelDataHandler) {
-	throw Error("Panel not exist");
-}
+const table = new Table([], "expenditure", [0, 4]);
 
 const fromDateString = ref("");
 const toDateString = ref("");
@@ -113,7 +107,7 @@ const onCreateClicked = () => {
 	editingElement.value = true;
 };
 onMounted(async () => {
-	await panelDataHandler.loadData();
+	await table.load();
 });
 </script>
 <style scoped>
