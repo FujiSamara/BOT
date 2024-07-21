@@ -32,4 +32,6 @@ jobs:
           pip install --no-cache-dir ruff
       - name: Run Ruff
         working-directory: ./src/backend
-        run: ruff check .
+        run: |
+          ruff check .
+          ruff format --check .
