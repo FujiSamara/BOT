@@ -32,13 +32,9 @@ export class Table {
 
 	/**
 	 * @param tableContent
-	 * @param _searchColumnIndexes Indexes of columns for searching.
+	 * @param _searchFields Indexes of columns for searching.
 	 */
-	constructor(
-		tableContent: Array<Array<string>>,
-		tableName: string,
-		private _searchColumnIndexes: Array<number> = [],
-	) {
+	constructor(tableContent: Array<Array<string>>, tableName: string) {
 		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/panel/${tableName}`;
 
 		for (let index = 0; index < tableContent.length; index++) {
@@ -64,60 +60,23 @@ export class Table {
 		this._nextKey++;
 	}
 
-	private _formattedRows = computed(
-		(): Array<{ key: number; columns: Array<string> }> => {
-			const result: Array<{ key: number; columns: Array<string> }> = [];
-
-			for (let index = 0; index < this._models.value.length; index++) {
-				const model = this._models.value[index];
-				const columns: Array<string> = [];
-
-				for (const fieldKey in model.instance) {
-					const field = model.instance[fieldKey];
-					const formatter = this._formatters.get(fieldKey);
-
-					if (formatter) {
-						columns.push(formatter(field));
-					} else {
-						columns.push(`${field}`);
-					}
-				}
-
-				result.push({ key: model.key, columns });
-			}
-
-			return result;
-		},
-	);
-
 	private _searchedRows = computed(() => {
-		const searchResult: Array<{ key: number; columns: Array<string> }> = [];
-
-		for (let index = 0; index < this._formattedRows.value.length; index++) {
-			const row = this._formattedRows.value[index];
-
-			for (const columnIndex of this._searchColumnIndexes) {
-				if (columnIndex >= row.columns.length) {
-					break;
-				}
-				const searchString = this.searchString.value.toLowerCase();
-				const talbeElement = row.columns[columnIndex].toLowerCase();
-				if (talbeElement.indexOf(searchString) !== -1) {
-					searchResult.push(row);
-					break;
-				}
+		const searchResult: Array<{ key: number; instance: any }> = [];
+		for (let index = 0; index < this._models.value.length; index++) {
+			const model = this._models.value[index];
+			if (this.searcher.value(model.instance)) {
+				searchResult.push(model);
 			}
 		}
-
 		return searchResult;
 	});
 
 	private _filteredRows = computed(() => {
-		const filterResult: Array<{ key: number; columns: Array<string> }> =
+		const filterResult: Array<{ key: number; instance: any }> =
 			this._searchedRows.value.filter(
-				(row: { key: number; columns: Array<string> }) => {
+				(model: { key: number; instance: any }) => {
 					for (const filter of this.filters.value) {
-						if (!filter(row)) return false;
+						if (!filter(model.instance)) return false;
 					}
 					return true;
 				},
@@ -126,21 +85,43 @@ export class Table {
 		return filterResult;
 	});
 
+	private _formattedRows = computed(() => {
+		const result: Array<{ key: number; columns: Array<string> }> = [];
+
+		for (let index = 0; index < this._filteredRows.value.length; index++) {
+			const model = this._filteredRows.value[index];
+			const columns: Array<string> = [];
+
+			for (const fieldKey in model.instance) {
+				const field = model.instance[fieldKey];
+				const formatter = this._formatters.get(fieldKey);
+
+				if (formatter) {
+					columns.push(formatter(field));
+				} else {
+					columns.push(`${field}`);
+				}
+			}
+
+			result.push({ key: model.key, columns });
+		}
+
+		return result;
+	});
+
 	// Protected fields
 	protected _formatters: Map<string, (value: any) => string> = new Map<
 		string,
 		(value: any) => string
 	>();
 
-	// Public fields
-	public searchString: Ref<string> = ref("");
 	/** Filters for rows. Must returns **true** if row need be shown. */
-	public filters: Ref<
-		Array<(row: { key: number; columns: Array<string> }) => boolean>
-	> = ref([]);
+	public filters: Ref<Array<(instance: any) => boolean>> = ref([]);
+	/** Searcher for rows. Must returns **true** if row need be shown. */
+	public searcher: Ref<(instance: any) => boolean> = ref((_) => true);
 
 	public data = computed(() => {
-		return this._filteredRows.value;
+		return this._formattedRows.value;
 	});
 
 	public async load() {
@@ -223,12 +204,8 @@ export class Table {
 }
 
 export class ExpenditureTable extends Table {
-	constructor(
-		tableContent: Array<Array<string>>,
-		tableName: string,
-		searchColumnIndexes: Array<number> = [],
-	) {
-		super(tableContent, tableName, searchColumnIndexes);
+	constructor(tableContent: Array<Array<string>>, tableName: string) {
+		super(tableContent, tableName);
 
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);

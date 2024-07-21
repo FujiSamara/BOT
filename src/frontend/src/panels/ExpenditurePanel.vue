@@ -8,7 +8,7 @@
 					v-model:to-date="toDateString"
 				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool v-model:value="table.searchString.value"></SeacrhTool>
+				<SeacrhTool v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -75,25 +75,34 @@ const tableHead = [
 	"Лимит",
 ];
 
-const table = new ExpenditureTable([], "expenditure", [0, 4]);
+const table = new ExpenditureTable([], "expenditure");
 const fromDateString = ref("");
 const toDateString = ref("");
+const searchString = ref("");
 
-table.filters.value = computed(
-	(): Array<(row: { key: number; columns: Array<string> }) => boolean> => {
-		const periodFilter = (row: {
-			key: number;
-			columns: Array<string>;
-		}): boolean => {
-			const rowDate = new Date(row.columns[3]);
-			const fromDate = new Date(fromDateString.value);
-			const toDate = new Date(toDateString.value);
+table.filters.value = computed((): Array<(instance: any) => boolean> => {
+	const periodFilter = (instance: any): boolean => {
+		const rowDate = new Date(instance.create_date);
+		const fromDate = new Date(fromDateString.value);
+		const toDate = new Date(toDateString.value);
 
-			return rowDate <= toDate && rowDate >= fromDate;
-		};
-		return [periodFilter];
-	},
-).value;
+		return rowDate <= toDate && rowDate >= fromDate;
+	};
+	return [periodFilter];
+}).value;
+table.searcher.value = computed((): ((instance: any) => boolean) => {
+	return (instance: any): boolean => {
+		const name: string = instance.name;
+		if (name.indexOf(searchString.value) !== -1) {
+			return true;
+		}
+		const chapter: string = instance.chapter;
+		if (chapter.indexOf(searchString.value) !== -1) {
+			return true;
+		}
+		return false;
+	};
+}).value;
 
 const onRowClicked = (rowKey: number) => {
 	defaultInputs.value = table.cloneRow(rowKey);
