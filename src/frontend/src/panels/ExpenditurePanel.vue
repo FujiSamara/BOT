@@ -25,8 +25,7 @@
 		<div v-if="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelElement
 				class="edit-page"
-				:inputHeaders="inputHeaders"
-				:default-inputs="defaultInputs"
+				:editor="editor"
 				@submit="onSubmit"
 			></EditPanelElement>
 		</div>
@@ -41,26 +40,21 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, onMounted, Ref, ref } from "vue";
+import { computed, onMounted, ref, shallowRef, ShallowRef } from "vue";
 import { ExpenditureTable } from "@/table";
+import { ExpenditureEditor } from "@/editor";
 
 const editingElement = ref(false);
 
 // Edit page
-const inputHeaders: Array<string> = [
-	"Статья",
-	"Раздел",
-	"ЦФО",
-	"ЦЗ",
-	"Руководитель ЦЗ",
-	"Лимит",
-];
+const editor: ShallowRef<ExpenditureEditor> = shallowRef(
+	new ExpenditureEditor(),
+);
+const editingElementKey = ref();
 
-const defaultInputs: Ref<Array<string>> = ref([]);
-
-const onSubmit = (inputs: Array<string>) => {
+const onSubmit = async () => {
+	await table.update(editor.value.toInstanse(), editingElementKey.value);
 	editingElement.value = false;
-	console.log(inputs);
 };
 
 // Table
@@ -105,17 +99,15 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 }).value;
 
 const onRowClicked = (rowKey: number) => {
-	defaultInputs.value = table.cloneRow(rowKey);
-	defaultInputs.value.splice(0, 1);
-	defaultInputs.value.splice(2, 1);
+	editor.value = new ExpenditureEditor(table.getInstance(rowKey));
+	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
-	defaultInputs.value = [];
 	editingElement.value = true;
 };
 onMounted(async () => {
-	await table.load();
+	await table.loadAll();
 });
 </script>
 <style scoped>

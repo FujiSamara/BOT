@@ -1,23 +1,15 @@
 <template>
-	<form
-		class="edit-panel-wrapper"
-		@submit.prevent="
-			$emit(
-				'submit',
-				inputs.map((val) => val.value),
-			)
-		"
-	>
+	<form class="edit-panel-wrapper" @submit.prevent="$emit('submit')">
 		<div class="inputs-wrapper">
 			<div
 				class="input-wrapper"
-				v-for="(inputHeader, index) in props.inputHeaders"
-				:key="inputHeader"
+				v-for="(field, _) in props.editor.fields"
+				:key="field.name"
 			>
-				<p class="input-header">{{ inputHeader }}:</p>
+				<p class="input-header">{{ field.name }}:</p>
 				<border-input
 					class="input"
-					v-model:value="inputs[index].value"
+					v-model:value="field.formattedField.value"
 				></border-input>
 			</div>
 		</div>
@@ -28,30 +20,17 @@
 	</form>
 </template>
 <script setup lang="ts">
-import { ref, Ref } from "vue";
 import BorderInput from "./UI/BorderInput.vue";
+import type { ExpenditureEditor } from "@/editor";
+import type { PropType } from "vue";
 
 const props = defineProps({
-	inputHeaders: {
-		type: Array<string>,
+	editor: {
+		type: Object as PropType<ExpenditureEditor>,
 		required: true,
-	},
-	defaultInputs: {
-		type: Array<string>,
-		required: false,
 	},
 });
 const emit = defineEmits(["submit"]);
-
-let inputs: Array<Ref<string>> = [];
-if (
-	!props.defaultInputs ||
-	props.defaultInputs.length !== props.inputHeaders.length
-) {
-	inputs = props.inputHeaders.map(() => ref(""));
-} else {
-	inputs = props.defaultInputs.map((val) => ref(val));
-}
 </script>
 <style scoped>
 .edit-panel-wrapper {

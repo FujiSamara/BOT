@@ -43,21 +43,29 @@ export class Table {
 		}
 	}
 
-	private elementChecked(key: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(key)!;
-		this._checked[curIndex] = newValue;
+	private elementUpdated(key: number): void {
+		const curIndex = this._indexes.get(key);
+		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
+
 		this._models.value[curIndex].key = this._nextKey;
 		this._indexes.delete(key);
 		this._indexes.set(this._nextKey, curIndex);
 		this._nextKey++;
 	}
+
+	private elementChecked(key: number, newValue: boolean): void {
+		const curIndex = this._indexes.get(key);
+		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
+
+		this._checked[curIndex] = newValue;
+		this.elementUpdated(key);
+	}
 	private elementHighlighted(key: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(key)!;
+		const curIndex = this._indexes.get(key);
+		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
+
 		this._highlighted[curIndex] = newValue;
-		this._models.value[curIndex].key = this._nextKey;
-		this._indexes.delete(key);
-		this._indexes.set(this._nextKey, curIndex);
-		this._nextKey++;
+		this.elementUpdated(key);
 	}
 
 	private _searchedRows = computed(() => {
@@ -124,7 +132,14 @@ export class Table {
 		return this._formattedRows.value;
 	});
 
-	public async load() {
+	public getInstance(key: number): any {
+		const index = this._indexes.get(key);
+		if (index === undefined) throw new Error(`Key ${key} not exist`);
+
+		return this._models.value[index].instance;
+	}
+
+	public async loadAll() {
 		const resp = await axios.get(`${this._endpoint}s`);
 		if (resp.status < 400) {
 			const models = resp.data.dumps;
@@ -135,17 +150,28 @@ export class Table {
 		}
 	}
 
-	public cloneRow(key: number): Array<string> {
+	public async create(instance: any) {
+		const resp = await axios.post(`${this._endpoint}/create`, instance);
+		if (resp.status >= 400) {
+			throw Error("Bad instance");
+		}
+	}
+
+	public async update(instance: any, key: number) {
 		const index = this._indexes.get(key);
 		if (index === undefined) throw new Error(`Key ${key} not exist`);
-
-		const result: Array<string> = [];
-
-		for (const elem of this._formattedRows.value[index].columns) {
-			result.push(elem.slice());
+		for (const fieldName in instance) {
+			this._models.value[index].instance[fieldName] = instance[fieldName];
 		}
 
-		return result;
+		const resp = await axios.patch(
+			`${this._endpoint}/update`,
+			this._models.value[index].instance,
+		);
+		if (resp.status >= 400) {
+			throw Error("Bad instance");
+		}
+		this.elementUpdated(key);
 	}
 
 	public isChecked(key: number): TableElementObserver<boolean> {
