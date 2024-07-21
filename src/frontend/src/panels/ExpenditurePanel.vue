@@ -8,7 +8,7 @@
 					v-model:to-date="toDateString"
 				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool v-model:value="searchString"></SeacrhTool>
+				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>

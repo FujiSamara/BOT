@@ -1,10 +1,16 @@
 <template>
 	<div class="search-tool-wrapper">
-		<input placeholder="Поиск" v-model="value" />
+		<input :id="props.id" placeholder="Поиск" v-model="value" />
 		<img src="/img/search.svg" />
 	</div>
 </template>
 <script setup lang="ts">
+const props = defineProps({
+	id: {
+		type: String,
+		required: true,
+	},
+});
 const value = defineModel("value", {
 	type: String,
 	required: true,
