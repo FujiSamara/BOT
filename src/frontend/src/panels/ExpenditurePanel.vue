@@ -91,11 +91,13 @@ table.filters.value = computed((): Array<(instance: any) => boolean> => {
 table.searcher.value = computed((): ((instance: any) => boolean) => {
 	return (instance: any): boolean => {
 		const name: string = instance.name;
-		if (name.indexOf(searchString.value) !== -1) {
+		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
 			return true;
 		}
 		const chapter: string = instance.chapter;
-		if (chapter.indexOf(searchString.value) !== -1) {
+		if (
+			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
+		) {
 			return true;
 		}
 		return false;
