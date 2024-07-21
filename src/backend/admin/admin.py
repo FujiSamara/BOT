@@ -15,17 +15,17 @@ from hashlib import sha256
 
 class FujiAdmin(Admin):
     def __init__(
-            self,
-            app: Starlette,
-            engine: Engine | None = None,
-            session_maker: sessionmaker | async_sessionmaker | None = None,
-            base_url: str = "/admin",
-            title: str = "Admin",
-            logo_url: str | None = None,
-            middlewares: Sequence[Middleware] | None = None,
-            debug: bool = False,
-            templates_dir: str = "templates",
-            authentication_backend: AuthenticationBackend | None = None
+        self,
+        app: Starlette,
+        engine: Engine | None = None,
+        session_maker: sessionmaker | async_sessionmaker | None = None,
+        base_url: str = "/admin",
+        title: str = "Admin",
+        logo_url: str | None = None,
+        middlewares: Sequence[Middleware] | None = None,
+        debug: bool = False,
+        templates_dir: str = "templates",
+        authentication_backend: AuthenticationBackend | None = None,
     ) -> None:
         super().__init__(
             app,
@@ -37,19 +37,16 @@ class FujiAdmin(Admin):
             middlewares,
             debug,
             templates_dir,
-            authentication_backend
+            authentication_backend,
         )
 
         self.admin.add_route(
-            path='/download',
-            route=self.download_file,
-            name="download"
+            path="/download", route=self.download_file, name="download"
         )
 
     @login_required
     async def download_file(self, request: Request) -> FileResponse | Response:
-        '''Returns file by his path.
-        '''
+        """Returns file by his path."""
         path = request.query_params.get("path")
         if not Path(path).is_file():
             return Response(content="File not found", status_code=400)
@@ -59,14 +56,16 @@ class FujiAdmin(Admin):
 
         filename = Path(path).name
 
-        return FileResponse(path=path, filename=filename,
-                            media_type="multipart/form-data")
+        return FileResponse(
+            path=path, filename=filename, media_type="multipart/form-data"
+        )
 
 
 class AdminAuth(AuthenticationBackend):
-    '''
+    """
     Authentication class for admin panel.
-    '''
+    """
+
     async def login(self, request: Request) -> bool:
         form = await request.form()
         username, password = form["username"], form["password"]
@@ -81,8 +80,7 @@ class AdminAuth(AuthenticationBackend):
         if self.username != username:
             return False
 
-        if sha256(password.encode()
-                  ).hexdigest() != self.password:
+        if sha256(password.encode()).hexdigest() != self.password:
             return False
 
         request.session["username"] = username
