@@ -42,6 +42,23 @@ def find_worker_by_column(column: any, value: any) -> WorkerSchema:
         return WorkerSchema.model_validate(raw_worker)
 
 
+def find_workers_by_name(name: str) -> list[WorkerSchema]:
+    """
+    Returns workers in database by given `name`.
+
+    Search is equivalent sql like statement.
+    """
+    with session.begin() as s:
+        raw_workers = s.query(Worker).filter(
+            or_(
+                Worker.f_name.ilike(f"%{name}%"),
+                Worker.l_name.ilike(f"%{name}%"),
+                Worker.o_name.ilike(f"%{name}%"),
+            )
+        )
+        return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
+
+
 def find_department_by_column(column: any, value: any) -> DepartmentSchema:
     """
     Returns department in database by `column` with `value`.
