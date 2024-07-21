@@ -3,8 +3,10 @@
 		<div class="inputs-wrapper">
 			<div
 				class="input-wrapper"
-				v-for="(field, _) in props.editor.fields"
+				v-for="(field, index) in props.editor.fields"
 				:key="field.name"
+				@focusout="inputFocused[index] = false"
+				@focusin="inputFocused[index] = true"
 			>
 				<p class="input-header">{{ field.name }}:</p>
 				<border-input
@@ -13,7 +15,7 @@
 				></border-input>
 				<Transition>
 					<select-list
-						v-if="field.selectList.value.length > 0"
+						v-if="field.selectList.value.length > 0 && inputFocused[index]"
 						:selectList="field.selectList.value"
 						@select="(index: number) => field.applySelection(index)"
 					></select-list>
@@ -29,7 +31,7 @@
 <script setup lang="ts">
 import BorderInput from "./UI/BorderInput.vue";
 import type { ExpenditureEditor } from "@/editor";
-import { Transition, type PropType } from "vue";
+import { ref, Transition, type PropType } from "vue";
 
 const props = defineProps({
 	editor: {
@@ -37,6 +39,7 @@ const props = defineProps({
 		required: true,
 	},
 });
+const inputFocused = ref(props.editor.fields.map((_) => false));
 const emit = defineEmits(["submit"]);
 </script>
 <style scoped>
