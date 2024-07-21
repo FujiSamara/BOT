@@ -11,6 +11,13 @@
 					class="input"
 					v-model:value="field.formattedField.value"
 				></border-input>
+				<Transition>
+					<select-list
+						v-if="field.selectList.value.length > 0"
+						:selectList="field.selectList.value"
+						@select="(index: number) => field.applySelection(index)"
+					></select-list>
+				</Transition>
 			</div>
 		</div>
 
@@ -22,7 +29,7 @@
 <script setup lang="ts">
 import BorderInput from "./UI/BorderInput.vue";
 import type { ExpenditureEditor } from "@/editor";
-import type { PropType } from "vue";
+import { Transition, type PropType } from "vue";
 
 const props = defineProps({
 	editor: {
@@ -36,11 +43,11 @@ const emit = defineEmits(["submit"]);
 .edit-panel-wrapper {
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
+	align-items: center;
 	justify-content: center;
 	background-color: #ffffff;
 	border-radius: 20px;
-	width: 725px;
+	max-width: 725px;
 	max-height: 100%;
 	padding-bottom: 18px;
 	gap: 20px;
@@ -80,14 +87,17 @@ const emit = defineEmits(["submit"]);
 	justify-content: center;
 	align-items: flex-start;
 	width: 100%;
-	gap: 10px;
 }
 .input {
 	background-color: #f6f6f6;
 	width: 100%;
 	height: 48px;
-	margin: 0;
+	margin-top: 10px;
+	margin-bottom: 0;
+	margin-left: 0;
+	margin-right: 0;
 	color: #292929;
+	z-index: 1;
 }
 .input-header {
 	color: #292929;
@@ -97,9 +107,20 @@ const emit = defineEmits(["submit"]);
 	margin: 0;
 }
 .button {
-	width: 100%;
+	width: calc(100% - 40px);
 	background-color: #f5ecf6;
 	color: #993ca6;
 	font-size: 17px;
+}
+
+.v-enter-active,
+.v-leave-active {
+	transition: all 0.5s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+	max-height: 0;
+	padding: 0;
 }
 </style>

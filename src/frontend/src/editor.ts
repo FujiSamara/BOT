@@ -5,6 +5,7 @@ import * as config from "@/config";
 class SmartField {
 	protected _rawField: Ref<any> = ref();
 	protected _tipList: Ref<Array<any>> = ref([]);
+	private _delaySetter: number = setTimeout(() => {}, 0);
 
 	constructor(
 		public name: string,
@@ -28,7 +29,14 @@ class SmartField {
 			return this.formatter(this._rawField.value);
 		},
 		set: async (newValue: string) => {
-			await this.setter(newValue);
+			clearTimeout(this._delaySetter);
+			if (newValue.length < 4) {
+				this._tipList.value = [];
+				return;
+			}
+			this._delaySetter = setTimeout(async () => {
+				await this.setter(newValue);
+			}, 50);
 		},
 	});
 
@@ -102,6 +110,5 @@ class WorkerSmartField extends SmartField {
 		}
 
 		this._tipList.value = resp.data;
-		console.log(this._tipList.value);
 	}
 }
