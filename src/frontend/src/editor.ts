@@ -54,6 +54,7 @@ class SmartField {
 		}
 
 		this._rawField.value = this._tipList.value[index];
+		this._tipList.value = [];
 	}
 }
 
