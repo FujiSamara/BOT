@@ -8,6 +8,7 @@
 							<table-checkbox
 								v-model:checked="mainCheckboxChecked"
 								class="checkbox"
+								id="main"
 							></table-checkbox>
 							<div class="table-actions">
 								<clickable-icon
@@ -37,19 +38,20 @@
 			<tbody>
 				<tr
 					v-for="row in table.data.value"
-					:key="row.id"
-					@click.prevent="$emit('click', row.id)"
-					@mouseleave="table.isHighlighted(row.id).value = false"
+					:key="row.key"
+					@click.prevent="$emit('click', row.key)"
+					@mouseleave="table.isHighlighted(row.key).value = false"
 					:class="{
 						highlighted:
-							table.isChecked(row.id).value ||
-							table.isHighlighted(row.id).value,
+							table.isChecked(row.key).value ||
+							table.isHighlighted(row.key).value,
 					}"
 				>
 					<th>
 						<div class="table-tools">
 							<table-checkbox
-								v-model:checked="table.isChecked(row.id).value"
+								:id="row.key.toString()"
+								v-model:checked="table.isChecked(row.key).value"
 								class="checkbox"
 							></table-checkbox>
 						</div>
@@ -66,12 +68,16 @@
 				</tr>
 			</tbody>
 		</table>
+		<div v-if="table.isLoading.value" class="loader-space">
+			<circle-loader></circle-loader>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
-import { Table } from "@/types";
+import type { Table } from "@/table";
+import type { PropType } from "vue";
 
 const props = defineProps({
 	tableHead: {
@@ -79,7 +85,7 @@ const props = defineProps({
 		required: true,
 	},
 	table: {
-		type: Table,
+		type: Object as PropType<Table>,
 		required: true,
 	},
 	canCreate: {
@@ -98,7 +104,7 @@ const mainCheckboxChecked = ref(false);
 
 watch(mainCheckboxChecked, () => {
 	for (let index = 0; index < props.table.data.value.length; index++) {
-		props.table.isChecked(props.table.data.value[index].id).value =
+		props.table.isChecked(props.table.data.value[index].key).value =
 			mainCheckboxChecked.value;
 	}
 });
@@ -110,6 +116,7 @@ const onDelete = () => {
 </script>
 <style scoped>
 .table-wrapper {
+	background-color: #ffffff;
 	overflow-y: auto;
 	overflow-x: auto;
 	white-space: nowrap;
@@ -144,8 +151,6 @@ const onDelete = () => {
 
 table {
 	height: fit-content;
-
-	background-color: #ffffff;
 
 	/** border */
 	border-collapse: collapse;
@@ -239,5 +244,13 @@ th {
 
 .icons {
 	width: 20px;
+}
+
+.loader-space {
+	display: flex;
+	width: 100%;
+	min-height: 70px;
+	position: relative;
+	justify-content: center;
 }
 </style>

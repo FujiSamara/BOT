@@ -14,9 +14,9 @@ def create(app: FastAPI) -> FastAPI:
         app,
         engine=engine,
         session_maker=session,
-        title='Fuji admin',
+        title="Fuji admin",
         templates_dir=templates_dir,
-        authentication_backend=AdminAuth(secret_key=uuid4())
+        authentication_backend=AdminAuth(secret_key=uuid4()),
     )
     try:
         configure(admin)

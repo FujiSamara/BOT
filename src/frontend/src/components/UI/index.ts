@@ -5,6 +5,8 @@ import NamedButton from "@/components/UI/NamedButton.vue";
 import LogoutButton from "@/components/UI/LogoutButton.vue";
 import TableCheckbox from "@/components/UI/TableCheckbox.vue";
 import ClickableIcon from "@/components/UI/ClickableIcon.vue";
+import SelectList from "@/components/UI/SelectList.vue";
+import CircleLoader from "@/components/UI/CircleLoader.vue";
 
 export default [
 	WindowCross,
@@ -14,4 +16,6 @@ export default [
 	LogoutButton,
 	TableCheckbox,
 	ClickableIcon,
+	SelectList,
+	CircleLoader,
 ];

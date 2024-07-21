@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
+from core.middlewares.setup import setup_core_middlewares
+
 # Apps
 import admin
 import bot
@@ -12,6 +14,8 @@ def configure(app: FastAPI):
     bot.create(app)
     admin.create(app)
     api.create(app)
+
+    setup_core_middlewares(app)
 
 
 @asynccontextmanager

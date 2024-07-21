@@ -1,6 +1,6 @@
 <template>
 	<div class="expenditure-content">
-		<div class="header-content">
+		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
@@ -8,7 +8,7 @@
 					v-model:to-date="toDateString"
 				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool v-model:value="table.searchString.value"></SeacrhTool>
+				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -22,12 +22,13 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<EditPanelElement
-			v-if="editingElement"
-			:inputHeaders="inputHeaders"
-			:default-inputs="defaultInputs"
-			@submit="onSubmit"
-		></EditPanelElement>
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
+			<EditPanelElement
+				class="edit-page"
+				:editor="editor"
+				@submit="onSubmit"
+			></EditPanelElement>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -39,23 +40,25 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, ref } from "vue";
-import { Table } from "@/types";
+import { computed, onMounted, Ref, ref, shallowRef, ShallowRef } from "vue";
+import { ExpenditureTable } from "@/table";
+import { ExpenditureEditor } from "@/editor";
 
 const editingElement = ref(false);
 
 // Edit page
-const inputHeaders: Array<string> = [
-	"Расстояние завершения заказа",
-	"Время сгорания заказа",
-	"Количество заказов в одни руки",
-];
+const editor: ShallowRef<ExpenditureEditor> = shallowRef(
+	new ExpenditureEditor(),
+);
+const editingElementKey: Ref<number> = ref(-1);
 
-const defaultInputs: Array<string> = ["100 м.", "", "123"];
-
-const onSubmit = (inputs: Array<string>) => {
+const onSubmit = async () => {
+	if (editingElementKey.value !== -1) {
+		await table.update(editor.value.toInstanse(), editingElementKey.value);
+	} else {
+		await table.create(editor.value.toInstanse());
+	}
 	editingElement.value = false;
-	console.log(inputs);
 };
 
 // Table
@@ -70,87 +73,50 @@ const tableHead = [
 	"Лимит",
 ];
 
-const tableBody: Array<Array<string>> = [
-	[
-		"1",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2014.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"2",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2015.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"3",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2016.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"4",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2013.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-	[
-		"5",
-		"Контрольные закупки ОКК",
-		"Контрольные закупки",
-		"2012.06.09",
-		"Саркисян А.",
-		"Марданов И.",
-		"Сайгина О.",
-		"100000",
-	],
-];
-
-const table = new Table(tableBody, [0, 4]);
-
+const table = new ExpenditureTable([], "expenditure");
 const fromDateString = ref("");
 const toDateString = ref("");
+const searchString = ref("");
 
-table.filters.value = computed(
-	(): Array<(row: { id: number; columns: Array<string> }) => boolean> => {
-		const periodFilter = (row: {
-			id: number;
-			columns: Array<string>;
-		}): boolean => {
-			const rowDate = new Date(row.columns[3]);
-			const fromDate = new Date(fromDateString.value);
-			const toDate = new Date(toDateString.value);
+table.filters.value = computed((): Array<(instance: any) => boolean> => {
+	const periodFilter = (instance: any): boolean => {
+		const rowDate = new Date(instance.create_date);
+		const fromDate = new Date(fromDateString.value);
+		const toDate = new Date(toDateString.value);
 
-			return rowDate <= toDate && rowDate >= fromDate;
-		};
-		return [periodFilter];
-	},
-).value;
+		return rowDate <= toDate && rowDate >= fromDate;
+	};
+	return [periodFilter];
+}).value;
+table.searcher.value = computed((): ((instance: any) => boolean) => {
+	return (instance: any): boolean => {
+		const name: string = instance.name;
+		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
+			return true;
+		}
+		const chapter: string = instance.chapter;
+		if (
+			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
+		) {
+			return true;
+		}
+		return false;
+	};
+}).value;
 
-const onRowClicked = (rowIndex: number) => {
-	console.log(rowIndex);
+const onRowClicked = (rowKey: number) => {
+	editor.value = new ExpenditureEditor(table.getInstance(rowKey));
+	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
+	editor.value = new ExpenditureEditor();
+	editingElementKey.value = -1;
 	editingElement.value = true;
 };
+onMounted(async () => {
+	await table.loadAll();
+});
 </script>
 <style scoped>
 .expenditure-content {
@@ -175,5 +141,12 @@ const onCreateClicked = () => {
 }
 .top-tools {
 	margin-left: auto;
+}
+.edit-panel-element-wrapper {
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	padding-top: 56px;
+	padding-bottom: 56px;
 }
 </style>

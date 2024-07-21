@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
     date_format: str = "%d.%m.%Y"
 
+    cors_origins: list[str] = [
+        "http://localhost:5001",
+    ]
+    cors_allow_methods: list[str] = ["GET", "POST", "PATCH", "PUT", "DELETE"]
+    cors_allow_headers: list[str] = [
+        "Content-Type",
+        "Set-Cookie",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Origin",
+        "Authorization",
+    ]
+
     @computed_field
     @property
     def storage(self) -> FileSystemStorage:
