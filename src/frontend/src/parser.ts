@@ -6,5 +6,5 @@ export function formatWorker(worker: WorkerSchema): string {
 
 export function formatDate(dateString: string): string {
 	const date = new Date(dateString);
-	return date.toLocaleDateString();
+	return date.toLocaleString();
 }
