@@ -532,3 +532,15 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
         old.cc_supervisor = cc_supervisor
 
     return True
+
+
+def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
+    """
+    Returns update_expenditure in database by `column` with `value`.
+    If update_expenditure not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_expenditure = s.query(Expenditure).filter(column == value).first()
+        if not raw_expenditure:
+            return None
+        return ExpenditureSchema.model_validate(raw_expenditure)

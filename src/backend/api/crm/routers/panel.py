@@ -22,6 +22,22 @@ async def get_panel_rows(panel_name: str) -> PanelSchema:
     return PanelSchema(dumps=[model.model_dump() for model in get_schemas()])
 
 
+@router.get("/{panel_name}/{id}")
+async def get_panel_row(panel_name: str, id: int) -> dict[str, Any]:
+    get_schema: Callable[[], BaseSchema] | None = None
+
+    match panel_name:
+        case "expenditure":
+            get_schema = service.get_expenditure_by_id
+        case _:
+            return HTTPException(400)
+
+    model = get_schema(id)
+    if model:
+        return model.model_dump()
+    return None
+
+
 @router.post("/{panel_name}/create")
 async def create_panel_row(
     panel_name: str,

@@ -5,6 +5,7 @@ from db.models import (
     Department,
     ApprovalStatus,
     Bid,
+    Expenditure,
     Post,
     Worker,
     Access,
@@ -576,6 +577,11 @@ def update_expenditure(expenditure: ExpenditureSchema) -> None:
     """Updates expenditure by `ExpenditureSchema.id`"""
     if not orm.update_expenditure(expenditure):
         logging.getLogger("uvicorn.error").error("Expenditure wasn't updated.")
+
+
+def get_expenditure_by_id(id: int) -> ExpenditureSchema:
+    """Finds expenditure by this `id`."""
+    return orm.find_expenditure_by_column(Expenditure.id, id)
 
 
 def find_workers(record: str) -> list[WorkerSchema]:
