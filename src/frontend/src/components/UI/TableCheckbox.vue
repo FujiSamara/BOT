@@ -1,6 +1,6 @@
 <template>
 	<div class="checkbox-wrapper">
-		<input type="checkbox" v-model="checked" @click.stop />
+		<input :id="props.id" type="checkbox" v-model="checked" @click.stop />
 	</div>
 </template>
 <script lang="ts">
@@ -9,6 +9,12 @@ export default {
 };
 </script>
 <script setup lang="ts">
+const props = defineProps({
+	id: {
+		type: String,
+		required: true,
+	},
+});
 const checked = defineModel("checked");
 </script>
 <style scoped>

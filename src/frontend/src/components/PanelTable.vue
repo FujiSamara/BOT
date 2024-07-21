@@ -8,6 +8,7 @@
 							<table-checkbox
 								v-model:checked="mainCheckboxChecked"
 								class="checkbox"
+								id="main"
 							></table-checkbox>
 							<div class="table-actions">
 								<clickable-icon
@@ -49,6 +50,7 @@
 					<th>
 						<div class="table-tools">
 							<table-checkbox
+								:id="row.key.toString()"
 								v-model:checked="table.isChecked(row.key).value"
 								class="checkbox"
 							></table-checkbox>
