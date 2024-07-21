@@ -5,7 +5,7 @@
 				class="input-wrapper"
 				v-for="(field, index) in props.editor.fields"
 				:key="field.name"
-				@focusout="inputFocused[index] = false"
+				@focusout="(event: FocusEvent) => onFocusOut(event, index)"
 				@focusin="inputFocused[index] = true"
 			>
 				<p class="input-header">{{ field.name }}:</p>
@@ -40,6 +40,13 @@ const props = defineProps({
 	},
 });
 const inputFocused = ref(props.editor.fields.map((_) => false));
+const onFocusOut = (event: FocusEvent, index: number) => {
+	const relatedTarget = event.relatedTarget;
+	if (relatedTarget instanceof HTMLElement) {
+		if (relatedTarget.localName === "li") return;
+	}
+	inputFocused.value[index] = false;
+};
 const emit = defineEmits(["submit"]);
 </script>
 <style scoped>
@@ -124,6 +131,5 @@ const emit = defineEmits(["submit"]);
 .v-enter-from,
 .v-leave-to {
 	max-height: 0;
-	padding: 0;
 }
 </style>

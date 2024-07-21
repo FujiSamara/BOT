@@ -43,6 +43,14 @@ export class Table {
 		}
 	}
 
+	private clear(): void {
+		this._highlighted = [];
+		this._checked = [];
+		this._indexes.clear();
+		this._nextKey = 0;
+		this._models.value = [];
+	}
+
 	private elementUpdated(key: number): void {
 		const curIndex = this._indexes.get(key);
 		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
@@ -141,20 +149,18 @@ export class Table {
 
 	public async loadAll() {
 		const resp = await axios.get(`${this._endpoint}s`);
-		if (resp.status < 400) {
-			const models = resp.data.dumps;
-			for (let index = 0; index < models.length; index++) {
-				const model = models[index];
-				this.push(model);
-			}
+		const models = resp.data.dumps;
+		for (let index = 0; index < models.length; index++) {
+			const model = models[index];
+			this.push(model);
 		}
 	}
 
 	public async create(instance: any) {
-		const resp = await axios.post(`${this._endpoint}/create`, instance);
-		if (resp.status >= 400) {
-			throw Error("Bad instance");
-		}
+		await axios.post(`${this._endpoint}/create`, instance);
+
+		this.clear();
+		await this.loadAll();
 	}
 
 	public async update(instance: any, key: number) {
@@ -164,13 +170,10 @@ export class Table {
 			this._models.value[index].instance[fieldName] = instance[fieldName];
 		}
 
-		const resp = await axios.patch(
+		await axios.patch(
 			`${this._endpoint}/update`,
 			this._models.value[index].instance,
 		);
-		if (resp.status >= 400) {
-			throw Error("Bad instance");
-		}
 		this.elementUpdated(key);
 	}
 
@@ -205,9 +208,14 @@ export class Table {
 		this._nextKey++;
 	}
 
-	public erase(key: number): void {
+	public async erase(key: number): Promise<void> {
 		const deleteIndex = this._indexes.get(key)!;
 		if (!this._indexes.delete(key)) throw new Error(`Key ${key} not exist`);
+
+		await axios.delete(
+			`${this._endpoint}/delete?rowID=${this._models.value[deleteIndex].instance.id}`,
+		);
+
 		this._checked.splice(deleteIndex, 1);
 		this._highlighted.splice(deleteIndex, 1);
 		this._models.value.splice(deleteIndex, 1);
@@ -217,12 +225,12 @@ export class Table {
 		}
 	}
 
-	public deleteChecked(): void {
+	public async deleteChecked(): Promise<void> {
 		for (let index = 0; index < this._models.value.length; index++) {
 			const key = this._models.value[index].key;
 
 			if (this._checked[index]) {
-				this.erase(key);
+				await this.erase(key);
 				index--;
 			}
 		}

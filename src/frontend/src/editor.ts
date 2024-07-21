@@ -11,6 +11,7 @@ class SmartField {
 		public name: string,
 		public fieldName: string,
 		defaultValue?: any,
+		private _delay: number = 0,
 	) {
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
@@ -26,17 +27,14 @@ class SmartField {
 
 	public formattedField = computed({
 		get: () => {
+			if (this._rawField.value === undefined) return "";
 			return this.formatter(this._rawField.value);
 		},
 		set: async (newValue: string) => {
 			clearTimeout(this._delaySetter);
-			if (newValue.length < 4) {
-				this._tipList.value = [];
-				return;
-			}
 			this._delaySetter = setTimeout(async () => {
 				await this.setter(newValue);
-			}, 50);
+			}, this._delay);
 		},
 	});
 
@@ -63,7 +61,6 @@ class Editor {
 
 	public toInstanse() {
 		const result: any = {};
-
 		for (const field of this.fields) {
 			result[field.fieldName] = field.rawValue;
 		}
@@ -76,20 +73,18 @@ export class ExpenditureEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
 
-		if (_instance) {
-			this.fields = [
-				new SmartField("Статья", "name", _instance.name),
-				new SmartField("Раздел", "chapter", _instance.chapter),
-				new SmartField("Лимит", "limit", _instance.limit),
-				new WorkerSmartField("ЦФО", "fac", _instance.fac),
-				new WorkerSmartField("ЦЗ", "cc", _instance.cc),
-				new WorkerSmartField(
-					"Руководитель ЦЗ",
-					"cc_supervisor",
-					_instance.cc_supervisor,
-				),
-			];
-		}
+		this.fields = [
+			new SmartField("Статья", "name", _instance?.name),
+			new SmartField("Раздел", "chapter", _instance?.chapter),
+			new SmartField("Лимит", "limit", _instance?.limit),
+			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
+			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
+			new WorkerSmartField(
+				"Руководитель ЦЗ",
+				"cc_supervisor",
+				_instance?.cc_supervisor,
+			),
+		];
 	}
 }
 
@@ -97,7 +92,7 @@ class WorkerSmartField extends SmartField {
 	private _endpoint: string = "";
 
 	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue);
+		super(name, fieldName, defaultValue, 200);
 		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/worker`;
 	}
 
@@ -105,10 +100,12 @@ class WorkerSmartField extends SmartField {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
-		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
-		if (resp.status >= 400) {
-			throw Error("Bad value");
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
 		}
+
+		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
 
 		this._tipList.value = resp.data;
 	}

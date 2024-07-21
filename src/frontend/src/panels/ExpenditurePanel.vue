@@ -40,7 +40,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, onMounted, ref, shallowRef, ShallowRef } from "vue";
+import { computed, onMounted, Ref, ref, shallowRef, ShallowRef } from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
@@ -50,10 +50,14 @@ const editingElement = ref(false);
 const editor: ShallowRef<ExpenditureEditor> = shallowRef(
 	new ExpenditureEditor(),
 );
-const editingElementKey = ref();
+const editingElementKey: Ref<number> = ref(-1);
 
 const onSubmit = async () => {
-	await table.update(editor.value.toInstanse(), editingElementKey.value);
+	if (editingElementKey.value !== -1) {
+		await table.update(editor.value.toInstanse(), editingElementKey.value);
+	} else {
+		await table.create(editor.value.toInstanse());
+	}
 	editingElement.value = false;
 };
 
@@ -104,6 +108,8 @@ const onRowClicked = (rowKey: number) => {
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
+	editor.value = new ExpenditureEditor();
+	editingElementKey.value = -1;
 	editingElement.value = true;
 };
 onMounted(async () => {
