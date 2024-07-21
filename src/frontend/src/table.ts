@@ -131,6 +131,7 @@ export class Table {
 		(value: any) => string
 	>();
 
+	public isLoading: Ref<boolean> = ref(false);
 	/** Filters for rows. Must returns **true** if row need be shown. */
 	public filters: Ref<Array<(instance: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
@@ -148,7 +149,9 @@ export class Table {
 	}
 
 	public async loadAll() {
+		this.isLoading.value = true;
 		const resp = await axios.get(`${this._endpoint}s`);
+		this.isLoading.value = false;
 		const models = resp.data.dumps;
 		for (let index = 0; index < models.length; index++) {
 			const model = models[index];

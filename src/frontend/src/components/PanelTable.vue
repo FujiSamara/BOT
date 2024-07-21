@@ -68,6 +68,9 @@
 				</tr>
 			</tbody>
 		</table>
+		<div v-if="table.isLoading.value" class="loader-space">
+			<circle-loader></circle-loader>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -113,6 +116,7 @@ const onDelete = () => {
 </script>
 <style scoped>
 .table-wrapper {
+	background-color: #ffffff;
 	overflow-y: auto;
 	overflow-x: auto;
 	white-space: nowrap;
@@ -147,8 +151,6 @@ const onDelete = () => {
 
 table {
 	height: fit-content;
-
-	background-color: #ffffff;
 
 	/** border */
 	border-collapse: collapse;
@@ -242,5 +244,13 @@ th {
 
 .icons {
 	width: 20px;
+}
+
+.loader-space {
+	display: flex;
+	width: 100%;
+	min-height: 70px;
+	position: relative;
+	justify-content: center;
 }
 </style>
