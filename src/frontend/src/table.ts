@@ -161,6 +161,7 @@ export class Table {
 
 		this.clear();
 		await this.loadAll();
+		this._highlighted[this._highlighted.length - 1] = true;
 	}
 
 	public async update(instance: any, key: number) {
