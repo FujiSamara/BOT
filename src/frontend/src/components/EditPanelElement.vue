@@ -10,6 +10,7 @@
 			>
 				<p class="input-header">{{ field.name }}:</p>
 				<border-input
+					:id="field.name"
 					class="input"
 					v-model:value="field.formattedField.value"
 				></border-input>
