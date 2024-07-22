@@ -60,7 +60,7 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-const table = new ExpenditureTable([], "expenditure");
+const table = new ExpenditureTable("expenditure");
 const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");
@@ -92,7 +92,7 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 }).value;
 
 const onRowClicked = (rowKey: number) => {
-	editor.value = new ExpenditureEditor(table.getInstance(rowKey));
+	editor.value = new ExpenditureEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
