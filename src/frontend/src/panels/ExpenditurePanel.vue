@@ -16,7 +16,6 @@
 		<PanelTable
 			v-if="!editingElement"
 			:table="table"
-			:tableHead="tableHead"
 			@click="onRowClicked"
 			@create="onCreateClicked"
 			:canCreate="true"
@@ -60,18 +59,6 @@ const onSubmit = async () => {
 	}
 	editingElement.value = false;
 };
-
-// Table
-const tableHead = [
-	"ID",
-	"Статья",
-	"Раздел",
-	"Дата создания",
-	"ЦФО",
-	"ЦЗ",
-	"Руководитель ЦЗ",
-	"Лимит",
-];
 
 const table = new ExpenditureTable([], "expenditure");
 const fromDateString = ref("");

@@ -28,8 +28,8 @@
 						</div>
 					</th>
 					<th
-						v-for="(columnValue, rowIndex) in props.tableHead"
-						:key="rowIndex"
+						v-for="columnValue in props.table.headers.value"
+						:key="columnValue"
 					>
 						{{ columnValue }}
 					</th>
@@ -80,10 +80,6 @@ import type { Table } from "@/table";
 import type { PropType } from "vue";
 
 const props = defineProps({
-	tableHead: {
-		type: Array<String>,
-		required: true,
-	},
 	table: {
 		type: Object as PropType<Table>,
 		required: true,

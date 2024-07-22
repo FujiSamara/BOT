@@ -130,8 +130,11 @@ export class Table {
 		string,
 		(value: any) => string
 	>();
+	/** Aliases for column names */
+	protected _aliases: Map<string, string> = new Map<string, string>();
 
 	public isLoading: Ref<boolean> = ref(false);
+
 	/** Filters for rows. Must returns **true** if row need be shown. */
 	public filters: Ref<Array<(instance: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
@@ -139,6 +142,20 @@ export class Table {
 
 	public data = computed(() => {
 		return this._formattedRows.value;
+	});
+
+	public headers = computed(() => {
+		const result: Array<string> = [];
+		if (this._models.value.length === 0) return result;
+
+		for (const fieldName in this._models.value[0].instance) {
+			let alias = this._aliases.get(fieldName);
+			if (alias === undefined) {
+				alias = fieldName;
+			}
+			result.push(alias);
+		}
+		return result;
 	});
 
 	public getInstance(key: number): any {
@@ -249,5 +266,14 @@ export class ExpenditureTable extends Table {
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDate);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("name", "Статья");
+		this._aliases.set("chapter", "Раздел");
+		this._aliases.set("create_date", "Дата создания");
+		this._aliases.set("limit", "Лимит");
+		this._aliases.set("fac", "ЦФО");
+		this._aliases.set("cc", "ЦЗ");
+		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
 	}
 }
