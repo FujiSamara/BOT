@@ -37,8 +37,7 @@ export class Table<T extends BaseSchema> {
 		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/panel/${tableName}`;
 	}
 
-	//
-	// Rows handlers
+	//#region Rows handlers
 	private _searchedRows = computed(() => {
 		const searchResult: Array<T> = [];
 		for (let index = 0; index < this._models.value.length; index++) {
@@ -177,10 +176,9 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	//
+	//#endregion
 
-	//
-	// Auxiliary fields
+	//#region Auxiliary fields
 	/** Formatters for column values */
 	protected _formatters: Map<string, (value: any) => string> = new Map<
 		string,
@@ -193,10 +191,9 @@ export class Table<T extends BaseSchema> {
 	/** Searcher for rows. Must returns **true** if row need be shown. */
 	public searcher: Ref<(instance: any) => boolean> = ref((_) => true);
 	public isLoading: Ref<boolean> = ref(false);
-	//
+	//#endregion
 
-	//
-	// CRUD
+	//#region CRUD
 	public push(model: T): void {
 		this._indexes.set(model.id, this._models.value.length);
 		this._models.value.push(model);
@@ -260,6 +257,7 @@ export class Table<T extends BaseSchema> {
 
 		return this._models.value[index];
 	}
+	//#endregion
 }
 
 export class ExpenditureTable extends Table<ExpenditureSchema> {
