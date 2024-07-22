@@ -194,10 +194,11 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region CRUD
-	public push(model: T): void {
+	public push(model: T, highlighted: boolean = false): void {
 		this._indexes.set(model.id, this._models.value.length);
 		this._models.value.push(model);
 		this._checked.value.push(false);
+		this._highlighted.value.push(highlighted);
 	}
 	public async loadAll(silent: boolean = false) {
 		this.isLoading.value = true && !silent;
@@ -216,7 +217,7 @@ export class Table<T extends BaseSchema> {
 			}
 
 			if (!modelFounded) {
-				this.push(model);
+				this.push(model, silent);
 			}
 		}
 	}
@@ -224,8 +225,7 @@ export class Table<T extends BaseSchema> {
 		await axios.post(`${this._endpoint}/create`, instance);
 
 		const resp = await axios.get(`${this._endpoint}/last`);
-		this.push(resp.data);
-		this._highlighted.value[this._indexes.get(resp.data.id)!] = true;
+		this.push(resp.data, true);
 	}
 	public async update(instance: T, id: number) {
 		const index = this._indexes.get(id);

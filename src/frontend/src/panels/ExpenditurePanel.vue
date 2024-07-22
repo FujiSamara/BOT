@@ -101,8 +101,12 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
+const loadTable = async (silent: boolean = false) => {
+	await table.loadAll(silent);
+	setTimeout(loadTable, 20000, true);
+};
 onMounted(async () => {
-	await table.loadAll();
+	await loadTable();
 });
 </script>
 <style scoped>
