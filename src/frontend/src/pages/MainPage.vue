@@ -6,7 +6,9 @@
 			@click="onNavButtonClicked"
 			@logout="onLogout"
 		></NavigationPanel>
-		<panel class="panel-content"></panel>
+		<keep-alive>
+			<panel class="panel-content"></panel>
+		</keep-alive>
 	</div>
 </template>
 <script setup lang="ts">
