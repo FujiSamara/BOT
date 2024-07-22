@@ -34,7 +34,7 @@ export class Table<T extends BaseSchema> {
 	 * @param _searchFields Indexes of columns for searching.
 	 */
 	constructor(tableName: string) {
-		this._endpoint = `${config.fullBackendURL}}/${config.crmEndpoint}/panel/${tableName}`;
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/panel/${tableName}`;
 	}
 
 	//#region Rows handlers
