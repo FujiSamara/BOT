@@ -199,14 +199,25 @@ export class Table<T extends BaseSchema> {
 		this._models.value.push(model);
 		this._checked.value.push(false);
 	}
-	public async loadAll() {
-		this.isLoading.value = true;
+	public async loadAll(silent: boolean = false) {
+		this.isLoading.value = true && !silent;
 		const resp = await axios.get(`${this._endpoint}s`);
 		this.isLoading.value = false;
 		const models = resp.data.dumps;
 		for (let index = 0; index < models.length; index++) {
-			const model = models[index];
-			this.push(model);
+			const model: T = models[index];
+
+			let modelFounded = false;
+			for (const oldModel of this._models.value) {
+				if (oldModel.id === model.id) {
+					modelFounded = true;
+					break;
+				}
+			}
+
+			if (!modelFounded) {
+				this.push(model);
+			}
 		}
 	}
 	public async create(instance: T) {
@@ -214,6 +225,7 @@ export class Table<T extends BaseSchema> {
 
 		const resp = await axios.get(`${this._endpoint}/last`);
 		this.push(resp.data);
+		this._highlighted.value[this._indexes.get(resp.data.id)!] = true;
 	}
 	public async update(instance: T, id: number) {
 		const index = this._indexes.get(id);
