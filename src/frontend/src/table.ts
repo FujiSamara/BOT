@@ -200,8 +200,9 @@ export class Table<T extends BaseSchema> {
 		this._checked.value.push(false);
 		this._highlighted.value.push(highlighted);
 	}
-	public async loadAll(silent: boolean = false) {
+	public async loadAll(silent: boolean = false): Promise<number> {
 		this.isLoading.value = true && !silent;
+		let changesCount = 0;
 		const resp = await axios.get(`${this._endpoint}s`);
 		this.isLoading.value = false;
 		const models = resp.data.dumps;
@@ -233,6 +234,7 @@ export class Table<T extends BaseSchema> {
 					}
 
 					if (modelString !== oldModelString) {
+						changesCount++;
 						for (const fieldName in model) {
 							this._models.value[j][fieldName] = model[fieldName];
 						}
@@ -244,9 +246,12 @@ export class Table<T extends BaseSchema> {
 			}
 
 			if (!modelFounded) {
+				changesCount++;
 				this.push(model, silent);
 			}
 		}
+
+		return changesCount;
 	}
 	public async create(instance: T) {
 		await axios.post(`${this._endpoint}/create`, instance);
