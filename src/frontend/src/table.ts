@@ -212,9 +212,8 @@ export class Table<T extends BaseSchema> {
 	public async create(instance: T) {
 		await axios.post(`${this._endpoint}/create`, instance);
 
-		// this.clear();
-		// await this.loadAll();
-		// this._highlighted.value[]
+		const resp = await axios.get(`${this._endpoint}/last`);
+		this.push(resp.data);
 	}
 	public async update(instance: T, id: number) {
 		const index = this._indexes.get(id);

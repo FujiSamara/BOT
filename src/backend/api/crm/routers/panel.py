@@ -22,9 +22,9 @@ async def get_panel_rows(panel_name: str) -> PanelSchema:
     return PanelSchema(dumps=[model.model_dump() for model in get_schemas()])
 
 
-@router.get("/{panel_name}/{id}")
+@router.get("/{panel_name}")
 async def get_panel_row(panel_name: str, id: int) -> dict[str, Any]:
-    get_schema: Callable[[], BaseSchema] | None = None
+    get_schema: Callable[[int], BaseSchema] | None = None
 
     match panel_name:
         case "expenditure":
@@ -33,6 +33,22 @@ async def get_panel_row(panel_name: str, id: int) -> dict[str, Any]:
             return HTTPException(400)
 
     model = get_schema(id)
+    if model:
+        return model.model_dump()
+    return None
+
+
+@router.get("/{panel_name}/last")
+async def get_last_panel_row(panel_name: str) -> dict[str, Any]:
+    get_schema: Callable[[], BaseSchema] | None = None
+
+    match panel_name:
+        case "expenditure":
+            get_schema = service.get_last_expenditure
+        case _:
+            return HTTPException(400)
+
+    model = get_schema()
     if model:
         return model.model_dump()
     return None
