@@ -98,7 +98,7 @@ class WorkerSmartField extends SmartField {
 
 	constructor(name: string, fieldName: string, defaultValue?: any) {
 		super(name, fieldName, defaultValue, 200);
-		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/worker`;
+		this._endpoint = `${config.fullBackendURL}}/${config.crmEndpoint}/worker`;
 	}
 
 	protected formatter(value: any): string {
