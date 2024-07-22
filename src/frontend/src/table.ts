@@ -205,15 +205,42 @@ export class Table<T extends BaseSchema> {
 		const resp = await axios.get(`${this._endpoint}s`);
 		this.isLoading.value = false;
 		const models = resp.data.dumps;
-		for (let index = 0; index < models.length; index++) {
-			const model: T = models[index];
+		for (let i = 0; i < models.length; i++) {
+			const model: T = models[i];
 
 			let modelFounded = false;
-			for (const oldModel of this._models.value) {
-				if (oldModel.id === model.id) {
-					modelFounded = true;
-					break;
+			for (let j = 0; j < this._models.value.length; j++) {
+				const oldModel = this._models.value[j];
+
+				if (oldModel.id !== model.id) {
+					continue;
 				}
+
+				modelFounded = true;
+
+				// Changes fields in model which was changed in new model.
+				for (const fieldName in model) {
+					const formatter = this._formatters.get(fieldName);
+
+					let modelString;
+					let oldModelString;
+					if (formatter) {
+						modelString = formatter(model[fieldName]);
+						oldModelString = formatter(oldModel[fieldName]);
+					} else {
+						modelString = `${model[fieldName]}`;
+						oldModelString = `${oldModel[fieldName]}`;
+					}
+
+					if (modelString !== oldModelString) {
+						for (const fieldName in model) {
+							this._models.value[j][fieldName] = model[fieldName];
+						}
+						this._highlighted.value[j] = true;
+						break;
+					}
+				}
+				break;
 			}
 
 			if (!modelFounded) {
