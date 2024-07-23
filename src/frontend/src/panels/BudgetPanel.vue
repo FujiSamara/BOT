@@ -83,13 +83,13 @@ const toDateString = ref("");
 const searchString = ref("");
 
 table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	const periodFilter = (instance: any): boolean => {
-		const rowDate = new Date(instance.create_date);
-		const fromDate = new Date(fromDateString.value);
-		const toDate = new Date(toDateString.value);
+	// const periodFilter = (instance: any): boolean => {
+	// 	const rowDate = new Date(instance.create_date);
+	// 	const fromDate = new Date(fromDateString.value);
+	// 	const toDate = new Date(toDateString.value);
 
-		return rowDate <= toDate && rowDate >= fromDate;
-	};
+	// 	return rowDate <= toDate && rowDate >= fromDate;
+	// };
 	return [];
 }).value;
 table.searcher.value = computed((): ((instance: any) => boolean) => {
