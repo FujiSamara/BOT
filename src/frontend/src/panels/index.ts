@@ -7,7 +7,7 @@ import { shallowRef } from "vue";
 const panels: Array<PanelData> = [
 	{
 		id: 1,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "/img/expenditure_logo.svg",
 		label: "Статьи",
 		isActive: false,
 		panel: shallowRef(ExpenditurePanel),
@@ -15,7 +15,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 2,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "/img/budget_logo.svg",
 		label: "Бюджет",
 		isActive: false,
 		panel: shallowRef(BudgetPanel),
