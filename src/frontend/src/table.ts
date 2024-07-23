@@ -212,7 +212,7 @@ export class Table<T extends BaseSchema> {
 	public async loadAll(silent: boolean = false): Promise<number> {
 		this.isLoading.value = true && !silent;
 		let changesCount = 0;
-		const resp = await axios.get(this._endpoint);
+		const resp = await axios.get(this._endpoint + "/");
 		this.isLoading.value = false;
 		const models = resp.data;
 		for (let i = 0; i < models.length; i++) {
@@ -265,7 +265,7 @@ export class Table<T extends BaseSchema> {
 	public async create(model: T) {
 		await axios.post(`${this._endpoint}`, model);
 
-		const resp = await axios.get(`${this._endpoint}/last`);
+		const resp = await axios.get(`${this._endpoint}/last/`);
 		this.push(resp.data, false);
 	}
 	public async update(model: T, id: number) {
@@ -292,7 +292,7 @@ export class Table<T extends BaseSchema> {
 		}
 
 		if (elementChanged) {
-			await axios.patch(`${this._endpoint}`, this._models.value[index]);
+			await axios.patch(`${this._endpoint}/`, this._models.value[index]);
 		}
 	}
 	public async erase(id: number): Promise<void> {
@@ -300,7 +300,7 @@ export class Table<T extends BaseSchema> {
 		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
 
 		await axios.delete(
-			`${this._endpoint}/${this._models.value[deleteIndex].id}`,
+			`${this._endpoint}/${this._models.value[deleteIndex].id}/`,
 		);
 
 		this._checked.value.splice(deleteIndex, 1);
