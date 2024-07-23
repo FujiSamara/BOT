@@ -2,6 +2,7 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    BudgetRecord,
     Expenditure,
     Post,
     WorkTime,
@@ -15,6 +16,7 @@ from db.models import (
 )
 from db.schemas import (
     BidSchema,
+    BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
     WorkerBidSchema,
@@ -45,6 +47,7 @@ def find_worker_by_column(column: any, value: any) -> WorkerSchema:
 def find_workers_by_name(name: str) -> list[WorkerSchema]:
     """
     Returns workers in database by given `name`.
+    Fields for search: `Worker.f_name`, `Worker.l_name`, `Worker.o_name`
 
     Search is equivalent sql like statement.
     """
@@ -469,7 +472,7 @@ def get_expenditures() -> list[ExpenditureSchema]:
     """Returns all expenditures in database."""
     with session.begin() as s:
         raw_models = s.query(Expenditure).all()
-        return [ExpenditureSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [ExpenditureSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def create_expenditure(expenditure: ExpenditureSchema) -> bool:
@@ -534,8 +537,8 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
 
 def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
     """
-    Returns update_expenditure in database by `column` with `value`.
-    If update_expenditure not exist return `None`.
+    Returns updated expenditure in database by `column` with `value`.
+    If updated expenditure not exist return `None`.
     """
     with session.begin() as s:
         raw_expenditure = s.query(Expenditure).filter(column == value).first()
@@ -551,3 +554,98 @@ def get_last_expenditrure() -> ExpenditureSchema:
         if not raw_expenditure:
             return None
         return ExpenditureSchema.model_validate(raw_expenditure)
+
+
+def get_budget_records() -> list[BudgetRecordSchema]:
+    """Returns all budget records in database."""
+    with session.begin() as s:
+        raw_models = s.query(BudgetRecord).all()
+        return [
+            BudgetRecordSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def remove_budget_record(id: int) -> None:
+    """Removes budget_record"""
+    with session.begin() as s:
+        s.query(BudgetRecord).filter(BudgetRecord.id == id).delete()
+
+
+def create_budget_record(record: BudgetRecordSchema) -> bool:
+    """Creates budget record
+    Returns: `True` if budget record created, `False` otherwise.
+    """
+    with session.begin() as s:
+        expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
+        )
+
+        if not expenditure:
+            return False
+
+        record_model = BudgetRecord(expenditure=expenditure, limit=record.limit)
+
+        s.add(record_model)
+
+    return True
+
+
+def get_last_budget_record() -> BudgetRecordSchema:
+    """Returns last budget record bind db."""
+    with session.begin() as s:
+        raw_expenditure = s.query(BudgetRecord).order_by(desc(BudgetRecord.id)).first()
+        if not raw_expenditure:
+            return None
+        return BudgetRecordSchema.model_validate(raw_expenditure)
+
+
+def update_budget_record(record: BudgetRecordSchema) -> bool:
+    """Updates budget record
+    Returns: `True` if budget record updated, `False` otherwise.
+    """
+    with session.begin() as s:
+        old = s.query(BudgetRecord).filter(BudgetRecord.id == record.id).first()
+
+        expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
+        )
+
+        if not old or not expenditure:
+            return False
+
+        old.expenditure = expenditure
+        old.limit = record.limit
+
+    return True
+
+
+def find_budget_record_by_column(column: any, value: any) -> BudgetRecordSchema:
+    """
+    Returns updated budget record in database by `column` with `value`.
+    If updated budget record not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_budget_record = s.query(BudgetRecord).filter(column == value).first()
+        if not raw_budget_record:
+            return None
+        return BudgetRecordSchema.model_validate(raw_budget_record)
+
+
+def find_expenditures_by_name(name: str) -> list[ExpenditureSchema]:
+    """
+    Returns expenditures in database by given `name`.
+    Fields for search: `Expenditure.name`, `Expenditure.chapter`
+
+    Search is equivalent sql like statement.
+    """
+    with session.begin() as s:
+        raw_expenditures = s.query(Expenditure).filter(
+            or_(
+                Expenditure.name.ilike(f"%{name}%"),
+                Expenditure.chapter.ilike(f"%{name}%"),
+            )
+        )
+        return [
+            ExpenditureSchema.model_validate(raw_expenditure)
+            for raw_expenditure in raw_expenditures
+        ]

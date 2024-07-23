@@ -3,11 +3,6 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
-				<PeriodTool
-					v-model:from-date="fromDateString"
-					v-model:to-date="toDateString"
-				></PeriodTool>
-				<ToolSeparator></ToolSeparator>
 				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
@@ -36,7 +31,6 @@ import EditPanelElement from "@/components/EditPanelElement.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
-import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import {
@@ -48,8 +42,8 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { ExpenditureTable } from "@/table";
-import { ExpenditureEditor } from "@/editor";
+import { BudgetTable } from "@/table";
+import { BudgetEditor } from "@/editor";
 
 const props = defineProps({
 	id: {
@@ -65,9 +59,7 @@ const emit = defineEmits<{
 const editingElement = ref(false);
 
 // Edit page
-const editor: ShallowRef<ExpenditureEditor> = shallowRef(
-	new ExpenditureEditor(),
-);
+const editor: ShallowRef<BudgetEditor> = shallowRef(new BudgetEditor());
 const editingElementKey: Ref<number> = ref(-1);
 
 const onSubmit = async () => {
@@ -79,28 +71,16 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-const table = new ExpenditureTable();
-const fromDateString = ref("");
-const toDateString = ref("");
+const table = new BudgetTable();
 const searchString = ref("");
 
-table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	const periodFilter = (instance: any): boolean => {
-		const rowDate = new Date(instance.create_date);
-		const fromDate = new Date(fromDateString.value);
-		const toDate = new Date(toDateString.value);
-
-		return rowDate <= toDate && rowDate >= fromDate;
-	};
-	return [periodFilter];
-}).value;
 table.searcher.value = computed((): ((instance: any) => boolean) => {
 	return (instance: any): boolean => {
-		const name: string = instance.name;
+		const name: string = instance.expenditure.name;
 		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
 			return true;
 		}
-		const chapter: string = instance.chapter;
+		const chapter: string = instance.expenditure.chapter;
 		if (
 			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
 		) {
@@ -111,12 +91,12 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 }).value;
 
 const onRowClicked = (rowKey: number) => {
-	editor.value = new ExpenditureEditor(table.getModel(rowKey));
+	editor.value = new BudgetEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
-	editor.value = new ExpenditureEditor();
+	editor.value = new BudgetEditor();
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
@@ -145,6 +125,7 @@ onMounted(async () => {
 	align-items: center;
 	flex-direction: row;
 	overflow: hidden;
+	flex-shrink: 0;
 }
 .header-content h1 {
 	font-family: Stolzl;

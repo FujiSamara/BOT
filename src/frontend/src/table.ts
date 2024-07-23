@@ -2,7 +2,7 @@ import { computed, ref, Ref } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
-import { BaseSchema, ExpenditureSchema } from "./types";
+import { BaseSchema, BudgetSchema, ExpenditureSchema } from "./types";
 
 class TableElementObserver<T> {
 	constructor(
@@ -263,7 +263,7 @@ export class Table<T extends BaseSchema> {
 		return changesCount;
 	}
 	public async create(model: T) {
-		await axios.post(`${this._endpoint}`, model);
+		await axios.post(`${this._endpoint}/`, model);
 
 		const resp = await axios.get(`${this._endpoint}/last/`);
 		this.push(resp.data, false);
@@ -346,5 +346,17 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
 		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
+	}
+}
+
+export class BudgetTable extends Table<BudgetSchema> {
+	constructor() {
+		super("budget");
+
+		this._formatters.set("expenditure", parser.formatExpenditure);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("limit", "Лимит");
+		this._aliases.set("expenditure", "Статья/Раздел");
 	}
 }

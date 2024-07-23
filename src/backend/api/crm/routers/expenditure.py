@@ -18,6 +18,15 @@ async def get_last_expenditure() -> Optional[ExpenditureSchema]:
     return service.get_last_expenditure()
 
 
+@router.get("/find")
+async def find_expenditures(record: str) -> list[ExpenditureSchema]:
+    """Finds expenditures by given `record`.
+
+    Search is carried out by name and chapter.
+    """
+    return service.find_expenditures(record)
+
+
 @router.get("/{id}")
 async def get_expenditure(id: int) -> Optional[ExpenditureSchema]:
     return service.get_expenditure_by_id(id)

@@ -2,6 +2,7 @@ from pathlib import Path
 from settings import get_settings
 import db.orm as orm
 from db.models import (
+    BudgetRecord,
     Department,
     ApprovalStatus,
     Bid,
@@ -14,6 +15,7 @@ from db.models import (
 )
 from db.schemas import (
     BidSchema,
+    BudgetRecordSchema,
     ExpenditureSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -585,7 +587,7 @@ def get_expenditure_by_id(id: int) -> ExpenditureSchema:
 
 
 def get_last_expenditure() -> ExpenditureSchema:
-    """Returns last expenditure bind db."""
+    """Returns last expenditure in db."""
     return orm.get_last_expenditrure()
 
 
@@ -595,3 +597,42 @@ def find_workers(record: str) -> list[WorkerSchema]:
     Search is carried out by f_name, l_name, o_name.
     """
     return orm.find_workers_by_name(record)
+
+
+def get_budget_records() -> list[BudgetRecordSchema]:
+    """Returns all budget records in database."""
+    return orm.get_budget_records()
+
+
+def create_budget_record(record: BudgetRecordSchema) -> None:
+    """Creates budget record"""
+    if not orm.create_budget_record(record):
+        logging.getLogger("uvicorn.error").error("Budget record wasn't created.")
+
+
+def remove_budget_record(id: int) -> None:
+    orm.remove_budget_record(id)
+
+
+def update_budget_record(record: BudgetRecordSchema) -> None:
+    """Updates expenditure by `ExpenditureSchema.id`"""
+    if not orm.update_budget_record(record):
+        logging.getLogger("uvicorn.error").error("Budget record wasn't updated.")
+
+
+def get_budget_record_by_id(id: int) -> BudgetRecordSchema:
+    """Finds budget record by this `id`."""
+    return orm.find_budget_record_by_column(BudgetRecord.id, id)
+
+
+def get_last_budget_record() -> BudgetRecordSchema:
+    """Returns last budget record in db."""
+    return orm.get_last_budget_record()
+
+
+def find_expenditures(record: str) -> list[WorkerSchema]:
+    """Finds expenditures by given `record`.
+
+    Search is carried out by name and chapter.
+    """
+    return orm.find_expenditures_by_name(record)
