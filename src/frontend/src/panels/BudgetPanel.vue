@@ -3,11 +3,11 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
-				<PeriodTool
+				<!-- <PeriodTool
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
 				></PeriodTool>
-				<ToolSeparator></ToolSeparator>
+				<ToolSeparator></ToolSeparator> -->
 				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
