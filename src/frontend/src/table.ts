@@ -187,9 +187,9 @@ export class Table<T extends BaseSchema> {
 	/** Aliases for column names */
 	protected _aliases: Map<string, string> = new Map<string, string>();
 	/** Filters for rows. Must returns **true** if row need be shown. */
-	public filters: Ref<Array<(instance: any) => boolean>> = ref([]);
+	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
-	public searcher: Ref<(instance: any) => boolean> = ref((_) => true);
+	public searcher: Ref<(model: any) => boolean> = ref((_) => true);
 	public isLoading: Ref<boolean> = ref(false);
 	public highlightedCount = computed(() => {
 		let result = 0;
@@ -262,20 +262,38 @@ export class Table<T extends BaseSchema> {
 
 		return changesCount;
 	}
-	public async create(instance: T) {
-		await axios.post(`${this._endpoint}/create`, instance);
+	public async create(model: T) {
+		await axios.post(`${this._endpoint}/create`, model);
 
 		const resp = await axios.get(`${this._endpoint}/last`);
 		this.push(resp.data, true);
 	}
-	public async update(instance: T, id: number) {
+	public async update(model: T, id: number) {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
-		for (const fieldName in instance) {
-			this._models.value[index][fieldName] = instance[fieldName];
+		let elementChanged = false;
+		for (const fieldName in model) {
+			const formatter = this._formatters.get(fieldName);
+
+			let modelString;
+			let oldModelString;
+			if (formatter) {
+				modelString = formatter(model[fieldName]);
+				oldModelString = formatter(this._models.value[index][fieldName]);
+			} else {
+				modelString = `${model[fieldName]}`;
+				oldModelString = `${this._models.value[index][fieldName]}`;
+			}
+
+			if (modelString !== oldModelString) {
+				elementChanged = true;
+			}
+			this._models.value[index][fieldName] = model[fieldName];
 		}
 
-		await axios.patch(`${this._endpoint}/update`, this._models.value[index]);
+		if (elementChanged) {
+			await axios.patch(`${this._endpoint}/update`, this._models.value[index]);
+		}
 	}
 	public async erase(id: number): Promise<void> {
 		const deleteIndex = this._indexes.get(id)!;
@@ -325,7 +343,6 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("name", "Статья");
 		this._aliases.set("chapter", "Раздел");
 		this._aliases.set("create_date", "Дата создания");
-		this._aliases.set("limit", "Лимит");
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
 		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");

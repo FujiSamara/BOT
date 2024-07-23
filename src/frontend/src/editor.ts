@@ -81,7 +81,6 @@ export class ExpenditureEditor extends Editor {
 		this.fields = [
 			new SmartField("Статья", "name", _instance?.name),
 			new SmartField("Раздел", "chapter", _instance?.chapter),
-			new SmartField("Лимит", "limit", _instance?.limit),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
 			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
 			new WorkerSmartField(
