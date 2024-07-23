@@ -32,9 +32,13 @@ export interface WorkerSchema extends BaseSchema {
 export interface ExpenditureSchema extends BaseSchema {
 	name: string;
 	chapter: string;
-	limit: number;
 	create_date: Date;
 	fac: WorkerSchema;
 	cc: WorkerSchema;
 	cc_supervisor: WorkerSchema;
+}
+
+export interface BudgetSchema extends BaseSchema {
+	limit: number;
+	expenditure: ExpenditureSchema;
 }

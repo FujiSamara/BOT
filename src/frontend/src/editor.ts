@@ -92,6 +92,21 @@ export class ExpenditureEditor extends Editor {
 	}
 }
 
+export class BudgetEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+
+		this.fields = [
+			new ExpenditureSmartField(
+				"Статья",
+				"expenditure",
+				_instance?.expenditure,
+			),
+			new SmartField("Лимит", "limit", _instance?.limit),
+		];
+	}
+}
+
 class WorkerSmartField extends SmartField {
 	private _endpoint: string = "";
 
@@ -102,6 +117,29 @@ class WorkerSmartField extends SmartField {
 
 	protected formatter(value: any): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
+
+		this._tipList.value = resp.data;
+	}
+}
+
+class ExpenditureSmartField extends SmartField {
+	private _endpoint: string = "";
+
+	constructor(name: string, fieldName: string, defaultValue?: any) {
+		super(name, fieldName, defaultValue, 200);
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
+	}
+
+	protected formatter(value: any): string {
+		return `${value.name}/${value.chapter}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
 		if (newValue.length < 4) {

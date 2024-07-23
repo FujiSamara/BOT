@@ -429,3 +429,24 @@ class Expenditure(Base):
     cc_supervisor: Mapped["Worker"] = relationship(
         "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
     )
+
+    budget_records: Mapped[List["BudgetRecord"]] = relationship(
+        "BudgetRecord",
+        back_populates="expenditure",
+        foreign_keys="BudgetRecord.expenditure_id",
+    )
+
+
+class BudgetRecord(Base):
+    """Записи в бюджете"""
+
+    id: Mapped[intpk]
+
+    __tablename__ = "budget_records"
+
+    expenditure_id: Mapped[int] = mapped_column(ForeignKey("expenditures.id"))
+    expenditure: Mapped["Expenditure"] = relationship(
+        "Expenditure", back_populates="budget_records"
+    )
+
+    limit: Mapped[float] = mapped_column(nullable=False)
