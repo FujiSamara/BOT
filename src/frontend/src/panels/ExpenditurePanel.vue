@@ -145,6 +145,7 @@ onMounted(async () => {
 	align-items: center;
 	flex-direction: row;
 	overflow: hidden;
+	flex-shrink: 0;
 }
 .header-content h1 {
 	font-family: Stolzl;
