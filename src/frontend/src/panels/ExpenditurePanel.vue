@@ -79,7 +79,7 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-const table = new ExpenditureTable("expenditure");
+const table = new ExpenditureTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");

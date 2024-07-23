@@ -37,7 +37,7 @@ async def delete_expenditure(
     service.remove_expenditure(id)
 
 
-@router.patch("/update")
+@router.patch("/")
 async def update_expenditure(
     schema: ExpenditureSchema,
 ) -> None:
