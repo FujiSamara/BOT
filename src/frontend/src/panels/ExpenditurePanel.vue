@@ -122,7 +122,7 @@ const onCreateClicked = () => {
 };
 const loadTable = async (silent: boolean = false) => {
 	await table.loadAll(silent);
-	setTimeout(loadTable, 5000, true);
+	setTimeout(loadTable, 20000, true);
 };
 watch(table.highlightedCount, () => {
 	emit("notify", table.highlightedCount.value, props.id);
