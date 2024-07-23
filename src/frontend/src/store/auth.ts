@@ -20,7 +20,7 @@ export const useAuthStore = defineStore("auth", {
 		},
 		async getUserAccesses(): Promise<Array<Access>> {
 			// TODO: Make getting accesses.
-			return [Access.Bid, Access.Expenditure];
+			return [Access.Bid, Access.Expenditure, Access.Budget];
 		},
 		async logout(): Promise<void> {
 			return;
