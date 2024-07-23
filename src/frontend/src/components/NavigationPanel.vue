@@ -40,7 +40,7 @@ const emit = defineEmits(["click", "logout"]);
 .panel-wrapper {
 	display: flex;
 	flex-direction: column;
-	width: 140px;
+	width: 125px;
 	gap: 50px;
 	padding: 40px 10px 40px 10px;
 	align-items: center;
@@ -79,7 +79,7 @@ const emit = defineEmits(["click", "logout"]);
 .notify {
 	position: absolute;
 	top: -6px;
-	right: 38px;
+	right: 32px;
 	background-color: #ff003d;
 	z-index: 1;
 	width: 20px;
