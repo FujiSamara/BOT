@@ -5,14 +5,17 @@
 			<div
 				class="nav-button"
 				v-for="data in props.navigationButtons"
-				v-memo="[data.isActive]"
+				v-memo="[data.isActive, data.notifyCount]"
+				@click="$emit('click', data.id)"
 			>
+				<div class="notify" v-if="data.notifyCount">
+					<p>{{ data.notifyCount }}</p>
+				</div>
 				<named-button
 					:img-src="data.imageSrc"
 					:label="data.label"
 					:is-active="data.isActive"
 					:key="data.id"
-					@click="$emit('click', data.id)"
 				></named-button>
 				<div v-if="data.isActive" class="button-decoration"></div>
 			</div>
@@ -37,12 +40,13 @@ const emit = defineEmits(["click", "logout"]);
 .panel-wrapper {
 	display: flex;
 	flex-direction: column;
-	width: 140px;
+	width: 125px;
 	gap: 50px;
 	padding: 40px 10px 40px 10px;
 	align-items: center;
 	background-color: #ffffff;
 	height: fit-content;
+	flex-grow: 0;
 }
 .panel-wrapper img {
 	width: 85px;
@@ -60,6 +64,7 @@ const emit = defineEmits(["click", "logout"]);
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	cursor: pointer;
 }
 .button-decoration {
 	width: 5px;
@@ -70,5 +75,23 @@ const emit = defineEmits(["click", "logout"]);
 	right: -10px;
 	top: -4px;
 	background-color: #993ca6;
+}
+.notify {
+	position: absolute;
+	top: -6px;
+	right: 32px;
+	background-color: #ff003d;
+	z-index: 1;
+	width: 20px;
+	height: 20px;
+	border-radius: 20px;
+	color: #ffffff;
+	font-family: Stolzl;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.notify p {
+	margin: 0;
 }
 </style>

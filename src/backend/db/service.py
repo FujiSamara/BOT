@@ -584,6 +584,11 @@ def get_expenditure_by_id(id: int) -> ExpenditureSchema:
     return orm.find_expenditure_by_column(Expenditure.id, id)
 
 
+def get_last_expenditure() -> ExpenditureSchema:
+    """Returns last expenditure bind db."""
+    return orm.get_last_expenditrure()
+
+
 def find_workers(record: str) -> list[WorkerSchema]:
     """Finds workers by given `record`.
 

@@ -23,7 +23,7 @@ from db.schemas import (
     PostSchema,
 )
 from sqlalchemy.sql.expression import func
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, desc
 
 
 def create_tables():
@@ -541,6 +541,15 @@ def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
     """
     with session.begin() as s:
         raw_expenditure = s.query(Expenditure).filter(column == value).first()
+        if not raw_expenditure:
+            return None
+        return ExpenditureSchema.model_validate(raw_expenditure)
+
+
+def get_last_expenditrure() -> ExpenditureSchema:
+    """Returns last expenditure bind db."""
+    with session.begin() as s:
+        raw_expenditure = s.query(Expenditure).order_by(desc(Expenditure.id)).first()
         if not raw_expenditure:
             return None
         return ExpenditureSchema.model_validate(raw_expenditure)

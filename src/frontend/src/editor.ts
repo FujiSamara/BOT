@@ -6,6 +6,7 @@ class SmartField {
 	protected _rawField: Ref<any> = ref();
 	protected _tipList: Ref<Array<any>> = ref([]);
 	private _delaySetter: number = setTimeout(() => {}, 0);
+	protected _stringifyValue: Ref<string | undefined> = ref(undefined);
 
 	constructor(
 		public name: string,
@@ -23,14 +24,17 @@ class SmartField {
 	}
 	protected async setter(newValue: any): Promise<void> {
 		this._rawField.value = newValue;
+		this._stringifyValue.value = undefined;
 	}
 
 	public formattedField = computed({
 		get: () => {
+			if (this._stringifyValue.value) return this._stringifyValue.value;
 			if (this._rawField.value === undefined) return "";
 			return this.formatter(this._rawField.value);
 		},
 		set: async (newValue: string) => {
+			this._stringifyValue.value = newValue;
 			clearTimeout(this._delaySetter);
 			this._delaySetter = setTimeout(async () => {
 				await this.setter(newValue);
@@ -51,6 +55,7 @@ class SmartField {
 			throw Error("Bad index");
 		}
 
+		this._stringifyValue.value = undefined;
 		this._rawField.value = this._tipList.value[index];
 		this._tipList.value = [];
 	}
@@ -76,7 +81,6 @@ export class ExpenditureEditor extends Editor {
 		this.fields = [
 			new SmartField("Статья", "name", _instance?.name),
 			new SmartField("Раздел", "chapter", _instance?.chapter),
-			new SmartField("Лимит", "limit", _instance?.limit),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
 			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
 			new WorkerSmartField(
@@ -93,7 +97,7 @@ class WorkerSmartField extends SmartField {
 
 	constructor(name: string, fieldName: string, defaultValue?: any) {
 		super(name, fieldName, defaultValue, 200);
-		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/worker`;
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/worker`;
 	}
 
 	protected formatter(value: any): string {

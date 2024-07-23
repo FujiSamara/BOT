@@ -2,6 +2,7 @@ import { computed, ref, Ref } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
+import { BaseSchema, ExpenditureSchema } from "./types";
 
 class TableElementObserver<T> {
 	constructor(
@@ -20,97 +21,55 @@ class TableElementObserver<T> {
 	}
 }
 
-export class Table {
-	private _highlighted: Array<boolean> = [];
-	private _checked: Array<boolean> = [];
+export class Table<T extends BaseSchema> {
+	private _highlighted: Ref<Array<boolean>> = ref([]);
+	private _checked: Ref<Array<boolean>> = ref([]);
 	/**  Key - ID, Value - index in internal arrays. */
 	protected _indexes: Map<number, number> = new Map();
-	private _nextKey: number = 0;
-	protected _models: Ref<Array<{ key: number; instance: any }>> = ref([]);
-
+	protected _models: Ref<Array<T>> = ref([]);
 	private _endpoint: string = "";
 
 	/**
 	 * @param tableContent
 	 * @param _searchFields Indexes of columns for searching.
 	 */
-	constructor(tableContent: Array<Array<string>>, tableName: string) {
-		this._endpoint = `http://${config.backendDomain}:${config.backendPort}/${config.crmEndpoint}/panel/${tableName}`;
-
-		for (let index = 0; index < tableContent.length; index++) {
-			const row = tableContent[index];
-			this.push(row);
-		}
+	constructor(tableName: string) {
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/panel/${tableName}`;
 	}
 
-	private clear(): void {
-		this._highlighted = [];
-		this._checked = [];
-		this._indexes.clear();
-		this._nextKey = 0;
-		this._models.value = [];
-	}
-
-	private elementUpdated(key: number): void {
-		const curIndex = this._indexes.get(key);
-		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
-
-		this._models.value[curIndex].key = this._nextKey;
-		this._indexes.delete(key);
-		this._indexes.set(this._nextKey, curIndex);
-		this._nextKey++;
-	}
-
-	private elementChecked(key: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(key);
-		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
-
-		this._checked[curIndex] = newValue;
-		this.elementUpdated(key);
-	}
-	private elementHighlighted(key: number, newValue: boolean): void {
-		const curIndex = this._indexes.get(key);
-		if (curIndex === undefined) throw new Error(`Key ${key} not exist`);
-
-		this._highlighted[curIndex] = newValue;
-		this.elementUpdated(key);
-	}
-
+	//#region Rows handlers
 	private _searchedRows = computed(() => {
-		const searchResult: Array<{ key: number; instance: any }> = [];
+		const searchResult: Array<T> = [];
 		for (let index = 0; index < this._models.value.length; index++) {
 			const model = this._models.value[index];
-			if (this.searcher.value(model.instance)) {
+			if (this.searcher.value(model)) {
 				searchResult.push(model);
 			}
 		}
 		return searchResult;
 	});
-
 	private _filteredRows = computed(() => {
-		const filterResult: Array<{ key: number; instance: any }> =
-			this._searchedRows.value.filter(
-				(model: { key: number; instance: any }) => {
-					for (const filter of this.filters.value) {
-						if (!filter(model.instance)) return false;
-					}
-					return true;
-				},
-			);
+		const filterResult: Array<T> = this._searchedRows.value.filter(
+			(model: T) => {
+				for (const filter of this.filters.value) {
+					if (!filter(model)) return false;
+				}
+				return true;
+			},
+		);
 
 		return filterResult;
 	});
-
 	private _formattedRows = computed(() => {
-		const result: Array<{ key: number; columns: Array<string> }> = [];
+		const result: Array<{ id: number; columns: Array<string> }> = [];
 
 		for (let index = 0; index < this._filteredRows.value.length; index++) {
 			const model = this._filteredRows.value[index];
 			const columns: Array<string> = [];
 
-			for (const fieldKey in model.instance) {
-				const field = model.instance[fieldKey];
-				const formatter = this._formatters.get(fieldKey);
+			for (const fieldName in model) {
+				const field = model[fieldName];
+				const formatter = this._formatters.get(fieldName);
 
 				if (formatter) {
 					columns.push(formatter(field));
@@ -119,135 +78,273 @@ export class Table {
 				}
 			}
 
-			result.push({ key: model.key, columns });
+			result.push({ id: model.id, columns: columns });
 		}
 
 		return result;
 	});
+	public rows = computed(() => {
+		return this._formattedRows.value;
+	});
+	public headers = computed(() => {
+		const result: Array<string> = [];
+		if (this._models.value.length === 0) return result;
 
-	// Protected fields
+		for (const fieldName in this._models.value[0]) {
+			let alias = this._aliases.get(fieldName);
+			if (alias === undefined) {
+				alias = fieldName;
+			}
+			result.push(alias);
+		}
+		return result;
+	});
+	public allChecked = computed({
+		get: () => {
+			if (this._checked.value.length === 0) {
+				return false;
+			}
+			for (let index = 0; index < this._checked.value.length; index++) {
+				if (!this._checked.value[index]) {
+					return false;
+				}
+			}
+			return true;
+		},
+		set: (newValue: boolean) => {
+			for (let index = 0; index < this._checked.value.length; index++) {
+				this._checked.value[index] = newValue;
+			}
+		},
+	});
+	public anyChecked = computed(() => {
+		for (let index = 0; index < this._checked.value.length; index++) {
+			if (this._checked.value[index]) {
+				return true;
+			}
+		}
+		return false;
+	});
+	private _elementChecked(id: number, newValue: boolean) {
+		const index = this._indexes.get(id)!;
+
+		this._checked.value[index] = newValue;
+	}
+	public checked = computed(() => {
+		const result: Map<number, TableElementObserver<boolean>> = new Map<
+			number,
+			TableElementObserver<boolean>
+		>();
+		for (let index = 0; index < this._models.value.length; index++) {
+			const modelID = this._models.value[index].id;
+
+			result.set(
+				modelID,
+				new TableElementObserver(
+					this._checked.value[this._indexes.get(modelID)!],
+					modelID,
+					this._elementChecked.bind(this),
+				),
+			);
+		}
+
+		return result;
+	});
+	private _elementHighlighted(id: number, newValue: boolean) {
+		const index = this._indexes.get(id)!;
+
+		this._highlighted.value[index] = newValue;
+	}
+	public highlighted = computed(() => {
+		const result: Map<number, TableElementObserver<boolean>> = new Map<
+			number,
+			TableElementObserver<boolean>
+		>();
+
+		for (let index = 0; index < this._models.value.length; index++) {
+			const modelID = this._models.value[index].id;
+
+			result.set(
+				modelID,
+				new TableElementObserver(
+					this._highlighted.value[this._indexes.get(modelID)!],
+					modelID,
+					this._elementHighlighted.bind(this),
+				),
+			);
+		}
+
+		return result;
+	});
+	//#endregion
+
+	//#region Auxiliary fields
+	/** Formatters for column values */
 	protected _formatters: Map<string, (value: any) => string> = new Map<
 		string,
 		(value: any) => string
 	>();
-
-	public isLoading: Ref<boolean> = ref(false);
+	/** Aliases for column names */
+	protected _aliases: Map<string, string> = new Map<string, string>();
 	/** Filters for rows. Must returns **true** if row need be shown. */
-	public filters: Ref<Array<(instance: any) => boolean>> = ref([]);
+	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
-	public searcher: Ref<(instance: any) => boolean> = ref((_) => true);
-
-	public data = computed(() => {
-		return this._formattedRows.value;
+	public searcher: Ref<(model: any) => boolean> = ref((_) => true);
+	public isLoading: Ref<boolean> = ref(false);
+	public highlightedCount = computed(() => {
+		let result = 0;
+		for (const elemHighlighted of this._highlighted.value) {
+			if (elemHighlighted) {
+				result++;
+			}
+		}
+		return result;
 	});
+	//#endregion
 
-	public getInstance(key: number): any {
-		const index = this._indexes.get(key);
-		if (index === undefined) throw new Error(`Key ${key} not exist`);
-
-		return this._models.value[index].instance;
+	//#region CRUD
+	public push(model: T, highlighted: boolean = false): void {
+		this._indexes.set(model.id, this._models.value.length);
+		this._models.value.push(model);
+		this._checked.value.push(false);
+		this._highlighted.value.push(highlighted);
 	}
-
-	public async loadAll() {
-		this.isLoading.value = true;
+	public async loadAll(silent: boolean = false): Promise<number> {
+		this.isLoading.value = true && !silent;
+		let changesCount = 0;
 		const resp = await axios.get(`${this._endpoint}s`);
 		this.isLoading.value = false;
 		const models = resp.data.dumps;
-		for (let index = 0; index < models.length; index++) {
-			const model = models[index];
-			this.push(model);
+		for (let i = 0; i < models.length; i++) {
+			const model: T = models[i];
+
+			let modelFounded = false;
+			for (let j = 0; j < this._models.value.length; j++) {
+				const oldModel = this._models.value[j];
+
+				if (oldModel.id !== model.id) {
+					continue;
+				}
+
+				modelFounded = true;
+
+				// Changes fields in model which was changed in new model.
+				for (const fieldName in model) {
+					const formatter = this._formatters.get(fieldName);
+
+					let modelString;
+					let oldModelString;
+					if (formatter) {
+						modelString = formatter(model[fieldName]);
+						oldModelString = formatter(oldModel[fieldName]);
+					} else {
+						modelString = `${model[fieldName]}`;
+						oldModelString = `${oldModel[fieldName]}`;
+					}
+
+					if (modelString !== oldModelString) {
+						changesCount++;
+						for (const fieldName in model) {
+							this._models.value[j][fieldName] = model[fieldName];
+						}
+						this._highlighted.value[j] = true;
+						break;
+					}
+				}
+				break;
+			}
+
+			if (!modelFounded) {
+				changesCount++;
+				this.push(model, silent);
+			}
+		}
+
+		return changesCount;
+	}
+	public async create(model: T) {
+		await axios.post(`${this._endpoint}/create`, model);
+
+		const resp = await axios.get(`${this._endpoint}/last`);
+		this.push(resp.data, true);
+	}
+	public async update(model: T, id: number) {
+		const index = this._indexes.get(id);
+		if (index === undefined) throw new Error(`ID ${id} not exist`);
+		let elementChanged = false;
+		for (const fieldName in model) {
+			const formatter = this._formatters.get(fieldName);
+
+			let modelString;
+			let oldModelString;
+			if (formatter) {
+				modelString = formatter(model[fieldName]);
+				oldModelString = formatter(this._models.value[index][fieldName]);
+			} else {
+				modelString = `${model[fieldName]}`;
+				oldModelString = `${this._models.value[index][fieldName]}`;
+			}
+
+			if (modelString !== oldModelString) {
+				elementChanged = true;
+			}
+			this._models.value[index][fieldName] = model[fieldName];
+		}
+
+		if (elementChanged) {
+			await axios.patch(`${this._endpoint}/update`, this._models.value[index]);
 		}
 	}
-
-	public async create(instance: any) {
-		await axios.post(`${this._endpoint}/create`, instance);
-
-		this.clear();
-		await this.loadAll();
-		this._highlighted[this._highlighted.length - 1] = true;
-	}
-
-	public async update(instance: any, key: number) {
-		const index = this._indexes.get(key);
-		if (index === undefined) throw new Error(`Key ${key} not exist`);
-		for (const fieldName in instance) {
-			this._models.value[index].instance[fieldName] = instance[fieldName];
-		}
-
-		await axios.patch(
-			`${this._endpoint}/update`,
-			this._models.value[index].instance,
-		);
-		this.elementUpdated(key);
-	}
-
-	public isChecked(key: number): TableElementObserver<boolean> {
-		return new TableElementObserver(
-			this._checked[this._indexes.get(key)!],
-			key,
-			this.elementChecked.bind(this),
-		);
-	}
-
-	public isHighlighted(key: number): TableElementObserver<boolean> {
-		return new TableElementObserver(
-			this._highlighted[this._indexes.get(key)!],
-			key,
-			this.elementHighlighted.bind(this),
-		);
-	}
-
-	public isAnyChecked(): boolean {
-		for (let index = 0; index < this._checked.length; index++) {
-			if (this._checked[index]) return true;
-		}
-		return false;
-	}
-
-	public push(model: any): void {
-		this._models.value.push({ instance: model, key: this._nextKey });
-		this._indexes.set(this._nextKey, this._checked.length);
-		this._checked.push(false);
-		this._highlighted.push(false);
-		this._nextKey++;
-	}
-
-	public async erase(key: number): Promise<void> {
-		const deleteIndex = this._indexes.get(key)!;
-		if (!this._indexes.delete(key)) throw new Error(`Key ${key} not exist`);
+	public async erase(id: number): Promise<void> {
+		const deleteIndex = this._indexes.get(id)!;
+		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
 
 		await axios.delete(
-			`${this._endpoint}/delete?rowID=${this._models.value[deleteIndex].instance.id}`,
+			`${this._endpoint}/delete?rowID=${this._models.value[deleteIndex].id}`,
 		);
 
-		this._checked.splice(deleteIndex, 1);
-		this._highlighted.splice(deleteIndex, 1);
+		this._checked.value.splice(deleteIndex, 1);
+		this._highlighted.value.splice(deleteIndex, 1);
 		this._models.value.splice(deleteIndex, 1);
 		for (let index = deleteIndex; index < this._models.value.length; index++) {
-			const element = this._models.value[index];
-			this._indexes.set(element.key, this._indexes.get(element.key)! - 1);
+			const model = this._models.value[index];
+			this._indexes.set(model.id, this._indexes.get(model.id)! - 1);
 		}
 	}
-
 	public async deleteChecked(): Promise<void> {
 		for (let index = 0; index < this._models.value.length; index++) {
-			const key = this._models.value[index].key;
+			const id = this._models.value[index].id;
 
-			if (this._checked[index]) {
-				await this.erase(key);
+			if (this._checked.value[index]) {
+				await this.erase(id);
 				index--;
 			}
 		}
 	}
+	public getModel(id: number): any {
+		const index = this._indexes.get(id);
+		if (index === undefined) throw new Error(`ID ${id} not exist`);
+
+		return this._models.value[index];
+	}
+	//#endregion
 }
 
-export class ExpenditureTable extends Table {
-	constructor(tableContent: Array<Array<string>>, tableName: string) {
-		super(tableContent, tableName);
+export class ExpenditureTable extends Table<ExpenditureSchema> {
+	constructor(tableName: string) {
+		super(tableName);
 
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDate);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("name", "Статья");
+		this._aliases.set("chapter", "Раздел");
+		this._aliases.set("create_date", "Дата создания");
+		this._aliases.set("fac", "ЦФО");
+		this._aliases.set("cc", "ЦЗ");
+		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
 	}
 }

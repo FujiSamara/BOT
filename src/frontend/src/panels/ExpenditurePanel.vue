@@ -16,7 +16,6 @@
 		<PanelTable
 			v-if="!editingElement"
 			:table="table"
-			:tableHead="tableHead"
 			@click="onRowClicked"
 			@create="onCreateClicked"
 			:canCreate="true"
@@ -40,9 +39,28 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, onMounted, Ref, ref, shallowRef, ShallowRef } from "vue";
+import {
+	computed,
+	onMounted,
+	Ref,
+	ref,
+	shallowRef,
+	ShallowRef,
+	watch,
+} from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
+
+const props = defineProps({
+	id: {
+		type: Number,
+		required: true,
+	},
+});
+
+const emit = defineEmits<{
+	(e: "notify", count: number, id: number): void;
+}>();
 
 const editingElement = ref(false);
 
@@ -61,19 +79,7 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-// Table
-const tableHead = [
-	"ID",
-	"Статья",
-	"Раздел",
-	"Дата создания",
-	"ЦФО",
-	"ЦЗ",
-	"Руководитель ЦЗ",
-	"Лимит",
-];
-
-const table = new ExpenditureTable([], "expenditure");
+const table = new ExpenditureTable("expenditure");
 const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");
@@ -105,7 +111,7 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 }).value;
 
 const onRowClicked = (rowKey: number) => {
-	editor.value = new ExpenditureEditor(table.getInstance(rowKey));
+	editor.value = new ExpenditureEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
@@ -114,8 +120,15 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
+const loadTable = async (silent: boolean = false) => {
+	await table.loadAll(silent);
+	setTimeout(loadTable, 20000, true);
+};
+watch(table.highlightedCount, () => {
+	emit("notify", table.highlightedCount.value, props.id);
+});
 onMounted(async () => {
-	await table.loadAll();
+	await loadTable();
 });
 </script>
 <style scoped>

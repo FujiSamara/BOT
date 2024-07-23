@@ -5,6 +5,7 @@ export interface NavigationData {
 	imageSrc: string;
 	label: string;
 	isActive: boolean;
+	notifyCount?: number;
 }
 
 export enum Access {

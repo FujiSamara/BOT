@@ -6,13 +6,13 @@
 					<th>
 						<div class="table-tools">
 							<table-checkbox
-								v-model:checked="mainCheckboxChecked"
+								v-model:checked="props.table.allChecked.value"
 								class="checkbox"
 								id="main"
 							></table-checkbox>
 							<div class="table-actions">
 								<clickable-icon
-									v-show="mainCheckboxChecked || props.table.isAnyChecked()"
+									v-show="props.table.anyChecked.value"
 									v-if="canDelete"
 									class="icons"
 									img-src="/img/trash.svg"
@@ -28,8 +28,8 @@
 						</div>
 					</th>
 					<th
-						v-for="(columnValue, rowIndex) in props.tableHead"
-						:key="rowIndex"
+						v-for="columnValue in props.table.headers.value"
+						:key="columnValue"
 					>
 						{{ columnValue }}
 					</th>
@@ -37,21 +37,21 @@
 			</thead>
 			<tbody>
 				<tr
-					v-for="row in table.data.value"
-					:key="row.key"
-					@click.prevent="$emit('click', row.key)"
-					@mouseleave="table.isHighlighted(row.key).value = false"
+					v-for="row in table.rows.value"
+					:key="row.id"
+					@click.prevent="$emit('click', row.id)"
+					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
 					:class="{
 						highlighted:
-							table.isChecked(row.key).value ||
-							table.isHighlighted(row.key).value,
+							table.checked.value.get(row.id)!.value ||
+							table.highlighted.value.get(row.id)!.value,
 					}"
 				>
 					<th>
 						<div class="table-tools">
 							<table-checkbox
-								:id="row.key.toString()"
-								v-model:checked="table.isChecked(row.key).value"
+								:id="row.id.toString()"
+								v-model:checked="table.checked.value.get(row.id)!.value"
 								class="checkbox"
 							></table-checkbox>
 						</div>
@@ -74,18 +74,14 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from "vue";
 import ClickableIcon from "./UI/ClickableIcon.vue";
 import type { Table } from "@/table";
 import type { PropType } from "vue";
+import { BaseSchema } from "@/types";
 
 const props = defineProps({
-	tableHead: {
-		type: Array<String>,
-		required: true,
-	},
 	table: {
-		type: Object as PropType<Table>,
+		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
 	canCreate: {
@@ -99,15 +95,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["click", "create", "delete"]);
-
-const mainCheckboxChecked = ref(false);
-
-watch(mainCheckboxChecked, () => {
-	for (let index = 0; index < props.table.data.value.length; index++) {
-		props.table.isChecked(props.table.data.value[index].key).value =
-			mainCheckboxChecked.value;
-	}
-});
 
 const onDelete = () => {
 	props.table.deleteChecked();

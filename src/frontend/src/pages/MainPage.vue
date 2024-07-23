@@ -6,7 +6,9 @@
 			@click="onNavButtonClicked"
 			@logout="onLogout"
 		></NavigationPanel>
-		<panel class="panel-content"></panel>
+		<keep-alive>
+			<panel :id="panelID" @notify="onNotify" class="panel-content"></panel>
+		</keep-alive>
 	</div>
 </template>
 <script setup lang="ts">
@@ -20,9 +22,11 @@ const authStore = useAuthStore();
 
 const panelsData = ref(getPanelsByAccesses(authStore.accesses));
 const panel = shallowRef(DefaultPanel);
+let panelID = 0;
 if (panelsData.value.length > 0) {
 	panel.value = panelsData.value[0].panel;
 	panelsData.value[0].isActive = true;
+	panelID = panelsData.value[0].id;
 }
 
 const onNavButtonClicked = async (id: number) => {
@@ -35,6 +39,7 @@ const onNavButtonClicked = async (id: number) => {
 
 	if (activePanelData) activePanelData.isActive = false;
 
+	panelID = panelData.id;
 	panel.value = panelData.panel;
 	panelData.isActive = true;
 };
@@ -42,12 +47,17 @@ const onNavButtonClicked = async (id: number) => {
 const onLogout = async () => {
 	await authStore.logout();
 };
+
+const onNotify = (count: number, id: number) => {
+	const panelData = panelsData.value.find((panelData) => panelData.id === id);
+	if (!panelData) return;
+
+	panelData.notifyCount = count;
+};
 </script>
 <style scoped>
 .wrapper {
 	display: flex;
-	flex-shrink: 1;
-	flex-grow: 1;
 	flex-direction: row;
 	height: 100%;
 	gap: 40px;
@@ -58,5 +68,9 @@ const onLogout = async () => {
 .panel-content {
 	min-width: 0;
 	flex-grow: 1;
+}
+.panel {
+	flex-grow: 0;
+	flex-shrink: 0;
 }
 </style>
