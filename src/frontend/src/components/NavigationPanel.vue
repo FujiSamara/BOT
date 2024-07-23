@@ -34,7 +34,6 @@ const props = defineProps({
 		required: true,
 	},
 });
-props.navigationButtons[0].notifyCount = 2;
 const emit = defineEmits(["click", "logout"]);
 </script>
 <style scoped>
