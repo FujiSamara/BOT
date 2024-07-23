@@ -3,11 +3,6 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
-				<!-- <PeriodTool
-					v-model:from-date="fromDateString"
-					v-model:to-date="toDateString"
-				></PeriodTool>
-				<ToolSeparator></ToolSeparator> -->
 				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
@@ -36,7 +31,6 @@ import EditPanelElement from "@/components/EditPanelElement.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
-import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import {
@@ -78,20 +72,8 @@ const onSubmit = async () => {
 };
 
 const table = new BudgetTable();
-const fromDateString = ref("");
-const toDateString = ref("");
 const searchString = ref("");
 
-table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	// const periodFilter = (instance: any): boolean => {
-	// 	const rowDate = new Date(instance.create_date);
-	// 	const fromDate = new Date(fromDateString.value);
-	// 	const toDate = new Date(toDateString.value);
-
-	// 	return rowDate <= toDate && rowDate >= fromDate;
-	// };
-	return [];
-}).value;
 table.searcher.value = computed((): ((instance: any) => boolean) => {
 	return (instance: any): boolean => {
 		const name: string = instance.expenditure.name;
