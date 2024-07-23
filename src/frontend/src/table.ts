@@ -191,6 +191,15 @@ export class Table<T extends BaseSchema> {
 	/** Searcher for rows. Must returns **true** if row need be shown. */
 	public searcher: Ref<(instance: any) => boolean> = ref((_) => true);
 	public isLoading: Ref<boolean> = ref(false);
+	public highlightedCount = computed(() => {
+		let result = 0;
+		for (const elemHighlighted of this._highlighted.value) {
+			if (elemHighlighted) {
+				result++;
+			}
+		}
+		return result;
+	});
 	//#endregion
 
 	//#region CRUD

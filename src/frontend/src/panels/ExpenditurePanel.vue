@@ -39,7 +39,15 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, onMounted, Ref, ref, shallowRef, ShallowRef } from "vue";
+import {
+	computed,
+	onMounted,
+	Ref,
+	ref,
+	shallowRef,
+	ShallowRef,
+	watch,
+} from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
@@ -113,12 +121,12 @@ const onCreateClicked = () => {
 	editingElement.value = true;
 };
 const loadTable = async (silent: boolean = false) => {
-	const changesCount = await table.loadAll(silent);
-	if (silent) {
-		emit("notify", changesCount, props.id);
-	}
-	setTimeout(loadTable, 20000, true);
+	await table.loadAll(silent);
+	setTimeout(loadTable, 5000, true);
 };
+watch(table.highlightedCount, () => {
+	emit("notify", table.highlightedCount.value, props.id);
+});
 onMounted(async () => {
 	await loadTable();
 });

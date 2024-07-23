@@ -5,14 +5,17 @@
 			<div
 				class="nav-button"
 				v-for="data in props.navigationButtons"
-				v-memo="[data.isActive]"
+				v-memo="[data.isActive, data.notifyCount]"
+				@click="$emit('click', data.id)"
 			>
+				<div class="notify" v-if="data.notifyCount">
+					<p>{{ data.notifyCount }}</p>
+				</div>
 				<named-button
 					:img-src="data.imageSrc"
 					:label="data.label"
 					:is-active="data.isActive"
 					:key="data.id"
-					@click="$emit('click', data.id)"
 				></named-button>
 				<div v-if="data.isActive" class="button-decoration"></div>
 			</div>
@@ -24,7 +27,6 @@
 </template>
 <script setup lang="ts">
 import { NavigationData } from "@/types";
-import { watch } from "vue";
 
 const props = defineProps({
 	navigationButtons: {
@@ -32,17 +34,8 @@ const props = defineProps({
 		required: true,
 	},
 });
+props.navigationButtons[0].notifyCount = 2;
 const emit = defineEmits(["click", "logout"]);
-
-watch(props.navigationButtons, () => {
-	for (let index = 0; index < props.navigationButtons.length; index++) {
-		const navButton = props.navigationButtons[index];
-
-		if (navButton.notifyCount) {
-			console.log(`${navButton.label} ${navButton.notifyCount}`);
-		}
-	}
-});
 </script>
 <style scoped>
 .panel-wrapper {
@@ -54,6 +47,7 @@ watch(props.navigationButtons, () => {
 	align-items: center;
 	background-color: #ffffff;
 	height: fit-content;
+	flex-grow: 0;
 }
 .panel-wrapper img {
 	width: 85px;
@@ -71,6 +65,7 @@ watch(props.navigationButtons, () => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	cursor: pointer;
 }
 .button-decoration {
 	width: 5px;
@@ -81,5 +76,23 @@ watch(props.navigationButtons, () => {
 	right: -10px;
 	top: -4px;
 	background-color: #993ca6;
+}
+.notify {
+	position: absolute;
+	top: -6px;
+	right: 38px;
+	background-color: #ff003d;
+	z-index: 1;
+	width: 20px;
+	height: 20px;
+	border-radius: 20px;
+	color: #ffffff;
+	font-family: Stolzl;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+.notify p {
+	margin: 0;
 }
 </style>

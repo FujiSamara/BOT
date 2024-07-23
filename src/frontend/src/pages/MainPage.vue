@@ -58,8 +58,6 @@ const onNotify = (count: number, id: number) => {
 <style scoped>
 .wrapper {
 	display: flex;
-	flex-shrink: 1;
-	flex-grow: 1;
 	flex-direction: row;
 	height: 100%;
 	gap: 40px;
@@ -70,5 +68,9 @@ const onNotify = (count: number, id: number) => {
 .panel-content {
 	min-width: 0;
 	flex-grow: 1;
+}
+.panel {
+	flex-grow: 0;
+	flex-shrink: 0;
 }
 </style>
