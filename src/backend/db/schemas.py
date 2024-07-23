@@ -179,7 +179,6 @@ class ExpenditureSchema(BaseModel):
     name: str
     chapter: str
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
-    limit: float
     fac: WorkerSchema
     cc: WorkerSchema
     cc_supervisor: WorkerSchema
