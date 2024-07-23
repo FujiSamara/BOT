@@ -24,6 +24,7 @@
 </template>
 <script setup lang="ts">
 import { NavigationData } from "@/types";
+import { watch } from "vue";
 
 const props = defineProps({
 	navigationButtons: {
@@ -32,6 +33,16 @@ const props = defineProps({
 	},
 });
 const emit = defineEmits(["click", "logout"]);
+
+watch(props.navigationButtons, () => {
+	for (let index = 0; index < props.navigationButtons.length; index++) {
+		const navButton = props.navigationButtons[index];
+
+		if (navButton.notifyCount) {
+			console.log(`${navButton.label} ${navButton.notifyCount}`);
+		}
+	}
+});
 </script>
 <style scoped>
 .panel-wrapper {

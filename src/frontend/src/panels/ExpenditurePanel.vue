@@ -43,6 +43,17 @@ import { computed, onMounted, Ref, ref, shallowRef, ShallowRef } from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
+const props = defineProps({
+	id: {
+		type: Number,
+		required: true,
+	},
+});
+
+const emit = defineEmits<{
+	(e: "notify", count: number, id: number): void;
+}>();
+
 const editingElement = ref(false);
 
 // Edit page
@@ -102,7 +113,10 @@ const onCreateClicked = () => {
 	editingElement.value = true;
 };
 const loadTable = async (silent: boolean = false) => {
-	await table.loadAll(silent);
+	const changesCount = await table.loadAll(silent);
+	if (silent) {
+		emit("notify", changesCount, props.id);
+	}
 	setTimeout(loadTable, 20000, true);
 };
 onMounted(async () => {
