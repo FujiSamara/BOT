@@ -490,7 +490,6 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             name=expenditure.name,
             chapter=expenditure.chapter,
             create_date=expenditure.create_date,
-            limit=expenditure.limit,
             fac=fac,
             cc=cc,
             cc_supervisor=cc_supervisor,
@@ -526,7 +525,6 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
         old.name = expenditure.name
         old.chapter = expenditure.chapter
         old.create_date = expenditure.create_date
-        old.limit = expenditure.limit
         old.fac = fac
         old.cc = cc
         old.cc_supervisor = cc_supervisor

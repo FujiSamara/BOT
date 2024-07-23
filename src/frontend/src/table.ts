@@ -33,8 +33,8 @@ export class Table<T extends BaseSchema> {
 	 * @param tableContent
 	 * @param _searchFields Indexes of columns for searching.
 	 */
-	constructor(tableName: string) {
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/panel/${tableName}`;
+	constructor(modelName: string) {
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${modelName}`;
 	}
 
 	//#region Rows handlers
@@ -212,9 +212,9 @@ export class Table<T extends BaseSchema> {
 	public async loadAll(silent: boolean = false): Promise<number> {
 		this.isLoading.value = true && !silent;
 		let changesCount = 0;
-		const resp = await axios.get(`${this._endpoint}s`);
+		const resp = await axios.get(this._endpoint + "/");
 		this.isLoading.value = false;
-		const models = resp.data.dumps;
+		const models = resp.data;
 		for (let i = 0; i < models.length; i++) {
 			const model: T = models[i];
 
@@ -263,10 +263,10 @@ export class Table<T extends BaseSchema> {
 		return changesCount;
 	}
 	public async create(model: T) {
-		await axios.post(`${this._endpoint}/create`, model);
+		await axios.post(`${this._endpoint}`, model);
 
-		const resp = await axios.get(`${this._endpoint}/last`);
-		this.push(resp.data, true);
+		const resp = await axios.get(`${this._endpoint}/last/`);
+		this.push(resp.data, false);
 	}
 	public async update(model: T, id: number) {
 		const index = this._indexes.get(id);
@@ -292,7 +292,7 @@ export class Table<T extends BaseSchema> {
 		}
 
 		if (elementChanged) {
-			await axios.patch(`${this._endpoint}/update`, this._models.value[index]);
+			await axios.patch(`${this._endpoint}/`, this._models.value[index]);
 		}
 	}
 	public async erase(id: number): Promise<void> {
@@ -300,7 +300,7 @@ export class Table<T extends BaseSchema> {
 		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
 
 		await axios.delete(
-			`${this._endpoint}/delete?rowID=${this._models.value[deleteIndex].id}`,
+			`${this._endpoint}/${this._models.value[deleteIndex].id}/`,
 		);
 
 		this._checked.value.splice(deleteIndex, 1);
@@ -331,8 +331,8 @@ export class Table<T extends BaseSchema> {
 }
 
 export class ExpenditureTable extends Table<ExpenditureSchema> {
-	constructor(tableName: string) {
-		super(tableName);
+	constructor() {
+		super("expenditure");
 
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);

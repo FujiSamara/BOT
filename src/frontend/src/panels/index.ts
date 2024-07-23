@@ -1,6 +1,7 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
+import BudgetPanel from "@/panels/BudgetPanel.vue";
 import { shallowRef } from "vue";
 
 const panels: Array<PanelData> = [
@@ -14,6 +15,14 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 2,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Бюджет",
+		isActive: false,
+		panel: shallowRef(BudgetPanel),
+		access: Access.Budget,
+	},
+	{
+		id: 3,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки",
 		isActive: false,

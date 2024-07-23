@@ -11,6 +11,7 @@ export interface NavigationData {
 export enum Access {
 	Bid,
 	Expenditure,
+	Budget,
 }
 
 export interface PanelData extends NavigationData {

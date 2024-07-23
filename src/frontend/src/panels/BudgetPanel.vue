@@ -1,7 +1,7 @@
 <template>
 	<div class="expenditure-content">
 		<div v-if="!editingElement" class="header-content">
-			<h1>Статьи</h1>
+			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
 					v-model:from-date="fromDateString"
