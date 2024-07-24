@@ -26,6 +26,7 @@
 				class="edit-page"
 				:editor="editor"
 				@submit="onSubmit"
+				@close="editingElement = false"
 			></EditPanelElement>
 		</div>
 	</div>

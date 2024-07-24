@@ -20,6 +20,7 @@
 			<EditPanelElement
 				class="edit-page"
 				:editor="editor"
+				@close="editingElement = false"
 				@submit="onSubmit"
 			></EditPanelElement>
 		</div>

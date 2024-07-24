@@ -1,5 +1,6 @@
 <template>
 	<form class="edit-panel-wrapper" @submit.prevent="$emit('submit')">
+		<window-cross class="cross" @click="emit('close')"></window-cross>
 		<div class="inputs-wrapper">
 			<div
 				class="input-wrapper"
@@ -48,7 +49,7 @@ const onFocusOut = (event: FocusEvent, index: number) => {
 	}
 	inputFocused.value[index] = false;
 };
-const emit = defineEmits(["submit"]);
+const emit = defineEmits(["submit", "close"]);
 </script>
 <style scoped>
 .edit-panel-wrapper {
@@ -62,6 +63,7 @@ const emit = defineEmits(["submit"]);
 	max-height: 100%;
 	padding-bottom: 18px;
 	gap: 20px;
+	position: relative;
 }
 .inputs-wrapper {
 	display: flex;
@@ -72,7 +74,6 @@ const emit = defineEmits(["submit"]);
 	overflow: auto;
 	padding-left: 20px;
 	padding-right: 20px;
-	padding-top: 18px;
 }
 .inputs-wrapper::-webkit-scrollbar {
 	width: 5px;
@@ -82,7 +83,6 @@ const emit = defineEmits(["submit"]);
 
 .inputs-wrapper::-webkit-scrollbar-track {
 	background-color: #e7e7e7;
-	margin-top: 20px;
 }
 
 .inputs-wrapper::-webkit-scrollbar-thumb:vertical {
@@ -132,5 +132,13 @@ const emit = defineEmits(["submit"]);
 .v-enter-from,
 .v-leave-to {
 	max-height: 0;
+}
+
+.cross {
+	align-self: flex-end;
+	z-index: 2;
+	position: relative;
+	top: 15px;
+	right: 15px;
 }
 </style>
