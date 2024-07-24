@@ -13,6 +13,7 @@ class SmartField {
 		public fieldName: string,
 		defaultValue?: any,
 		private _delay: number = 0,
+		public readonly canEdit: boolean = true,
 	) {
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
@@ -20,6 +21,9 @@ class SmartField {
 	}
 
 	protected formatter(value: any): string {
+		return `${value}`;
+	}
+	protected tipFormatter(value: any): string {
 		return `${value}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
@@ -47,7 +51,7 @@ class SmartField {
 	}
 
 	public selectList = computed(() => {
-		return this._tipList.value.map((value) => this.formatter(value));
+		return this._tipList.value.map((value) => this.tipFormatter(value));
 	});
 
 	public applySelection(index: number) {
@@ -121,6 +125,9 @@ class WorkerSmartField extends SmartField {
 	protected formatter(value: any): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
 	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
 	protected async setter(newValue: any): Promise<void> {
 		if (newValue.length < 4) {
 			this._tipList.value = [];
@@ -142,6 +149,9 @@ class ExpenditureSmartField extends SmartField {
 	}
 
 	protected formatter(value: any): string {
+		return `${value.name}`;
+	}
+	protected tipFormatter(value: any): string {
 		return `${value.name}/${value.chapter}`;
 	}
 	protected async setter(newValue: any): Promise<void> {

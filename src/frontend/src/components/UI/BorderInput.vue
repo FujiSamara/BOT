@@ -1,9 +1,18 @@
 <template>
-	<input :placeholder="placeholder" v-model="value" />
+	<input
+		:disabled="props.disabled"
+		:placeholder="placeholder"
+		v-model="value"
+	/>
 </template>
 <script setup>
 const placeholder = defineModel("placeholder");
 const value = defineModel("value");
+const props = defineProps({
+	disabled: {
+		type: Boolean,
+	},
+});
 </script>
 <script>
 export default {

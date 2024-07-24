@@ -12,6 +12,7 @@
 				<p class="input-header">{{ field.name }}:</p>
 				<border-input
 					:id="field.name"
+					:disabled="!field.canEdit"
 					class="input"
 					v-model:value="field.formattedField.value"
 				></border-input>
@@ -31,7 +32,6 @@
 	</form>
 </template>
 <script setup lang="ts">
-import BorderInput from "./UI/BorderInput.vue";
 import type { ExpenditureEditor } from "@/editor";
 import { ref, Transition, type PropType } from "vue";
 
