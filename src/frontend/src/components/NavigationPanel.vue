@@ -47,6 +47,7 @@ const emit = defineEmits(["click", "logout"]);
 	background-color: #ffffff;
 	height: fit-content;
 	flex-grow: 0;
+	overflow: hidden;
 }
 .panel-wrapper img {
 	width: 85px;
@@ -57,6 +58,25 @@ const emit = defineEmits(["click", "logout"]);
 	gap: 20px;
 	align-items: center;
 	width: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+.menu::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+	border-radius: 2000px;
+}
+
+.menu::-webkit-scrollbar-track {
+	background-color: #e7e7e7;
+}
+
+.menu::-webkit-scrollbar-thumb:vertical {
+	height: 10px;
+	width: 5px;
+	height: 15px !important;
+	border-radius: 22px;
+	background-color: #993ca6;
 }
 .nav-button {
 	position: relative;

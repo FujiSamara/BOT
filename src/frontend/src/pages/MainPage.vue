@@ -72,5 +72,7 @@ const onNotify = (count: number, id: number) => {
 .panel {
 	flex-grow: 0;
 	flex-shrink: 0;
+	max-height: 100%;
+	min-height: 0;
 }
 </style>
