@@ -330,6 +330,7 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 }
 
+//#region Panel tables
 export class ExpenditureTable extends Table<ExpenditureSchema> {
 	constructor() {
 		super("expenditure");
@@ -360,3 +361,4 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._aliases.set("expenditure", "Статья/Раздел");
 	}
 }
+//#endregion

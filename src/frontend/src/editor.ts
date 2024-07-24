@@ -74,6 +74,7 @@ class Editor {
 	}
 }
 
+//#region Panels editors
 export class ExpenditureEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
@@ -106,7 +107,9 @@ export class BudgetEditor extends Editor {
 		];
 	}
 }
+//#endregion
 
+//#region Panels smart Fields
 class WorkerSmartField extends SmartField {
 	private _endpoint: string = "";
 
@@ -152,3 +155,4 @@ class ExpenditureSmartField extends SmartField {
 		this._tipList.value = resp.data;
 	}
 }
+//#endregion
