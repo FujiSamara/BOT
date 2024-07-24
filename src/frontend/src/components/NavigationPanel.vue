@@ -60,6 +60,8 @@ const emit = defineEmits(["click", "logout"]);
 	width: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
+	padding-top: 10px;
+	padding-bottom: 10px;
 }
 .menu::-webkit-scrollbar {
 	width: 5px;
