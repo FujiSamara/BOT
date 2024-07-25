@@ -7,18 +7,19 @@ import logging
 import sys
 from fastapi_storages import FileSystemStorage
 from dotenv import load_dotenv
+import uuid
 
 
 class Settings(BaseSettings):
-    # main
+    # region Network
     host: str = Field(validation_alias="HOST", default="127.0.0.1")
     domain: str = Field(validation_alias="DOMAIN", default="127.0.0.1")
     port: int = Field(validation_alias="PORT", default=5000)
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
-    storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
-    date_format: str = "%d.%m.%Y"
+    # endregion
 
+    # region Security
     cors_origins: list[str] = [
         "http://localhost:5001",
     ]
@@ -30,6 +31,12 @@ class Settings(BaseSettings):
         "Access-Control-Allow-Origin",
         "Authorization",
     ]
+
+    secret_key: str = Field(validation_alias="SECRET_KEY", default=str(uuid.uuid4()))
+    # endregion
+
+    # region Storages
+    storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
 
     @computed_field
     @property
@@ -56,10 +63,14 @@ class Settings(BaseSettings):
             + f"@{self.psql_host}:{self.psql_port}/{self.psql_db_name}"
         )
 
+    # endregion
+
     # bot
     bot_token: str = Field(validate_default="BOT_TOKEN")
     telegram_token: str = Field(validate_default="TELEGRAM_TOKEN")
     bot_webhook_url: str = Field(validate_default="BOT_WEBHOOK_URL")
+
+    date_format: str = "%d.%m.%Y"
 
 
 @lru_cache
