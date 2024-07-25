@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     ]
 
     secret_key: str = Field(validation_alias="SECRET_KEY", default=str(uuid.uuid4()))
+    access_token_expire_minutes: int = Field(
+        validation_alias="ACCESS_TOKEN_EXPIRE_MINUTES", default=30
+    )
+    token_algorithm: str = Field(validation_alias="TOKEN_ALGORITHM", default="HS256")
     # endregion
 
     # region Storages
