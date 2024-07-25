@@ -1,5 +1,5 @@
 import axios from "axios";
-import { computed, Ref, ref } from "vue";
+import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
 
 class SmartField {
@@ -7,12 +7,12 @@ class SmartField {
 	protected _tipList: Ref<Array<any>> = ref([]);
 	private _delaySetter: number = setTimeout(() => {}, 0);
 	protected _stringifyValue: Ref<string | undefined> = ref(undefined);
+	protected readonly _delay: number = 0;
 
 	constructor(
 		public name: string,
 		public fieldName: string,
 		defaultValue?: any,
-		private _delay: number = 0,
 		public readonly canEdit: boolean = true,
 	) {
 		if (defaultValue) {
@@ -101,11 +101,21 @@ export class BudgetEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
 
+		const chapterField = new SmartField(
+			"Раздел",
+			"chapter",
+			_instance?.expenditure.chapter,
+			false,
+		);
+
 		this.fields = [
+			chapterField,
 			new ExpenditureSmartField(
 				"Статья",
 				"expenditure",
 				_instance?.expenditure,
+				true,
+				chapterField,
 			),
 			new SmartField("Лимит", "limit", _instance?.limit),
 		];
@@ -116,9 +126,15 @@ export class BudgetEditor extends Editor {
 //#region Panels smart Fields
 class WorkerSmartField extends SmartField {
 	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
 
-	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue, 200);
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/worker`;
 	}
 
@@ -142,10 +158,22 @@ class WorkerSmartField extends SmartField {
 
 class ExpenditureSmartField extends SmartField {
 	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
 
-	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue, 200);
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+		protected chapterField?: SmartField,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
+		if (chapterField) {
+			watch(this._rawField, () => {
+				chapterField.formattedField.value = this._rawField.value.chapter;
+			});
+		}
 	}
 
 	protected formatter(value: any): string {
