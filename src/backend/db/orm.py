@@ -580,10 +580,23 @@ def create_budget_record(record: BudgetRecordSchema) -> bool:
             s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
         )
 
-        if not expenditure:
+        department = None
+        if record.department:
+            department = (
+                s.query(Department)
+                .filter(Department.id == record.department.id)
+                .first()
+            )
+
+        if not expenditure or (record.department and not department):
             return False
 
-        record_model = BudgetRecord(expenditure=expenditure, limit=record.limit)
+        record_model = BudgetRecord(
+            expenditure=expenditure,
+            limit=record.limit,
+            department=department,
+            last_update=record.last_update,
+        )
 
         s.add(record_model)
 
@@ -609,12 +622,21 @@ def update_budget_record(record: BudgetRecordSchema) -> bool:
         expenditure = (
             s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
         )
+        department = None
+        if record.department:
+            department = (
+                s.query(Department)
+                .filter(Department.id == record.department.id)
+                .first()
+            )
 
         if not old or not expenditure:
             return False
 
         old.expenditure = expenditure
         old.limit = record.limit
+        old.department = department
+        old.last_update = record.last_update
 
     return True
 
