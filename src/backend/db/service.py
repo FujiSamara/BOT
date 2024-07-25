@@ -569,7 +569,10 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
     if not orm.create_expenditure(expenditure):
         logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
-    budget_record = BudgetRecordSchema(expenditure=expenditure, department=expenditure)
+    budget_record = BudgetRecordSchema(
+        expenditure=expenditure, department=expenditure.creator.department
+    )
+    create_budget_record(budget_record)
 
 
 def remove_expenditure(id: int) -> None:

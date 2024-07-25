@@ -485,8 +485,9 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
         cc_supervisor = (
             s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
         )
+        creator = s.query(Worker).filter(Worker.id == expenditure.creator.id).first()
 
-        if not cc or not fac or not cc_supervisor:
+        if not cc or not fac or not cc_supervisor or not creator:
             return False
 
         expenditure_model = Expenditure(
@@ -496,6 +497,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             fac=fac,
             cc=cc,
             cc_supervisor=cc_supervisor,
+            creator=creator,
         )
 
         s.add(expenditure_model)

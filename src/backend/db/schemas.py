@@ -178,6 +178,7 @@ class ExpenditureSchema(BaseModel):
     fac: WorkerSchema
     cc: WorkerSchema
     cc_supervisor: WorkerSchema
+    creator: WorkerSchema
 
 
 class BudgetRecordSchema(BaseModel):

@@ -23,13 +23,6 @@ async def get_budget_record(id: int) -> Optional[BudgetRecordSchema]:
     return service.get_budget_record_by_id(id)
 
 
-@router.post("/")
-async def create_budget_record(
-    schema: BudgetRecordSchema,
-) -> None:
-    service.create_budget_record(schema)
-
-
 @router.delete("/{id}")
 async def delete_budget_record(
     id: int,
