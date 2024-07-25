@@ -254,6 +254,9 @@ class Worker(Base):
     medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
     citizenship: Mapped[str] = mapped_column(nullable=True)
 
+    password: Mapped[str] = mapped_column(nullable=True)
+    can_use_crm: Mapped[bool] = mapped_column(nullable=True, default=False)
+
 
 class Bid(Base):
     """Заявки"""

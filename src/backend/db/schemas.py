@@ -48,6 +48,9 @@ class WorkerSchema(BaseSchema):
     medical_records_availability: Optional[bool]
     citizenship: Optional[str]
 
+    password: Optional[str]
+    can_use_crm: Optional[bool] = False
+
 
 class BidSchema(BaseModel):
     class Config:
