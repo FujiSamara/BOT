@@ -103,6 +103,13 @@ def get_departments_ids() -> list[int]:
     return result
 
 
+def get_worker_by_phone_number(number: str) -> WorkerSchema:
+    """
+    Finds worker by his phone number.
+    """
+    return orm.find_worker_by_column(Worker.phone_number, number)
+
+
 async def create_bid(
     amount: int,
     payment_type: str,
