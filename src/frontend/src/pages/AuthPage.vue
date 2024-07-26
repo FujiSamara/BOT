@@ -7,8 +7,19 @@
 			</div>
 			<form @submit.prevent="onSubmit">
 				<div class="inputs">
-					<border-input :value="login" placeholder="Логин"></border-input>
-					<border-input :value="password" placeholder="Пароль"></border-input>
+					<border-input
+						v-model:value="login"
+						placeholder="Логин"
+						auto
+						id="username"
+						autocomplete="username"
+					></border-input>
+					<border-input
+						v-model:value="password"
+						placeholder="Пароль"
+						id="password"
+						autocomplete="current-password"
+					></border-input>
 				</div>
 				<purple-button><p style="margin: 0">Войти</p></purple-button>
 			</form>
@@ -22,7 +33,7 @@ import { useAuthStore } from "@/store/auth";
 import { ref } from "vue";
 
 const onAuth = async () => {
-	await router.push("/");
+	await router.replace({ name: "home" });
 };
 
 const authStore = useAuthStore();

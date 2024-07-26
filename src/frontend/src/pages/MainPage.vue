@@ -44,8 +44,8 @@ const onNavButtonClicked = async (id: number) => {
 	panelData.isActive = true;
 };
 
-const onLogout = async () => {
-	await authStore.logout();
+const onLogout = () => {
+	authStore.logout();
 };
 
 const onNotify = (count: number, id: number) => {

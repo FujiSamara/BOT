@@ -11,9 +11,11 @@
   "dependencies": {
     "@types/node": "^20.14.9",
     "axios": "^1.7.2",
+    "jwt-decode": "^4.0.0",
     "pinia": "^2.1.7",
     "url": "^0.11.3",
     "vue": "^3.4.31",
+    "vue-cookies": "^1.8.4",
     "vue-router": "^4.4.0"
   },
   "devDependencies": {

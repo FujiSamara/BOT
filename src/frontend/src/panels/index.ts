@@ -40,7 +40,7 @@ export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 		for (let i = 0; i < accesses.length; i++) {
 			const access = accesses[i];
 
-			if (panel.access === access) {
+			if (panel.access === access || access === Access.Admin) {
 				result.push(panel);
 				break;
 			}
