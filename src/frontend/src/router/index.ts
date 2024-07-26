@@ -1,24 +1,39 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "@/store/auth";
 
-const pageLoader = (pageImport: any) => {
-	return async () => {
-		const authStore = useAuthStore();
-		const isAuthed = await authStore.auth();
-		if (isAuthed) return await pageImport;
-		else return await import("@/pages/AuthPage.vue");
-	};
-};
-
 const routes = [
 	{
-		path: "/",
-		component: pageLoader(import("@/pages/MainPage.vue")),
+		path: "/crm",
+		children: [
+			{
+				name: "home",
+				path: "",
+				component: async () => await import("@/pages/MainPage.vue"),
+			},
+			{
+				name: "login",
+				path: "login",
+				component: async () => await import("@/pages/AuthPage.vue"),
+			},
+		],
 	},
 ];
 
 const router = createRouter({
-	routes,
+	routes: routes,
 	history: createWebHistory(),
 });
+
+router.beforeEach(async (to, _) => {
+	const authStore = useAuthStore();
+	const authed = await authStore.auth();
+
+	if (authed && to.name === "login") {
+		return { name: "home" };
+	}
+	if (!authed && to.name !== "login") {
+		return { name: "login" };
+	}
+});
+
 export default router;
