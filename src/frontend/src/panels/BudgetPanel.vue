@@ -13,7 +13,7 @@
 			:table="table"
 			@click="onRowClicked"
 			@create="onCreateClicked"
-			:canCreate="true"
+			:canCreate="false"
 			:canDelete="true"
 		></PanelTable>
 		<div v-if="editingElement" class="edit-panel-element-wrapper">
