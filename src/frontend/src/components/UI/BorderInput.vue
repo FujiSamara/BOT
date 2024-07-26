@@ -3,6 +3,7 @@
 		:disabled="props.disabled"
 		:placeholder="placeholder"
 		v-model="value"
+		:autocomplete="autocomplete"
 	/>
 </template>
 <script setup>
@@ -11,6 +12,9 @@ const value = defineModel("value");
 const props = defineProps({
 	disabled: {
 		type: Boolean,
+	},
+	autocomplete: {
+		type: String,
 	},
 });
 </script>
