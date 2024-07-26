@@ -5,7 +5,7 @@ import sys
 
 
 def create(app: FastAPI) -> FastAPI:
-    auth = FastAPI(docs_url=None, redoc_url=None)
+    auth = FastAPI()
     try:
         configure(auth)
     except Exception as e:
