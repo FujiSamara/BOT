@@ -8,11 +8,10 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    username: str
     scopes: list[str] = []
 
 
 class User(BaseModel):
-    id: int
     username: str
     full_name: Optional[str] = None
