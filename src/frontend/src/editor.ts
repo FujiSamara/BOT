@@ -1,12 +1,14 @@
 import axios from "axios";
 import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
+import { useNetworkStore } from "./store/network";
 
 class SmartField {
 	protected _rawField: Ref<any> = ref();
 	protected _tipList: Ref<Array<any>> = ref([]);
 	private _delaySetter: number = setTimeout(() => {}, 0);
 	protected _stringifyValue: Ref<string | undefined> = ref(undefined);
+	protected _network = useNetworkStore();
 	protected readonly _delay: number = 0;
 
 	constructor(
@@ -67,6 +69,7 @@ class SmartField {
 
 class Editor {
 	public fields: Array<SmartField> = [];
+	protected _network = useNetworkStore();
 
 	public toInstanse() {
 		const result: any = {};
@@ -150,7 +153,9 @@ class WorkerSmartField extends SmartField {
 			return;
 		}
 
-		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/find?record=${newValue}`),
+		);
 
 		this._tipList.value = resp.data;
 	}
@@ -188,7 +193,9 @@ class ExpenditureSmartField extends SmartField {
 			return;
 		}
 
-		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/find?record=${newValue}`),
+		);
 
 		this._tipList.value = resp.data;
 	}
