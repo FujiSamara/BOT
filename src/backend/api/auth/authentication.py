@@ -15,7 +15,7 @@ from db import service
 
 def encrypt_password(password: str) -> str:
     """Returns encrypted password by"""
-    return sha256(password).hexdigest()
+    return sha256(password.encode()).hexdigest()
 
 
 def _authenticate_user(username: str, password: str) -> Optional[User]:
@@ -84,7 +84,7 @@ async def get_current_user(
         raise credentials_exception
 
     for scope in security_scopes.scopes:
-        if scope not in token_data.scopes:
+        if scope not in token_data.scopes and "admin" not in token_data.scopes:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not enough permissions",

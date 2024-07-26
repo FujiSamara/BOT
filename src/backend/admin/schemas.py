@@ -21,6 +21,7 @@ from xlsxwriter import Workbook
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
 from db import service
+from api.auth import encrypt_password
 
 
 class PostView(ModelView, model=Post):
@@ -154,6 +155,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.facs,
         Worker.ccs,
         Worker.cc_supervisors,
+        Worker.password,
     ]
     can_export = False
 
@@ -176,6 +178,8 @@ class WorkerView(ModelView, model=Worker):
         Worker.medical_records_availability: "Наличие медицинской книжки",
         Worker.gender: "Пол",
         Worker.citizenship: "Гражданство",
+        Worker.can_use_crm: "Может использовать CRM",
+        Worker.password: "Пароль",
     }
 
     form_columns = [
@@ -191,6 +195,8 @@ class WorkerView(ModelView, model=Worker):
         Worker.medical_records_availability,
         Worker.gender,
         Worker.citizenship,
+        Worker.can_use_crm,
+        Worker.password,
     ]
 
     form_ajax_refs = {
@@ -212,6 +218,10 @@ class WorkerView(ModelView, model=Worker):
             return "Мужчина"
         else:
             return "Женщина"
+
+    async def on_model_change(self, data, model, is_created, request):
+        if "password" in data:
+            data["password"] = encrypt_password(data["password"])
 
     column_formatters = {Worker.gender: gender_format}
     column_formatters_detail = column_formatters
