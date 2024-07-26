@@ -1,13 +1,13 @@
 import { defineStore } from "pinia";
 import { Access, accessesDict, Token } from "@/types";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import * as config from "@/config";
 import { inject } from "vue";
 import { VueCookies } from "vue-cookies";
 import { jwtDecode } from "jwt-decode";
 import router from "@/router";
 
-export const useAuthStore = defineStore("auth", {
+export const useNetworkStore = defineStore("network", {
 	state() {
 		const $cookies = inject<VueCookies>("$cookies")!;
 		const access_token = $cookies.get("access_token");
@@ -18,11 +18,13 @@ export const useAuthStore = defineStore("auth", {
 				`${token_type} ${access_token}`;
 		}
 
+		// Global axios settings
 		axios.defaults.withCredentials = true;
 
 		return {
 			accesses: new Array<Access>(),
 			$cookies: $cookies,
+			username: undefined,
 		};
 	},
 	actions: {
@@ -33,7 +35,7 @@ export const useAuthStore = defineStore("auth", {
 				.get(url)
 				.then(() => {
 					const access_token = this.$cookies.get("access_token");
-					this.setUserAccesses(access_token);
+					this.setUserData(access_token);
 
 					return true;
 				})
@@ -69,19 +71,32 @@ export const useAuthStore = defineStore("auth", {
 					return false;
 				});
 		},
-		setUserAccesses(token: string): void {
+		setUserData(token: string): void {
 			const decoded: any = jwtDecode(token);
-
 			this.accesses = [];
 			for (const scope of decoded.scopes) {
 				if (accessesDict[scope]) this.accesses.push(accessesDict[scope]);
 			}
+			this.username = decoded.sub;
 		},
 		logout(): void {
 			this.$cookies.remove("access_token");
 			this.$cookies.remove("token_type");
 			axios.defaults.headers.common["Authorization"] = undefined;
 			router.push({ name: "login" });
+		},
+		async withAuthChecking(
+			handler: Promise<AxiosResponse<any, any>>,
+		): Promise<any> {
+			return await handler.catch((error) => {
+				const statusCode = error.response ? error.response.status : null;
+
+				if (statusCode === 401) {
+					router.push({ name: "login" });
+				} else {
+					return Promise.reject(error);
+				}
+			});
 		},
 	},
 });

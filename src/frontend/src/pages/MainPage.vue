@@ -15,10 +15,10 @@
 import NavigationPanel from "@/components/NavigationPanel.vue";
 import DefaultPanel from "@/panels/DefaultPanel.vue";
 import { getPanelsByAccesses } from "@/panels";
-import { useAuthStore } from "@/store/auth";
+import { useNetworkStore } from "@/store/network";
 import { ref, shallowRef } from "vue";
 
-const authStore = useAuthStore();
+const authStore = useNetworkStore();
 
 const panelsData = ref(getPanelsByAccesses(authStore.accesses));
 const panel = shallowRef(DefaultPanel);

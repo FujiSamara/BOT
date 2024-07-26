@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/store/auth";
+import { useNetworkStore } from "@/store/network";
 
 const routes = [
 	{
@@ -25,7 +25,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, _) => {
-	const authStore = useAuthStore();
+	const authStore = useNetworkStore();
 	const authed = await authStore.auth();
 
 	if (authed && to.name === "login") {

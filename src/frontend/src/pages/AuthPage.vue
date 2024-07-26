@@ -29,14 +29,14 @@
 <script setup lang="ts">
 import ModalWindow from "@/components/ModalWindow.vue";
 import router from "@/router";
-import { useAuthStore } from "@/store/auth";
+import { useNetworkStore } from "@/store/network";
 import { ref } from "vue";
 
 const onAuth = async () => {
 	await router.replace({ name: "home" });
 };
 
-const authStore = useAuthStore();
+const authStore = useNetworkStore();
 
 const login = ref("");
 const password = ref("");
