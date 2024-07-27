@@ -14,6 +14,6 @@ export function formatExpenditure(expenditure: ExpenditureSchema): string {
 }
 
 export function formatDepartment(department: DepartmentSchema): string {
-	if (department === undefined) return "Не указано";
+	if (!department) return "Не указано";
 	return department.name;
 }
