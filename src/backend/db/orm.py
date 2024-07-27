@@ -673,3 +673,22 @@ def find_expenditures_by_name(name: str) -> list[ExpenditureSchema]:
             ExpenditureSchema.model_validate(raw_expenditure)
             for raw_expenditure in raw_expenditures
         ]
+
+
+def find_departments_by_name(name: str) -> list[DepartmentSchema]:
+    """
+    Returns departments in database by given `name`.
+    Fields for search: `Department.name`
+
+    Search is equivalent sql like statement.
+    """
+    with session.begin() as s:
+        raw_departments = s.query(Department).filter(
+            or_(
+                Department.name.ilike(f"%{name}%"),
+            )
+        )
+        return [
+            DepartmentSchema.model_validate(raw_department)
+            for raw_department in raw_departments
+        ]

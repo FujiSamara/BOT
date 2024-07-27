@@ -658,4 +658,4 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
 
     Search is carried out by name.
     """
-    return orm.find_department_by_column(Department.name, record)
+    return orm.find_departments_by_name(record)
