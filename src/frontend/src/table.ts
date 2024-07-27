@@ -281,7 +281,7 @@ export class Table<T extends BaseSchema> {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
 		let elementChanged = false;
-		for (const fieldName in this._models.value[index]) {
+		for (const fieldName in model) {
 			const formatter = this._formatters.get(fieldName);
 
 			let modelString;

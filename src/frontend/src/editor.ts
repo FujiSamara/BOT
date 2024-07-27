@@ -88,7 +88,6 @@ export class ExpenditureEditor extends Editor {
 		super();
 
 		this.fields = [
-			new SmartField("ID", "id", _instance?.id, false),
 			new SmartField("Статья", "name", _instance?.name),
 			new SmartField("Раздел", "chapter", _instance?.chapter),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
@@ -113,7 +112,6 @@ export class BudgetEditor extends Editor {
 		);
 
 		this.fields = [
-			new SmartField("ID", "id", _instance?.id, false),
 			chapterField,
 			new ExpenditureSmartField(
 				"Статья",
