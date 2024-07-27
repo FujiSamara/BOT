@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from hashlib import sha256
+from calendar import timegm
 
 from pydantic import ValidationError
 
@@ -71,6 +72,11 @@ async def get_current_user(
             get_settings().secret_key,
             algorithms=[get_settings().token_algorithm],
         )
+
+        expire: datetime = payload.get("exp")
+        if timegm(datetime.now().utctimetuple()) > expire:
+            raise credentials_exception
+
         username: str = payload.get("sub")
         if not username:
             raise credentials_exception
