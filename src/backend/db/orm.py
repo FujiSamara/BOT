@@ -508,7 +508,9 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
 def remove_expenditure(id: int) -> None:
     """Removes expenditure"""
     with session.begin() as s:
-        s.query(Expenditure).filter(Expenditure.id == id).delete()
+        expenditure = s.query(Expenditure).filter(Expenditure.id == id).first()
+        if expenditure:
+            s.delete(expenditure)
 
 
 def update_expenditure(expenditure: ExpenditureSchema) -> bool:
