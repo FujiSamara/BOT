@@ -76,7 +76,8 @@ export class Table<T extends BaseSchema> {
 				if (formatter) {
 					columns.push(formatter(field));
 				} else {
-					columns.push(`${field}`);
+					if (field === null) columns.push("Пусто");
+					else columns.push(`${field}`);
 				}
 			}
 
@@ -272,7 +273,7 @@ export class Table<T extends BaseSchema> {
 		);
 
 		const resp = await this._network.withAuthChecking(
-			axios.get(`${this._endpoint}/last/`),
+			axios.get(`${this._endpoint}/last`),
 		);
 		this.push(resp.data, false);
 	}
@@ -348,6 +349,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
+		this._formatters.set("creator", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDate);
 
 		this._aliases.set("id", "ID");
@@ -357,6 +359,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
 		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
+		this._aliases.set("creator", "Создал");
 	}
 }
 
@@ -365,10 +368,13 @@ export class BudgetTable extends Table<BudgetSchema> {
 		super("budget");
 
 		this._formatters.set("expenditure", parser.formatExpenditure);
+		this._formatters.set("department", parser.formatDepartment);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("limit", "Лимит");
 		this._aliases.set("expenditure", "Статья/Раздел");
+		this._aliases.set("last_update", "Последние обновление");
+		this._aliases.set("department", "Производство");
 	}
 }
 //#endregion
