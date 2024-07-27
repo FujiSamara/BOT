@@ -92,7 +92,7 @@ export const useNetworkStore = defineStore("network", {
 				const statusCode = error.response ? error.response.status : null;
 
 				if (statusCode === 401) {
-					router.push({ name: "login" });
+					router.go(0);
 				} else {
 					return Promise.reject(error);
 				}
