@@ -4,6 +4,7 @@
 		:placeholder="placeholder"
 		v-model="value"
 		:autocomplete="autocomplete"
+		:type="type"
 	/>
 </template>
 <script setup>
@@ -14,6 +15,9 @@ const props = defineProps({
 		type: Boolean,
 	},
 	autocomplete: {
+		type: String,
+	},
+	type: {
 		type: String,
 	},
 });

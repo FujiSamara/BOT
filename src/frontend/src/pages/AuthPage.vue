@@ -19,6 +19,7 @@
 						placeholder="Пароль"
 						id="password"
 						autocomplete="current-password"
+						type="password"
 					></border-input>
 				</div>
 				<purple-button><p style="margin: 0">Войти</p></purple-button>
