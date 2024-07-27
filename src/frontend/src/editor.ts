@@ -35,7 +35,8 @@ class SmartField {
 
 	public formattedField = computed({
 		get: () => {
-			if (this._stringifyValue.value) return this._stringifyValue.value;
+			if (this._stringifyValue.value !== undefined)
+				return this._stringifyValue.value;
 			if (this._rawField.value === undefined) return "";
 			return this.formatter(this._rawField.value);
 		},
@@ -134,6 +135,11 @@ export class BudgetEditor extends Editor {
 				true,
 				chapterField,
 			),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				_instance?.department,
+			),
 			new SmartField("Лимит", "limit", _instance?.limit),
 		];
 	}
@@ -209,6 +215,40 @@ class ExpenditureSmartField extends SmartField {
 
 		const resp = await this._network.withAuthChecking(
 			axios.get(`${this._endpoint}/find?record=${newValue}`),
+		);
+
+		this._tipList.value = resp.data;
+	}
+}
+
+class DepartmentSmartField extends SmartField {
+	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
+
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/department`;
+	}
+
+	protected formatter(value: any): string {
+		return `${value.name}`;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
 		);
 
 		this._tipList.value = resp.data;
