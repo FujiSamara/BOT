@@ -651,3 +651,11 @@ def find_expenditures(record: str) -> list[WorkerSchema]:
     Search is carried out by name and chapter.
     """
     return orm.find_expenditures_by_name(record)
+
+
+def find_department_by_name(record: str) -> list[DepartmentSchema]:
+    """Finds departments by given `record`.
+
+    Search is carried out by name.
+    """
+    return orm.find_department_by_column(Department.name, record)
