@@ -81,9 +81,9 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
 			return true;
 		}
-		const chapter: string = instance.expenditure.chapter;
+		const dep_name: string = instance.department.name;
 		if (
-			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
+			dep_name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
 		) {
 			return true;
 		}

@@ -311,7 +311,7 @@ export class Table<T extends BaseSchema> {
 		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
 
 		await this._network.withAuthChecking(
-			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}/`),
+			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}`),
 		);
 
 		this._checked.value.splice(deleteIndex, 1);
