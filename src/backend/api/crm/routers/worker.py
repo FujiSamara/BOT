@@ -14,7 +14,7 @@ router = APIRouter()
 async def find_workers(
     name: str, _: User = Security(get_current_user, scopes=["authenticated"])
 ) -> list[WorkerSchema]:
-    """Finds workers by given `record`.
+    """Finds workers by given `name`.
 
     Search is carried out by f_name, l_name, o_name.
     """
