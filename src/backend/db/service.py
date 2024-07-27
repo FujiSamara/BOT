@@ -576,8 +576,12 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
     if not orm.create_expenditure(expenditure):
         logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
+    updated_expenditure = get_last_expenditure()
     budget_record = BudgetRecordSchema(
-        expenditure=expenditure, department=expenditure.creator.department
+        expenditure=updated_expenditure,
+        department=updated_expenditure.creator.department,
+        limit=None,
+        last_update=None,
     )
     create_budget_record(budget_record)
 

@@ -1,4 +1,4 @@
-import { ExpenditureSchema, WorkerSchema } from "@/types";
+import { DepartmentSchema, ExpenditureSchema, WorkerSchema } from "@/types";
 
 export function formatWorker(worker: WorkerSchema): string {
 	return `${worker.l_name} ${worker.f_name} ${worker.o_name}`;
@@ -11,4 +11,8 @@ export function formatDate(dateString: string): string {
 
 export function formatExpenditure(expenditure: ExpenditureSchema): string {
 	return `${expenditure.name}/${expenditure.chapter}`;
+}
+
+export function formatDepartment(department: DepartmentSchema): string {
+	return department.name;
 }

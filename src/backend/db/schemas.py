@@ -51,6 +51,13 @@ class WorkerSchema(BaseSchema):
     password: Optional[str]
     can_use_crm: Optional[bool] = False
 
+    @field_validator("gender", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, list):
+            return (val[0],)
+        return val
+
 
 class BidSchema(BaseModel):
     class Config:

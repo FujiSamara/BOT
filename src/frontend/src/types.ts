@@ -52,3 +52,7 @@ export interface BudgetSchema extends BaseSchema {
 	limit: number;
 	expenditure: ExpenditureSchema;
 }
+
+export interface DepartmentSchema extends BaseSchema {
+	name: string;
+}
