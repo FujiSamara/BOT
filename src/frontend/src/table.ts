@@ -372,9 +372,10 @@ export class BudgetTable extends Table<BudgetSchema> {
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("limit", "Лимит");
-		this._aliases.set("expenditure", "Статья/Раздел");
+		this._aliases.set("expenditure", "Статья");
 		this._aliases.set("last_update", "Последние обновление");
 		this._aliases.set("department", "Производство");
+		this._aliases.set("chapter", "Раздел");
 	}
 }
 //#endregion
