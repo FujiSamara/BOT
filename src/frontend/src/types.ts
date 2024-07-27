@@ -8,11 +8,21 @@ export interface NavigationData {
 	notifyCount?: number;
 }
 
+export interface Token {
+	access_token: string;
+	token_type: string;
+}
+
 export enum Access {
 	Bid,
 	Expenditure,
 	Budget,
+	Admin,
 }
+
+export const accessesDict: any = {
+	admin: Access.Admin,
+};
 
 export interface PanelData extends NavigationData {
 	panel: ShallowRef<any>;
@@ -41,4 +51,8 @@ export interface ExpenditureSchema extends BaseSchema {
 export interface BudgetSchema extends BaseSchema {
 	limit: number;
 	expenditure: ExpenditureSchema;
+}
+
+export interface DepartmentSchema extends BaseSchema {
+	name: string;
 }

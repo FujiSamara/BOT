@@ -1,6 +1,7 @@
 from fastapi_utils.tasks import repeat_every
 import logging
 from datetime import datetime, timedelta
+from aiogram.exceptions import TelegramBadRequest
 
 from bot.handlers.rate.utils import shift_closed
 from bot.text import unclosed_shift_notify, unclosed_shift_request
@@ -22,13 +23,22 @@ async def notify_with_unclosed_shift() -> None:
         if not shift_closed(previous_day, deparment_id):
             chef = service.get_chef_by_department_id(deparment_id)
             if chef and chef.telegram_id:
-                logger.info(f"Notifying {chef.l_name} {chef.f_name}...")
-                msg = await notify_worker_by_telegram_id(
-                    id=chef.telegram_id, message=unclosed_shift_notify
-                )
-                await msg.answer(
-                    text=unclosed_shift_request,
-                    reply_markup=create_inline_keyboard(rating_menu_button),
-                )
+                try:
+                    logger.info(f"Notifying {chef.l_name} {chef.f_name}...")
+                    msg = await notify_worker_by_telegram_id(
+                        id=chef.telegram_id, message=unclosed_shift_notify
+                    )
+                    await msg.answer(
+                        text=unclosed_shift_request,
+                        reply_markup=create_inline_keyboard(rating_menu_button),
+                    )
+                except TelegramBadRequest as e:
+                    logger.warning(
+                        f"Chef {chef.l_name} {chef.f_name} notifying failed: {e}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Chef {chef.l_name} {chef.f_name} notifying failed: {e}"
+                    )
 
     logger.info("Notifying owners completed.")

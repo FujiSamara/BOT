@@ -15,10 +15,10 @@
 import NavigationPanel from "@/components/NavigationPanel.vue";
 import DefaultPanel from "@/panels/DefaultPanel.vue";
 import { getPanelsByAccesses } from "@/panels";
-import { useAuthStore } from "@/store/auth";
+import { useNetworkStore } from "@/store/network";
 import { ref, shallowRef } from "vue";
 
-const authStore = useAuthStore();
+const authStore = useNetworkStore();
 
 const panelsData = ref(getPanelsByAccesses(authStore.accesses));
 const panel = shallowRef(DefaultPanel);
@@ -44,8 +44,8 @@ const onNavButtonClicked = async (id: number) => {
 	panelData.isActive = true;
 };
 
-const onLogout = async () => {
-	await authStore.logout();
+const onLogout = () => {
+	authStore.logout();
 };
 
 const onNotify = (count: number, id: number) => {
@@ -72,5 +72,7 @@ const onNotify = (count: number, id: number) => {
 .panel {
 	flex-grow: 0;
 	flex-shrink: 0;
+	max-height: 100%;
+	min-height: 0;
 }
 </style>

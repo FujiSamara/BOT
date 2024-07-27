@@ -1,9 +1,26 @@
 <template>
-	<input :placeholder="placeholder" v-model="value" />
+	<input
+		:disabled="props.disabled"
+		:placeholder="placeholder"
+		v-model="value"
+		:autocomplete="autocomplete"
+		:type="type"
+	/>
 </template>
 <script setup>
 const placeholder = defineModel("placeholder");
 const value = defineModel("value");
+const props = defineProps({
+	disabled: {
+		type: Boolean,
+	},
+	autocomplete: {
+		type: String,
+	},
+	type: {
+		type: String,
+	},
+});
 </script>
 <script>
 export default {

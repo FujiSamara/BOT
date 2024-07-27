@@ -103,6 +103,13 @@ def get_departments_ids() -> list[int]:
     return result
 
 
+def get_worker_by_phone_number(number: str) -> WorkerSchema:
+    """
+    Finds worker by his phone number.
+    """
+    return orm.find_worker_by_column(Worker.phone_number, number)
+
+
 async def create_bid(
     amount: int,
     payment_type: str,
@@ -569,6 +576,14 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
     if not orm.create_expenditure(expenditure):
         logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
+    updated_expenditure = get_last_expenditure()
+    budget_record = BudgetRecordSchema(
+        expenditure=updated_expenditure,
+        department=updated_expenditure.creator.department,
+        limit=None,
+        last_update=None,
+    )
+    create_budget_record(budget_record)
 
 
 def remove_expenditure(id: int) -> None:
@@ -636,3 +651,11 @@ def find_expenditures(record: str) -> list[WorkerSchema]:
     Search is carried out by name and chapter.
     """
     return orm.find_expenditures_by_name(record)
+
+
+def find_department_by_name(record: str) -> list[DepartmentSchema]:
+    """Finds departments by given `record`.
+
+    Search is carried out by name.
+    """
+    return orm.find_departments_by_name(record)

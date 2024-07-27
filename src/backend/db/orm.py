@@ -485,8 +485,9 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
         cc_supervisor = (
             s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
         )
+        creator = s.query(Worker).filter(Worker.id == expenditure.creator.id).first()
 
-        if not cc or not fac or not cc_supervisor:
+        if not cc or not fac or not cc_supervisor or not creator:
             return False
 
         expenditure_model = Expenditure(
@@ -496,6 +497,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             fac=fac,
             cc=cc,
             cc_supervisor=cc_supervisor,
+            creator=creator,
         )
 
         s.add(expenditure_model)
@@ -506,7 +508,9 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
 def remove_expenditure(id: int) -> None:
     """Removes expenditure"""
     with session.begin() as s:
-        s.query(Expenditure).filter(Expenditure.id == id).delete()
+        expenditure = s.query(Expenditure).filter(Expenditure.id == id).first()
+        if expenditure:
+            s.delete(expenditure)
 
 
 def update_expenditure(expenditure: ExpenditureSchema) -> bool:
@@ -580,10 +584,23 @@ def create_budget_record(record: BudgetRecordSchema) -> bool:
             s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
         )
 
-        if not expenditure:
+        department = None
+        if record.department:
+            department = (
+                s.query(Department)
+                .filter(Department.id == record.department.id)
+                .first()
+            )
+
+        if not expenditure or (record.department and not department):
             return False
 
-        record_model = BudgetRecord(expenditure=expenditure, limit=record.limit)
+        record_model = BudgetRecord(
+            expenditure=expenditure,
+            limit=record.limit,
+            department=department,
+            last_update=record.last_update,
+        )
 
         s.add(record_model)
 
@@ -609,12 +626,21 @@ def update_budget_record(record: BudgetRecordSchema) -> bool:
         expenditure = (
             s.query(Expenditure).filter(Expenditure.id == record.expenditure.id).first()
         )
+        department = None
+        if record.department:
+            department = (
+                s.query(Department)
+                .filter(Department.id == record.department.id)
+                .first()
+            )
 
         if not old or not expenditure:
             return False
 
         old.expenditure = expenditure
         old.limit = record.limit
+        old.department = department
+        old.last_update = record.last_update
 
     return True
 
@@ -648,4 +674,23 @@ def find_expenditures_by_name(name: str) -> list[ExpenditureSchema]:
         return [
             ExpenditureSchema.model_validate(raw_expenditure)
             for raw_expenditure in raw_expenditures
+        ]
+
+
+def find_departments_by_name(name: str) -> list[DepartmentSchema]:
+    """
+    Returns departments in database by given `name`.
+    Fields for search: `Department.name`
+
+    Search is equivalent sql like statement.
+    """
+    with session.begin() as s:
+        raw_departments = s.query(Department).filter(
+            or_(
+                Department.name.ilike(f"%{name}%"),
+            )
+        )
+        return [
+            DepartmentSchema.model_validate(raw_department)
+            for raw_department in raw_departments
         ]

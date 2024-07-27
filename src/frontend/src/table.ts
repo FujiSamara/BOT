@@ -3,6 +3,7 @@ import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
 import { BaseSchema, BudgetSchema, ExpenditureSchema } from "./types";
+import { useNetworkStore } from "./store/network";
 
 class TableElementObserver<T> {
 	constructor(
@@ -28,6 +29,7 @@ export class Table<T extends BaseSchema> {
 	protected _indexes: Map<number, number> = new Map();
 	protected _models: Ref<Array<T>> = ref([]);
 	private _endpoint: string = "";
+	private _network = useNetworkStore();
 
 	/**
 	 * @param tableContent
@@ -74,7 +76,8 @@ export class Table<T extends BaseSchema> {
 				if (formatter) {
 					columns.push(formatter(field));
 				} else {
-					columns.push(`${field}`);
+					if (field === null) columns.push("Пусто");
+					else columns.push(`${field}`);
 				}
 			}
 
@@ -212,7 +215,9 @@ export class Table<T extends BaseSchema> {
 	public async loadAll(silent: boolean = false): Promise<number> {
 		this.isLoading.value = true && !silent;
 		let changesCount = 0;
-		const resp = await axios.get(this._endpoint + "/");
+		const resp = await this._network.withAuthChecking(
+			axios.get(this._endpoint + "/"),
+		);
 		this.isLoading.value = false;
 		const models = resp.data;
 		for (let i = 0; i < models.length; i++) {
@@ -263,16 +268,20 @@ export class Table<T extends BaseSchema> {
 		return changesCount;
 	}
 	public async create(model: T) {
-		await axios.post(`${this._endpoint}/`, model);
+		await this._network.withAuthChecking(
+			axios.post(`${this._endpoint}/`, model),
+		);
 
-		const resp = await axios.get(`${this._endpoint}/last/`);
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/last`),
+		);
 		this.push(resp.data, false);
 	}
 	public async update(model: T, id: number) {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
 		let elementChanged = false;
-		for (const fieldName in model) {
+		for (const fieldName in this._models.value[index]) {
 			const formatter = this._formatters.get(fieldName);
 
 			let modelString;
@@ -292,15 +301,17 @@ export class Table<T extends BaseSchema> {
 		}
 
 		if (elementChanged) {
-			await axios.patch(`${this._endpoint}/`, this._models.value[index]);
+			await this._network.withAuthChecking(
+				axios.patch(`${this._endpoint}/`, this._models.value[index]),
+			);
 		}
 	}
 	public async erase(id: number): Promise<void> {
 		const deleteIndex = this._indexes.get(id)!;
 		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
 
-		await axios.delete(
-			`${this._endpoint}/${this._models.value[deleteIndex].id}/`,
+		await this._network.withAuthChecking(
+			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}`),
 		);
 
 		this._checked.value.splice(deleteIndex, 1);
@@ -330,6 +341,7 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 }
 
+//#region Panel tables
 export class ExpenditureTable extends Table<ExpenditureSchema> {
 	constructor() {
 		super("expenditure");
@@ -337,6 +349,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
+		this._formatters.set("creator", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDate);
 
 		this._aliases.set("id", "ID");
@@ -346,6 +359,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
 		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
+		this._aliases.set("creator", "Создал");
 	}
 }
 
@@ -354,9 +368,13 @@ export class BudgetTable extends Table<BudgetSchema> {
 		super("budget");
 
 		this._formatters.set("expenditure", parser.formatExpenditure);
+		this._formatters.set("department", parser.formatDepartment);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("limit", "Лимит");
 		this._aliases.set("expenditure", "Статья/Раздел");
+		this._aliases.set("last_update", "Последние обновление");
+		this._aliases.set("department", "Производство");
 	}
 }
+//#endregion

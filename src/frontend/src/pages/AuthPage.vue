@@ -7,8 +7,20 @@
 			</div>
 			<form @submit.prevent="onSubmit">
 				<div class="inputs">
-					<border-input :value="login" placeholder="Логин"></border-input>
-					<border-input :value="password" placeholder="Пароль"></border-input>
+					<border-input
+						v-model:value="login"
+						placeholder="Логин"
+						auto
+						id="username"
+						autocomplete="username"
+					></border-input>
+					<border-input
+						v-model:value="password"
+						placeholder="Пароль"
+						id="password"
+						autocomplete="current-password"
+						type="password"
+					></border-input>
 				</div>
 				<purple-button><p style="margin: 0">Войти</p></purple-button>
 			</form>
@@ -18,14 +30,14 @@
 <script setup lang="ts">
 import ModalWindow from "@/components/ModalWindow.vue";
 import router from "@/router";
-import { useAuthStore } from "@/store/auth";
+import { useNetworkStore } from "@/store/network";
 import { ref } from "vue";
 
 const onAuth = async () => {
-	await router.push("/");
+	await router.replace({ name: "home" });
 };
 
-const authStore = useAuthStore();
+const authStore = useNetworkStore();
 
 const login = ref("");
 const password = ref("");

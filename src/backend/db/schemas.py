@@ -48,6 +48,16 @@ class WorkerSchema(BaseSchema):
     medical_records_availability: Optional[bool]
     citizenship: Optional[str]
 
+    password: Optional[str]
+    can_use_crm: Optional[bool] = False
+
+    @field_validator("gender", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, list):
+            return (val[0],)
+        return val
+
 
 class BidSchema(BaseModel):
     class Config:
@@ -178,6 +188,7 @@ class ExpenditureSchema(BaseModel):
     fac: WorkerSchema
     cc: WorkerSchema
     cc_supervisor: WorkerSchema
+    creator: WorkerSchema
 
 
 class BudgetRecordSchema(BaseModel):
@@ -187,4 +198,15 @@ class BudgetRecordSchema(BaseModel):
 
     id: Optional[int] = -1
     expenditure: ExpenditureSchema
-    limit: float
+    limit: Optional[float]
+    last_update: Optional[datetime.datetime]
+    department: Optional[DepartmentSchema]
+
+
+class BudgetRecordWithChapter(BudgetRecordSchema):
+    @field_validator("chapter", mode="before")
+    @classmethod
+    def upload_file_validate(cls, _):
+        return cls.expenditure.chapter
+
+    chapter: str

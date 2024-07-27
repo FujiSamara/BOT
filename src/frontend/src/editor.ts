@@ -1,18 +1,21 @@
 import axios from "axios";
-import { computed, Ref, ref } from "vue";
+import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
+import { useNetworkStore } from "./store/network";
 
 class SmartField {
 	protected _rawField: Ref<any> = ref();
 	protected _tipList: Ref<Array<any>> = ref([]);
 	private _delaySetter: number = setTimeout(() => {}, 0);
 	protected _stringifyValue: Ref<string | undefined> = ref(undefined);
+	protected _network = useNetworkStore();
+	protected readonly _delay: number = 0;
 
 	constructor(
 		public name: string,
 		public fieldName: string,
 		defaultValue?: any,
-		private _delay: number = 0,
+		public readonly canEdit: boolean = true,
 	) {
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
@@ -22,6 +25,9 @@ class SmartField {
 	protected formatter(value: any): string {
 		return `${value}`;
 	}
+	protected tipFormatter(value: any): string {
+		return `${value}`;
+	}
 	protected async setter(newValue: any): Promise<void> {
 		this._rawField.value = newValue;
 		this._stringifyValue.value = undefined;
@@ -29,7 +35,8 @@ class SmartField {
 
 	public formattedField = computed({
 		get: () => {
-			if (this._stringifyValue.value) return this._stringifyValue.value;
+			if (this._stringifyValue.value !== undefined)
+				return this._stringifyValue.value;
 			if (this._rawField.value === undefined) return "";
 			return this.formatter(this._rawField.value);
 		},
@@ -47,7 +54,7 @@ class SmartField {
 	}
 
 	public selectList = computed(() => {
-		return this._tipList.value.map((value) => this.formatter(value));
+		return this._tipList.value.map((value) => this.tipFormatter(value));
 	});
 
 	public applySelection(index: number) {
@@ -63,6 +70,7 @@ class SmartField {
 
 class Editor {
 	public fields: Array<SmartField> = [];
+	protected _network = useNetworkStore();
 
 	public toInstanse() {
 		const result: any = {};
@@ -74,6 +82,7 @@ class Editor {
 	}
 }
 
+//#region Panels editors
 export class ExpenditureEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
@@ -90,33 +99,73 @@ export class ExpenditureEditor extends Editor {
 			),
 		];
 	}
+
+	public async toInstanse() {
+		const result = super.toInstanse();
+
+		const resp = await this._network.withAuthChecking(
+			axios.get(
+				`${config.fullBackendURL}/${config.crmEndpoint}/worker/by/phone?phone=${this._network.username}`,
+			),
+		);
+
+		result.creator = resp.data;
+
+		return result;
+	}
 }
 
 export class BudgetEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
 
+		const chapterField = new SmartField(
+			"Раздел",
+			"chapter",
+			_instance?.expenditure.chapter,
+			false,
+		);
+
 		this.fields = [
+			chapterField,
 			new ExpenditureSmartField(
 				"Статья",
 				"expenditure",
 				_instance?.expenditure,
+				true,
+				chapterField,
+			),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				_instance?.department,
 			),
 			new SmartField("Лимит", "limit", _instance?.limit),
 		];
 	}
 }
+//#endregion
 
+//#region Panels smart Fields
 class WorkerSmartField extends SmartField {
 	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
 
-	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue, 200);
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/worker`;
 	}
 
 	protected formatter(value: any): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
 	}
 	protected async setter(newValue: any): Promise<void> {
 		if (newValue.length < 4) {
@@ -124,7 +173,9 @@ class WorkerSmartField extends SmartField {
 			return;
 		}
 
-		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
+		);
 
 		this._tipList.value = resp.data;
 	}
@@ -132,13 +183,28 @@ class WorkerSmartField extends SmartField {
 
 class ExpenditureSmartField extends SmartField {
 	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
 
-	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue, 200);
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+		protected chapterField?: SmartField,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
+		if (chapterField) {
+			watch(this._rawField, () => {
+				chapterField.formattedField.value = this._rawField.value.chapter;
+			});
+		}
 	}
 
 	protected formatter(value: any): string {
+		return `${value.name}`;
+	}
+	protected tipFormatter(value: any): string {
 		return `${value.name}/${value.chapter}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
@@ -147,8 +213,45 @@ class ExpenditureSmartField extends SmartField {
 			return;
 		}
 
-		const resp = await axios.get(`${this._endpoint}/find?record=${newValue}`);
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/find?record=${newValue}`),
+		);
 
 		this._tipList.value = resp.data;
 	}
 }
+
+class DepartmentSmartField extends SmartField {
+	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
+
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/department`;
+	}
+
+	protected formatter(value: any): string {
+		return `${value.name}`;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
+		);
+
+		this._tipList.value = resp.data;
+	}
+}
+//#endregion

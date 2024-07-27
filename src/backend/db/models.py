@@ -181,6 +181,10 @@ class Department(Base):
         "Worker", foreign_keys=[territorial_director_id]
     )
 
+    budget_records: Mapped[List["BudgetRecord"]] = relationship(
+        "BudgetRecord", back_populates="department"
+    )
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -227,6 +231,11 @@ class Worker(Base):
         back_populates="cc_supervisor",
         foreign_keys="Expenditure.cc_supervisor_id",
     )
+    expenditures: Mapped[List["Expenditure"]] = relationship(
+        "Expenditure",
+        back_populates="creator",
+        foreign_keys="Expenditure.creator_id",
+    )
 
     # айдишник из биосмарта для определения конкретного рабочего
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
@@ -244,6 +253,9 @@ class Worker(Base):
     dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
     medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
     citizenship: Mapped[str] = mapped_column(nullable=True)
+
+    password: Mapped[str] = mapped_column(nullable=True)
+    can_use_crm: Mapped[bool] = mapped_column(nullable=True, default=False)
 
 
 class Bid(Base):
@@ -430,9 +442,15 @@ class Expenditure(Base):
         "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
     )
 
+    creator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    creator: Mapped["Worker"] = relationship(
+        "Worker", back_populates="expenditures", foreign_keys=[creator_id]
+    )
+
     budget_records: Mapped[List["BudgetRecord"]] = relationship(
         "BudgetRecord",
         back_populates="expenditure",
+        cascade="all,delete",
         foreign_keys="BudgetRecord.expenditure_id",
     )
 
@@ -448,5 +466,12 @@ class BudgetRecord(Base):
     expenditure: Mapped["Expenditure"] = relationship(
         "Expenditure", back_populates="budget_records"
     )
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id"), nullable=True
+    )
+    department: Mapped["Department"] = relationship(
+        "Department", back_populates="budget_records"
+    )
 
-    limit: Mapped[float] = mapped_column(nullable=False)
+    limit: Mapped[float] = mapped_column(nullable=True)
+    last_update: Mapped[datetime.datetime] = mapped_column(nullable=True)
