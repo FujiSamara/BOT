@@ -73,12 +73,9 @@ const editingElementKey: Ref<number> = ref(-1);
 
 const onSubmit = async () => {
 	if (editingElementKey.value !== -1) {
-		await table.update(
-			await editor.value.toInstanse(),
-			editingElementKey.value,
-		);
+		await table.update(editor.value.toInstanse(), editingElementKey.value);
 	} else {
-		await table.create(await editor.value.toInstanse());
+		await table.create(editor.value.toInstanse());
 	}
 	editingElement.value = false;
 };

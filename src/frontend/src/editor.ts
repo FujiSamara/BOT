@@ -88,6 +88,7 @@ export class ExpenditureEditor extends Editor {
 		super();
 
 		this.fields = [
+			new SmartField("ID", "id", _instance?.id, false),
 			new SmartField("Статья", "name", _instance?.name),
 			new SmartField("Раздел", "chapter", _instance?.chapter),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
@@ -99,22 +100,7 @@ export class ExpenditureEditor extends Editor {
 			),
 		];
 	}
-
-	public async toInstanse() {
-		const result = super.toInstanse();
-
-		const resp = await this._network.withAuthChecking(
-			axios.get(
-				`${config.fullBackendURL}/${config.crmEndpoint}/worker/by/phone?phone=${this._network.username}`,
-			),
-		);
-
-		result.creator = resp.data;
-
-		return result;
-	}
 }
-
 export class BudgetEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
@@ -127,6 +113,7 @@ export class BudgetEditor extends Editor {
 		);
 
 		this.fields = [
+			new SmartField("ID", "id", _instance?.id, false),
 			chapterField,
 			new ExpenditureSmartField(
 				"Статья",
