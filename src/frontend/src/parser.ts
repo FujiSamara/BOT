@@ -1,6 +1,7 @@
 import { DepartmentSchema, ExpenditureSchema, WorkerSchema } from "@/types";
 
 export function formatWorker(worker: WorkerSchema): string {
+	if (!worker) return "Не указано";
 	return `${worker.l_name} ${worker.f_name} ${worker.o_name}`;
 }
 
