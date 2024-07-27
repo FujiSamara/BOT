@@ -81,11 +81,13 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
 			return true;
 		}
-		const dep_name: string = instance.department.name;
-		if (
-			dep_name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
-		) {
-			return true;
+		if (instance.department) {
+			const dep_name: string = instance.department.name;
+			if (
+				dep_name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
+			) {
+				return true;
+			}
 		}
 		return false;
 	};

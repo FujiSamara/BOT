@@ -188,7 +188,7 @@ class ExpenditureSchema(BaseModel):
     fac: WorkerSchema
     cc: WorkerSchema
     cc_supervisor: WorkerSchema
-    creator: WorkerSchema
+    creator: Optional[WorkerSchema] = None
 
 
 class BudgetRecordSchema(BaseModel):
@@ -198,9 +198,9 @@ class BudgetRecordSchema(BaseModel):
 
     id: Optional[int] = -1
     expenditure: ExpenditureSchema
-    limit: Optional[float]
-    last_update: Optional[datetime.datetime]
-    department: Optional[DepartmentSchema]
+    limit: Optional[float] = None
+    last_update: Optional[datetime.datetime] = None
+    department: Optional[DepartmentSchema] = None
 
 
 class BudgetRecordWithChapter(BudgetRecordSchema):

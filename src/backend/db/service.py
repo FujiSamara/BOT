@@ -579,7 +579,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> None:
     updated_expenditure = get_last_expenditure()
     budget_record = BudgetRecordSchema(
         expenditure=updated_expenditure,
-        department=updated_expenditure.creator.department,
+        department=None,
         limit=None,
         last_update=None,
     )

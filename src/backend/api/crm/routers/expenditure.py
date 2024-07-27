@@ -46,8 +46,9 @@ async def get_expenditure(
 @router.post("/")
 async def create_expenditure(
     schema: ExpenditureSchema,
-    _: User = Security(get_current_user, scopes=["expenditure"]),
+    user: User = Security(get_current_user, scopes=["expenditure"]),
 ) -> None:
+    schema.creator = service.get_worker_by_phone_number(user.username)
     service.create_expenditure(schema)
 
 

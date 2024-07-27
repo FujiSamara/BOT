@@ -99,22 +99,7 @@ export class ExpenditureEditor extends Editor {
 			),
 		];
 	}
-
-	public async toInstanse() {
-		const result = super.toInstanse();
-
-		const resp = await this._network.withAuthChecking(
-			axios.get(
-				`${config.fullBackendURL}/${config.crmEndpoint}/worker/by/phone?phone=${this._network.username}`,
-			),
-		);
-
-		result.creator = resp.data;
-
-		return result;
-	}
 }
-
 export class BudgetEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
