@@ -14,6 +14,7 @@ from db.models import (
     WorkerBid,
 )
 from db.schemas import (
+    BidRecordSchema,
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
@@ -659,3 +660,37 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
     Search is carried out by name.
     """
     return orm.find_departments_by_name(record)
+
+
+def get_bid_records() -> list[BidRecordSchema]:
+    """Returns all bid records in database."""
+    bids = orm.get_bids()
+
+    result: list[BidRecordSchema] = []
+
+    for bid in bids:
+        documents = []
+        if bid.document:
+            documents.append(bid.document)
+        if bid.document1:
+            documents.append(bid.document1)
+        if bid.document2:
+            documents.append(bid.document2)
+
+        result.append(
+            BidRecordSchema(
+                id=bid.id,
+                amount=bid.amount,
+                payment_type=bid.payment_type,
+                department=bid.department,
+                worker=bid.worker,
+                close_date=bid.close_date,
+                comment=bid.comment,
+                create_date=bid.create_date,
+                documents=documents,
+                purpose=bid.purpose,
+                status=bid.kru_state,
+            )
+        )
+
+    return result
