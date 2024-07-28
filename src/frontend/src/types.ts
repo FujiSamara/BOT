@@ -56,3 +56,16 @@ export interface BudgetSchema extends BaseSchema {
 export interface DepartmentSchema extends BaseSchema {
 	name: string;
 }
+
+export interface BidSchema extends BaseSchema {
+	amount: number;
+	payment_type: string;
+	department: DepartmentSchema;
+	worker: WorkerSchema;
+	purpose: string;
+	create_date: Date;
+	close_date: Date;
+	documents: string;
+	status: string;
+	comment: string;
+}
