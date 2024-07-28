@@ -57,6 +57,11 @@ export interface DepartmentSchema extends BaseSchema {
 	name: string;
 }
 
+export interface DocumentSchema {
+	name: string;
+	href: string;
+}
+
 export interface BidSchema extends BaseSchema {
 	amount: number;
 	payment_type: string;
@@ -65,7 +70,7 @@ export interface BidSchema extends BaseSchema {
 	purpose: string;
 	create_date: Date;
 	close_date: Date;
-	documents: string;
+	documents: Array<DocumentSchema>;
 	status: string;
 	comment: string;
 }

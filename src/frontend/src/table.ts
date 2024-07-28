@@ -413,6 +413,11 @@ export class BidTable extends Table<BidSchema> {
 	constructor() {
 		super("bid");
 
+		this._formatters.set("department", parser.formatDepartment);
+		this._formatters.set("worker", parser.formatWorker);
+		this._formatters.set("create_date", parser.formatDate);
+		this._formatters.set("close_date", parser.formatDate);
+
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
@@ -423,17 +428,19 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("close_date", "Дата закрытия");
 		this._aliases.set("status", "Статус");
 		this._aliases.set("comment", "Комментарий");
+		this._aliases.set("documents", "Документы");
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("create_date", 1);
 		this._columsOrder.set("close_date", 2);
 		this._columsOrder.set("worker", 3);
 		this._columsOrder.set("amount", 4);
-		this._columsOrder.set("payment_type", 5);
-		this._columsOrder.set("department", 6);
-		this._columsOrder.set("purpose", 7);
-		this._columsOrder.set("status", 8);
-		this._columsOrder.set("comment", 9);
+		this._columsOrder.set("documents", 5);
+		this._columsOrder.set("payment_type", 6);
+		this._columsOrder.set("department", 7);
+		this._columsOrder.set("purpose", 8);
+		this._columsOrder.set("status", 9);
+		this._columsOrder.set("comment", 10);
 	}
 }
 //#endregion
