@@ -84,7 +84,7 @@ export class Table<T extends BaseSchema> {
 					}
 				}
 
-				const index = this._columOrder.get(fieldName);
+				const index = this._columsOrder.get(fieldName);
 
 				if (index && columns.length > index) {
 					columns.splice(index, 0, formattedField);
@@ -111,7 +111,7 @@ export class Table<T extends BaseSchema> {
 				alias = fieldName;
 			}
 
-			const index = this._columOrder.get(fieldName);
+			const index = this._columsOrder.get(fieldName);
 
 			if (index && result.length > index) {
 				result.splice(index, 0, alias);
@@ -207,7 +207,7 @@ export class Table<T extends BaseSchema> {
 		(value: any) => string
 	>();
 	/** Order of column in table */
-	protected _columOrder: Map<string, number> = new Map<string, number>();
+	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
 	protected _aliases: Map<string, string> = new Map<string, string>();
 	/** Filters for rows. Must returns **true** if row need be shown. */
@@ -398,9 +398,9 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._aliases.set("department", "Производство");
 		this._aliases.set("chapter", "Раздел");
 
-		this._columOrder.set("id", 0);
-		this._columOrder.set("chapter", 1);
-		this._columOrder.set("expenditure", 2);
+		this._columsOrder.set("id", 0);
+		this._columsOrder.set("chapter", 1);
+		this._columsOrder.set("expenditure", 2);
 	}
 }
 //#endregion
