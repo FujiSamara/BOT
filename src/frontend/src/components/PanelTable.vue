@@ -56,11 +56,19 @@
 							></table-checkbox>
 						</div>
 					</th>
-					<th
-						v-for="(columnValue, columnIndex) in row.columns"
-						:key="columnIndex"
-					>
-						{{ columnValue }}
+					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
+						<ul class="table-cell">
+							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
+								<a
+									v-if="cellLine.href.length > 0"
+									:href="cellLine.href"
+									@click.stop
+									target="_blank"
+									>{{ cellLine.value }}</a
+								>
+								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+							</li>
+						</ul>
 					</th>
 				</tr>
 				<tr>
@@ -240,4 +248,22 @@ th {
 	position: relative;
 	justify-content: center;
 }
+
+/*#region Table cell */
+.table-cell {
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+.table-cell-line {
+	list-style-type: none;
+}
+.table-cell p {
+	margin: 0;
+	cursor: default;
+}
+.table-cell a {
+	color: #993ca6;
+}
+/*#endregion */
 </style>

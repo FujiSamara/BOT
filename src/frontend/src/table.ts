@@ -27,6 +27,29 @@ class TableElementObserver<T> {
 	}
 }
 
+export class Cell {
+	public cellLines: Array<CellLine> = [];
+
+	constructor(...cellLines: Array<CellLine>) {
+		if (cellLines.length === 0) {
+			cellLines.push(new CellLine());
+		}
+		this.cellLines = cellLines;
+	}
+
+	public toString(): string {
+		return this.cellLines.map((cellLine) => cellLine.value).join();
+	}
+}
+
+export class CellLine {
+	constructor(
+		public value: string = "Не указано",
+		public href: string = "",
+		public color: string = "",
+	) {}
+}
+
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
@@ -68,26 +91,17 @@ export class Table<T extends BaseSchema> {
 		return filterResult;
 	});
 	private _formattedRows = computed(() => {
-		const result: Array<{ id: number; columns: Array<string> }> = [];
+		const result: Array<{ id: number; columns: Array<Cell> }> = [];
 
 		for (let index = 0; index < this._filteredRows.value.length; index++) {
 			const model = this._filteredRows.value[index];
-			const columns: Array<string> = [];
+			const columns: Array<Cell> = [];
 
 			for (const fieldName in model) {
 				const field = model[fieldName];
-				const formatter = this._formatters.get(fieldName);
+				const formatter = this.getFormatter(fieldName);
 
-				let formattedField: string;
-				if (formatter) {
-					formattedField = formatter(field);
-				} else {
-					if (field === null) {
-						formattedField = "Не указано";
-					} else {
-						formattedField = `${field}`;
-					}
-				}
+				const formattedField: Cell = formatter(field);
 
 				const index = this._columsOrder.get(fieldName);
 
@@ -206,11 +220,28 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Auxiliary fields
+	/** Default forrmatter for column value */
+	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
+		if (value === null) {
+			return new Cell();
+		} else {
+			return new Cell(new CellLine(`${value}`));
+		}
+	};
 	/** Formatters for column values */
-	protected _formatters: Map<string, (value: any) => string> = new Map<
+	protected _formatters: Map<string, (value: any) => Cell> = new Map<
 		string,
-		(value: any) => string
+		(value: any) => Cell
 	>();
+	private getFormatter(fieldName: string): (value: any) => Cell {
+		const formatter = this._formatters.get(fieldName);
+
+		if (formatter) {
+			return formatter;
+		} else {
+			return this._defaultFormatter;
+		}
+	}
 	/** Order of column in table */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
@@ -261,17 +292,12 @@ export class Table<T extends BaseSchema> {
 
 				// Changes fields in model which was changed in new model.
 				for (const fieldName in model) {
-					const formatter = this._formatters.get(fieldName);
+					const formatter = this.getFormatter(fieldName);
 
-					let modelString;
-					let oldModelString;
-					if (formatter) {
-						modelString = formatter(model[fieldName]);
-						oldModelString = formatter(oldModel[fieldName]);
-					} else {
-						modelString = `${model[fieldName]}`;
-						oldModelString = `${oldModel[fieldName]}`;
-					}
+					const modelString: string = formatter(model[fieldName]).toString();
+					const oldModelString: string = formatter(
+						oldModel[fieldName],
+					).toString();
 
 					if (modelString !== oldModelString) {
 						changesCount++;
@@ -308,17 +334,12 @@ export class Table<T extends BaseSchema> {
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
 		let elementChanged = false;
 		for (const fieldName in model) {
-			const formatter = this._formatters.get(fieldName);
+			const formatter = this.getFormatter(fieldName);
 
-			let modelString;
-			let oldModelString;
-			if (formatter) {
-				modelString = formatter(model[fieldName]);
-				oldModelString = formatter(this._models.value[index][fieldName]);
-			} else {
-				modelString = `${model[fieldName]}`;
-				oldModelString = `${this._models.value[index][fieldName]}`;
-			}
+			const modelString: string = formatter(model[fieldName]).toString();
+			const oldModelString: string = formatter(
+				this._models.value[index][fieldName],
+			).toString();
 
 			if (modelString !== oldModelString) {
 				elementChanged = true;
