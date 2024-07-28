@@ -61,9 +61,10 @@
 							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
 								<a
 									v-if="cellLine.href.length > 0"
-									:href="cellLine.href"
-									@click.stop
-									target="_blank"
+									@click.stop="
+										async () =>
+											await onHrefClicked(cellLine.href, cellLine.value)
+									"
 									>{{ cellLine.value }}</a
 								>
 								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
@@ -86,6 +87,7 @@ import ClickableIcon from "./UI/ClickableIcon.vue";
 import type { Table } from "@/table";
 import type { PropType } from "vue";
 import { BaseSchema } from "@/types";
+import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
 	table: {
@@ -102,11 +104,17 @@ const props = defineProps({
 	},
 });
 
+const networkStore = useNetworkStore();
+
 const emit = defineEmits(["click", "create", "delete"]);
 
 const onDelete = () => {
 	props.table.deleteChecked();
 	emit("delete");
+};
+
+const onHrefClicked = async (href: string, filename: string) => {
+	await networkStore.downloadFile(href, filename);
 };
 </script>
 <style scoped>
@@ -264,6 +272,8 @@ th {
 }
 .table-cell a {
 	color: #993ca6;
+	text-decoration: underline;
+	user-select: none;
 }
 /*#endregion */
 </style>

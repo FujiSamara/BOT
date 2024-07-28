@@ -6,6 +6,7 @@ import { inject } from "vue";
 import { VueCookies } from "vue-cookies";
 import { jwtDecode } from "jwt-decode";
 import router from "@/router";
+import FileSaver from "file-saver";
 
 export const useNetworkStore = defineStore("network", {
 	state() {
@@ -97,6 +98,20 @@ export const useNetworkStore = defineStore("network", {
 					return Promise.reject(error);
 				}
 			});
+		},
+		async downloadFile(href: string, filename: string) {
+			const resp = await this.withAuthChecking(
+				axios.get(href, {
+					responseType: "blob",
+				}),
+			);
+
+			const file = resp.data as Uint8Array;
+			console.log(resp.data);
+
+			const fileBlob = new Blob([file], { type: "application/octet-stream" });
+
+			FileSaver.saveAs(fileBlob, filename);
 		},
 	},
 });
