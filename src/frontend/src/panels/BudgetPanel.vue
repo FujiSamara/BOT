@@ -1,5 +1,5 @@
 <template>
-	<div class="expenditure-content">
+	<div class="budget-content">
 		<div v-if="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
@@ -115,7 +115,7 @@ onMounted(async () => {
 });
 </script>
 <style scoped>
-.expenditure-content {
+.budget-content {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
