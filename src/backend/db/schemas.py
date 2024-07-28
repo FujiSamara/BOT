@@ -241,9 +241,9 @@ class BidRecordSchema(BaseSchema):
             result = []
             for doc in val:
                 if isinstance(doc, StorageFile):
-                    result.append(service.get_file_data(doc.path))
+                    result.append(service.get_file_data(doc.path, "api"))
                 elif isinstance(doc, str):
-                    result.append(service.get_file_data(doc))
+                    result.append(service.get_file_data(doc, "api"))
                 else:
                     return val
             return result

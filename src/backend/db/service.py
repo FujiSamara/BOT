@@ -521,8 +521,10 @@ def create_worker_bid(
     orm.add_worker_bid(worker_bid)
 
 
-def get_file_data(file_path: str) -> FileSchema:
-    """Returns file `FileSchema` with file href and name."""
+def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
+    """Returns file `FileSchema` with file href and name.
+    - `mode`  Specifies file request source.
+    """
     proto = "http"
     host = get_settings().domain
     port = get_settings().port
@@ -531,8 +533,15 @@ def get_file_data(file_path: str) -> FileSchema:
 
     filename = Path(file_path).name
 
+    source: str = ""
+
+    if mode == "sqladmin":
+        source = "/admin"
+    elif mode == "api":
+        source = "/api"
+
     return FileSchema(
-        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={file_path}"
+        name=filename, href=f"{proto}://{host}:{port}{source}/download?path={file_path}"
     )
 
 
