@@ -2,7 +2,12 @@ import { computed, ref, Ref } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
-import { BaseSchema, BudgetSchema, ExpenditureSchema } from "./types";
+import {
+	BaseSchema,
+	BidSchema,
+	BudgetSchema,
+	ExpenditureSchema,
+} from "./types";
 import { useNetworkStore } from "./store/network";
 
 class TableElementObserver<T> {
@@ -401,6 +406,34 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("chapter", 1);
 		this._columsOrder.set("expenditure", 2);
+	}
+}
+
+export class BidTable extends Table<BidSchema> {
+	constructor() {
+		super("bid");
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("amount", "Сумма");
+		this._aliases.set("payment_type", "Тип оплаты");
+		this._aliases.set("department", "Произовдство");
+		this._aliases.set("worker", "Работник");
+		this._aliases.set("purpose", "Цель");
+		this._aliases.set("create_date", "Дата создания");
+		this._aliases.set("close_date", "Дата закрытия");
+		this._aliases.set("status", "Статус");
+		this._aliases.set("comment", "Комментарий");
+
+		this._columsOrder.set("id", 0);
+		this._columsOrder.set("create_date", 1);
+		this._columsOrder.set("close_date", 2);
+		this._columsOrder.set("worker", 3);
+		this._columsOrder.set("amount", 4);
+		this._columsOrder.set("payment_type", 5);
+		this._columsOrder.set("department", 6);
+		this._columsOrder.set("purpose", 7);
+		this._columsOrder.set("status", 8);
+		this._columsOrder.set("comment", 9);
 	}
 }
 //#endregion
