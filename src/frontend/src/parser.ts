@@ -11,7 +11,7 @@ export function formatDate(dateString: string): string {
 }
 
 export function formatExpenditure(expenditure: ExpenditureSchema): string {
-	return `${expenditure.name}/${expenditure.chapter}`;
+	return `${expenditure.name}`;
 }
 
 export function formatDepartment(department: DepartmentSchema): string {

@@ -204,9 +204,4 @@ class BudgetRecordSchema(BaseModel):
 
 
 class BudgetRecordWithChapter(BudgetRecordSchema):
-    @field_validator("chapter", mode="before")
-    @classmethod
-    def upload_file_validate(cls, _):
-        return cls.expenditure.chapter
-
     chapter: str

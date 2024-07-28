@@ -3,7 +3,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from db import service
-from db.schemas import BudgetRecordSchema
+from db.schemas import BudgetRecordSchema, BudgetRecordWithChapter
 
 from api.auth import User, get_current_user
 
@@ -14,22 +14,52 @@ router = APIRouter()
 @router.get("/")
 async def get_budget_records(
     _: User = Security(get_current_user, scopes=["budget"]),
-) -> list[BudgetRecordSchema]:
-    return service.get_budget_records()
+) -> list[BudgetRecordWithChapter]:
+    return [
+        BudgetRecordWithChapter(
+            id=record.id,
+            expenditure=record.expenditure,
+            limit=record.limit,
+            last_update=record.last_update,
+            department=record.department,
+            chapter=record.expenditure.chapter,
+        )
+        for record in service.get_budget_records()
+    ]
 
 
 @router.get("/last")
 async def get_last_budget_record(
     _: User = Security(get_current_user, scopes=["budget"]),
-) -> Optional[BudgetRecordSchema]:
-    return service.get_last_budget_record()
+) -> Optional[BudgetRecordWithChapter]:
+    record = service.get_last_budget_record()
+    if record:
+        return BudgetRecordWithChapter(
+            id=record.id,
+            expenditure=record.expenditure,
+            limit=record.limit,
+            last_update=record.last_update,
+            department=record.department,
+            chapter=record.expenditure.chapter,
+        )
+    return None
 
 
 @router.get("/{id}")
 async def get_budget_record(
     id: int, _: User = Security(get_current_user, scopes=["budget"])
-) -> Optional[BudgetRecordSchema]:
-    return service.get_budget_record_by_id(id)
+) -> Optional[BudgetRecordWithChapter]:
+    record = service.get_budget_record_by_id(id)
+    if record:
+        return BudgetRecordWithChapter(
+            id=record.id,
+            expenditure=record.expenditure,
+            limit=record.limit,
+            last_update=record.last_update,
+            department=record.department,
+            chapter=record.expenditure.chapter,
+        )
+    return None
 
 
 @router.delete("/{id}")
