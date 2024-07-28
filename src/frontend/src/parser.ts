@@ -27,3 +27,11 @@ export function formatDepartment(department: DepartmentSchema): string {
 export function formatDocument(document: DocumentSchema): string {
 	return document.name;
 }
+
+export function formatDocuments(documents: Array<DocumentSchema>): string {
+	return documents.map((document) => formatDocument(document)).join("\n");
+}
+
+export function formatStatus(_: any) {
+	return "Не поддерживается";
+}
