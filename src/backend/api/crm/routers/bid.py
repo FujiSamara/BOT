@@ -3,7 +3,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from db import service
-from db.schemas import BudgetRecordSchema, BudgetRecordWithChapter
+from db.schemas import BidRecordSchema, BudgetRecordSchema, BudgetRecordWithChapter
 
 from api.auth import User, get_current_user
 
@@ -12,25 +12,15 @@ router = APIRouter()
 
 
 @router.get("/")
-async def get_bid_records(
+async def get_bids(
     _: User = Security(get_current_user, scopes=["bid"]),
-) -> list[BudgetRecordWithChapter]:
-    return [
-        BudgetRecordWithChapter(
-            id=record.id,
-            expenditure=record.expenditure,
-            limit=record.limit,
-            last_update=record.last_update,
-            department=record.department,
-            chapter=record.expenditure.chapter,
-        )
-        for record in service.get_budget_records()
-    ]
+) -> list[BidRecordSchema]:
+    return service.get_bid_records()
 
 
 @router.get("/last")
 async def get_last_budget_record(
-    _: User = Security(get_current_user, scopes=["budget"]),
+    _: User = Security(get_current_user, scopes=["bid"]),
 ) -> Optional[BudgetRecordWithChapter]:
     record = service.get_last_budget_record()
     if record:
@@ -47,7 +37,7 @@ async def get_last_budget_record(
 
 @router.get("/{id}")
 async def get_budget_record(
-    id: int, _: User = Security(get_current_user, scopes=["budget"])
+    id: int, _: User = Security(get_current_user, scopes=["bid"])
 ) -> Optional[BudgetRecordWithChapter]:
     record = service.get_budget_record_by_id(id)
     if record:
@@ -64,13 +54,13 @@ async def get_budget_record(
 
 @router.delete("/{id}")
 async def delete_budget_record(
-    id: int, _: User = Security(get_current_user, scopes=["budget"])
+    id: int, _: User = Security(get_current_user, scopes=["bid"])
 ) -> None:
     service.remove_budget_record(id)
 
 
 @router.patch("/")
 async def update_budget_record(
-    schema: BudgetRecordSchema, _: User = Security(get_current_user, scopes=["budget"])
+    schema: BudgetRecordSchema, _: User = Security(get_current_user, scopes=["bid"])
 ) -> None:
     service.update_budget_record(schema)
