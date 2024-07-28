@@ -12,7 +12,7 @@ from api.auth.schemas import User
 from api.auth.authentication import get_current_user
 
 
-def _register_general_routes(auth: FastAPI):
+def register_general_routes(auth: FastAPI):
     """Registers base auth routes"""
 
     auth.post("/token", response_model=Token)(login)
