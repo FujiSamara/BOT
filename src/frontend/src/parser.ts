@@ -40,3 +40,21 @@ export function formatDocuments(documents: Array<DocumentSchema>): Cell {
 export function formatStatus(_: Cell) {
 	return new Cell(new CellLine("Временно не поддерживается"));
 }
+
+export function formatPaymentType(payment_type: string) {
+	let result: string = "";
+
+	switch (payment_type) {
+		case "cash":
+			result = "Наличная";
+			break;
+		case "card":
+			result = "Безналичная";
+			break;
+		case "taxi":
+			result = "Требуется такси";
+			break;
+	}
+
+	return new Cell(new CellLine(result));
+}
