@@ -1,6 +1,6 @@
 <template>
 	<div class="button-wrapper" @click.prevent>
-		<img :src="props.imgSrc" />
+		<img :src="props.imgSrc" :class="{ filtered: props.withFilter }" />
 	</div>
 </template>
 <script setup lang="ts">
@@ -8,6 +8,10 @@ const props = defineProps({
 	imgSrc: {
 		type: String,
 		required: true,
+	},
+	withFilter: {
+		type: Boolean,
+		default: true,
 	},
 });
 </script>
@@ -30,7 +34,7 @@ export default {
 .button-wrapper:hover {
 	transition: 0.5s;
 	-webkit-transition: 0.5s;
-	transform: scale(1.05);
+	transform: scale(1.1);
 }
 .button-wrapper p {
 	font-size: 18px;
@@ -42,6 +46,8 @@ export default {
 .button-wrapper img {
 	width: 100%;
 	height: 100%;
+}
+.filtered {
 	filter: brightness(0) saturate(100%) invert(32%) sepia(12%) saturate(6808%)
 		hue-rotate(262deg) brightness(93%) contrast(90%);
 }

@@ -19,10 +19,29 @@
 									@click="onDelete"
 								></clickable-icon>
 								<clickable-icon
+									v-show="!props.table.anyChecked.value"
 									v-if="canCreate"
 									class="icons"
 									img-src="/img/add-plus.svg"
 									@click="emit('create')"
+									style="filter: none !important"
+								></clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canApprove"
+									class="icons"
+									img-src="/img/check.svg"
+									:with-filter="false"
+									@click="emit('approve')"
+								>
+								</clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canReject"
+									class="icons"
+									img-src="/img/reject.svg"
+									:with-filter="false"
+									@click="emit('reject')"
 								></clickable-icon>
 							</div>
 						</div>
@@ -102,11 +121,19 @@ const props = defineProps({
 		type: Boolean,
 		required: false,
 	},
+	canApprove: {
+		type: Boolean,
+		required: false,
+	},
+	canReject: {
+		type: Boolean,
+		required: false,
+	},
 });
 
 const networkStore = useNetworkStore();
 
-const emit = defineEmits(["click", "create", "delete"]);
+const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
 const onDelete = () => {
 	props.table.deleteChecked();
