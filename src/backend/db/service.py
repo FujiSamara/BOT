@@ -14,6 +14,7 @@ from db.models import (
     WorkerBid,
 )
 from db.schemas import (
+    BidRecordSchema,
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
@@ -520,8 +521,10 @@ def create_worker_bid(
     orm.add_worker_bid(worker_bid)
 
 
-def get_file_data(file_path: str) -> FileSchema:
-    """Returns file `FileSchema` with file href and name."""
+def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
+    """Returns file `FileSchema` with file href and name.
+    - `mode`  Specifies file request source.
+    """
     proto = "http"
     host = get_settings().domain
     port = get_settings().port
@@ -530,8 +533,15 @@ def get_file_data(file_path: str) -> FileSchema:
 
     filename = Path(file_path).name
 
+    source: str = ""
+
+    if mode == "sqladmin":
+        source = "/admin"
+    elif mode == "api":
+        source = "/api"
+
     return FileSchema(
-        name=filename, href=f"{proto}://{host}:{port}/admin/download?path={file_path}"
+        name=filename, href=f"{proto}://{host}:{port}{source}/download?path={file_path}"
     )
 
 
@@ -659,3 +669,37 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
     Search is carried out by name.
     """
     return orm.find_departments_by_name(record)
+
+
+def get_bid_records() -> list[BidRecordSchema]:
+    """Returns all bid records in database."""
+    bids = orm.get_bids()
+
+    result: list[BidRecordSchema] = []
+
+    for bid in bids:
+        documents = []
+        if bid.document:
+            documents.append(bid.document)
+        if bid.document1:
+            documents.append(bid.document1)
+        if bid.document2:
+            documents.append(bid.document2)
+
+        result.append(
+            BidRecordSchema(
+                id=bid.id,
+                amount=bid.amount,
+                payment_type=bid.payment_type,
+                department=bid.department,
+                worker=bid.worker,
+                close_date=bid.close_date,
+                comment=bid.comment,
+                create_date=bid.create_date,
+                documents=documents,
+                purpose=bid.purpose,
+                status=bid.kru_state,
+            )
+        )
+
+    return result

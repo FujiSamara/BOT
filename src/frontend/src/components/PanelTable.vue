@@ -19,10 +19,29 @@
 									@click="onDelete"
 								></clickable-icon>
 								<clickable-icon
+									v-show="!props.table.anyChecked.value"
 									v-if="canCreate"
 									class="icons"
 									img-src="/img/add-plus.svg"
 									@click="emit('create')"
+									style="filter: none !important"
+								></clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canApprove"
+									class="icons"
+									img-src="/img/check.svg"
+									:with-filter="false"
+									@click="emit('approve')"
+								>
+								</clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canReject"
+									class="icons"
+									img-src="/img/reject.svg"
+									:with-filter="false"
+									@click="emit('reject')"
 								></clickable-icon>
 							</div>
 						</div>
@@ -56,11 +75,20 @@
 							></table-checkbox>
 						</div>
 					</th>
-					<th
-						v-for="(columnValue, columnIndex) in row.columns"
-						:key="columnIndex"
-					>
-						{{ columnValue }}
+					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
+						<ul class="table-cell">
+							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
+								<a
+									v-if="cellLine.href.length > 0"
+									@click.stop="
+										async () =>
+											await onHrefClicked(cellLine.href, cellLine.value)
+									"
+									>{{ cellLine.value }}</a
+								>
+								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+							</li>
+						</ul>
 					</th>
 				</tr>
 				<tr>
@@ -78,6 +106,7 @@ import ClickableIcon from "./UI/ClickableIcon.vue";
 import type { Table } from "@/table";
 import type { PropType } from "vue";
 import { BaseSchema } from "@/types";
+import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
 	table: {
@@ -92,13 +121,27 @@ const props = defineProps({
 		type: Boolean,
 		required: false,
 	},
+	canApprove: {
+		type: Boolean,
+		required: false,
+	},
+	canReject: {
+		type: Boolean,
+		required: false,
+	},
 });
 
-const emit = defineEmits(["click", "create", "delete"]);
+const networkStore = useNetworkStore();
+
+const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
 const onDelete = () => {
 	props.table.deleteChecked();
 	emit("delete");
+};
+
+const onHrefClicked = async (href: string, filename: string) => {
+	await networkStore.downloadFile(href, filename);
 };
 </script>
 <style scoped>
@@ -240,4 +283,24 @@ th {
 	position: relative;
 	justify-content: center;
 }
+
+/*#region Table cell */
+.table-cell {
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+.table-cell-line {
+	list-style-type: none;
+}
+.table-cell p {
+	margin: 0;
+	cursor: default;
+}
+.table-cell a {
+	color: #993ca6;
+	text-decoration: underline;
+	user-select: none;
+}
+/*#endregion */
 </style>

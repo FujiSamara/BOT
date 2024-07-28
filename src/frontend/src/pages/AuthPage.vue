@@ -37,13 +37,13 @@ const onAuth = async () => {
 	await router.replace({ name: "home" });
 };
 
-const authStore = useNetworkStore();
+const networkStore = useNetworkStore();
 
 const login = ref("");
 const password = ref("");
 
 const onSubmit = async () => {
-	if (await authStore.login(login.value, password.value)) {
+	if (await networkStore.login(login.value, password.value)) {
 		await onAuth();
 	} else {
 		login.value = "";

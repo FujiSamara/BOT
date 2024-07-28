@@ -2,11 +2,13 @@ from typing import Optional
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
+from pathlib import Path
 from fastapi import UploadFile
 from db.models import ApprovalStatus, Gender
+import logging
 
 
-# Full shemas
+# region Shemas for models
 class BaseSchema(BaseModel):
     class Config:
         from_attributes = True
@@ -73,15 +75,21 @@ class BidSchema(BaseModel):
     purpose: str
     create_date: datetime.datetime
     close_date: Optional[datetime.datetime]
-    document: UploadFile
-    document1: Optional[UploadFile]
-    document2: Optional[UploadFile]
+    document: Optional[UploadFile | str]
+    document1: Optional[UploadFile | str]
+    document2: Optional[UploadFile | str]
 
     @field_validator("document", "document1", "document2", mode="before")
     @classmethod
     def upload_file_validate(cls, val):
         if isinstance(val, StorageFile):
-            return UploadFile(val.open(), filename=val.name)
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                logging.getLogger("uvicorn.error").warning(
+                    f"File with path: {val.path} not exist"
+                )
+                return val.path
         return val
 
     agreement: Optional[str] = "Нет"
@@ -170,12 +178,6 @@ class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
     pass
 
 
-# Create shemas
-class FileSchema(BaseModel):
-    name: str
-    href: str
-
-
 class ExpenditureSchema(BaseModel):
     class Config:
         arbitrary_types_allowed = True
@@ -203,5 +205,49 @@ class BudgetRecordSchema(BaseModel):
     department: Optional[DepartmentSchema] = None
 
 
+# endregion
+
+
+# region Extended schemas for api
+class FileSchema(BaseModel):
+    name: str
+    href: str
+
+
 class BudgetRecordWithChapter(BudgetRecordSchema):
     chapter: str
+
+
+class BidRecordSchema(BaseSchema):
+    """Shortened version of `BidSchema` for crm api"""
+
+    amount: float
+    payment_type: str
+    department: DepartmentSchema
+    worker: WorkerSchema
+    purpose: str
+    create_date: datetime.datetime
+    close_date: Optional[datetime.datetime]
+    documents: list[FileSchema]
+    status: str
+    comment: Optional[str]
+
+    @field_validator("documents", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        from db import service
+
+        if isinstance(val, list):
+            result = []
+            for doc in val:
+                if isinstance(doc, UploadFile):
+                    result.append(service.get_file_data(doc.file.name, "api"))
+                elif isinstance(doc, str):
+                    result.append(service.get_file_data(doc, "api"))
+                else:
+                    return val
+            return result
+        return val
+
+
+# endregion

@@ -25,8 +25,8 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, _) => {
-	const authStore = useNetworkStore();
-	const authed = await authStore.auth();
+	const networkStore = useNetworkStore();
+	const authed = await networkStore.auth();
 
 	if (authed && to.name === "login") {
 		return { name: "home" };

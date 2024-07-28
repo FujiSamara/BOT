@@ -45,23 +45,6 @@ async def get_last_budget_record(
     return None
 
 
-@router.get("/{id}")
-async def get_budget_record(
-    id: int, _: User = Security(get_current_user, scopes=["budget"])
-) -> Optional[BudgetRecordWithChapter]:
-    record = service.get_budget_record_by_id(id)
-    if record:
-        return BudgetRecordWithChapter(
-            id=record.id,
-            expenditure=record.expenditure,
-            limit=record.limit,
-            last_update=record.last_update,
-            department=record.department,
-            chapter=record.expenditure.chapter,
-        )
-    return None
-
-
 @router.delete("/{id}")
 async def delete_budget_record(
     id: int, _: User = Security(get_current_user, scopes=["budget"])

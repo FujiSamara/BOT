@@ -18,9 +18,9 @@ import { getPanelsByAccesses } from "@/panels";
 import { useNetworkStore } from "@/store/network";
 import { ref, shallowRef } from "vue";
 
-const authStore = useNetworkStore();
+const networkStore = useNetworkStore();
 
-const panelsData = ref(getPanelsByAccesses(authStore.accesses));
+const panelsData = ref(getPanelsByAccesses(networkStore.accesses));
 const panel = shallowRef(DefaultPanel);
 let panelID = 0;
 if (panelsData.value.length > 0) {
@@ -45,7 +45,7 @@ const onNavButtonClicked = async (id: number) => {
 };
 
 const onLogout = () => {
-	authStore.logout();
+	networkStore.logout();
 };
 
 const onNotify = (count: number, id: number) => {

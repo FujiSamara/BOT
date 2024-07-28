@@ -694,3 +694,10 @@ def find_departments_by_name(name: str) -> list[DepartmentSchema]:
             DepartmentSchema.model_validate(raw_department)
             for raw_department in raw_departments
         ]
+
+
+def get_bids() -> list[BidSchema]:
+    """Returns all bids in database."""
+    with session.begin() as s:
+        raw_models = s.query(Bid).all()
+        return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
