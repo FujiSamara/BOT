@@ -1,17 +1,23 @@
 import sys
 import subprocess as sub
 import pathlib
+from typing import Callable
+
+from src.dev import tunnel
+
 
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.resolve()
 EXECUTEABLE_PATH = sys.executable
 
 
 def run():
-    run_type = "APP"
-    if len(sys.argv) > 1:
-        run_type = sys.argv[1]
+    OKBLUE = "\033[94m"
+    ENDC = "\033[0m"
 
-    commands: list[list] = []
+    # region Configuring main commands
+    print(OKBLUE + "[Processes configuring started]" + ENDC)
+
+    processes: list[list] = []
 
     # Backend
     backend_cmd = [
@@ -19,8 +25,8 @@ def run():
         "-Xfrozen_modules=off",
         f"{CURRENT_DIRECTORY}/src/backend/manage.py",
     ]
-    if run_type != "FRONTEND":
-        commands.append(backend_cmd)
+    if "FRONTEND" not in sys.argv:
+        processes.append(backend_cmd)
 
     # Frontend
     frontend_cmd = [
@@ -30,16 +36,47 @@ def run():
         "run",
         "dev",
     ]
-    if run_type != "BACKEND":
-        commands.append(frontend_cmd)
+    if "BACKEND" not in sys.argv:
+        processes.append(frontend_cmd)
 
     procs: list[sub.Popen] = []
-    for cmd in commands:
+
+    print(OKBLUE + "[Processes configuring completed]" + ENDC)
+    # endregion
+
+    # region Configuring and launch preLaunch tasks
+    print(OKBLUE + "[Prelaunch tasks started]" + ENDC)
+
+    pre_launch_tasks = []
+
+    if "TUNNEL" in sys.argv:
+        pre_launch_tasks.append(tunnel.run)
+
+    run_pre_launch_tasks(pre_launch_tasks)
+
+    print(OKBLUE + "[Prelaunch tasks completed]" + ENDC)
+    # endregion
+
+    # region Launch and waiting processes.
+    print(OKBLUE + "[Processes started]" + ENDC)
+
+    for cmd in processes:
         proc = sub.Popen(args=cmd)
         procs.append(proc)
-
     for proc in procs:
         proc.wait()
+
+    print(OKBLUE + "[Processes completed]" + ENDC)
+    # endregion
+
+
+def run_pre_launch_tasks(tasks: list[Callable]):
+    try:
+        for task in tasks:
+            task()
+    except Exception as e:
+        print(e)
+        sys.exit()
 
 
 if __name__ == "__main__":
