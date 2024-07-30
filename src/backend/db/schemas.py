@@ -61,6 +61,28 @@ class WorkerSchema(BaseSchema):
         return val
 
 
+class DocumentSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    document: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                logging.getLogger("uvicorn.error").warning(
+                    f"File with path: {val.path} not exist"
+                )
+                return val.path
+        return val
+
+
 class BidSchema(BaseModel):
     class Config:
         arbitrary_types_allowed = True
@@ -137,45 +159,17 @@ class WorkerBidSchema(BaseModel):
 
     department: DepartmentSchema
 
-    worksheet: list["WorkerBidWorksheetSchema"]
+    worksheet: list[DocumentSchema]
 
-    passport: list["WorkerBidPassportSchema"]
+    passport: list[DocumentSchema]
 
-    work_permission: list["WorkerBidWorkPermissionSchema"]
+    work_permission: list[DocumentSchema]
 
     state: ApprovalStatus
 
     sender: WorkerSchema
 
     comment: Optional[str]
-
-
-class WorkerBidDocumentSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-    document: UploadFile
-
-    @field_validator("document", mode="before")
-    @classmethod
-    def upload_file_validate(cls, val):
-        if isinstance(val, StorageFile):
-            return UploadFile(val.open(), filename=val.name)
-        return val
-
-
-class WorkerBidWorksheetSchema(WorkerBidDocumentSchema):
-    pass
-
-
-class WorkerBidPassportSchema(WorkerBidDocumentSchema):
-    pass
-
-
-class WorkerBidWorkPermissionSchema(WorkerBidDocumentSchema):
-    pass
 
 
 class ExpenditureSchema(BaseModel):

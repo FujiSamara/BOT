@@ -22,9 +22,7 @@ from db.schemas import (
     WorkTimeSchema,
     DepartmentSchema,
     WorkerBidSchema,
-    WorkerBidPassportSchema,
-    WorkerBidWorksheetSchema,
-    WorkerBidWorkPermissionSchema,
+    DocumentSchema,
     FileSchema,
 )
 import logging
@@ -476,31 +474,31 @@ def create_worker_bid(
     if not last_bid_id:
         last_bid_id = 0
 
-    worksheet_insts: list[WorkerBidWorksheetSchema] = []
+    worksheet_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(worksheet):
         suffix = Path(doc.filename).suffix
         filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        worksheet_inst = WorkerBidWorksheetSchema(document=doc)
+        worksheet_inst = DocumentSchema(document=doc)
         worksheet_insts.append(worksheet_inst)
 
-    passport_insts: list[WorkerBidPassportSchema] = []
+    passport_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(passport):
         suffix = Path(doc.filename).suffix
         filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        passport_inst = WorkerBidPassportSchema(document=doc)
+        passport_inst = DocumentSchema(document=doc)
         passport_insts.append(passport_inst)
 
-    work_permission_insts: list[WorkerBidWorkPermissionSchema] = []
+    work_permission_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(work_permission):
         suffix = Path(doc.filename).suffix
         filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        work_permission_inst = WorkerBidWorkPermissionSchema(document=doc)
+        work_permission_inst = DocumentSchema(document=doc)
         work_permission_insts.append(work_permission_inst)
 
     worker_bid = WorkerBidSchema(
