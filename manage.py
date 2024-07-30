@@ -3,7 +3,7 @@ import subprocess as sub
 import pathlib
 from typing import Callable
 
-from src.dev import tunnel
+from src.server import tunnel
 
 
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.resolve()
