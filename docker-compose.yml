@@ -1,38 +1,43 @@
 services:
-  app-db:
-    image: postgres
-    container_name: db
-    ports:
-      - 5432:5432
+  app-frontend:
+    build: src/frontend
+
+    volumes:
+      - cert-key:/var/www/certs/cert.key:ro
+      - cert:/var/www/certs/cert.crt:ro
+      - nginx-html:/app/dist
+
+    network_mode: "host"
+
     env_file:
       - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
-      timeout: 5s
-      retries: 10
-    networks:
-        net:    
-          aliases:
-            - db.local
 
   app-backend:
     build: src/backend/
 
+    volumes:
+      - cert-key:/var/www/certs/cert.key:ro
+      - cert:/var/www/certs/cert.crt:ro
+      - files-dir:/tmp
+
+    network_mode: "host"
+
     env_file:
       - .env
 
-    depends_on:
-      app-db:
-        condition: service_healthy
+  app-server:
+    build: src/server
 
-    ports:
-      - 80:80
+    volumes:
+      - nginx-html:/usr/share/nginx/html
 
-    networks:
-      net:
+    network_mode: "host"
 
-
-networks:
-  net:
-
+volumes:
+  nginx-html:
+  cert-key:
+    external: true
+  cert:
+    external: true
+  files-dir:
+    external: true
