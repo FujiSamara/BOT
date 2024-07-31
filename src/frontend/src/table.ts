@@ -439,7 +439,6 @@ export class BidTable extends Table<BidSchema> {
 		this._formatters.set("create_date", parser.formatDate);
 		this._formatters.set("close_date", parser.formatDate);
 		this._formatters.set("documents", parser.formatDocuments);
-		this._formatters.set("status", parser.formatStatus);
 		this._formatters.set("payment_type", parser.formatPaymentType);
 
 		this._aliases.set("id", "ID");

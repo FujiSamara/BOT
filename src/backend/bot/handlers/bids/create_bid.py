@@ -37,7 +37,7 @@ from bot.handlers.bids.schemas import (
 
 from bot.handlers.bids.utils import (
     get_full_bid_info,
-    get_state_bid_info,
+    get_short_bid_info,
     get_bid_list_info,
 )
 from bot.handlers.utils import (
@@ -443,7 +443,7 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData)
     bid = get_bid_by_id(bid_id)
     await try_delete_message(callback.message)
 
-    text = get_state_bid_info(bid)
+    text = get_short_bid_info(bid)
 
     await callback.message.answer(
         text=text, reply_markup=create_inline_keyboard(bid_create_pending_button)

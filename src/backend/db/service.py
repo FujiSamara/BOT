@@ -671,6 +671,8 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
 
 def get_bid_records() -> list[BidRecordSchema]:
     """Returns all bid records in database."""
+    from bot.handlers.bids.utils import get_bid_state_info
+
     bids = orm.get_bids()
 
     result: list[BidRecordSchema] = []
@@ -688,7 +690,7 @@ def get_bid_records() -> list[BidRecordSchema]:
                 create_date=bid.create_date,
                 documents=[doc.document for doc in bid.documents],
                 purpose=bid.purpose,
-                status=bid.kru_state,
+                status=get_bid_state_info(bid),
             )
         )
 
