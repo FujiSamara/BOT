@@ -22,9 +22,7 @@ from db.schemas import (
     WorkTimeSchema,
     DepartmentSchema,
     WorkerBidSchema,
-    WorkerBidPassportSchema,
-    WorkerBidWorksheetSchema,
-    WorkerBidWorkPermissionSchema,
+    DocumentSchema,
     FileSchema,
 )
 import logging
@@ -117,18 +115,17 @@ async def create_bid(
     department: str,
     purpose: str,
     telegram_id: int,
-    file: UploadFile,
-    file1: Optional[UploadFile],
-    file2: Optional[UploadFile],
+    expenditure: str,
+    files: list[UploadFile],
+    fac_state: ApprovalStatus,
+    cc_state: ApprovalStatus,
+    cc_supervisor_state: ApprovalStatus,
     kru_state: ApprovalStatus,
     owner_state: ApprovalStatus,
     accountant_cash_state: ApprovalStatus,
     accountant_card_state: ApprovalStatus,
     teller_cash_state: ApprovalStatus,
     teller_card_state: ApprovalStatus,
-    agreement: Optional[str] = None,
-    urgently: Optional[str] = None,
-    need_document: Optional[str] = None,
     comment: Optional[str] = None,
 ):
     """
@@ -150,40 +147,41 @@ async def create_bid(
         )
         return
 
+    expenditure_inst = orm.find_expenditure_by_column(Expenditure.name, expenditure)
+
+    if not expenditure_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Expenditure with name '{expenditure}' not found"
+        )
+        return
+
     cur_date = datetime.now()
     last_bid_id = orm.get_last_bid_id()
     if not last_bid_id:
         last_bid_id = 0
 
-    if file:
+    documents = []
+    for file in files:
         suffix = Path(file.filename).suffix
         filename = f"document_bid_{last_bid_id + 1}{suffix}"
         file.filename = filename
-    if file1:
-        suffix = Path(file1.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}_1{suffix}"
-        file1.filename = filename
-    if file2:
-        suffix = Path(file2.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}_2{suffix}"
-        file2.filename = filename
+        documents.append(DocumentSchema(document=file))
 
     bid = BidSchema(
         amount=amount,
         payment_type=payment_type,
         department=department_inst,
+        expenditure=expenditure_inst,
         worker=worker_inst,
         purpose=purpose,
         create_date=cur_date,
         close_date=None,
-        agreement=agreement,
-        urgently=urgently,
-        need_document=need_document,
         comment=comment,
         denying_reason=None,
-        document=file,
-        document1=file1,
-        document2=file2,
+        documents=documents,
+        fac_state=fac_state,
+        cc_state=cc_state,
+        cc_supervisor_state=cc_supervisor_state,
         kru_state=kru_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
@@ -193,9 +191,6 @@ async def create_bid(
     )
 
     orm.add_bid(bid)
-    from bot.handlers.utils import notify_workers_by_access
-
-    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -271,54 +266,80 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         notify_worker_by_telegram_id,
     )
 
-    if state_name == "kru_state":
-        if state == ApprovalStatus.approved:
-            bid.kru_state = ApprovalStatus.approved
+    match state_name:
+        case "fac_state":
+            bid.fac_state = state
+            bid.cc_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_state = ApprovalStatus.skipped
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_state":
+            bid.cc_state = state
+            bid.cc_supervisor_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_supervisor_state":
+            bid.cc_supervisor_state = state
+            bid.kru_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "kru_state":
+            bid.kru_state = state
             if bid.owner_state == ApprovalStatus.skipped:
                 if bid.accountant_cash_state == ApprovalStatus.skipped:
                     bid.accountant_card_state = ApprovalStatus.pending_approval
                 else:
                     bid.accountant_cash_state = ApprovalStatus.pending_approval
-            else:
-                bid.owner_state = ApprovalStatus.pending_approval
-        else:
-            bid.kru_state = ApprovalStatus.denied
-            bid.owner_state = ApprovalStatus.skipped
-            bid.accountant_card_state = ApprovalStatus.skipped
-            bid.accountant_cash_state = ApprovalStatus.skipped
-            bid.teller_card_state = ApprovalStatus.skipped
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "owner_state":
-        if state == ApprovalStatus.approved:
-            bid.owner_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "owner_state":
+            bid.owner_state = state
             if bid.accountant_cash_state == ApprovalStatus.skipped:
                 bid.accountant_card_state = ApprovalStatus.pending_approval
             else:
                 bid.accountant_cash_state = ApprovalStatus.pending_approval
-        else:
-            bid.owner_state = ApprovalStatus.denied
-            bid.accountant_card_state = ApprovalStatus.skipped
-            bid.accountant_cash_state = ApprovalStatus.skipped
-            bid.teller_card_state = ApprovalStatus.skipped
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "accountant_card_state":
-        if state == ApprovalStatus.approved:
-            bid.accountant_card_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_card_state":
+            bid.accountant_card_state = state
             bid.teller_card_state = ApprovalStatus.pending_approval
-        else:
-            bid.accountant_card_state = ApprovalStatus.denied
-            bid.teller_card_state = ApprovalStatus.skipped
-    elif state_name == "accountant_cash_state":
-        if state == ApprovalStatus.approved:
-            bid.accountant_cash_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_cash_state":
+            bid.accountant_cash_state = state
             bid.teller_cash_state = ApprovalStatus.pending_approval
-        else:
-            bid.accountant_cash_state = ApprovalStatus.denied
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "teller_card_state":
-        bid.teller_card_state = ApprovalStatus.approved
-    else:
-        bid.teller_cash_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "teller_card_state":
+            bid.teller_card_state = ApprovalStatus.approved
+        case "teller_cash_state":
+            bid.teller_cash_state = ApprovalStatus.approved
 
     if bid.owner_state == ApprovalStatus.pending_approval:
         await notify_workers_by_access(
@@ -476,31 +497,31 @@ def create_worker_bid(
     if not last_bid_id:
         last_bid_id = 0
 
-    worksheet_insts: list[WorkerBidWorksheetSchema] = []
+    worksheet_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(worksheet):
         suffix = Path(doc.filename).suffix
         filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        worksheet_inst = WorkerBidWorksheetSchema(document=doc)
+        worksheet_inst = DocumentSchema(document=doc)
         worksheet_insts.append(worksheet_inst)
 
-    passport_insts: list[WorkerBidPassportSchema] = []
+    passport_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(passport):
         suffix = Path(doc.filename).suffix
         filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        passport_inst = WorkerBidPassportSchema(document=doc)
+        passport_inst = DocumentSchema(document=doc)
         passport_insts.append(passport_inst)
 
-    work_permission_insts: list[WorkerBidWorkPermissionSchema] = []
+    work_permission_insts: list[DocumentSchema] = []
 
     for index, doc in enumerate(work_permission):
         suffix = Path(doc.filename).suffix
         filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
-        work_permission_inst = WorkerBidWorkPermissionSchema(document=doc)
+        work_permission_inst = DocumentSchema(document=doc)
         work_permission_insts.append(work_permission_inst)
 
     worker_bid = WorkerBidSchema(
@@ -673,19 +694,13 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
 
 def get_bid_records() -> list[BidRecordSchema]:
     """Returns all bid records in database."""
+    from bot.handlers.bids.utils import get_bid_state_info
+
     bids = orm.get_bids()
 
     result: list[BidRecordSchema] = []
 
     for bid in bids:
-        documents = []
-        if bid.document:
-            documents.append(bid.document)
-        if bid.document1:
-            documents.append(bid.document1)
-        if bid.document2:
-            documents.append(bid.document2)
-
         result.append(
             BidRecordSchema(
                 id=bid.id,
@@ -696,10 +711,22 @@ def get_bid_records() -> list[BidRecordSchema]:
                 close_date=bid.close_date,
                 comment=bid.comment,
                 create_date=bid.create_date,
-                documents=documents,
+                documents=[doc.document for doc in bid.documents],
                 purpose=bid.purpose,
-                status=bid.kru_state,
+                status=get_bid_state_info(bid),
             )
         )
 
     return result
+
+
+def get_chapters() -> list[str]:
+    """Returns list of all chapters in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.chapter for expenditure in expenditures]
+
+
+def get_expenditures_names() -> list[str]:
+    """Returns list of all expenduture names in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.name for expenditure in expenditures]

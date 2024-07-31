@@ -13,13 +13,12 @@ class Auth(StatesGroup):
 # Bid
 class BidCreating(StatesGroup):
     department = State()
+    expenditure_chapter = State()
+    expenditure = State()
     payment_amount = State()
     payment_purpose = State()
-    agreement_existence = State()
-    urgently = State()
-    need_document = State()
     comment = State()
-    document = State()
+    documents = State()
 
 
 class BidCoordination(StatesGroup):

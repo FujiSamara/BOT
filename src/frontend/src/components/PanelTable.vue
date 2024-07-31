@@ -32,7 +32,7 @@
 									class="icons"
 									img-src="/img/check.svg"
 									:with-filter="false"
-									@click="emit('approve')"
+									@click="onApprove"
 								>
 								</clickable-icon>
 								<clickable-icon
@@ -41,7 +41,7 @@
 									class="icons"
 									img-src="/img/reject.svg"
 									:with-filter="false"
-									@click="emit('reject')"
+									@click="onReject"
 								></clickable-icon>
 							</div>
 						</div>
@@ -135,9 +135,17 @@ const networkStore = useNetworkStore();
 
 const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
-const onDelete = () => {
-	props.table.deleteChecked();
+const onDelete = async () => {
+	await props.table.deleteChecked();
 	emit("delete");
+};
+const onApprove = async () => {
+	await props.table.approveChecked();
+	emit("approve");
+};
+const onReject = async () => {
+	await props.table.rejectChecked();
+	emit("approve");
 };
 
 const onHrefClicked = async (href: string, filename: string) => {

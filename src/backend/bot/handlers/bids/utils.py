@@ -5,32 +5,6 @@ from bot.kb import payment_type_dict
 
 
 def get_full_bid_info(bid: BidSchema) -> str:
-    stage = ""
-
-    if bid.kru_state == ApprovalStatus.pending_approval:
-        stage = "КРУ"
-    elif bid.owner_state == ApprovalStatus.pending_approval:
-        stage = "Собственник"
-    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        stage = "Бухгалтер безнал."
-    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        stage = "Бухгалтер нал."
-    elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        stage = "Кассир безнал."
-    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        stage = "Кассир нал."
-    elif (
-        bid.kru_state == ApprovalStatus.denied
-        or bid.owner_state == ApprovalStatus.denied
-        or bid.accountant_card_state == ApprovalStatus.denied
-        or bid.accountant_cash_state == ApprovalStatus.denied
-        or bid.teller_card_state == ApprovalStatus.denied
-        or bid.teller_cash_state == ApprovalStatus.denied
-    ):
-        stage = "Отказано"
-    else:
-        stage = "Выплачено"
-
     bid_info = f"""{hbold("Номер заявки")}: {bid.id}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
@@ -41,7 +15,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Заявка срочная?")} {bid.urgently}
 {hbold("Нужна платежка?")} {bid.need_document}
 {hbold("Комментарий")}: {bid.comment}
-{hbold("Текущий этап")}: {stage}
+{hbold("Текущий этап")}: {get_bid_state_info(bid)}
 """
 
     return bid_info
@@ -70,23 +44,45 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
     return bid_info
 
 
-def get_state_bid_info(bid: BidSchema) -> str:
-    stage = ""
-    if bid.kru_state == ApprovalStatus.pending_approval:
-        stage = "КРУ"
-    elif bid.owner_state == ApprovalStatus.pending_approval:
-        stage = "Собственника"
-    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        stage = "Бухгалтера безнал."
-    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        stage = "Бухгалтера нал."
-    elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        stage = "Кассира безнал."
-    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        stage = "Кассира нал."
+def get_bid_state_info(bid: BidSchema) -> str:
+    stage = "На согласовании у "
 
+    if bid.fac_state == ApprovalStatus.pending_approval:
+        stage += "ЦФО"
+    elif bid.cc_state == ApprovalStatus.pending_approval:
+        stage += "ЦЗ"
+    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
+        stage += "Руководитель ЦЗ"
+    elif bid.kru_state == ApprovalStatus.pending_approval:
+        stage += "КРУ"
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        stage += "Собственник"
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
+        stage += "Бухгалтер безнал."
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
+        stage += "Бухгалтер нал."
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
+        stage += "Кассир безнал."
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
+        stage += "Кассир нал."
+    elif (
+        bid.kru_state == ApprovalStatus.denied
+        or bid.owner_state == ApprovalStatus.denied
+        or bid.accountant_card_state == ApprovalStatus.denied
+        or bid.accountant_cash_state == ApprovalStatus.denied
+        or bid.teller_card_state == ApprovalStatus.denied
+        or bid.teller_cash_state == ApprovalStatus.denied
+    ):
+        stage = "Отказано"
+    else:
+        stage = "Выплачено"
+
+    return stage
+
+
+def get_short_bid_info(bid: BidSchema) -> str:
     return f"""Заявка {bid.id} от {bid.create_date.date()} на сумму: {bid.amount}.
-Статус: на согласовании у {stage}"""
+Статус: {get_bid_state_info(bid)}"""
 
 
 def get_bid_list_info(bid: BidSchema) -> str:
@@ -98,3 +94,25 @@ def get_bid_list_info(bid: BidSchema) -> str:
 
 def get_worker_bid_list_info(bid: WorkerBidSchema) -> str:
     return f"{bid.id}: {bid.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')}"
+
+
+def get_current_coordinator(bid: BidSchema) -> str:
+    if bid.fac_state == ApprovalStatus.pending_approval:
+        return "fac_state"
+    elif bid.cc_state == ApprovalStatus.pending_approval:
+        return "cc_state"
+    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
+        return "cc_supervisor_state"
+
+    elif bid.kru_state == ApprovalStatus.pending_approval:
+        return "kru_state"
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        return "owner_state"
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
+        return "accountant_card_state"
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
+        return "accountant_cash_state"
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
+        return "teller_card_state"
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
+        return "teller_cash_state"

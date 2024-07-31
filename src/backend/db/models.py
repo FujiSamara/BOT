@@ -270,9 +270,6 @@ class Bid(Base):
     amount: Mapped[int] = mapped_column(nullable=False)
     payment_type: Mapped[str] = mapped_column(nullable=False)
     purpose: Mapped[str] = mapped_column(nullable=False)
-    agreement: Mapped[str] = mapped_column(nullable=True, default="Нет")
-    urgently: Mapped[str] = mapped_column(nullable=True, default="Нет")
-    need_document: Mapped[str] = mapped_column(nullable=True, default="Нет")
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     denying_reason: Mapped[str] = mapped_column(nullable=True, default="")
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
@@ -284,21 +281,36 @@ class Bid(Base):
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     worker: Mapped["Worker"] = relationship("Worker", back_populates="bids")
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    document1: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage), nullable=True
+    expenditure_id: Mapped[int] = mapped_column(ForeignKey("expenditures.id"))
+    expenditure: Mapped["Expenditure"] = relationship(
+        "Expenditure", back_populates="bids"
     )
-    document2: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage), nullable=True
+
+    documents: Mapped[List["BidDocument"]] = relationship(
+        "BidDocument", cascade="all,delete"
     )
 
     # States
+    fac_state: Mapped[approvalstatus]
+    cc_state: Mapped[approvalstatus]
+    cc_supervisor_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
     owner_state: Mapped[approvalstatus]
     accountant_cash_state: Mapped[approvalstatus]
     accountant_card_state: Mapped[approvalstatus]
     teller_cash_state: Mapped[approvalstatus]
     teller_card_state: Mapped[approvalstatus]
+
+
+class BidDocument(Base):
+    """Документы заявок на платежи"""
+
+    __tablename__ = "bids_documents"
+
+    id: Mapped[intpk]
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    bid_id: Mapped[int] = mapped_column(ForeignKey("bids.id"))
+    bid: Mapped["Bid"] = relationship("Bid", back_populates="documents")
 
 
 class WorkerBid(Base):
@@ -452,6 +464,13 @@ class Expenditure(Base):
         back_populates="expenditure",
         cascade="all,delete",
         foreign_keys="BudgetRecord.expenditure_id",
+    )
+
+    bids: Mapped[List["Bid"]] = relationship(
+        "Bid",
+        back_populates="expenditure",
+        cascade="all,delete",
+        foreign_keys="Bid.expenditure_id",
     )
 
 
