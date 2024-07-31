@@ -107,7 +107,6 @@ export const useNetworkStore = defineStore("network", {
 			);
 
 			const file = resp.data as Uint8Array;
-			console.log(resp.data);
 
 			const fileBlob = new Blob([file], { type: "application/octet-stream" });
 
