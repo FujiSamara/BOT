@@ -469,6 +469,7 @@ class Expenditure(Base):
     bids: Mapped[List["Bid"]] = relationship(
         "Bid",
         back_populates="expenditure",
+        cascade="all,delete",
         foreign_keys="Bid.expenditure_id",
     )
 
