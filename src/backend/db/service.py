@@ -115,18 +115,17 @@ async def create_bid(
     department: str,
     purpose: str,
     telegram_id: int,
-    file: UploadFile,
-    file1: Optional[UploadFile],
-    file2: Optional[UploadFile],
+    expenditure: str,
+    files: list[UploadFile],
+    fac_state: ApprovalStatus,
+    cc_state: ApprovalStatus,
+    cc_supervisor_state: ApprovalStatus,
     kru_state: ApprovalStatus,
     owner_state: ApprovalStatus,
     accountant_cash_state: ApprovalStatus,
     accountant_card_state: ApprovalStatus,
     teller_cash_state: ApprovalStatus,
     teller_card_state: ApprovalStatus,
-    agreement: Optional[str] = None,
-    urgently: Optional[str] = None,
-    need_document: Optional[str] = None,
     comment: Optional[str] = None,
 ):
     """
@@ -148,40 +147,41 @@ async def create_bid(
         )
         return
 
+    expenditure_inst = orm.find_expenditure_by_column(Expenditure.name, expenditure)
+
+    if not expenditure_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Expenditure with name '{expenditure}' not found"
+        )
+        return
+
     cur_date = datetime.now()
     last_bid_id = orm.get_last_bid_id()
     if not last_bid_id:
         last_bid_id = 0
 
-    if file:
+    documents = []
+    for file in files:
         suffix = Path(file.filename).suffix
         filename = f"document_bid_{last_bid_id + 1}{suffix}"
         file.filename = filename
-    if file1:
-        suffix = Path(file1.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}_1{suffix}"
-        file1.filename = filename
-    if file2:
-        suffix = Path(file2.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}_2{suffix}"
-        file2.filename = filename
+        documents.append(DocumentSchema(document=file))
 
     bid = BidSchema(
         amount=amount,
         payment_type=payment_type,
         department=department_inst,
+        expenditure=expenditure_inst,
         worker=worker_inst,
         purpose=purpose,
         create_date=cur_date,
         close_date=None,
-        agreement=agreement,
-        urgently=urgently,
-        need_document=need_document,
         comment=comment,
         denying_reason=None,
-        document=file,
-        document1=file1,
-        document2=file2,
+        documents=documents,
+        fac_state=fac_state,
+        cc_state=cc_state,
+        cc_supervisor_state=cc_supervisor_state,
         kru_state=kru_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
@@ -191,9 +191,9 @@ async def create_bid(
     )
 
     orm.add_bid(bid)
-    from bot.handlers.utils import notify_workers_by_access
+    # from bot.handlers.utils import notify_workers_by_access
 
-    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
+    # await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -701,3 +701,15 @@ def get_bid_records() -> list[BidRecordSchema]:
         )
 
     return result
+
+
+def get_chapters() -> list[str]:
+    """Returns list of all chapters in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.chapter for expenditure in expenditures]
+
+
+def get_expenditures_names() -> list[str]:
+    """Returns list of all expenduture names in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.name for expenditure in expenditures]
