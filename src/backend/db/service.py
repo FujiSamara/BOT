@@ -676,14 +676,6 @@ def get_bid_records() -> list[BidRecordSchema]:
     result: list[BidRecordSchema] = []
 
     for bid in bids:
-        documents = []
-        if bid.document:
-            documents.append(bid.document)
-        if bid.document1:
-            documents.append(bid.document1)
-        if bid.document2:
-            documents.append(bid.document2)
-
         result.append(
             BidRecordSchema(
                 id=bid.id,
@@ -694,7 +686,7 @@ def get_bid_records() -> list[BidRecordSchema]:
                 close_date=bid.close_date,
                 comment=bid.comment,
                 create_date=bid.create_date,
-                documents=documents,
+                documents=[doc.document for doc in bid.documents],
                 purpose=bid.purpose,
                 status=bid.kru_state,
             )
