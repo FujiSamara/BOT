@@ -191,9 +191,6 @@ async def create_bid(
     )
 
     orm.add_bid(bid)
-    # from bot.handlers.utils import notify_workers_by_access
-
-    # await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -269,54 +266,80 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         notify_worker_by_telegram_id,
     )
 
-    if state_name == "kru_state":
-        if state == ApprovalStatus.approved:
-            bid.kru_state = ApprovalStatus.approved
+    match state_name:
+        case "fac_state":
+            bid.fac_state = state
+            bid.cc_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_state = ApprovalStatus.skipped
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_state":
+            bid.cc_state = state
+            bid.cc_supervisor_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_supervisor_state":
+            bid.cc_supervisor_state = state
+            bid.kru_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "kru_state":
+            bid.kru_state = state
             if bid.owner_state == ApprovalStatus.skipped:
                 if bid.accountant_cash_state == ApprovalStatus.skipped:
                     bid.accountant_card_state = ApprovalStatus.pending_approval
                 else:
                     bid.accountant_cash_state = ApprovalStatus.pending_approval
-            else:
-                bid.owner_state = ApprovalStatus.pending_approval
-        else:
-            bid.kru_state = ApprovalStatus.denied
-            bid.owner_state = ApprovalStatus.skipped
-            bid.accountant_card_state = ApprovalStatus.skipped
-            bid.accountant_cash_state = ApprovalStatus.skipped
-            bid.teller_card_state = ApprovalStatus.skipped
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "owner_state":
-        if state == ApprovalStatus.approved:
-            bid.owner_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "owner_state":
+            bid.owner_state = state
             if bid.accountant_cash_state == ApprovalStatus.skipped:
                 bid.accountant_card_state = ApprovalStatus.pending_approval
             else:
                 bid.accountant_cash_state = ApprovalStatus.pending_approval
-        else:
-            bid.owner_state = ApprovalStatus.denied
-            bid.accountant_card_state = ApprovalStatus.skipped
-            bid.accountant_cash_state = ApprovalStatus.skipped
-            bid.teller_card_state = ApprovalStatus.skipped
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "accountant_card_state":
-        if state == ApprovalStatus.approved:
-            bid.accountant_card_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_card_state":
+            bid.accountant_card_state = state
             bid.teller_card_state = ApprovalStatus.pending_approval
-        else:
-            bid.accountant_card_state = ApprovalStatus.denied
-            bid.teller_card_state = ApprovalStatus.skipped
-    elif state_name == "accountant_cash_state":
-        if state == ApprovalStatus.approved:
-            bid.accountant_cash_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_cash_state":
+            bid.accountant_cash_state = state
             bid.teller_cash_state = ApprovalStatus.pending_approval
-        else:
-            bid.accountant_cash_state = ApprovalStatus.denied
-            bid.teller_cash_state = ApprovalStatus.skipped
-    elif state_name == "teller_card_state":
-        bid.teller_card_state = ApprovalStatus.approved
-    else:
-        bid.teller_cash_state = ApprovalStatus.approved
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "teller_card_state":
+            bid.teller_card_state = ApprovalStatus.approved
+        case "teller_cash_state":
+            bid.teller_cash_state = ApprovalStatus.approved
 
     if bid.owner_state == ApprovalStatus.pending_approval:
         await notify_workers_by_access(
