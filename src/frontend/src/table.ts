@@ -260,6 +260,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
+	/** Erases row after approving or rejecting if true. */
+	protected _deleteAfterStatusChanged: boolean = false;
 	//#endregion
 
 	//#region CRUD
@@ -319,7 +321,7 @@ export class Table<T extends BaseSchema> {
 
 		return changesCount;
 	}
-	public async create(model: T) {
+	public async create(model: T): Promise<void> {
 		await this._network.withAuthChecking(
 			axios.post(`${this._endpoint}/`, model),
 		);
@@ -329,7 +331,7 @@ export class Table<T extends BaseSchema> {
 		);
 		this.push(resp.data, false);
 	}
-	public async update(model: T, id: number) {
+	public async update(model: T, id: number): Promise<void> {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
 		let elementChanged = false;
@@ -353,13 +355,17 @@ export class Table<T extends BaseSchema> {
 			);
 		}
 	}
-	public async erase(id: number): Promise<void> {
+	public async delete(id: number): Promise<void> {
 		const deleteIndex = this._indexes.get(id)!;
-		if (!this._indexes.delete(id)) throw new Error(`ID ${id} not exist`);
-
+		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
 		await this._network.withAuthChecking(
 			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}`),
 		);
+	}
+	public async erase(id: number): Promise<void> {
+		const deleteIndex = this._indexes.get(id);
+		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
+		this._indexes.delete(id);
 
 		this._checked.value.splice(deleteIndex, 1);
 		this._highlighted.value.splice(deleteIndex, 1);
@@ -374,6 +380,7 @@ export class Table<T extends BaseSchema> {
 			const id = this._models.value[index].id;
 
 			if (this._checked.value[index]) {
+				await this.delete(id);
 				await this.erase(id);
 				index--;
 			}
@@ -384,6 +391,50 @@ export class Table<T extends BaseSchema> {
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
 
 		return this._models.value[index];
+	}
+	public async approve(id: number): Promise<void> {
+		const approveIndex = this._indexes.get(id)!;
+
+		await this._network.withAuthChecking(
+			axios.patch(
+				`${this._endpoint}/approve/${this._models.value[approveIndex].id}`,
+			),
+		);
+
+		if (this._deleteAfterStatusChanged) {
+			this.erase(id);
+		}
+	}
+	public async approveChecked(): Promise<void> {
+		for (let index = 0; index < this._models.value.length; index++) {
+			const id = this._models.value[index].id;
+
+			if (this._checked.value[index]) {
+				await this.approve(id);
+			}
+		}
+	}
+	public async reject(id: number): Promise<void> {
+		const approveIndex = this._indexes.get(id)!;
+
+		await this._network.withAuthChecking(
+			axios.patch(
+				`${this._endpoint}/reject/${this._models.value[approveIndex].id}`,
+			),
+		);
+
+		if (this._deleteAfterStatusChanged) {
+			this.erase(id);
+		}
+	}
+	public async rejectChecked(): Promise<void> {
+		for (let index = 0; index < this._models.value.length; index++) {
+			const id = this._models.value[index].id;
+
+			if (this._checked.value[index]) {
+				await this.reject(id);
+			}
+		}
 	}
 	//#endregion
 }

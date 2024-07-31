@@ -94,3 +94,25 @@ def get_bid_list_info(bid: BidSchema) -> str:
 
 def get_worker_bid_list_info(bid: WorkerBidSchema) -> str:
     return f"{bid.id}: {bid.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')}"
+
+
+def get_current_coordinator(bid: BidSchema) -> str:
+    if bid.fac_state == ApprovalStatus.pending_approval:
+        return "fac_state"
+    elif bid.cc_state == ApprovalStatus.pending_approval:
+        return "cc_state"
+    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
+        return "cc_supervisor_state"
+
+    elif bid.kru_state == ApprovalStatus.pending_approval:
+        return "kru_state"
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        return "owner_state"
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
+        return "accountant_card_state"
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
+        return "accountant_cash_state"
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
+        return "teller_card_state"
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
+        return "teller_cash_state"
