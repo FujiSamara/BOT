@@ -118,6 +118,10 @@ export class Table<T extends BaseSchema> {
 		return result;
 	});
 	public rows = computed(() => {
+		if (this.isHidden.value) {
+			return [];
+		}
+
 		return this._formattedRows.value;
 	});
 	public headers = computed(() => {
@@ -250,7 +254,15 @@ export class Table<T extends BaseSchema> {
 	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
 	public searcher: Ref<(model: any) => boolean> = ref((_) => true);
+	/** True when table is execute large loading operations. */
 	public isLoading: Ref<boolean> = ref(false);
+	/** Hides all row if true */
+	public isHidden: Ref<boolean> = ref(false);
+	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true** */
+	public emulateLoading(value: boolean) {
+		this.isLoading.value = value;
+		this.isHidden.value = value;
+	}
 	public highlightedCount = computed(() => {
 		let result = 0;
 		for (const elemHighlighted of this._highlighted.value) {
@@ -406,6 +418,7 @@ export class Table<T extends BaseSchema> {
 		}
 	}
 	public async approveChecked(): Promise<void> {
+		this.emulateLoading(true);
 		for (let index = 0; index < this._models.value.length; index++) {
 			const id = this._models.value[index].id;
 
@@ -413,6 +426,8 @@ export class Table<T extends BaseSchema> {
 				await this.approve(id);
 			}
 		}
+		this.allChecked.value = false;
+		this.emulateLoading(false);
 	}
 	public async reject(id: number): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
@@ -428,6 +443,7 @@ export class Table<T extends BaseSchema> {
 		}
 	}
 	public async rejectChecked(): Promise<void> {
+		this.emulateLoading(true);
 		for (let index = 0; index < this._models.value.length; index++) {
 			const id = this._models.value[index].id;
 
@@ -435,6 +451,8 @@ export class Table<T extends BaseSchema> {
 				await this.reject(id);
 			}
 		}
+		this.allChecked.value = false;
+		this.emulateLoading(false);
 	}
 	//#endregion
 }
