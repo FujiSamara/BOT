@@ -388,6 +388,7 @@ export class Table<T extends BaseSchema> {
 		}
 	}
 	public async deleteChecked(): Promise<void> {
+		this.emulateLoading(true);
 		for (let index = 0; index < this._models.value.length; index++) {
 			const id = this._models.value[index].id;
 
@@ -397,6 +398,7 @@ export class Table<T extends BaseSchema> {
 				index--;
 			}
 		}
+		this.emulateLoading(false);
 	}
 	public getModel(id: number): any {
 		const index = this._indexes.get(id);
