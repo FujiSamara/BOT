@@ -465,3 +465,78 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+# Bid IT
+
+create_bid_it_department_button = InlineKeyboardButton(
+    text="Заявка в IT отдел", callback_data="get_create_bid_it_menu"
+)
+
+settings_bid_it_menu_button = InlineKeyboardButton(
+    text="Создать заявку", callback_data="get_bid_it_settings_menu"
+)
+
+bid_it_create_history_button = InlineKeyboardButton(
+    text="История заявок", callback_data="get_create_history_bid_it"
+)
+bid_it_create_pending_button = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_create_pending_bid_it"
+)
+
+bid_it_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [settings_bid_it_menu_button],
+        [bid_it_create_pending_button],
+        [bid_it_create_history_button],
+        [main_menu_button],
+    ]
+)
+
+async def get_create_bid_it_department(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    problem = data.get("problem")
+    photo: Document | None = data.get("photo")
+    photo_text = "Отсутствует"
+    comment = data.get("comment")
+    all_field_exist = True
+    
+    if not problem:
+        all_field_exist = False
+        problem = "Не указано"
+    else:
+        problem = "✅ " + problem
+
+    if not comment:
+        all_field_exist = False
+        comment = "Не указано"
+    else:
+        comment = "✅ " + comment
+    
+    if photo is None:
+        all_field_exist = False
+    if photo:
+        if hasattr(photo, "file_name"):
+            photo_text = "✅ " + photo.file_name
+        else:
+            photo_text = "✅ " + "Фотография"
+
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Выберите проблему из списка", callback_data="get_problem_it"),
+            InlineKeyboardButton(text=problem, callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Опишите проблему", callback_data="get_comment"),
+            InlineKeyboardButton(text=comment, callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Фото", callback_data="get_photo"),
+            InlineKeyboardButton(text=photo_text, callback_data="dummy"),
+        ]
+    ]
+    if all_field_exist:
+        keyboard.append(
+            [InlineKeyboardButton(text="Отправить заявку", callback_data="send_bid_it")] # send kuda to escho
+        )
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

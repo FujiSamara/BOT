@@ -18,6 +18,7 @@ from db.service import get_workers_by_level, get_worker_level_by_telegram_id
 from bot.bot import get_bot
 from bot.kb import (
     create_bid_menu_button,
+    create_bid_it_department_button,
     teller_card_menu_button,
     teller_cash_menu_button,
     accountant_card_menu_button,
@@ -44,6 +45,7 @@ async def send_menu_by_level(message: Message, edit=None):
         case Access.worker:
             menus.append([create_bid_menu_button])
             menus.append([worker_bid_menu_button])
+            menus.append([create_bid_it_department_button])
             if level == 6:
                 menus.append([rating_menu_button])
         case Access.teller_cash:

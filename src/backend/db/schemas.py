@@ -205,6 +205,46 @@ class BudgetRecordSchema(BaseModel):
     department: Optional[DepartmentSchema] = None
 
 
+class ProblemITSchema(BaseSchema):
+    name: str
+
+
+class BidITSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    problem: ProblemITSchema
+    problem_comment: str
+    problem_photo: UploadFile | str
+    worker: WorkerSchema
+    department: DepartmentSchema
+    opening_date: datetime.datetime
+    done_date: Optional[datetime.datetime] = None
+    reopening_date: Optional[datetime.datetime] = None
+    approve_date: Optional[datetime.datetime] = None
+    close_date: Optional[datetime.datetime] = None
+    status: ApprovalStatus
+    repairman: Optional[WorkerSchema] = None
+    mark: Optional[int] = None
+    work_photo: Optional[UploadFile | str] = None
+    work_comment: Optional[str] = None
+
+    @field_validator("problem_photo", "work_photo", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                logging.getLogger("uvicorn.error").warning(
+                    f"File with path: {val.path} not exist"
+                )
+                return val.path
+        return val
+
+
 # endregion
 
 
@@ -248,6 +288,6 @@ class BidRecordSchema(BaseSchema):
                     return val
             return result
         return val
-
+      
 
 # endregion

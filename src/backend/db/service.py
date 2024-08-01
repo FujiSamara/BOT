@@ -12,6 +12,7 @@ from db.models import (
     Access,
     WorkTime,
     WorkerBid,
+    ProblemIT,
 )
 from db.schemas import (
     BidRecordSchema,
@@ -26,6 +27,8 @@ from db.schemas import (
     WorkerBidWorksheetSchema,
     WorkerBidWorkPermissionSchema,
     FileSchema,
+    ProblemITSchema,
+    BidITSchema,
 )
 import logging
 from datetime import datetime
@@ -703,3 +706,72 @@ def get_bid_records() -> list[BidRecordSchema]:
         )
 
     return result
+
+
+def get_problems_it_types() -> list[str]:
+    """
+    Returns all existed IT problems types.
+    """
+    problems: list[ProblemITSchema] = orm.get_problems_it_columns()
+    return [problem.name for problem in problems]
+
+
+def get_problems_it_schema() -> list[ProblemITSchema]:
+    """
+    Returns all existed IT problems types with ids.
+    """
+    return orm.get_problems_it_columns()
+
+
+async def create_bid_it(
+    problem_id: str,
+    comment: str,
+    photo: UploadFile,
+    telegram_id: int,
+):
+    """
+    Creates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    cur_date = datetime.now()
+    problem_inst = orm.find_problem_it_by_id(ProblemIT.id, problem_id)
+    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id '{telegram_id}' not found"
+        )
+        return
+
+    department = get_worker_department_by_telegram_id(telegram_id)
+    department_inst = orm.find_department_by_column(Department.name, department.name)
+
+    if not department_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department}' not found"
+        )
+        return
+
+    last_bid_it_id = orm.get_last_bid_it_id()
+    if not last_bid_it_id:
+        last_bid_it_id = 0
+
+    if photo:
+        suffix = Path(photo.filename).suffix
+        filename = f"document_bid_IT_{last_bid_it_id + 1}{suffix}"
+        photo.filename = filename
+
+    bid_it = BidITSchema(
+        problem=problem_inst,
+        problem_comment=comment,
+        problem_photo=photo,
+        worker=worker_inst,
+        department=department_inst,
+        opening_date=cur_date,
+        status=ApprovalStatus.pending,
+    )
+
+    orm.add_bid_it(bid_it)
+    from bot.handlers.utils import notify_workers_by_access
+
+    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")

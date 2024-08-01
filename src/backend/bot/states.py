@@ -41,3 +41,12 @@ class WorkerBidCreating(StatesGroup):
 class RateForm(StatesGroup):
     rating = State()
     fine = State()
+
+
+# Bid IT
+class BidITCreating(StatesGroup):
+    department = State()
+    problem = State()
+    photo = State()
+    comment = State()
+    telegram_id = State()

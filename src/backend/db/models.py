@@ -4,7 +4,7 @@ from db.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 import datetime
 from settings import get_settings
 import enum
@@ -137,6 +137,10 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
+    bids_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="department"
+    )
+
     # айдишник из биосмарта для определения конкретного подразделения
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
     biosmart_strid: Mapped[str] = mapped_column(nullable=True)
@@ -212,6 +216,14 @@ class Worker(Base):
     company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
+    bids_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
+    )
+    repairman_bids_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT",
+        back_populates="repairman",
+        foreign_keys="[BidIT.repairman_id]"
+    )
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
     )
@@ -475,3 +487,53 @@ class BudgetRecord(Base):
 
     limit: Mapped[float] = mapped_column(nullable=True)
     last_update: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+
+class ProblemIT(Base):
+    """Проблемы c компьютерами"""
+
+    __tablename__ = "problems_it"
+
+    def __str__(self) -> str:
+        return self.name
+
+    id: Mapped[intpk]
+    name: Mapped[str] = mapped_column(nullable=False)
+    bids_it: Mapped[list["BidIT"]] = relationship("BidIT", back_populates="problem")
+
+
+class BidIT(Base):
+    """Заявки в IT отдел"""
+
+    __tablename__ = "bids_it"
+
+    id: Mapped[intpk]
+    problem_comment: Mapped[str] = mapped_column(nullable=False)
+    problem_photo: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage), nullable=False)
+
+    problem_id: Mapped[int] = mapped_column(ForeignKey("problems_it.id"), nullable=False)
+    problem: Mapped["ProblemIT"] = relationship(
+        "ProblemIT", back_populates="bids_it", foreign_keys=[problem_id]
+    )
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    worker: Mapped["Worker"] = relationship(
+        "Worker", back_populates="bids_it", foreign_keys=[worker_id]
+    )
+    repairman_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workers.id"), nullable=True)
+    repairman: Mapped["Worker"] = relationship(
+        "Worker", back_populates="repairman_bids_it", foreign_keys=[repairman_id]
+    )
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"), nullable=False)
+    department: Mapped["Department"] = relationship(
+        "Department", back_populates="bids_it", foreign_keys=[department_id]
+    )
+
+    status: Mapped[approvalstatus]
+    opening_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    done_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopening_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    mark: Mapped[int] = mapped_column(nullable=True)
+    work_photo: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage), nullable=True)
+    work_comment: Mapped[str] = mapped_column(nullable=True)

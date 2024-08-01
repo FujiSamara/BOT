@@ -13,6 +13,8 @@ from db.models import (
     WorkerBidWorksheet,
     WorkerBidPassport,
     WorkerBidWorkPermission,
+    ProblemIT,
+    BidIT,
 )
 from db.schemas import (
     BidSchema,
@@ -23,6 +25,8 @@ from db.schemas import (
     WorkerSchema,
     WorkTimeSchema,
     PostSchema,
+    ProblemITSchema,
+    BidITSchema,
 )
 from sqlalchemy.sql.expression import func
 from sqlalchemy import or_, and_, desc
@@ -701,3 +705,64 @@ def get_bids() -> list[BidSchema]:
     with session.begin() as s:
         raw_models = s.query(Bid).all()
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_problems_it_columns() -> list[ProblemITSchema]:
+    """
+    Returns all existed IT problems in database.
+    """
+    with session.begin() as s:
+        raw_models = s.query(ProblemIT).all()
+        return [ProblemITSchema.model_validate(raw_model) for raw_model in raw_models]
+    
+
+def get_last_bid_it_id() -> int:
+    """
+    Returns last bid IT id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(BidIT.id)).first()[0]
+
+
+def find_problem_it_by_id(column: any, value: any) -> ProblemITSchema:
+    """
+    Returns problem IT in database by `column` with `value`.
+    If problem IT not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_worker = s.query(ProblemIT).filter(column == value).first()
+        if not raw_worker:
+            return None
+        return ProblemITSchema.model_validate(raw_worker)
+
+
+def add_bid_it(bid_it: BidITSchema):
+    """
+    Adds `bid IT` to database.
+    """
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.id == bid_it.worker.id).first()
+        department = (
+            s.query(Department).filter(Department.id == bid_it.department.id).first()
+        )
+        problem = s.query(ProblemIT).filter(ProblemIT.id == bid_it.problem.id).first()
+
+        bid = BidIT(
+            problem_comment=bid_it.problem_comment,
+            problem_photo=bid_it.problem_photo,
+            problem=problem,
+            department=department,
+            worker=worker,
+            status=bid_it.status,
+            opening_date=bid_it.opening_date,
+            done_date=None,
+            reopening_date=None,
+            approve_date=None,
+            close_date=None,
+            mark=None,
+            repairman=None,
+            work_photo=None,
+            work_comment=None,
+        )
+
+        s.add(bid)
