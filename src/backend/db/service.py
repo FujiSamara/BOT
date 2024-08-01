@@ -18,6 +18,7 @@ from db.schemas import (
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
+    TechnicalProblemSchema,
     WorkerSchema,
     WorkTimeSchema,
     DepartmentSchema,
@@ -730,3 +731,17 @@ def get_expenditures_names() -> list[str]:
     """Returns list of all expenduture names in db"""
     expenditures = orm.get_expenditures()
     return [expenditure.name for expenditure in expenditures]
+
+
+#Technical Request
+def create_technical_problem(record: TechnicalProblemSchema) -> None:
+    if not orm.create_technical_problem(record):
+        logging.getLogger("uvicorn.error").error("Technical problem record wasn't created")
+
+
+def get_technical_problems() -> TechnicalProblemSchema:
+    return [problem.problem_name for problem in orm.get_technical_problems()]
+
+def create_technical_request(record:) -> None:
+    if not orm.create_technical_request(record):
+        logging.getLogger("uvicorn.error").error("Technical problem record wasn't created")

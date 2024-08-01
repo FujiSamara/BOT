@@ -49,7 +49,9 @@ def run():
         "dev",
     ]
     if "BACKEND" not in sys.argv:
-        processes.append(AppProcess("Frontend", frontend_cmd))
+        processes.append(frontend_cmd)
+
+    procs: list[sub.Popen] = []
 
     print(OKBLUE + "[Processes configuring completed]" + ENDC)
     # endregion

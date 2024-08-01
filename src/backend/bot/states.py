@@ -40,3 +40,11 @@ class WorkerBidCreating(StatesGroup):
 class RateForm(StatesGroup):
     rating = State()
     fine = State()
+
+
+#Technical Request
+
+class TechRequestForm(StatesGroup):
+    problem_name = State()
+    description = State()
+    photo = State()

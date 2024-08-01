@@ -232,3 +232,27 @@ class BidRecordSchema(BaseSchema):
 
 
 # endregion
+
+
+#Technical request
+class Problem(BaseSchema):
+    
+
+
+class TechnicalProblemSchema(BaseSchema):
+    problem_name: str
+
+
+class TechnicalRequestSchema(BaseSchema):
+    #Данные при создание
+    problem: TechnicalProblemSchema
+    description: str
+    photo: str
+    create_date = datetime.datetime.now().date()
+    create_time = datetime.datetime.now().time()
+
+    #Данные создателя
+    creator: WorkerSchema
+
+    department: DepartmentSchema
+

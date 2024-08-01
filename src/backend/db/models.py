@@ -26,10 +26,12 @@ class Gender(enum.Enum):
 
 
 class Access(enum.Enum):
-    kru = (6,)
+    technician = (1,)
+    electrician = (2,)
     worker = (3,)
     teller_cash = (4,)
     teller_card = (5,)
+    kru = (6,)
     accountant_cash = (7,)
     accountant_card = (8,)
     owner = (10,)
@@ -58,7 +60,7 @@ class Post(Base):
     name: Mapped[str] = mapped_column(nullable=False)
     salary: Mapped[float] = mapped_column(nullable=True)
     level: Mapped[int] = mapped_column(
-        CheckConstraint("level<=10 AND level>0"), nullable=False
+        CheckConstraint("level>0"), nullable=False
     )
 
     workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="post")
@@ -185,6 +187,8 @@ class Department(Base):
         "BudgetRecord", back_populates="department"
     )
 
+    technical_request: Mapped[List["TechnicalRequest"]] = relationship("TechnicalRequest", back_populates="department")
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -256,6 +260,11 @@ class Worker(Base):
 
     password: Mapped[str] = mapped_column(nullable=True)
     can_use_crm: Mapped[bool] = mapped_column(nullable=True, default=False)
+
+    worker_technical_request: Mapped["TechnicalRequest"] = relationship("TechnicalRequest", foreign_keys="[TechnicalRequest.worker_id]",
+                                                                         back_populates="worker",)
+    repairman_technical_request: Mapped["TechnicalRequest"] = relationship("TechnicalRequest", foreign_keys="[TechnicalRequest.repairman_id]",
+                                                                            back_populates="repairman",)
 
 
 class Bid(Base):
@@ -494,3 +503,51 @@ class BudgetRecord(Base):
 
     limit: Mapped[float] = mapped_column(nullable=True)
     last_update: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+
+#Technical Problem
+class Problem(Base):
+    __abstract__ = True
+
+    id: Mapped[intpk]
+
+
+class TechnicalProblem(Problem):
+    """Виды технических проблем"""
+    
+    __tablename__ = "technical_problems"
+
+    problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    requests: Mapped[list["TechnicalRequest"]] = relationship("TechnicalRequest", back_populates="problem")
+    executor: Mapped[Access] = mapped_column(Enum(Access), nullable=False)
+
+
+class TechnicalRequest(Base):
+    """Технические заявки"""
+
+    id: Mapped[intpk]
+
+    __tablename__ = "technical_requests"
+
+    problem_id: Mapped[int] = mapped_column(ForeignKey("technical_problems.id"))
+    problem: Mapped["TechnicalProblem"] = relationship("TechnicalProblem", back_populates="requests")
+
+    description: Mapped[str] = mapped_column(nullable=False)
+    photos: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+
+    status: Mapped[bool] = mapped_column(nullable=True)
+    score: Mapped[int] = mapped_column(CheckConstraint("(score>0 AND score<6) OR NULL"))
+
+    open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    worker: Mapped["Worker"] = relationship("Worker", back_populates="worker_technical_request", foreign_keys=[worker_id])
+
+    repairman_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    repairman: Mapped["Worker"] = relationship("Worker", back_populates="repairman_technical_request", foreign_keys=[repairman_id])
+
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"), nullable=False)
+    department: Mapped["Department"] = relationship("Department", back_populates="technical_request")

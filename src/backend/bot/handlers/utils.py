@@ -26,6 +26,7 @@ from bot.kb import (
     kru_menu_button,
     rating_menu_button,
     worker_bid_menu_button,
+    tech_req_menu_button,
     create_reply_keyboard,
 )
 import asyncio
@@ -44,6 +45,7 @@ async def send_menu_by_level(message: Message, edit=None):
         case Access.worker:
             menus.append([create_bid_menu_button])
             menus.append([worker_bid_menu_button])
+            menus.append([tech_req_menu_button])
             if level == 6:
                 menus.append([rating_menu_button])
         case Access.teller_cash:

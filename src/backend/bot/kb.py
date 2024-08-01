@@ -418,3 +418,129 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+#Techical request
+tech_req_menu_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_tech_req_menu"
+)
+
+
+tech_req_create = InlineKeyboardButton(
+    text="Создать заявку", callback_data="get_tech_req_create"
+)
+
+tech_req_waiting = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_tech_req_waiting"
+)
+
+tech_req_history = InlineKeyboardButton(
+    text="История заявок", callback_data="get_tech_req_history"
+)
+
+
+tech_problem = InlineKeyboardButton(
+    text="Создать проблему", callback_data="create_tech_problem"
+)
+
+
+tech_req_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [tech_req_create],
+        [tech_req_waiting],
+        [tech_req_history],
+        [main_menu_button],
+    ]
+)
+
+
+async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    problem_name = data.get("problem_name")
+    description = data.get("description")
+    photo = data.get("photo")
+
+    if not problem_name:
+        problem_name=""
+        form_complete = False
+    else:
+        problem_name=" ✅"
+    
+    if not description:
+        description=""
+        form_complete = False
+    else:
+        description=" ✅"
+
+    if not photo or len(photo) == 0:
+        photo=""
+        form_complete = False
+    else:
+        photo=f"{len(photo)}"
+
+
+    buttons = [
+        [
+            InlineKeyboardButton(text="Проблема", callback_data="problem_type_tech_req"),
+            InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Комментарий", callback_data="description_tech_req"),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Фото", callback_data="photo_tech_req"),
+            InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить проблему", callback_data="send_tech_req"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def create_tech_problem_kb(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    problem_name = data.get("problem_name")
+
+    buttons = [
+        [
+            InlineKeyboardButton(text="Имя", callback_data="get_problem_name"),
+            InlineKeyboardButton(
+                text=str(problem_name),
+                callback_data="dummy",
+            ),
+        ]
+    ]
+    
+    if not problem_name:
+        problem_name = ""
+        form_complete = False
+    else:
+        problem_name += " ✅"
+
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить проблему", callback_data="send_tech_problem"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+tech_req_status_dict={
+
+}
