@@ -1,10 +1,10 @@
 services:
   app-frontend:
-    build: src/frontend
+    build:
+      context: src/frontend
+      network: host
 
     volumes:
-      - cert-key:/var/www/certs/cert.key:ro
-      - cert:/var/www/certs/cert.crt:ro
       - nginx-html:/app/dist
 
     network_mode: "host"
@@ -13,11 +13,12 @@ services:
       - .env
 
   app-backend:
-    build: src/backend/
+    build:
+      context: src/backend
+      network: host
 
     volumes:
-      - cert-key:/var/www/certs/cert.key:ro
-      - cert:/var/www/certs/cert.crt:ro
+      - cert-dir:/var/www/certs:ro
       - files-dir:/tmp
 
     network_mode: "host"
@@ -26,18 +27,20 @@ services:
       - .env
 
   app-server:
-    build: src/server
+    build:
+      context: src/server
+      network: host
 
     volumes:
+      - cert-dir:/var/www/certs:ro
       - nginx-html:/usr/share/nginx/html
+      - ./src/server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
 
     network_mode: "host"
 
 volumes:
   nginx-html:
-  cert-key:
-    external: true
-  cert:
+  cert-dir:
     external: true
   files-dir:
     external: true
