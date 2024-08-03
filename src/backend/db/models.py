@@ -185,6 +185,12 @@ class Department(Base):
         "BudgetRecord", back_populates="department"
     )
 
+    # Мобилка
+    dm_id: Mapped[UUID] = mapped_column(nullable=True)
+    person_max_orders: Mapped[int] = mapped_column(nullable=True)
+    max_close_order_distance: Mapped[int] = mapped_column(nullable=True)
+    orders_collect_time: Mapped[int] = mapped_column(nullable=True)
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -256,6 +262,11 @@ class Worker(Base):
 
     password: Mapped[str] = mapped_column(nullable=True)
     can_use_crm: Mapped[bool] = mapped_column(nullable=True, default=False)
+
+    # Поля мобилки
+    dm_id: Mapped[UUID] = mapped_column(nullable=True)
+    dm_device_id: Mapped[str] = mapped_column(nullable=True)
+    dm_add_info: Mapped[str] = mapped_column(nullable=True)
 
 
 class Bid(Base):
