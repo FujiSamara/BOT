@@ -206,7 +206,11 @@ class BudgetRecordSchema(BaseModel):
 
 
 class ProblemITSchema(BaseSchema):
-    name: str
+    problem: str
+    category: str
+    hours: float
+    repairman: WorkerSchema
+
 
 
 class BidITSchema(BaseModel):

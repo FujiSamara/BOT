@@ -227,6 +227,11 @@ class Worker(Base):
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
     )
+    repairman_problems_it: Mapped[List["ProblemIT"]] = relationship(
+        "ProblemIT",
+        back_populates="repairman",
+        foreign_keys="[ProblemIT.repairman_id]"
+    )
 
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="worker"
@@ -498,7 +503,14 @@ class ProblemIT(Base):
         return self.name
 
     id: Mapped[intpk]
-    name: Mapped[str] = mapped_column(nullable=False)
+    problem: Mapped[str] = mapped_column(nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    hours: Mapped[float] = mapped_column(nullable=False)
+    repairman_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    repairman: Mapped["Worker"] = relationship(
+        "Worker", back_populates="repairman_problems_it", foreign_keys=[repairman_id]
+    )
+
     bids_it: Mapped[list["BidIT"]] = relationship("BidIT", back_populates="problem")
 
 

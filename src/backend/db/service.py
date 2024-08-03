@@ -714,7 +714,7 @@ def get_problems_it_types() -> list[str]:
     Returns all existed IT problems types.
     """
     problems: list[ProblemITSchema] = orm.get_problems_it_columns()
-    return [problem.name for problem in problems]
+    return [problem.problem for problem in problems]
 
 
 def get_problems_it_schema() -> list[ProblemITSchema]:
