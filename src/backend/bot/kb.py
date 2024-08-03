@@ -469,7 +469,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
 # Bid IT
 
-create_bid_it_department_button = InlineKeyboardButton(
+create_bid_it_menu_button = InlineKeyboardButton(
     text="Заявка в IT отдел", callback_data="get_create_bid_it_menu"
 )
 
@@ -493,14 +493,15 @@ bid_it_menu = InlineKeyboardMarkup(
     ]
 )
 
-async def get_create_bid_it_department(state: FSMContext) -> InlineKeyboardMarkup:
+
+async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     problem = data.get("problem")
     photo: Document | None = data.get("photo")
     photo_text = "Отсутствует"
     comment = data.get("comment")
     all_field_exist = True
-    
+
     if not problem:
         all_field_exist = False
         problem = "Не указано"
@@ -512,7 +513,7 @@ async def get_create_bid_it_department(state: FSMContext) -> InlineKeyboardMarku
         comment = "Не указано"
     else:
         comment = "✅ " + comment
-    
+
     if photo is None:
         all_field_exist = False
     if photo:
@@ -523,7 +524,9 @@ async def get_create_bid_it_department(state: FSMContext) -> InlineKeyboardMarku
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Выберите проблему из списка", callback_data="get_problem_it"),
+            InlineKeyboardButton(
+                text="Выберите проблему из списка", callback_data="get_problem_it"
+            ),
             InlineKeyboardButton(text=problem, callback_data="dummy"),
         ],
         [
@@ -533,10 +536,14 @@ async def get_create_bid_it_department(state: FSMContext) -> InlineKeyboardMarku
         [
             InlineKeyboardButton(text="Фото", callback_data="get_photo"),
             InlineKeyboardButton(text=photo_text, callback_data="dummy"),
-        ]
+        ],
     ]
     if all_field_exist:
         keyboard.append(
-            [InlineKeyboardButton(text="Отправить заявку", callback_data="send_bid_it")] # send kuda to escho
+            [
+                InlineKeyboardButton(
+                    text="Отправить заявку", callback_data="send_bid_it"
+                )
+            ]  # send kuda to escho
         )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

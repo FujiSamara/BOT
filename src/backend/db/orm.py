@@ -714,7 +714,7 @@ def get_problems_it_columns() -> list[ProblemITSchema]:
     with session.begin() as s:
         raw_models = s.query(ProblemIT).all()
         return [ProblemITSchema.model_validate(raw_model) for raw_model in raw_models]
-    
+
 
 def get_last_bid_it_id() -> int:
     """
@@ -734,6 +734,27 @@ def find_problem_it_by_id(column: any, value: any) -> ProblemITSchema:
         if not raw_worker:
             return None
         return ProblemITSchema.model_validate(raw_worker)
+
+
+def get_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = s.query(BidIT).filter(BidIT.worker_id == worker.id).all()
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def find_bid_it_by_column(column: any, value: any) -> BidITSchema:
+    """
+    Returns bid IT in database by `column` with `value`.
+    If bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bid = s.query(BidIT).filter(column == value).first()
+        if not raw_bid:
+            return None
+        return BidITSchema.model_validate(raw_bid)
 
 
 def add_bid_it(bid_it: BidITSchema):

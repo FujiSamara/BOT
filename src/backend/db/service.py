@@ -13,6 +13,7 @@ from db.models import (
     WorkTime,
     WorkerBid,
     ProblemIT,
+    BidIT,
 )
 from db.schemas import (
     BidRecordSchema,
@@ -723,6 +724,25 @@ def get_problems_it_schema() -> list[ProblemITSchema]:
     return orm.get_problems_it_columns()
 
 
+def get_bids_it_by_worker_telegram_id(id: str) -> list[BidITSchema]:
+    """
+    Returns all bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_bids_it_by_worker(worker)
+
+
+def get_bid_it_by_id(id: int) -> BidITSchema:
+    """
+    Returns bid IT in database by it id.
+    """
+    return orm.find_bid_it_by_column(BidIT.id, id)
+
+
 async def create_bid_it(
     problem_id: str,
     comment: str,
@@ -774,4 +794,4 @@ async def create_bid_it(
     orm.add_bid_it(bid_it)
     from bot.handlers.utils import notify_workers_by_access
 
-    await notify_workers_by_access(access=Access.kru, message="У вас новая заявка!")
+    await notify_workers_by_access(access=Access.worker, message="У вас новая заявка!")
