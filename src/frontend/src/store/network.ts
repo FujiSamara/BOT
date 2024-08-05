@@ -76,7 +76,8 @@ export const useNetworkStore = defineStore("network", {
 			const decoded: any = jwtDecode(token);
 			this.accesses = [];
 			for (const scope of decoded.scopes) {
-				if (accessesDict[scope]) this.accesses.push(accessesDict[scope]);
+				if (accessesDict[scope] !== undefined)
+					this.accesses.push(accessesDict[scope]);
 			}
 			this.username = decoded.sub;
 		},
