@@ -11,9 +11,6 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Предприятие")}: {bid.department.name}
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
-{hbold("Наличие договора")}: {bid.agreement}
-{hbold("Заявка срочная?")} {bid.urgently}
-{hbold("Нужна платежка?")} {bid.need_document}
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {get_bid_state_info(bid)}
 """
