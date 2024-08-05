@@ -212,7 +212,6 @@ class ProblemITSchema(BaseSchema):
     repairman: WorkerSchema
 
 
-
 class BidITSchema(BaseModel):
     class Config:
         arbitrary_types_allowed = True
@@ -292,6 +291,6 @@ class BidRecordSchema(BaseSchema):
                     return val
             return result
         return val
-      
+
 
 # endregion

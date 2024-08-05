@@ -137,9 +137,7 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
-    bids_it: Mapped[List["BidIT"]] = relationship(
-        "BidIT", back_populates="department"
-    )
+    bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
 
     # айдишник из биосмарта для определения конкретного подразделения
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
@@ -220,17 +218,13 @@ class Worker(Base):
         "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
     )
     repairman_bids_it: Mapped[List["BidIT"]] = relationship(
-        "BidIT",
-        back_populates="repairman",
-        foreign_keys="[BidIT.repairman_id]"
+        "BidIT", back_populates="repairman", foreign_keys="[BidIT.repairman_id]"
     )
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
     )
     repairman_problems_it: Mapped[List["ProblemIT"]] = relationship(
-        "ProblemIT",
-        back_populates="repairman",
-        foreign_keys="[ProblemIT.repairman_id]"
+        "ProblemIT", back_populates="repairman", foreign_keys="[ProblemIT.repairman_id]"
     )
 
     work_times: Mapped[List["WorkTime"]] = relationship(
@@ -506,7 +500,9 @@ class ProblemIT(Base):
     problem: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(nullable=False)
     hours: Mapped[float] = mapped_column(nullable=False)
-    repairman_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    repairman_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workers.id"), nullable=False
+    )
     repairman: Mapped["Worker"] = relationship(
         "Worker", back_populates="repairman_problems_it", foreign_keys=[repairman_id]
     )
@@ -521,9 +517,13 @@ class BidIT(Base):
 
     id: Mapped[intpk]
     problem_comment: Mapped[str] = mapped_column(nullable=False)
-    problem_photo: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage), nullable=False)
+    problem_photo: Mapped[FileType] = mapped_column(
+        FileType(storage=get_settings().storage), nullable=False
+    )
 
-    problem_id: Mapped[int] = mapped_column(ForeignKey("problems_it.id"), nullable=False)
+    problem_id: Mapped[int] = mapped_column(
+        ForeignKey("problems_it.id"), nullable=False
+    )
     problem: Mapped["ProblemIT"] = relationship(
         "ProblemIT", back_populates="bids_it", foreign_keys=[problem_id]
     )
@@ -531,11 +531,15 @@ class BidIT(Base):
     worker: Mapped["Worker"] = relationship(
         "Worker", back_populates="bids_it", foreign_keys=[worker_id]
     )
-    repairman_id: Mapped[Optional[int]] = mapped_column(ForeignKey("workers.id"), nullable=True)
+    repairman_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
     repairman: Mapped["Worker"] = relationship(
         "Worker", back_populates="repairman_bids_it", foreign_keys=[repairman_id]
     )
-    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"), nullable=False)
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id"), nullable=False
+    )
     department: Mapped["Department"] = relationship(
         "Department", back_populates="bids_it", foreign_keys=[department_id]
     )
@@ -547,5 +551,7 @@ class BidIT(Base):
     approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     mark: Mapped[int] = mapped_column(nullable=True)
-    work_photo: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage), nullable=True)
+    work_photo: Mapped[FileType] = mapped_column(
+        FileType(storage=get_settings().storage), nullable=True
+    )
     work_comment: Mapped[str] = mapped_column(nullable=True)
