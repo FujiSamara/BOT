@@ -127,7 +127,10 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     """
     Sends notify `message` to workers by their `scope`.
     """
-    workers: list[WorkerSchema] = service.get_workers_by_scope(scope)
+    workers: list[WorkerSchema] = [
+        *service.get_workers_by_scope(scope),
+        *service.get_workers_by_scope(FujiScope.admin),
+    ]
 
     for worker in workers:
         if not worker.telegram_id:

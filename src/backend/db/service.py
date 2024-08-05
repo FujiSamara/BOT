@@ -302,6 +302,8 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                     bid.accountant_card_state = ApprovalStatus.pending_approval
                 else:
                     bid.accountant_cash_state = ApprovalStatus.pending_approval
+            else:
+                bid.owner_state = ApprovalStatus.pending_approval
             if state == ApprovalStatus.denied:
                 bid.owner_state = ApprovalStatus.skipped
                 bid.accountant_card_state = ApprovalStatus.skipped
@@ -336,29 +338,39 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         case "teller_cash_state":
             bid.teller_cash_state = ApprovalStatus.approved
 
-    if bid.owner_state == ApprovalStatus.pending_approval:
+    if bid.kru_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            access=FujiScope.bot_bid_owner, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+        )
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            access=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            access=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            access=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            access=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
         )
     if state == ApprovalStatus.approved:
         stage = ""
         match state_name:
+            case "fac_state":
+                stage = "Ваша заявка согласована ЦФО!"
+            case "cc_state":
+                stage = "Ваша заявка согласована ЦЗ!"
+            case "cc_supervisor_state":
+                stage = "Ваша заявка согласована руководителем ЦЗ!"
             case "kru_state":
                 stage = "Ваша заявка согласована КРУ!"
             case "owner_state":
