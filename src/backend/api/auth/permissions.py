@@ -21,7 +21,7 @@ _scopes = {
 
 def _to_auth_scope(fuji_scope: FujiScope) -> str:
     """Converts `FujiScopes` to auth str scope."""
-    return _scopes[fuji_scope.name]
+    return fuji_scope.name
 
 
 def _to_fuji_scope(scope: str) -> FujiScope:
