@@ -34,7 +34,6 @@ export default {
 	background-color: white;
 	border-radius: 40px;
 	width: 560px;
-	height: 480px;
 	padding: 50px;
 	position: relative;
 }
@@ -50,6 +49,8 @@ export default {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 	gap: 40px;
 }
 </style>
