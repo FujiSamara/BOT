@@ -43,16 +43,6 @@ class FujiScope(enum.Enum):
     bot_worker_bid = 13
 
 
-class Access(enum.Enum):
-    kru = (6,)
-    worker = (3,)
-    teller_cash = (4,)
-    teller_card = (5,)
-    accountant_cash = (7,)
-    accountant_card = (8,)
-    owner = (10,)
-
-
 class DepartmentType(enum.Enum):
     dark_store = (1,)
     restaurant = (2,)
