@@ -129,27 +129,15 @@ class CoordinationFactory:
         self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
     ):
         bid = get_bid_by_id(callback_data.id)
-        media: list[InputMediaDocument] = [
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=bid.document.file.read(), filename=bid.document.filename
-                ),
-            )
-        ]
-        if bid.document1:
+        media: list[InputMediaDocument] = []
+
+        for document in bid.documents:
             media.append(
                 InputMediaDocument(
                     media=BufferedInputFile(
-                        file=bid.document1.file.read(), filename=bid.document1.filename
-                    )
-                )
-            )
-        if bid.document2:
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=bid.document2.file.read(), filename=bid.document2.filename
-                    )
+                        file=document.document.file.read(),
+                        filename=document.document.filename,
+                    ),
                 )
             )
         await try_delete_message(callback.message)
