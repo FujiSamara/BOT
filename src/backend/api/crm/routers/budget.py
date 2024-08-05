@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/")
 async def get_budget_records(
-    _: User = Security(get_current_user, scopes=["budget"]),
+    _: User = Security(get_current_user, scopes=["crm_budget"]),
 ) -> list[BudgetRecordWithChapter]:
     return [
         BudgetRecordWithChapter(
@@ -30,7 +30,7 @@ async def get_budget_records(
 
 @router.get("/last")
 async def get_last_budget_record(
-    _: User = Security(get_current_user, scopes=["budget"]),
+    _: User = Security(get_current_user, scopes=["crm_budget"]),
 ) -> Optional[BudgetRecordWithChapter]:
     record = service.get_last_budget_record()
     if record:
@@ -47,13 +47,14 @@ async def get_last_budget_record(
 
 @router.delete("/{id}")
 async def delete_budget_record(
-    id: int, _: User = Security(get_current_user, scopes=["budget"])
+    id: int, _: User = Security(get_current_user, scopes=["crm_budget"])
 ) -> None:
     service.remove_budget_record(id)
 
 
 @router.patch("/")
 async def update_budget_record(
-    schema: BudgetRecordSchema, _: User = Security(get_current_user, scopes=["budget"])
+    schema: BudgetRecordSchema,
+    _: User = Security(get_current_user, scopes=["crm_budget"]),
 ) -> None:
     service.update_budget_record(schema)
