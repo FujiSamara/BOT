@@ -38,6 +38,8 @@ def upgrade() -> None:
                 "bot_bid_teller_card",
                 "bot_bid_accountant_cash",
                 "bot_bid_accountant_card",
+                "bot_rate",
+                "bot_worker_bid",
                 name="fujiscope",
             ),
             nullable=False,
