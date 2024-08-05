@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import ApprovalStatus, Gender
+from db.models import ApprovalStatus, FujiScope, Gender, PostScope
 import logging
 
 
@@ -19,6 +19,19 @@ class BaseSchema(BaseModel):
 class PostSchema(BaseSchema):
     name: str
     level: int
+    scopes: list[FujiScope]
+
+    @field_validator("scopes", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, list):
+            result = []
+            for raw_scope in val:
+                if isinstance(raw_scope, PostScope):
+                    result.append(raw_scope.scope)
+
+            return result
+        return val
 
 
 class CompanySchema(BaseSchema):
@@ -40,7 +53,7 @@ class WorkerSchema(BaseSchema):
     phone_number: Optional[str]
     telegram_id: Optional[int]
 
-    post: Optional[PostSchema]
+    post: PostSchema
 
     department: DepartmentSchema
 
