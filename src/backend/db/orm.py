@@ -708,7 +708,7 @@ def get_bids() -> list[BidSchema]:
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-#Technical problem
+# Technical problem
 def create_technical_problem(record: ProblemSchema) -> bool:
     """Creates technical problem
     Returns: `True` if technical problem record created, `False` otherwise.
@@ -726,13 +726,16 @@ def get_problem_schema_by_problem(problem: str) -> ProblemSchema:
     Return ProblemSchema by problem text
     """
     with session.begin() as s:
-        raw_model = s.query(TechnicalProblem).filter(TechnicalProblem.problem_name == problem).first()[0]
+        raw_model = (
+            s.query(TechnicalProblem)
+            .filter(TechnicalProblem.problem_name == problem)
+            .first()[0]
+        )
         return ProblemSchema.model_validate(raw_model)
 
 
 def get_technical_problems() -> list[ProblemSchema]:
-    """Returns list of ProblemSchema
-    """
+    """Returns list of ProblemSchema"""
     with session.begin() as s:
         raw_models = s.query(TechnicalProblem).all()
         return [ProblemSchema.model_validate(raw_model) for raw_model in raw_models]
@@ -744,11 +747,15 @@ def get_last_technical_request_id() -> int:
     """
     with session.begin() as s:
         return s.query(func.max(TechnicalRequest.id)).first()[0]
-    
 
-def get_technical_problem_by_problem_name(problem_name:str) -> ProblemSchema:
+
+def get_technical_problem_by_problem_name(problem_name: str) -> ProblemSchema:
     with session.begin() as s:
-        return ProblemSchema.model_validate(s.query(TechnicalProblem).filter(TechnicalProblem.problem_name == problem_name).first())
+        return ProblemSchema.model_validate(
+            s.query(TechnicalProblem)
+            .filter(TechnicalProblem.problem_name == problem_name)
+            .first()
+        )
 
 
 def create_technical_request(record: TechnicalRequestSchema) -> bool:
@@ -759,11 +766,11 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
         worker = s.query(Worker).filter(Worker.id == record.worker.id).first()
         if not worker:
             return False
-        
+
         # repairman = s.query(Worker).filter(Worker.id == record.repairman.id).first()
         # if not repairman:
-            # return False
-        
+        # return False
+
         department = (
             s.query(Department).filter(Department.id == record.department.id).first()
         )
@@ -771,36 +778,42 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             return False
 
         technical_request = TechnicalRequest(
-            problem_id = record.problem.id,
-            description = record.description,
-            state = record.state,
-            score = None,
-            open_date = record.open_date,
-            confirmation_date = None,
-            reopen_date = None,
-            close_date = None,
-            worker_id = worker.id,
-            repairman_id = worker.id,#repairman.id,
-            department_id = department.id,
+            problem_id=record.problem.id,
+            description=record.description,
+            state=record.state,
+            score=None,
+            open_date=record.open_date,
+            confirmation_date=None,
+            reopen_date=None,
+            close_date=None,
+            worker_id=worker.id,
+            repairman_id=worker.id,  # repairman.id,
+            department_id=department.id,
         )
         s.add(technical_request)
 
         for doc in record.photos:
-            file = TechnicalRequestPhoto(technical_request=technical_request, document=doc.document)
+            file = TechnicalRequestPhoto(
+                technical_request=technical_request, document=doc.document
+            )
             s.add(file)
-    
+
     return True
 
 
-def get_technical_requests_by_column(column: Any, value: Any) -> list[TechnicalRequestSchema]:
+def get_technical_requests_by_column(
+    column: Any, value: Any
+) -> list[TechnicalRequestSchema]:
     """
     Returns all `TechnicalReques` as `TechnicalRequesSchema` in database
     by `column` with `value`.
     """
     return get_technical_requests_by_columns([column], [value])
-    
 
-def get_technical_requests_by_columns(columns: list[Any], values: list[Any]) -> list[TechnicalRequestSchema]:
+
+def get_technical_requests_by_columns(
+    columns: list[Any], values: list[Any]
+) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema in database
     by columns with values.
@@ -811,7 +824,10 @@ def get_technical_requests_by_columns(columns: list[Any], values: list[Any]) -> 
             query = query.filter(column == value)
 
         raw_models = query.all()
-        return [TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models]
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
 
 # def get_workers_with_post_by_columns(
 #     columns: list[Any], values: list[Any]

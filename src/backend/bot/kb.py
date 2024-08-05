@@ -420,7 +420,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-#Techical request
+# Techical request
 tech_req_menu_button = InlineKeyboardButton(
     text="Тех. заявки", callback_data="get_tech_req_menu"
 )
@@ -467,7 +467,7 @@ async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
         if len(problem_name) > 16:
             problem_name = problem_name[:16] + "..."
         problem_name += " ✅"
-    
+
     if not description:
         description = ""
         form_complete = False
@@ -482,23 +482,24 @@ async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         photo = f"{len(photo)}"
 
-
     buttons = [
         [
-            InlineKeyboardButton(text="Проблема", callback_data="problem_type_tech_req"),
+            InlineKeyboardButton(
+                text="Проблема", callback_data="problem_type_tech_req"
+            ),
             InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Комментарий", callback_data="description_tech_req"),
+            InlineKeyboardButton(
+                text="Комментарий", callback_data="description_tech_req"
+            ),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
         ],
         [
             InlineKeyboardButton(text="Фото", callback_data="photo_tech_req"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [
-            tech_req_menu_button
-        ]
+        [tech_req_menu_button],
     ]
 
     if form_complete:
@@ -527,13 +528,12 @@ async def create_tech_problem_kb(state: FSMContext) -> InlineKeyboardMarkup:
             ),
         ]
     ]
-    
+
     if not problem_name:
         problem_name = ""
         form_complete = False
     else:
         problem_name += " ✅"
-
 
     if form_complete:
         buttons.append(
@@ -547,6 +547,4 @@ async def create_tech_problem_kb(state: FSMContext) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-tech_req_status_dict={
-
-}
+tech_req_status_dict = {}

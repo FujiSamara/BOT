@@ -735,14 +735,16 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
-#Technical Request
+# Technical Request
 def create_technical_problem(record: ProblemSchema) -> None:
     if not orm.create_technical_problem(record):
-        logging.getLogger("uvicorn.error").error("Technical problem record wasn't created")
+        logging.getLogger("uvicorn.error").error(
+            "Technical problem record wasn't created"
+        )
 
 
 def get_technical_problem_names() -> list[ProblemSchema]:
-    return [problem.problem_name for problem in orm.get_technical_problems()]    
+    return [problem.problem_name for problem in orm.get_technical_problems()]
 
 
 def get_technical_problems() -> list[ProblemSchema]:
@@ -750,11 +752,11 @@ def get_technical_problems() -> list[ProblemSchema]:
 
 
 def create_technical_request(
-        problem_name: str,
-        description: str,
-        photo_files: list[UploadFile],
-        state: ApprovalStatus,
-        telegram_id: int,
+    problem_name: str,
+    description: str,
+    photo_files: list[UploadFile],
+    state: ApprovalStatus,
+    telegram_id: int,
 ) -> None:
     cur_date = datetime.now()
 
@@ -764,17 +766,21 @@ def create_technical_request(
 
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     if not worker:
-        logging.getLogger("uvicorn.error").error(f"Worker with telegram id {telegram_id} wasn't found")
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id {telegram_id} wasn't found"
+        )
 
     problem = orm.get_technical_problem_by_problem_name(problem_name=problem_name)
     if not problem:
-        logging.getLogger("uvicorn.error").error(f"Problem with name {problem_name} wasn't found")
+        logging.getLogger("uvicorn.error").error(
+            f"Problem with name {problem_name} wasn't found"
+        )
 
     # repairman = orm.get_workers_with_post_by_columns([Worker.department, Worker.post], [worker.department, problem.executor])
     # if not repairman:
     #     logging.getLogger("uvicorn.error").error(
     # f"Repairman with department {worker.department} and responsible by {problem.executor} wasn't found"
-    #)
+    # )
 
     # repairman = worker
 
@@ -792,42 +798,58 @@ def create_technical_request(
         state=state,
         open_date=cur_date,
         worker=worker,
-        repairman=worker,#repairman,
-        department=worker.department
+        repairman=worker,  # repairman,
+        department=worker.department,
     )
 
     if not orm.create_technical_request(request):
-        logging.getLogger("uvicorn.error").error("Technical problem record wasn't created")
+        logging.getLogger("uvicorn.error").error(
+            "Technical problem record wasn't created"
+        )
 
 
-def get_all_waiting_technical_requests_by_TG_id(telegram_id: int) -> list[TechnicalRequestSchema]:
+def get_all_waiting_technical_requests_by_TG_id(
+    telegram_id: int,
+) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
     """
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)
     if not worker:
-        logging.getLogger("uvicorn.error").error(f"Worker with telegram id {telegram_id} wasn't found")
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id {telegram_id} wasn't found"
+        )
 
-    requests = orm.get_technical_requests_by_columns([TechnicalRequest.worker_id, TechnicalRequest.state],
-                                                      [worker[0].id, "pending"])
+    requests = orm.get_technical_requests_by_columns(
+        [TechnicalRequest.worker_id, TechnicalRequest.state], [worker[0].id, "pending"]
+    )
     if not requests:
-        logging.getLogger("uvicorn.error").error(f"Requests for {worker.id} wasn't founds")
+        logging.getLogger("uvicorn.error").error(
+            f"Requests for {worker.id} wasn't founds"
+        )
 
     return requests
 
 
-
-def get_all_technical_requests_by_TG_id(telegram_id: int) -> list[TechnicalRequestSchema]:
+def get_all_technical_requests_by_TG_id(
+    telegram_id: int,
+) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
     """
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)
     if not worker:
-        logging.getLogger("uvicorn.error").error(f"Worker with telegram id {telegram_id} wasn't found")
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id {telegram_id} wasn't found"
+        )
 
-    requests = orm.get_technical_requests_by_column(TechnicalRequest.worker_id, worker[0].id)
+    requests = orm.get_technical_requests_by_column(
+        TechnicalRequest.worker_id, worker[0].id
+    )
     if not requests:
-        logging.getLogger("uvicorn.error").error(f"Requests for {worker.id} wasn't founds")
+        logging.getLogger("uvicorn.error").error(
+            f"Requests for {worker.id} wasn't founds"
+        )
 
     return requests
 
@@ -837,7 +859,11 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
     Return TechnicalRequestSchema by id
     """
     try:
-        request = orm.get_technical_requests_by_column(TechnicalRequest.id, request_id)[0]
+        request = orm.get_technical_requests_by_column(TechnicalRequest.id, request_id)[
+            0
+        ]
         return request
     except IndexError:
-        logging.getLogger("uvicorn.error").error(f"Requests with id {request_id} wasn't founds")
+        logging.getLogger("uvicorn.error").error(
+            f"Requests with id {request_id} wasn't founds"
+        )

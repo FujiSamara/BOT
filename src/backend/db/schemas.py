@@ -234,7 +234,7 @@ class BidRecordSchema(BaseSchema):
 # endregion
 
 
-#Technical request
+# Technical request
 class ProblemSchema(BaseSchema):
     problem_name: str
     executor: Executor
@@ -248,7 +248,7 @@ class TechnicalRequestSchema(BaseSchema):
 
     id: Optional[int] = -1
 
-    #Данные при создание
+    # Данные при создание
     problem: ProblemSchema
     description: str
     photos: list[DocumentSchema]
@@ -257,7 +257,7 @@ class TechnicalRequestSchema(BaseSchema):
     confirmation_date: Optional[datetime.datetime] = None
     reopen_date: Optional[datetime.datetime] = None
     close_date: Optional[datetime.datetime] = None
-    
+
     state: ApprovalStatus
     score: Optional[int] = None
 
