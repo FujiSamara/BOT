@@ -59,6 +59,9 @@ class PostScope(Base):
 
     __tablename__ = "post_scopes"
 
+    def __str__(self) -> str:
+        return self.scope.name
+
     id: Mapped[intpk]
     scope: Mapped[FujiScope] = mapped_column(Enum(FujiScope), nullable=False)
 
