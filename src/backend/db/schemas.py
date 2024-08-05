@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import ApprovalStatus, Gender
+from db.models import ApprovalStatus, Gender, Executor
 import logging
 
 
@@ -235,24 +235,32 @@ class BidRecordSchema(BaseSchema):
 
 
 #Technical request
-class Problem(BaseSchema):
-    
-
-
-class TechnicalProblemSchema(BaseSchema):
+class ProblemSchema(BaseSchema):
     problem_name: str
+    executor: Executor
+    hours: float
 
 
 class TechnicalRequestSchema(BaseSchema):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
     #Данные при создание
-    problem: TechnicalProblemSchema
+    problem: ProblemSchema
     description: str
-    photo: str
-    create_date = datetime.datetime.now().date()
-    create_time = datetime.datetime.now().time()
+    photos: list[DocumentSchema]
 
-    #Данные создателя
-    creator: WorkerSchema
+    open_date: datetime.datetime
+    confirmation_date: Optional[datetime.datetime] = None
+    reopen_date: Optional[datetime.datetime] = None
+    close_date: Optional[datetime.datetime] = None
+    
+    state: ApprovalStatus
+    score: Optional[int] = None
 
+    worker: WorkerSchema
+    repairman: WorkerSchema
     department: DepartmentSchema
-

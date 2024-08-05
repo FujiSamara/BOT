@@ -438,12 +438,6 @@ tech_req_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_tech_req_history"
 )
 
-
-tech_problem = InlineKeyboardButton(
-    text="Создать проблему", callback_data="create_tech_problem"
-)
-
-
 tech_req_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [tech_req_create],
@@ -451,6 +445,11 @@ tech_req_menu = InlineKeyboardMarkup(
         [tech_req_history],
         [main_menu_button],
     ]
+)
+
+
+tech_problem = InlineKeyboardButton(
+    text="Создать проблему", callback_data="create_tech_problem"
 )
 
 
@@ -462,22 +461,26 @@ async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
     photo = data.get("photo")
 
     if not problem_name:
-        problem_name=""
+        problem_name = ""
         form_complete = False
     else:
-        problem_name=" ✅"
+        if len(problem_name) > 16:
+            problem_name = problem_name[:16] + "..."
+        problem_name += " ✅"
     
     if not description:
-        description=""
+        description = ""
         form_complete = False
     else:
-        description=" ✅"
+        if len(description) > 16:
+            description = description[:16] + "..."
+        description += " ✅"
 
     if not photo or len(photo) == 0:
-        photo=""
+        photo = ""
         form_complete = False
     else:
-        photo=f"{len(photo)}"
+        photo = f"{len(photo)}"
 
 
     buttons = [
@@ -493,6 +496,9 @@ async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото", callback_data="photo_tech_req"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
+        [
+            tech_req_menu_button
+        ]
     ]
 
     if form_complete:

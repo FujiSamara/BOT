@@ -2,11 +2,12 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
-    BidDocument,
     BudgetRecord,
     Expenditure,
     Post,
     TechnicalProblem,
+    TechnicalRequest,
+    TechnicalRequestPhoto,
     WorkTime,
     Worker,
     Department,
@@ -21,7 +22,8 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
-    TechnicalProblemSchema,
+    ProblemSchema,
+    TechnicalRequestSchema,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -160,34 +162,30 @@ def add_bid(bid: BidSchema):
         department = (
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
-        expenditure = (
-            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
-        )
 
-        bid_model = Bid(
+        bid = Bid(
             amount=bid.amount,
             payment_type=bid.payment_type,
             purpose=bid.purpose,
+            agreement=bid.agreement,
+            urgently=bid.urgently,
+            need_document=bid.need_document,
             comment=bid.comment,
             create_date=bid.create_date,
             department=department,
             worker=worker,
-            documents=[],
+            document=bid.document,
+            document1=bid.document1,
+            document2=bid.document2,
             kru_state=bid.kru_state,
             owner_state=bid.owner_state,
             accountant_card_state=bid.accountant_card_state,
             accountant_cash_state=bid.accountant_cash_state,
             teller_card_state=bid.teller_card_state,
             teller_cash_state=bid.teller_cash_state,
-            fac_state=bid.fac_state,
-            cc_state=bid.cc_state,
-            cc_supervisor_state=bid.cc_supervisor_state,
-            expenditure=expenditure,
         )
-        s.add(bid_model)
 
-        for document in bid.documents:
-            s.add(BidDocument(bid=bid_model, document=document.document))
+        s.add(bid)
 
 
 def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
@@ -281,22 +279,18 @@ def update_bid(bid: BidSchema):
         if not new_worker:
             return None
 
-        new_expenditure = (
-            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
-        )
-        if not new_expenditure:
-            return None
-
         cur_bid.amount = bid.amount
         cur_bid.payment_type = bid.payment_type
         cur_bid.purpose = bid.purpose
+        cur_bid.agreement = bid.agreement
+        cur_bid.urgently = bid.urgently
+        cur_bid.need_document = bid.need_document
         cur_bid.comment = bid.comment
         cur_bid.denying_reason = bid.denying_reason
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
         cur_bid.worker = new_worker
-        cur_bid.expenditure = new_expenditure
         # TODO: Update documents
         # cur_bid.document = bid.document
         # cur_bid.document1 = bid.document1
@@ -307,9 +301,6 @@ def update_bid(bid: BidSchema):
         cur_bid.accountant_cash_state = bid.accountant_cash_state
         cur_bid.teller_card_state = bid.teller_card_state
         cur_bid.teller_cash_state = bid.teller_cash_state
-        cur_bid.fac_state = bid.fac_state
-        cur_bid.cc_state = bid.cc_state
-        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
 
 
 def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchema]:
@@ -715,3 +706,123 @@ def get_bids() -> list[BidSchema]:
     with session.begin() as s:
         raw_models = s.query(Bid).all()
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+#Technical problem
+def create_technical_problem(record: ProblemSchema) -> bool:
+    """Creates technical problem
+    Returns: `True` if technical problem record created, `False` otherwise.
+    """
+    with session.begin() as s:
+        record_model = TechnicalProblem(problem_type=record.problem_type)
+
+        s.add(record_model)
+
+    return True
+
+
+def get_problem_schema_by_problem(problem: str) -> ProblemSchema:
+    """
+    Return ProblemSchema by problem text
+    """
+    with session.begin() as s:
+        raw_model = s.query(TechnicalProblem).filter(TechnicalProblem.problem_name == problem).first()[0]
+        return ProblemSchema.model_validate(raw_model)
+
+
+def get_technical_problems() -> list[ProblemSchema]:
+    """Returns list of ProblemSchema
+    """
+    with session.begin() as s:
+        raw_models = s.query(TechnicalProblem).all()
+        return [ProblemSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_last_technical_request_id() -> int:
+    """
+    Returns last technical request id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(TechnicalRequest.id)).first()[0]
+    
+
+def get_technical_problem_by_problem_name(problem_name:str) -> ProblemSchema:
+    with session.begin() as s:
+        return ProblemSchema.model_validate(s.query(TechnicalProblem).filter(TechnicalProblem.problem_name == problem_name).first())
+
+
+def create_technical_request(record: TechnicalRequestSchema) -> bool:
+    """Creates technical problem
+    Returns: `True` if technical problem request record created, `False` otherwise.
+    """
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.id == record.worker.id).first()
+        if not worker:
+            return False
+        
+        # repairman = s.query(Worker).filter(Worker.id == record.repairman.id).first()
+        # if not repairman:
+            # return False
+        
+        department = (
+            s.query(Department).filter(Department.id == record.department.id).first()
+        )
+        if not department:
+            return False
+
+        technical_request = TechnicalRequest(
+            problem_id = record.problem.id,
+            description = record.description,
+            state = record.state,
+            score = None,
+            open_date = record.open_date,
+            confirmation_date = None,
+            reopen_date = None,
+            close_date = None,
+            worker_id = worker.id,
+            repairman_id = worker.id,#repairman.id,
+            department_id = department.id,
+        )
+        s.add(technical_request)
+
+        for doc in record.photos:
+            file = TechnicalRequestPhoto(technical_request=technical_request, document=doc.document)
+            s.add(file)
+    
+    return True
+
+
+def get_technical_requests_by_column(column: Any, value: Any) -> list[TechnicalRequestSchema]:
+    """
+    Returns all `TechnicalReques` as `TechnicalRequesSchema` in database
+    by `column` with `value`.
+    """
+    return get_technical_requests_by_columns([column], [value])
+    
+
+def get_technical_requests_by_columns(columns: list[Any], values: list[Any]) -> list[TechnicalRequestSchema]:
+    """
+    Returns all TechnicalRequest as TechnicalRequestSchema in database
+    by columns with values.
+    """
+    with session.begin() as s:
+        query = s.query(TechnicalRequest)
+        for column, value in zip(columns, values):
+            query = query.filter(column == value)
+
+        raw_models = query.all()
+        return [TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models]
+
+# def get_workers_with_post_by_columns(
+#     columns: list[Any], values: list[Any]
+# ) -> list[WorkerSchema]:
+#     """
+#     Returns all `Worker` as `WorkerSchema` in database
+#     by `columns` with `values`.
+#     """
+#     with session.begin() as s:
+#         query = s.query(Worker).join(Worker.post)
+#         for column, value in zip(columns, values):
+#             query = query.filter(column == value)
+#         raw_models = query.all()
+#         return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]

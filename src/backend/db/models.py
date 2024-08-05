@@ -43,6 +43,12 @@ class DepartmentType(enum.Enum):
     fast_casual = (3,)
 
 
+class Executor(enum.Enum):
+    technician = (1,)
+    chief_technician = (2,)
+    electrician = (3,)
+
+
 approvalstatus = Annotated[
     ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
 ]
@@ -518,8 +524,30 @@ class TechnicalProblem(Problem):
     __tablename__ = "technical_problems"
 
     problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
+    executor: Mapped[Executor] = mapped_column(Enum(Executor), nullable=False)
+    hours: Mapped[float] = mapped_column(nullable=False)
     requests: Mapped[list["TechnicalRequest"]] = relationship("TechnicalRequest", back_populates="problem")
-    executor: Mapped[Access] = mapped_column(Enum(Access), nullable=False)
+
+
+class TechicalRequestDocument(Base):
+    """Общий класс для документов у заявок на тех. ремонт"""
+
+    __abstract__ = True
+
+    id: Mapped[intpk]
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    technical_request_id: Mapped[int] = mapped_column(ForeignKey("technical_requests.id"))
+
+
+
+class TechnicalRequestPhoto(TechicalRequestDocument):
+    """Фото для тех заявок"""
+
+    __tablename__ = "technical_requests_photos"
+
+    technical_request: Mapped["TechnicalRequest"] = relationship(
+        "TechnicalRequest", back_populates="photos"
+    )
 
 
 class TechnicalRequest(Base):
@@ -533,10 +561,12 @@ class TechnicalRequest(Base):
     problem: Mapped["TechnicalProblem"] = relationship("TechnicalProblem", back_populates="requests")
 
     description: Mapped[str] = mapped_column(nullable=False)
-    photos: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    photos: Mapped[List["TechnicalRequestPhoto"]] = relationship(
+        "TechnicalRequestPhoto", cascade="all,delete", back_populates="technical_request"
+    )
 
-    status: Mapped[bool] = mapped_column(nullable=True)
-    score: Mapped[int] = mapped_column(CheckConstraint("(score>0 AND score<6) OR NULL"))
+    state: Mapped[approvalstatus]
+    score: Mapped[int] = mapped_column(CheckConstraint("(score>0 AND score<6) OR NULL"), nullable=True)
 
     open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
     confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
