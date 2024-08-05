@@ -200,6 +200,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
         Worker.department,
+        Worker.telegram_id,
         Worker.post,
         Worker.b_date,
         Worker.employment_date,
