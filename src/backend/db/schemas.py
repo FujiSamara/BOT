@@ -5,6 +5,7 @@ import datetime
 from pathlib import Path
 from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope
+from io import BytesIO
 import logging
 
 
@@ -92,7 +93,7 @@ class DocumentSchema(BaseModel):
                 logging.getLogger("uvicorn.error").warning(
                     f"File with path: {val.path} not exist"
                 )
-                return val.path
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
         return val
 
 
