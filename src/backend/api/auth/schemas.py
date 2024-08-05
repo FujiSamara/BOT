@@ -15,3 +15,7 @@ class TokenData(BaseModel):
 class User(BaseModel):
     username: str
     full_name: Optional[str] = None
+
+
+class UserWithScopes(User):
+    scopes: list[str] = []
