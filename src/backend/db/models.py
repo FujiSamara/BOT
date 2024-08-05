@@ -25,6 +25,22 @@ class Gender(enum.Enum):
     woman = (2,)
 
 
+class FujiScope(enum.Enum):
+    admin = 1
+    # CRM
+    crm_bid = 2
+    crm_budget = 3
+    crm_expenditure = 4
+    # BOT
+    bot_bid_create = 5
+    bot_bid_kru = 6
+    bot_bid_owner = 7
+    bot_bid_teller_cash = 8
+    bot_bid_teller_card = 9
+    bot_bid_accountant_cash = 10
+    bot_bid_accountant_card = 11
+
+
 class Access(enum.Enum):
     kru = (6,)
     worker = (3,)
@@ -46,6 +62,18 @@ approvalstatus = Annotated[
 ]
 
 
+class PostScope(Base):
+    """Доступы у должности"""
+
+    __tablename__ = "post_scopes"
+
+    id: Mapped[intpk]
+    scope: Mapped[FujiScope] = mapped_column(Enum(FujiScope), nullable=False)
+
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
+    post: Mapped["Post"] = relationship("Post", back_populates="scopes")
+
+
 class Post(Base):
     """Должности у работников"""
 
@@ -59,7 +87,7 @@ class Post(Base):
     salary: Mapped[float] = mapped_column(nullable=True)
     level: Mapped[int] = mapped_column(
         CheckConstraint("level<=10 AND level>0"), nullable=False
-    )
+    )  # deprecated
 
     workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="post")
 
@@ -70,6 +98,8 @@ class Post(Base):
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="post"
     )
+
+    scopes: Mapped[List["PostScope"]] = relationship("PostScope", back_populates="post")
 
 
 class Company(Base):
