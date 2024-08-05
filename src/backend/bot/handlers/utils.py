@@ -1,4 +1,5 @@
 from typing import Any, Awaitable, Callable
+from functools import cache
 from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
@@ -12,9 +13,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
-from db.models import Access
+from db.models import Access, FujiScope
 from db.schemas import WorkerSchema
-from db.service import get_workers_by_level, get_worker_level_by_telegram_id
+from db.service import get_workers_by_level
+import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
     create_bid_menu_button,
@@ -31,33 +33,38 @@ from bot.kb import (
 import asyncio
 
 
+@cache
+def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
+    """Returns cached scope-menu dict"""
+    return {
+        FujiScope.bot_bid_kru: kru_menu_button,
+        FujiScope.bot_bid_owner: owner_menu_button,
+        FujiScope.bot_bid_accountant_card: accountant_card_menu_button,
+        FujiScope.bot_bid_accountant_cash: accountant_cash_menu_button,
+        FujiScope.bot_bid_teller_card: teller_card_menu_button,
+        FujiScope.bot_bid_teller_cash: teller_cash_menu_button,
+        FujiScope.bot_rate: rating_menu_button,
+        FujiScope.bot_worker_bid: worker_bid_menu_button,
+        FujiScope.bot_bid_create: create_bid_menu_button,
+    }
+
+
 async def send_menu_by_level(message: Message, edit=None):
     """
     Sends specific menu for user by his role.
 
     If `edit = True` - calling `Message.edit_text` instead `Message.answer`
     """
-    level = get_worker_level_by_telegram_id(message.chat.id)
+    scopes = []
+    worker = service.get_worker_by_telegram_id(message.chat.id)
+    if worker:
+        scopes = worker.post.scopes
+
     menus = []
 
-    match get_access_by_level(level):
-        case Access.worker:
-            menus.append([create_bid_menu_button])
-            menus.append([worker_bid_menu_button])
-            if level == 6:
-                menus.append([rating_menu_button])
-        case Access.teller_cash:
-            menus.append([teller_cash_menu_button])
-        case Access.teller_card:
-            menus.append([teller_card_menu_button])
-        case Access.kru:
-            menus.append([kru_menu_button])
-        case Access.accountant_cash:
-            menus.append([accountant_cash_menu_button])
-        case Access.accountant_card:
-            menus.append([accountant_card_menu_button])
-        case Access.owner:
-            menus.append([owner_menu_button])
+    for scope, button in get_scope_menu_dict().items():
+        if scope in scopes or FujiScope.admin in scopes:
+            menus.append([button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
 

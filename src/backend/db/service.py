@@ -44,6 +44,14 @@ def get_worker_level_by_telegram_id(id: str) -> int:
     return worker.post.level
 
 
+def get_worker_by_telegram_id(id: str) -> Optional[WorkerSchema]:
+    """
+    Returns worker by his telegram id.
+    Return `None`, if worker doesn't exits.
+    """
+    return orm.find_worker_by_column(Worker.telegram_id, id)
+
+
 def get_workers_by_level(level: int) -> list[WorkerSchema]:
     """
     Returns all workers in database with `level` at column.

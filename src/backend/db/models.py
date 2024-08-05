@@ -39,6 +39,8 @@ class FujiScope(enum.Enum):
     bot_bid_teller_card = 9
     bot_bid_accountant_cash = 10
     bot_bid_accountant_card = 11
+    bot_rate = 12
+    bot_worker_bid = 13
 
 
 class Access(enum.Enum):
