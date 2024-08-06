@@ -599,8 +599,10 @@ async def repairman_repair_tech_req_kb(
             [
                 InlineKeyboardButton(
                     text="Отметить выполненой",
-                    callback_data=ShowRequestCallbackData(end_point="save_repairman_repair",
-                                                          request_id=callback_data.request_id).pack(),
+                    callback_data=ShowRequestCallbackData(
+                        end_point="save_repairman_repair",
+                        request_id=callback_data.request_id,
+                    ).pack(),
                 )
             ]
         )

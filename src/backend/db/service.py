@@ -835,12 +835,10 @@ def update_technical_request_repairman(
     documents = []
     try:
         # Определяем index последнего файла, если ранее были добавлены фото после ремонта
-        index = (
-            int(
-                request.repair_photos[-1].name[
-                    -1 * len(Path(request.repair_photos[-1].filename).suffix) - 1
-                ]
-            )
+        index = int(
+            request.repair_photos[-1].name[
+                -1 * len(Path(request.repair_photos[-1].filename).suffix) - 1
+            ]
         )
     except IndexError:
         index = 0

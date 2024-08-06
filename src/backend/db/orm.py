@@ -871,23 +871,3 @@ def get_technical_requets_for_repairman_history(
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
-
-
-def get_photo_repair_technical_request_index_by_request_id(request_id: int) -> int:
-    with session.begin() as s:
-        pass
-
-
-# def get_workers_with_post_by_columns(
-#     columns: list[Any], values: list[Any]
-# ) -> list[WorkerSchema]:
-#     """
-#     Returns all `Worker` as `WorkerSchema` in database
-#     by `columns` with `values`.
-#     """
-#     with session.begin() as s:
-#         query = s.query(Worker).join(Worker.post)
-#         for column, value in zip(columns, values):
-#             query = query.filter(column == value)
-#         raw_models = query.all()
-#         return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
