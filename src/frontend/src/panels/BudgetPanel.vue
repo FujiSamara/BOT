@@ -17,18 +17,18 @@
 			:canDelete="true"
 		></PanelTable>
 		<div v-if="editingElement" class="edit-panel-element-wrapper">
-			<EditPanelElement
+			<EditPanelRow
 				class="edit-page"
 				:editor="editor"
 				@close="editingElement = false"
 				@submit="onSubmit"
-			></EditPanelElement>
+			></EditPanelRow>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
 import PanelTable from "@/components/PanelTable.vue";
-import EditPanelElement from "@/components/EditPanelElement.vue";
+import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
