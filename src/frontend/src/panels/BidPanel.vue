@@ -22,19 +22,10 @@
 			:can-approve="true"
 			:can-reject="true"
 		></PanelTable>
-		<div v-if="editingElement" class="edit-panel-element-wrapper">
-			<EditPanelElement
-				class="edit-page"
-				:editor="editor"
-				@submit="onSubmit"
-				@close="editingElement = false"
-			></EditPanelElement>
-		</div>
 	</div>
 </template>
 <script setup lang="ts">
 import PanelTable from "@/components/PanelTable.vue";
-import EditPanelElement from "@/components/EditPanelElement.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
@@ -71,15 +62,6 @@ const editor: ShallowRef<ExpenditureEditor> = shallowRef(
 	new ExpenditureEditor(),
 );
 const editingElementKey: Ref<number> = ref(-1);
-
-const onSubmit = async () => {
-	if (editingElementKey.value !== -1) {
-		await table.update(editor.value.toInstanse(), editingElementKey.value);
-	} else {
-		await table.create(editor.value.toInstanse());
-	}
-	editingElement.value = false;
-};
 
 const table = new BidTable();
 const fromDateString = ref("");
