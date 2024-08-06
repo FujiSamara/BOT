@@ -431,12 +431,12 @@ export class Table<T extends BaseSchema> {
 		this.allChecked.value = false;
 		this.emulateLoading(false);
 	}
-	public async reject(id: number): Promise<void> {
+	public async reject(id: number, reason: string): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
 
 		await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}/reject/${this._models.value[approveIndex].id}`,
+				`${this._endpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
 			),
 		);
 
@@ -444,13 +444,13 @@ export class Table<T extends BaseSchema> {
 			this.erase(id);
 		}
 	}
-	public async rejectChecked(): Promise<void> {
+	public async rejectChecked(reason: string): Promise<void> {
 		this.emulateLoading(true);
 		for (let index = 0; index < this._models.value.length; index++) {
 			const id = this._models.value[index].id;
 
 			if (this._checked.value[index]) {
-				await this.reject(id);
+				await this.reject(id, reason);
 			}
 		}
 		this.allChecked.value = false;

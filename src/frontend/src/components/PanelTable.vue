@@ -96,15 +96,35 @@
 				</tr>
 			</tbody>
 		</table>
+		<Transition name="modal">
+			<ModalWindow
+				class="reject-modal"
+				v-if="modalVisible"
+				@close="modalVisible = false"
+			>
+				<div class="modal-form">
+					<border-input
+						placeholder="Причина отказа"
+						v-model:value="rejectReason"
+					></border-input>
+					<purple-button
+						class="modal-button"
+						@click.prevent="onRejectCommentSubmit"
+						><p style="margin: 0">Отказать</p></purple-button
+					>
+				</div>
+			</ModalWindow>
+		</Transition>
 		<div v-if="table.isLoading.value" class="loader-space">
 			<circle-loader></circle-loader>
 		</div>
 	</div>
 </template>
 <script setup lang="ts">
-import ClickableIcon from "./UI/ClickableIcon.vue";
+import ClickableIcon from "@/components/UI/ClickableIcon.vue";
+import ModalWindow from "@/components/ModalWindow.vue";
 import type { Table } from "@/table";
-import type { PropType } from "vue";
+import { ref, type PropType } from "vue";
 import { BaseSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
 
@@ -133,6 +153,9 @@ const props = defineProps({
 
 const networkStore = useNetworkStore();
 
+const modalVisible = ref(false);
+const rejectReason = ref("");
+
 const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
 const onDelete = async () => {
@@ -143,9 +166,13 @@ const onApprove = async () => {
 	await props.table.approveChecked();
 	emit("approve");
 };
-const onReject = async () => {
-	await props.table.rejectChecked();
-	emit("approve");
+const onReject = () => {
+	modalVisible.value = true;
+};
+const onRejectCommentSubmit = async () => {
+	modalVisible.value = false;
+	await props.table.rejectChecked(rejectReason.value);
+	emit("reject");
 };
 
 const onHrefClicked = async (href: string, filename: string) => {
@@ -311,4 +338,41 @@ th {
 	user-select: none;
 }
 /*#endregion */
+
+/*#region Modal window transition */
+.modal-enter-active,
+.modal-leave-active {
+	transition: opacity 0.5s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+	opacity: 0;
+}
+/*#endregion */
+
+.modal-header {
+	font-size: 24px;
+}
+
+.modal-form {
+	display: flex;
+	width: 90%;
+	flex-direction: column;
+	align-items: center;
+	align-content: center;
+	gap: 15px;
+}
+
+.modal-form input {
+	width: 100%;
+}
+
+.modal-button {
+	width: 100%;
+}
+
+.modal-button p {
+	user-select: none;
+}
 </style>
