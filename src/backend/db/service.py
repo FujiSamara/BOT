@@ -699,32 +699,29 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
     return orm.find_departments_by_name(record)
 
 
-def get_bid_records() -> list[BidRecordSchema]:
-    """Returns all bid records in database."""
+def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
+    """Converts `BidSchema` to `BidRecordSchema`"""
     from bot.handlers.bids.utils import get_bid_state_info
 
-    bids = orm.get_bids()
+    return BidRecordSchema(
+        id=bid.id,
+        amount=bid.amount,
+        payment_type=bid.payment_type,
+        department=bid.department,
+        worker=bid.worker,
+        close_date=bid.close_date,
+        comment=bid.comment,
+        create_date=bid.create_date,
+        documents=[doc.document for doc in bid.documents],
+        purpose=bid.purpose,
+        status=get_bid_state_info(bid),
+        denying_reason=bid.denying_reason,
+    )
 
-    result: list[BidRecordSchema] = []
 
-    for bid in bids:
-        result.append(
-            BidRecordSchema(
-                id=bid.id,
-                amount=bid.amount,
-                payment_type=bid.payment_type,
-                department=bid.department,
-                worker=bid.worker,
-                close_date=bid.close_date,
-                comment=bid.comment,
-                create_date=bid.create_date,
-                documents=[doc.document for doc in bid.documents],
-                purpose=bid.purpose,
-                status=get_bid_state_info(bid),
-            )
-        )
-
-    return result
+def get_bid_records() -> list[BidRecordSchema]:
+    """Returns all bid records in database."""
+    return [bid_to_bid_record(bid) for bid in orm.get_bids()]
 
 
 def get_chapters() -> list[str]:

@@ -117,22 +117,36 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
+	private _sortedRows = computed(() => {
+		const result = [...this._formattedRows.value];
+
+		if (this.sortBy.value !== -1) {
+			result.sort(
+				(
+					a: { id: number; columns: Array<Cell> },
+					b: { id: number; columns: Array<Cell> },
+				) =>
+					a.columns[this.sortBy.value]
+						.toString()
+						.localeCompare(b.columns[this.sortBy.value].toString()),
+			);
+		}
+
+		return result;
+	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
 			return [];
 		}
 
-		return this._formattedRows.value;
+		return this._sortedRows.value;
 	});
 	public headers = computed(() => {
 		const result: Array<string> = [];
 		if (this._models.value.length === 0) return result;
 
 		for (const fieldName in this._models.value[0]) {
-			let alias = this._aliases.get(fieldName);
-			if (alias === undefined) {
-				alias = fieldName;
-			}
+			const alias = this.getAlias(fieldName);
 
 			const index = this._columsOrder.get(fieldName);
 
@@ -246,6 +260,39 @@ export class Table<T extends BaseSchema> {
 			return this._defaultFormatter;
 		}
 	}
+	private getAlias(fieldName: string): string {
+		let alias = this._aliases.get(fieldName);
+		if (alias === undefined) {
+			alias = fieldName;
+		}
+		return alias;
+	}
+	/** Return **true** if rows sorted by this column with **header**. */
+	public sorted(header: string): boolean {
+		const index = this.headers.value.findIndex(
+			(val: string) => val === this.getAlias(header),
+		);
+
+		return index === -1 ? false : index === this.sortBy.value;
+	}
+	/** Sorts columns by specify **header** */
+	public sort(header: string) {
+		const index = this.headers.value.findIndex(
+			(val: string) => val === this.getAlias(header),
+		);
+
+		if (index === -1) {
+			return;
+		}
+
+		if (this.sortBy.value === index) {
+			this.sortBy.value = -1;
+		} else {
+			this.sortBy.value = index;
+		}
+	}
+	/** If not equal **-1** sorts column by row[**index**]. */
+	protected sortBy: Ref<number> = ref(-1);
 	/** Order of column in table */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
@@ -277,6 +324,26 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region CRUD
+	/** Updates **source** model by **target** model if have difference.
+	 * - Returns **true** if **source** model updated, **false** otherwise.
+	 */
+	private updateModel(source: any, target: any): boolean {
+		let modelChanged = false;
+
+		for (const fieldName in target) {
+			const formatter = this.getFormatter(fieldName);
+
+			const targetString: string = formatter(target[fieldName]).toString();
+			const sourceString: string = formatter(source[fieldName]).toString();
+			source[fieldName] = target[fieldName];
+
+			if (targetString !== sourceString) {
+				modelChanged = true;
+			}
+		}
+
+		return modelChanged;
+	}
 	public push(model: T, highlighted: boolean = false): void {
 		this._indexes.set(model.id, this._models.value.length);
 		this._models.value.push(model);
@@ -305,22 +372,9 @@ export class Table<T extends BaseSchema> {
 				modelFounded = true;
 
 				// Changes fields in model which was changed in new model.
-				for (const fieldName in model) {
-					const formatter = this.getFormatter(fieldName);
-
-					const modelString: string = formatter(model[fieldName]).toString();
-					const oldModelString: string = formatter(
-						oldModel[fieldName],
-					).toString();
-
-					if (modelString !== oldModelString) {
-						changesCount++;
-						for (const fieldName in model) {
-							this._models.value[j][fieldName] = model[fieldName];
-						}
-						this._highlighted.value[j] = true;
-						break;
-					}
+				if (this.updateModel(oldModel, model)) {
+					this._highlighted.value[j] = true;
+					changesCount++;
 				}
 				break;
 			}
@@ -346,20 +400,7 @@ export class Table<T extends BaseSchema> {
 	public async update(model: T, id: number): Promise<void> {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
-		let elementChanged = false;
-		for (const fieldName in model) {
-			const formatter = this.getFormatter(fieldName);
-
-			const modelString: string = formatter(model[fieldName]).toString();
-			const oldModelString: string = formatter(
-				this._models.value[index][fieldName],
-			).toString();
-
-			if (modelString !== oldModelString) {
-				elementChanged = true;
-			}
-			this._models.value[index][fieldName] = model[fieldName];
-		}
+		let elementChanged = this.updateModel(this._models.value[index], model);
 
 		if (elementChanged) {
 			await this._network.withAuthChecking(
@@ -409,11 +450,13 @@ export class Table<T extends BaseSchema> {
 	public async approve(id: number): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
 
-		await this._network.withAuthChecking(
+		const resp = await this._network.withAuthChecking(
 			axios.patch(
 				`${this._endpoint}/approve/${this._models.value[approveIndex].id}`,
 			),
 		);
+
+		this.updateModel(this._models.value[approveIndex], resp.data);
 
 		if (this._deleteAfterStatusChanged) {
 			this.erase(id);
@@ -431,26 +474,28 @@ export class Table<T extends BaseSchema> {
 		this.allChecked.value = false;
 		this.emulateLoading(false);
 	}
-	public async reject(id: number): Promise<void> {
+	public async reject(id: number, reason: string): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
 
-		await this._network.withAuthChecking(
+		const resp = await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}/reject/${this._models.value[approveIndex].id}`,
+				`${this._endpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
 			),
 		);
+
+		this.updateModel(this._models.value[approveIndex], resp.data);
 
 		if (this._deleteAfterStatusChanged) {
 			this.erase(id);
 		}
 	}
-	public async rejectChecked(): Promise<void> {
+	public async rejectChecked(reason: string): Promise<void> {
 		this.emulateLoading(true);
 		for (let index = 0; index < this._models.value.length; index++) {
 			const id = this._models.value[index].id;
 
 			if (this._checked.value[index]) {
-				await this.reject(id);
+				await this.reject(id, reason);
 			}
 		}
 		this.allChecked.value = false;
@@ -522,6 +567,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("close_date", "Дата закрытия");
 		this._aliases.set("status", "Статус");
 		this._aliases.set("comment", "Комментарий");
+		this._aliases.set("denying_reason", "Причина отказа");
 		this._aliases.set("documents", "Документы");
 
 		this._columsOrder.set("id", 0);
@@ -534,7 +580,8 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("department", 7);
 		this._columsOrder.set("purpose", 8);
 		this._columsOrder.set("status", 9);
-		this._columsOrder.set("comment", 10);
+		this._columsOrder.set("denying_reason", 10);
+		this._columsOrder.set("comment", 11);
 	}
 }
 //#endregion
