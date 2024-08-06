@@ -63,7 +63,10 @@ def get_bid_state_info(bid: BidSchema) -> str:
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         stage += "Кассир нал."
     elif (
-        bid.kru_state == ApprovalStatus.denied
+        bid.fac_state == ApprovalStatus.denied
+        or bid.cc_state == ApprovalStatus.denied
+        or bid.cc_supervisor_state == ApprovalStatus.denied
+        or bid.kru_state == ApprovalStatus.denied
         or bid.owner_state == ApprovalStatus.denied
         or bid.accountant_card_state == ApprovalStatus.denied
         or bid.accountant_cash_state == ApprovalStatus.denied
