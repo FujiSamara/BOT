@@ -520,6 +520,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("close_date", "Дата закрытия");
 		this._aliases.set("status", "Статус");
 		this._aliases.set("comment", "Комментарий");
+		this._aliases.set("denying_reason", "Причина отказа");
 		this._aliases.set("documents", "Документы");
 
 		this._columsOrder.set("id", 0);
@@ -532,7 +533,8 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("department", 7);
 		this._columsOrder.set("purpose", 8);
 		this._columsOrder.set("status", 9);
-		this._columsOrder.set("comment", 10);
+		this._columsOrder.set("denying_reason", 10);
+		this._columsOrder.set("comment", 11);
 	}
 }
 //#endregion

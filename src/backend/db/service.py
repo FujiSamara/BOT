@@ -715,6 +715,7 @@ def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
         documents=[doc.document for doc in bid.documents],
         purpose=bid.purpose,
         status=get_bid_state_info(bid),
+        denying_reason=bid.denying_reason,
     )
 
 

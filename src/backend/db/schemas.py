@@ -226,6 +226,7 @@ class BidRecordSchema(BaseSchema):
     documents: list[FileSchema]
     status: str
     comment: Optional[str]
+    denying_reason: Optional[str]
 
     @field_validator("documents", mode="before")
     @classmethod
