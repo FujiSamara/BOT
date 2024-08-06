@@ -3,6 +3,10 @@ services:
     build:
       context: src/frontend
       network: host
+      args:
+        VITE_PORT:
+        VITE_DOMAIN:
+        VITE_PROTOCOL:
 
     volumes:
       - nginx-html:/app/dist
