@@ -6,6 +6,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
+from bot.handlers.tech_req.schemas import ShowRequestCallbackData
 from db.schemas import WorkTimeSchema
 from bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from db.models import ApprovalStatus
@@ -421,8 +422,8 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
 
 # Techical request
-tech_req_menu_button = InlineKeyboardButton(
-    text="Тех. заявки", callback_data="get_tech_req_menu"
+worker_tech_req_menu_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_worker_tech_req_menu"
 )
 
 
@@ -430,19 +431,62 @@ tech_req_create = InlineKeyboardButton(
     text="Создать заявку", callback_data="get_tech_req_create"
 )
 
-tech_req_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_tech_req_waiting"
+worker_tech_req_waiting = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_worker_tech_req_waiting"
 )
 
-tech_req_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_tech_req_history"
+worker_tech_req_history = InlineKeyboardButton(
+    text="История заявок", callback_data="get_worker_tech_req_history"
 )
 
-tech_req_menu = InlineKeyboardMarkup(
+worker_tech_req_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [tech_req_create],
-        [tech_req_waiting],
-        [tech_req_history],
+        [worker_tech_req_waiting],
+        [worker_tech_req_history],
+        [main_menu_button],
+    ]
+)
+
+
+repairman_tech_req_menu_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_repairman_tech_req_menu"
+)
+
+
+repairman_tech_req_waiting = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_repairman_tech_req_waiting"
+)
+
+repairman_tech_req_history = InlineKeyboardButton(
+    text="История", callback_data="get_repairman_tech_req_history"
+)
+
+repairman_tech_req_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [repairman_tech_req_waiting],
+        [repairman_tech_req_history],
+        [main_menu_button],
+    ]
+)
+
+
+kru_tech_req_menu_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_kru_tech_req_menu"
+)
+
+kru_tech_req_waiting = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_kru_tech_req_waiting"
+)
+
+kru_tech_req_history = InlineKeyboardButton(
+    text="История заявок", callback_data="get_kru_tech_req_history"
+)
+
+kru_tech_req_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [kru_tech_req_waiting],
+        [kru_tech_req_history],
         [main_menu_button],
     ]
 )
@@ -453,7 +497,7 @@ tech_problem = InlineKeyboardButton(
 )
 
 
-async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
+async def worker_create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
     problem_name = data.get("problem_name")
@@ -499,14 +543,64 @@ async def create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото", callback_data="photo_tech_req"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [tech_req_menu_button],
+        [worker_tech_req_menu_button],
     ]
 
     if form_complete:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Отправить проблему", callback_data="send_tech_req"
+                    text="Отправить проблему", callback_data="send_worker_tech_req"
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def repairman_repair_tech_req_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    photo = data.get("photo")
+
+    if not photo or len(photo) == 0:
+        photo = ""
+        form_complete = False
+    else:
+        photo = f"{len(photo)} ✅"
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Фото",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="get_photo",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="repairman_show_form_waiting",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отметить выполненой",
+                    callback_data=ShowRequestCallbackData(end_point="save_repairman_repair",
+                                                          request_id=callback_data.request_id).pack(),
                 )
             ]
         )
@@ -545,6 +639,3 @@ async def create_tech_problem_kb(state: FSMContext) -> InlineKeyboardMarkup:
         )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
-
-tech_req_status_dict = {}

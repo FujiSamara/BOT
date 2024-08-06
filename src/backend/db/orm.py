@@ -7,7 +7,8 @@ from db.models import (
     Post,
     TechnicalProblem,
     TechnicalRequest,
-    TechnicalRequestPhoto,
+    TechnicalRequestProblemPhoto,
+    TechnicalRequestRepairPhoto,
     WorkTime,
     Worker,
     Department,
@@ -763,41 +764,46 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
     Returns: `True` if technical problem request record created, `False` otherwise.
     """
     with session.begin() as s:
-        worker = s.query(Worker).filter(Worker.id == record.worker.id).first()
-        if not worker:
-            return False
-
-        # repairman = s.query(Worker).filter(Worker.id == record.repairman.id).first()
-        # if not repairman:
-        # return False
-
-        department = (
-            s.query(Department).filter(Department.id == record.department.id).first()
-        )
-        if not department:
-            return False
-
         technical_request = TechnicalRequest(
             problem_id=record.problem.id,
             description=record.description,
             state=record.state,
             score=None,
             open_date=record.open_date,
+            repair_date=None,
             confirmation_date=None,
             reopen_date=None,
             close_date=None,
-            worker_id=worker.id,
-            repairman_id=worker.id,  # repairman.id,
-            department_id=department.id,
+            worker_id=record.worker.id,
+            territorial_manager_id=record.territorial_manager.id,
+            repairman_id=record.repairman.id,  # repairman.id,
+            department_id=record.department.id,
         )
         s.add(technical_request)
 
-        for doc in record.photos:
-            file = TechnicalRequestPhoto(
+        for doc in record.problem_photos:
+            file = TechnicalRequestProblemPhoto(
                 technical_request=technical_request, document=doc.document
             )
             s.add(file)
 
+    return True
+
+
+def update_technical_request(record: TechnicalRequestSchema):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
+        )
+
+        cur_request.state = record.state
+        cur_request.repair_date = record.repair_date
+
+        for doc in record.repair_photos:
+            file = TechnicalRequestRepairPhoto(
+                technical_request=cur_request, document=doc.document
+            )
+            s.add(file)
     return True
 
 
@@ -811,12 +817,27 @@ def get_technical_requests_by_column(
     return get_technical_requests_by_columns([column], [value])
 
 
+def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
+    """
+    Return WorkerSchema for territorial manager by department id
+    """
+    with session.begin() as s:
+        territorial_manager_id: int = (
+            s.query(Department)
+            .with_entities(Department.territorial_manager_id)
+            .where(Department.id == department_id)
+            .first()
+        )[0]
+        return WorkerSchema.model_validate(
+            s.query(Worker).filter(Worker.id == territorial_manager_id).first()
+        )
+
+
 def get_technical_requests_by_columns(
     columns: list[Any], values: list[Any]
 ) -> list[TechnicalRequestSchema]:
     """
-    Returns all TechnicalRequest as TechnicalRequestSchema in database
-    by columns with values.
+    Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
     """
     with session.begin() as s:
         query = s.query(TechnicalRequest)
@@ -827,6 +848,34 @@ def get_technical_requests_by_columns(
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
+
+
+def get_technical_requets_for_repairman_history(
+    repairman_id: int,  # department_id: int
+) -> list[TechnicalRequestSchema]:
+    with session.begin() as s:
+        raw_models = (
+            s.query(TechnicalRequest)
+            .filter(
+                and_(
+                    TechnicalRequest.repairman_id == repairman_id,
+                    or_(
+                        TechnicalRequest.state == ApprovalStatus.pending_approval,
+                        TechnicalRequest.state == ApprovalStatus.approved,
+                    ),
+                    # TechnicalRequest.department_id == department_id
+                )
+            )
+            .all()
+        )
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_photo_repair_technical_request_index_by_request_id(request_id: int) -> int:
+    with session.begin() as s:
+        pass
 
 
 # def get_workers_with_post_by_columns(

@@ -277,6 +277,11 @@ class Worker(Base):
         foreign_keys="[TechnicalRequest.repairman_id]",
         back_populates="repairman",
     )
+    territorial_manager_technical_request: Mapped["TechnicalRequest"] = relationship(
+        "TechnicalRequest",
+        foreign_keys="[TechnicalRequest.territorial_manager_id]",
+        back_populates="territorial_manager",
+    )
 
 
 class Bid(Base):
@@ -549,13 +554,23 @@ class TechicalRequestDocument(Base):
     )
 
 
-class TechnicalRequestPhoto(TechicalRequestDocument):
+class TechnicalRequestProblemPhoto(TechicalRequestDocument):
     """Фото для тех заявок"""
 
-    __tablename__ = "technical_requests_photos"
+    __tablename__ = "technical_requests_problem_photos"
 
     technical_request: Mapped["TechnicalRequest"] = relationship(
-        "TechnicalRequest", back_populates="photos"
+        "TechnicalRequest", back_populates="problem_photos"
+    )
+
+
+class TechnicalRequestRepairPhoto(TechicalRequestDocument):
+    """Фото для тех заявок"""
+
+    __tablename__ = "technical_requests_repair_photos"
+
+    technical_request: Mapped["TechnicalRequest"] = relationship(
+        "TechnicalRequest", back_populates="repair_photos"
     )
 
 
@@ -572,8 +587,15 @@ class TechnicalRequest(Base):
     )
 
     description: Mapped[str] = mapped_column(nullable=False)
-    photos: Mapped[List["TechnicalRequestPhoto"]] = relationship(
-        "TechnicalRequestPhoto",
+
+    problem_photos: Mapped[List["TechnicalRequestProblemPhoto"]] = relationship(
+        "TechnicalRequestProblemPhoto",
+        cascade="all,delete",
+        back_populates="technical_request",
+    )
+
+    repair_photos: Mapped[List["TechnicalRequestRepairPhoto"]] = relationship(
+        "TechnicalRequestRepairPhoto",
         cascade="all,delete",
         back_populates="technical_request",
     )
@@ -584,6 +606,7 @@ class TechnicalRequest(Base):
     )
 
     open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    repair_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     reopen_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
@@ -598,6 +621,15 @@ class TechnicalRequest(Base):
         "Worker",
         back_populates="repairman_technical_request",
         foreign_keys=[repairman_id],
+    )
+
+    territorial_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=False
+    )
+    territorial_manager: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="territorial_manager_technical_request",
+        foreign_keys=[territorial_manager_id],
     )
 
     department_id: Mapped[int] = mapped_column(

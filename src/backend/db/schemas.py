@@ -251,9 +251,11 @@ class TechnicalRequestSchema(BaseSchema):
     # Данные при создание
     problem: ProblemSchema
     description: str
-    photos: list[DocumentSchema]
+    problem_photos: list[DocumentSchema]
+    repair_photos: Optional[list[DocumentSchema]] = None
 
     open_date: datetime.datetime
+    repair_date: Optional[datetime.datetime] = None
     confirmation_date: Optional[datetime.datetime] = None
     reopen_date: Optional[datetime.datetime] = None
     close_date: Optional[datetime.datetime] = None
@@ -263,4 +265,5 @@ class TechnicalRequestSchema(BaseSchema):
 
     worker: WorkerSchema
     repairman: WorkerSchema
+    territorial_manager: WorkerSchema
     department: DepartmentSchema

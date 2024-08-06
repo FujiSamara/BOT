@@ -28,3 +28,7 @@ format_err = "Введен не верный формат.\nПожалуйста
 
 unclosed_shift_notify = "У вас осталась не закрытая смена!"
 unclosed_shift_request = "Закройте смену!"
+
+notifay_repairman = "У Вас новая техническая заявка!"
+
+notifay_teritorial_manager = "У Вас новая техническая заявка для оценки!"

@@ -45,7 +45,11 @@ class RateForm(StatesGroup):
 # Technical Request
 
 
-class TechRequestForm(StatesGroup):
+class WorkerTechnicalRequestForm(StatesGroup):
     problem_name = State()
     description = State()
+    photo = State()
+
+
+class RepairmanTechnicalRequestForm(StatesGroup):
     photo = State()

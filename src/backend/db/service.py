@@ -755,9 +755,12 @@ def create_technical_request(
     problem_name: str,
     description: str,
     photo_files: list[UploadFile],
-    state: ApprovalStatus,
     telegram_id: int,
-) -> None:
+) -> int:
+    """
+    Create technical request
+    Return: repairman telegram id
+    """
     cur_date = datetime.now()
 
     last_technical_request_id = orm.get_last_technical_request_id()
@@ -782,23 +785,32 @@ def create_technical_request(
     # f"Repairman with department {worker.department} and responsible by {problem.executor} wasn't found"
     # )
 
-    # repairman = worker
+    repairman = worker
+
+    territorial_manager = orm.get_territorial_manager_by_department_id(
+        worker.department.id
+    )
+    if not problem:
+        logging.getLogger("uvicorn.error").error(
+            f"Territorial manager wirh department id: {worker.department.id} wasn's found"
+        )
 
     documents = []
     for index, doc in enumerate(photo_files):
         suffix = Path(doc.filename).suffix
-        filename = f"photo_technical_request_{last_technical_request_id + 1}_{index + 1}{suffix}"
+        filename = f"photo_problem_technical_request_{last_technical_request_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
         documents.append(DocumentSchema(document=doc))
 
     request = TechnicalRequestSchema(
         problem=problem,
         description=description,
-        photos=documents,
-        state=state,
+        problem_photos=documents,
+        state=ApprovalStatus.pending,
         open_date=cur_date,
         worker=worker,
-        repairman=worker,  # repairman,
+        repairman=repairman,
+        territorial_manager=territorial_manager,
         department=worker.department,
     )
 
@@ -807,51 +819,157 @@ def create_technical_request(
             "Technical problem record wasn't created"
         )
 
+    return repairman.telegram_id
 
-def get_all_waiting_technical_requests_by_TG_id(
+
+def update_technical_request_repairman(
+    photo_files: list[UploadFile], request_id: int
+) -> int:
+    """
+    Update tecnical request
+    Return territorial manager telegram id
+    """
+    cur_date = datetime.now()
+
+    request = get_technical_request_by_id(request_id=request_id)
+    documents = []
+    try:
+        # Определяем index последнего файла, если ранее были добавлены фото после ремонта
+        index = (
+            int(
+                request.repair_photos[-1].name[
+                    -1 * len(Path(request.repair_photos[-1].filename).suffix) - 1
+                ]
+            )
+        )
+    except IndexError:
+        index = 0
+    for doc in photo_files:
+        suffix = Path(doc.filename).suffix
+        filename = f"photo_repair_technical_request_{request_id}_{index + 1}{suffix}"
+        doc.filename = filename
+        documents.append(DocumentSchema(document=doc))
+        index += 1
+
+    request.repair_date = cur_date
+    request.repair_photos = documents
+    request.state = ApprovalStatus.pending_approval
+
+    if not orm.update_technical_request(request):
+        logging.getLogger("uvicorn.error").error(
+            f"Technical problem with id {request.problem.id} record wasn't updated"
+        )
+    return request.territorial_manager.telegram_id
+
+
+def get_all_waiting_technical_requests_by_worker_TG_id(
     telegram_id: int,
 ) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
     """
-    worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)
-    if not worker:
+    try:
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    except IndexError:
         logging.getLogger("uvicorn.error").error(
             f"Worker with telegram id {telegram_id} wasn't found"
         )
-
-    requests = orm.get_technical_requests_by_columns(
-        [TechnicalRequest.worker_id, TechnicalRequest.state], [worker[0].id, "pending"]
-    )
-    if not requests:
-        logging.getLogger("uvicorn.error").error(
-            f"Requests for {worker.id} wasn't founds"
+    else:
+        requests = orm.get_technical_requests_by_columns(
+            [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
         )
+        if len(requests) == 0:
+            logging.getLogger("uvicorn.error").info(
+                f"Requests for worker with id: {worker.id} wasn't founds"
+            )
 
     return requests
 
 
-def get_all_technical_requests_by_TG_id(
+def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_id(
+    telegram_id: int,
+    # department_id: int,
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for repairman
+    """
+    try:
+        repairman = orm.get_workers_with_post_by_column(
+            Worker.telegram_id, telegram_id
+        )[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Repairman with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        requests = orm.get_technical_requests_by_columns(
+            [
+                TechnicalRequest.repairman_id,
+                TechnicalRequest.state,
+                TechnicalRequest.department_id,
+            ],
+            [
+                repairman.id,
+                ApprovalStatus.pending,
+                # department_id
+            ],
+        )
+        if len(requests) == 0:
+            logging.getLogger("uvicorn.error").info(
+                f"Requests for repairman with id: {repairman.id} wasn't founds"
+            )
+        return requests
+
+
+def get_all_history_technical_requests_by_repairman_TG_and_department_id(
+    telegram_id: int,
+    # department_id: int
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for repairman
+    """
+    try:
+        repairman = orm.get_workers_with_post_by_column(
+            Worker.telegram_id, telegram_id
+        )[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Repairman with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        requests = orm.get_technical_requets_for_repairman_history(
+            repairman.id,  # department_id
+        )
+        if len(requests) == 0:
+            logging.getLogger("uvicorn.error").info(
+                f"Requests for repairman with id: {repairman.id} wasn't founds"
+            )
+        return requests
+
+
+def get_all_history_technical_requests_by_worker_TG_id(
     telegram_id: int,
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all technical requests by Telegram id
+    Return history technical requests by Telegram id for worker
     """
-    worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)
-    if not worker:
+    try:
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    except IndexError:
         logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id {telegram_id} wasn't found"
+            f"Worker with telegram id: {telegram_id} wasn't found"
         )
-
-    requests = orm.get_technical_requests_by_column(
-        TechnicalRequest.worker_id, worker[0].id
-    )
-    if not requests:
-        logging.getLogger("uvicorn.error").error(
-            f"Requests for {worker.id} wasn't founds"
+    else:
+        requests = orm.get_technical_requests_by_columns(
+            [TechnicalRequest.worker_id, TechnicalRequest.state],
+            [worker.id, ApprovalStatus.approved],
         )
+        if len(requests) == 0:
+            logging.getLogger("uvicorn.error").info(
+                f"Requests for worker with id: {worker.id} wasn't founds"
+            )
 
-    return requests
+        return requests
 
 
 def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
@@ -864,6 +982,6 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         ]
         return request
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Requests with id {request_id} wasn't founds"
+        logging.getLogger("uvicorn.error").info(
+            f"Requests with id: {request_id} wasn't founds"
         )
