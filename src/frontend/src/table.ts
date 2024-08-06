@@ -277,6 +277,26 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region CRUD
+	/** Updates **source** model by **target** model if have difference.
+	 * - Returns **true** if **source** model updated, **false** otherwise.
+	 */
+	private updateModel(source: any, target: any): boolean {
+		let modelChanged = false;
+
+		for (const fieldName in target) {
+			const formatter = this.getFormatter(fieldName);
+
+			const targetString: string = formatter(target[fieldName]).toString();
+			const sourceString: string = formatter(source[fieldName]).toString();
+			source[fieldName] = target[fieldName];
+
+			if (targetString !== sourceString) {
+				modelChanged = true;
+			}
+		}
+
+		return modelChanged;
+	}
 	public push(model: T, highlighted: boolean = false): void {
 		this._indexes.set(model.id, this._models.value.length);
 		this._models.value.push(model);
@@ -305,22 +325,9 @@ export class Table<T extends BaseSchema> {
 				modelFounded = true;
 
 				// Changes fields in model which was changed in new model.
-				for (const fieldName in model) {
-					const formatter = this.getFormatter(fieldName);
-
-					const modelString: string = formatter(model[fieldName]).toString();
-					const oldModelString: string = formatter(
-						oldModel[fieldName],
-					).toString();
-
-					if (modelString !== oldModelString) {
-						changesCount++;
-						for (const fieldName in model) {
-							this._models.value[j][fieldName] = model[fieldName];
-						}
-						this._highlighted.value[j] = true;
-						break;
-					}
+				if (this.updateModel(oldModel, model)) {
+					this._highlighted.value[j] = true;
+					changesCount++;
 				}
 				break;
 			}
@@ -346,20 +353,7 @@ export class Table<T extends BaseSchema> {
 	public async update(model: T, id: number): Promise<void> {
 		const index = this._indexes.get(id);
 		if (index === undefined) throw new Error(`ID ${id} not exist`);
-		let elementChanged = false;
-		for (const fieldName in model) {
-			const formatter = this.getFormatter(fieldName);
-
-			const modelString: string = formatter(model[fieldName]).toString();
-			const oldModelString: string = formatter(
-				this._models.value[index][fieldName],
-			).toString();
-
-			if (modelString !== oldModelString) {
-				elementChanged = true;
-			}
-			this._models.value[index][fieldName] = model[fieldName];
-		}
+		let elementChanged = this.updateModel(this._models.value[index], model);
 
 		if (elementChanged) {
 			await this._network.withAuthChecking(
@@ -409,11 +403,13 @@ export class Table<T extends BaseSchema> {
 	public async approve(id: number): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
 
-		await this._network.withAuthChecking(
+		const resp = await this._network.withAuthChecking(
 			axios.patch(
 				`${this._endpoint}/approve/${this._models.value[approveIndex].id}`,
 			),
 		);
+
+		this.updateModel(this._models.value[approveIndex], resp.data);
 
 		if (this._deleteAfterStatusChanged) {
 			this.erase(id);
@@ -434,11 +430,13 @@ export class Table<T extends BaseSchema> {
 	public async reject(id: number, reason: string): Promise<void> {
 		const approveIndex = this._indexes.get(id)!;
 
-		await this._network.withAuthChecking(
+		const resp = await this._network.withAuthChecking(
 			axios.patch(
 				`${this._endpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
 			),
 		);
+
+		this.updateModel(this._models.value[approveIndex], resp.data);
 
 		if (this._deleteAfterStatusChanged) {
 			this.erase(id);
