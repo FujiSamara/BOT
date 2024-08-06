@@ -32,10 +32,13 @@ async def approve_bid(
 
 
 @router.patch("/reject/{id}")
-async def reject_bid(id: int, _: User = Security(get_current_user, scopes=["crm_bid"])):
+async def reject_bid(
+    id: int, reason: str, _: User = Security(get_current_user, scopes=["crm_bid"])
+):
     """Rejects bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
+        bid.denying_reason = reason
         await service.update_bid_state(
             bid, get_current_coordinator(bid), ApprovalStatus.denied
         )
