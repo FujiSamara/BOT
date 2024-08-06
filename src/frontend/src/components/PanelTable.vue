@@ -50,7 +50,12 @@
 						v-for="columnValue in props.table.headers.value"
 						:key="columnValue"
 					>
-						{{ columnValue }}
+						<div class="table-header">
+							<p @click="props.table.sort(columnValue)" style="margin: 0">
+								{{ columnValue }}
+							</p>
+							<img v-if="props.table.sorted(columnValue)" src="/img/sort_icon.svg"></img>
+						</div>
 					</th>
 				</tr>
 			</thead>
@@ -273,6 +278,23 @@ thead th {
 
 	color: black;
 	background-color: #ffffff;
+	user-select: none;
+}
+
+thead th p:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+thead th img {
+	height: 8px;
+}
+
+.table-header {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
 }
 
 /** All cells */
@@ -339,6 +361,8 @@ th {
 }
 /*#endregion */
 
+/*#region Modal window */
+
 /*#region Modal window transition */
 .modal-enter-active,
 .modal-leave-active {
@@ -375,4 +399,5 @@ th {
 .modal-button p {
 	user-select: none;
 }
+/*#endregion */
 </style>

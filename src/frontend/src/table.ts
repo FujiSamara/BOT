@@ -117,22 +117,36 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
+	private _sortedRows = computed(() => {
+		const result = [...this._formattedRows.value];
+
+		if (this.sortBy.value !== -1) {
+			result.sort(
+				(
+					a: { id: number; columns: Array<Cell> },
+					b: { id: number; columns: Array<Cell> },
+				) =>
+					a.columns[this.sortBy.value]
+						.toString()
+						.localeCompare(b.columns[this.sortBy.value].toString()),
+			);
+		}
+
+		return result;
+	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
 			return [];
 		}
 
-		return this._formattedRows.value;
+		return this._sortedRows.value;
 	});
 	public headers = computed(() => {
 		const result: Array<string> = [];
 		if (this._models.value.length === 0) return result;
 
 		for (const fieldName in this._models.value[0]) {
-			let alias = this._aliases.get(fieldName);
-			if (alias === undefined) {
-				alias = fieldName;
-			}
+			const alias = this.getAlias(fieldName);
 
 			const index = this._columsOrder.get(fieldName);
 
@@ -246,6 +260,39 @@ export class Table<T extends BaseSchema> {
 			return this._defaultFormatter;
 		}
 	}
+	private getAlias(fieldName: string): string {
+		let alias = this._aliases.get(fieldName);
+		if (alias === undefined) {
+			alias = fieldName;
+		}
+		return alias;
+	}
+	/** Return **true** if rows sorted by this column with **header**. */
+	public sorted(header: string): boolean {
+		const index = this.headers.value.findIndex(
+			(val: string) => val === this.getAlias(header),
+		);
+
+		return index === -1 ? false : index === this.sortBy.value;
+	}
+	/** Sorts columns by specify **header** */
+	public sort(header: string) {
+		const index = this.headers.value.findIndex(
+			(val: string) => val === this.getAlias(header),
+		);
+
+		if (index === -1) {
+			return;
+		}
+
+		if (this.sortBy.value === index) {
+			this.sortBy.value = -1;
+		} else {
+			this.sortBy.value = index;
+		}
+	}
+	/** If not equal **-1** sorts column by row[**index**]. */
+	protected sortBy: Ref<number> = ref(-1);
 	/** Order of column in table */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
