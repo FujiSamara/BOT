@@ -13,21 +13,21 @@ router = APIRouter()
 
 @router.get("/")
 async def get_expenditures(
-    _: User = Security(get_current_user, scopes=["expenditure"]),
+    _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> list[ExpenditureSchema]:
     return service.get_expenditures()
 
 
 @router.get("/last")
 async def get_last_expenditure(
-    _: User = Security(get_current_user, scopes=["expenditure"]),
+    _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> Optional[ExpenditureSchema]:
     return service.get_last_expenditure()
 
 
 @router.get("/find")
 async def find_expenditures(
-    record: str, _: User = Security(get_current_user, scopes=["expenditure"])
+    record: str, _: User = Security(get_current_user, scopes=["crm_expenditure"])
 ) -> list[ExpenditureSchema]:
     """Finds expenditures by given `record`.
 
@@ -39,7 +39,7 @@ async def find_expenditures(
 @router.post("/")
 async def create_expenditure(
     schema: ExpenditureSchema,
-    user: User = Security(get_current_user, scopes=["expenditure"]),
+    user: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> None:
     schema.creator = service.get_worker_by_phone_number(user.username)
     service.create_expenditure(schema)
@@ -47,7 +47,7 @@ async def create_expenditure(
 
 @router.delete("/{id}")
 async def delete_expenditure(
-    id: int, _: User = Security(get_current_user, scopes=["expenditure"])
+    id: int, _: User = Security(get_current_user, scopes=["crm_expenditure"])
 ) -> None:
     service.remove_expenditure(id)
 
@@ -55,6 +55,6 @@ async def delete_expenditure(
 @router.patch("/")
 async def update_expenditure(
     schema: ExpenditureSchema,
-    _: User = Security(get_current_user, scopes=["expenditure"]),
+    _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> None:
     service.update_expenditure(schema)

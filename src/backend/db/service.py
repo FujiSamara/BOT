@@ -7,10 +7,10 @@ from db.models import (
     ApprovalStatus,
     Bid,
     Expenditure,
+    FujiScope,
     Post,
     TechnicalRequest,
     Worker,
-    Access,
     WorkTime,
     WorkerBid,
 )
@@ -34,24 +34,19 @@ from fastapi import UploadFile
 from typing import Any, Optional
 
 
-def get_worker_level_by_telegram_id(id: str) -> int:
+def get_worker_by_telegram_id(id: str) -> Optional[WorkerSchema]:
     """
-    Returns worker access level by his telegram id.
-
-    Return `-1`, if worker doesn't exits.
+    Returns worker by his telegram id.
+    Return `None`, if worker doesn't exits.
     """
-    worker = orm.find_worker_by_column(Worker.telegram_id, id)
-    if not worker:
-        return -1
-
-    return worker.post.level
+    return orm.find_worker_by_column(Worker.telegram_id, id)
 
 
-def get_workers_by_level(level: int) -> list[WorkerSchema]:
+def get_workers_by_scope(scope: FujiScope) -> list[WorkerSchema]:
     """
-    Returns all workers in database with `level` at column.
+    Returns all workers in database by `scope`.
     """
-    return orm.get_workers_with_post_by_column(Post.level, level)
+    return orm.get_workers_with_scope(scope)
 
 
 def get_worker_department_by_telegram_id(id: str) -> DepartmentSchema:
@@ -265,7 +260,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     Updates bid state with `state_name` by specified `state`.
     """
     from bot.handlers.utils import (
-        notify_workers_by_access,
+        notify_workers_by_scope,
         notify_worker_by_telegram_id,
     )
 
@@ -310,6 +305,8 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                     bid.accountant_card_state = ApprovalStatus.pending_approval
                 else:
                     bid.accountant_cash_state = ApprovalStatus.pending_approval
+            else:
+                bid.owner_state = ApprovalStatus.pending_approval
             if state == ApprovalStatus.denied:
                 bid.owner_state = ApprovalStatus.skipped
                 bid.accountant_card_state = ApprovalStatus.skipped
@@ -344,29 +341,39 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         case "teller_cash_state":
             bid.teller_cash_state = ApprovalStatus.approved
 
-    if bid.owner_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_access(
-            access=Access.owner, message="У вас новая заявка!"
+    if bid.kru_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+        )
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_access(
-            access=Access.accountant_card, message="У вас новая заявка!"
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_access(
-            access=Access.accountant_cash, message="У вас новая заявка!"
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_access(
-            access=Access.teller_card, message="У вас новая заявка!"
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_access(
-            access=Access.teller_cash, message="У вас новая заявка!"
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
         )
     if state == ApprovalStatus.approved:
         stage = ""
         match state_name:
+            case "fac_state":
+                stage = "Ваша заявка согласована ЦФО!"
+            case "cc_state":
+                stage = "Ваша заявка согласована ЦЗ!"
+            case "cc_supervisor_state":
+                stage = "Ваша заявка согласована руководителем ЦЗ!"
             case "kru_state":
                 stage = "Ваша заявка согласована КРУ!"
             case "owner_state":
@@ -583,7 +590,7 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     worker_bid.state = state
     orm.update_worker_bid(worker_bid)
 
-    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_level
+    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
@@ -598,7 +605,7 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
             worker.telegram_id,
             f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
         )
-    await send_menu_by_level(msg)
+    await send_menu_by_scopes(msg)
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
@@ -695,32 +702,29 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
     return orm.find_departments_by_name(record)
 
 
-def get_bid_records() -> list[BidRecordSchema]:
-    """Returns all bid records in database."""
+def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
+    """Converts `BidSchema` to `BidRecordSchema`"""
     from bot.handlers.bids.utils import get_bid_state_info
 
-    bids = orm.get_bids()
+    return BidRecordSchema(
+        id=bid.id,
+        amount=bid.amount,
+        payment_type=bid.payment_type,
+        department=bid.department,
+        worker=bid.worker,
+        close_date=bid.close_date,
+        comment=bid.comment,
+        create_date=bid.create_date,
+        documents=[doc.document for doc in bid.documents],
+        purpose=bid.purpose,
+        status=get_bid_state_info(bid),
+        denying_reason=bid.denying_reason,
+    )
 
-    result: list[BidRecordSchema] = []
 
-    for bid in bids:
-        result.append(
-            BidRecordSchema(
-                id=bid.id,
-                amount=bid.amount,
-                payment_type=bid.payment_type,
-                department=bid.department,
-                worker=bid.worker,
-                close_date=bid.close_date,
-                comment=bid.comment,
-                create_date=bid.create_date,
-                documents=[doc.document for doc in bid.documents],
-                purpose=bid.purpose,
-                status=get_bid_state_info(bid),
-            )
-        )
-
-    return result
+def get_bid_records() -> list[BidRecordSchema]:
+    """Returns all bid records in database."""
+    return [bid_to_bid_record(bid) for bid in orm.get_bids()]
 
 
 def get_chapters() -> list[str]:

@@ -3,6 +3,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqladmin import ModelView, action
 from db.models import (
+    PostScope,
     Worker,
     Company,
     Department,
@@ -16,6 +17,22 @@ from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
 from db import service
 from api.auth import encrypt_password
+
+
+class PostScopeView(ModelView, model=PostScope):
+    column_list = [PostScope.post, PostScope.scope]
+    column_searchable_list = [PostScope.scope]
+    form_columns = [PostScope.scope, PostScope.post]
+    column_details_exclude_list = [PostScope.post_id, PostScope.id]
+    can_export = False
+    can_edit = False
+
+    name_plural = "Доступы"
+    name = "Доступ"
+    column_labels = {
+        PostScope.post: "Должность",
+        PostScope.scope: "Доступ",
+    }
 
 
 class PostView(ModelView, model=Post):
@@ -32,6 +49,7 @@ class PostView(ModelView, model=Post):
         Post.level: "Уровень доступа",
         Post.workers: "Работники",
         Post.salary: "Зарплата",
+        Post.scopes: "Доступы",
     }
 
 
@@ -182,6 +200,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
         Worker.department,
+        Worker.telegram_id,
         Worker.post,
         Worker.b_date,
         Worker.employment_date,

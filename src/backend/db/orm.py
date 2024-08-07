@@ -4,7 +4,9 @@ from db.models import (
     Bid,
     BudgetRecord,
     Expenditure,
+    FujiScope,
     Post,
+    PostScope,
     TechnicalProblem,
     TechnicalRequest,
     TechnicalRequestProblemPhoto,
@@ -326,6 +328,21 @@ def get_workers_with_post_by_columns(
         for column, value in zip(columns, values):
             query = query.filter(column == value)
         raw_models = query.all()
+        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
+    """
+    Returns all `Worker` as `WorkerSchema` in database
+    by `scope`.
+    """
+    with session.begin() as s:
+        raw_models = (
+            s.query(Worker)
+            .join(Worker.post)
+            .join(Post.scopes)
+            .filter(PostScope.scope == scope)
+        ).all()
         return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
 
 

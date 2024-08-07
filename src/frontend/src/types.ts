@@ -22,6 +22,9 @@ export enum Access {
 
 export const accessesDict: any = {
 	admin: Access.Admin,
+	crm_bid: Access.Bid,
+	crm_budget: Access.Budget,
+	crm_expenditure: Access.Expenditure,
 };
 
 export interface PanelData extends NavigationData {

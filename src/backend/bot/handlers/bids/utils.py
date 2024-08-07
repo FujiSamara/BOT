@@ -11,9 +11,6 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Предприятие")}: {bid.department.name}
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
-{hbold("Наличие договора")}: {bid.agreement}
-{hbold("Заявка срочная?")} {bid.urgently}
-{hbold("Нужна платежка?")} {bid.need_document}
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {get_bid_state_info(bid)}
 """
@@ -66,7 +63,10 @@ def get_bid_state_info(bid: BidSchema) -> str:
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         stage += "Кассир нал."
     elif (
-        bid.kru_state == ApprovalStatus.denied
+        bid.fac_state == ApprovalStatus.denied
+        or bid.cc_state == ApprovalStatus.denied
+        or bid.cc_supervisor_state == ApprovalStatus.denied
+        or bid.kru_state == ApprovalStatus.denied
         or bid.owner_state == ApprovalStatus.denied
         or bid.accountant_card_state == ApprovalStatus.denied
         or bid.accountant_cash_state == ApprovalStatus.denied

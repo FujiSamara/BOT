@@ -8,8 +8,8 @@ from calendar import timegm
 
 from pydantic import ValidationError
 
-from api.auth.schemas import TokenData, User
-from api.auth.permissions import _oauth2_schema
+from api.auth.schemas import TokenData, User, UserWithScopes
+from api.auth.permissions import _oauth2_schema, _to_auth_scope
 from settings import get_settings
 from db import service
 
@@ -19,7 +19,7 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def _authenticate_user(username: str, password: str) -> Optional[User]:
+def _authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
     """Authenticates user by his `username` and `password`.
 
     Returns corresponding `User` if `username` and `password` correct,
@@ -34,8 +34,10 @@ def _authenticate_user(username: str, password: str) -> Optional[User]:
     ):
         return
 
-    return User(
-        username=worker.phone_number, full_name=f"{worker.l_name} {worker.f_name}"
+    return UserWithScopes(
+        username=worker.phone_number,
+        full_name=f"{worker.l_name} {worker.f_name}",
+        scopes=[_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes],
     )
 
 

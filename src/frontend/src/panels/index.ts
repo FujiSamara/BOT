@@ -41,6 +41,7 @@ export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 			const access = accesses[i];
 
 			if (panel.access === access || access === Access.Admin) {
+				panel.isActive = false;
 				result.push(panel);
 				break;
 			}

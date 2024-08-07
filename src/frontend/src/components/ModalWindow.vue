@@ -19,7 +19,10 @@ export default {
 <style scoped>
 .wrapper {
 	background-color: rgba(0, 0, 0, 0.3);
-	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 2;
+	position: fixed;
 	width: 100%;
 	height: 100%;
 	display: flex;
@@ -31,7 +34,6 @@ export default {
 	background-color: white;
 	border-radius: 40px;
 	width: 560px;
-	height: 480px;
 	padding: 50px;
 	position: relative;
 }
@@ -47,6 +49,8 @@ export default {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+	align-items: center;
 	gap: 40px;
 }
 </style>

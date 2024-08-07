@@ -1,12 +1,14 @@
-# Build stage
-FROM node:lts-alpine as build-stage
+FROM node:lts-alpine
+
+# Envs
+ARG VITE_PORT
+ARG VITE_DOMAIN
+ARG VITE_PROTOCOL
+ENV VITE_PORT $VITE_PORT
+ENV VITE_DOMAIN $VITE_DOMAIN
+ENV VITE_PROTOCOL $VITE_PROTOCOL
 
 ADD . /app
 WORKDIR /app
 RUN npm install
 RUN npx vite build .
-
-# Production stage
-FROM nginx:stable-alpine as production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-CMD ["nginx", "-g", "daemon off;"]

@@ -1,38 +1,50 @@
 services:
-  app-db:
-    image: postgres
-    container_name: db
-    ports:
-      - 5432:5432
+  app-frontend:
+    build:
+      context: src/frontend
+      network: host
+      args:
+        VITE_PORT:
+        VITE_DOMAIN:
+        VITE_PROTOCOL:
+
+    volumes:
+      - nginx-html:/app/dist
+
+    network_mode: "host"
+
     env_file:
       - .env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 2s
-      timeout: 5s
-      retries: 10
-    networks:
-        net:    
-          aliases:
-            - db.local
 
   app-backend:
-    build: src/backend/
+    build:
+      context: src/backend
+      network: host
+
+    volumes:
+      - cert-dir:/var/www/certs:ro
+      - files-dir:/tmp
+
+    network_mode: "host"
 
     env_file:
       - .env
 
-    depends_on:
-      app-db:
-        condition: service_healthy
+  app-server:
+    build:
+      context: src/server
+      network: host
 
-    ports:
-      - 80:80
+    volumes:
+      - cert-dir:/var/www/certs:ro
+      - nginx-html:/usr/share/nginx/html
+      - ./src/server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
 
-    networks:
-      net:
+    network_mode: "host"
 
-
-networks:
-  net:
-
+volumes:
+  nginx-html:
+  cert-dir:
+    external: true
+  files-dir:
+    external: true
