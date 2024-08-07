@@ -28,7 +28,7 @@ from bot.handlers.utils import (
 #     send_photos,
 #     show_form,
 # )
-from bot.handlers.tech_req.schemas import ShowRequestCallbackData
+# from bot.handlers.tech_req.schemas import ShowRequestCallbackData
 
 # from db.service import (
 #     get_technical_problem_names,
