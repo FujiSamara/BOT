@@ -483,22 +483,22 @@ repairman_tech_req_menu = InlineKeyboardMarkup(
 )
 
 
-kru_tech_req_menu_button = InlineKeyboardButton(
+territorial_manager_tech_req_menu_button = InlineKeyboardButton(
     text="Тех. заявки", callback_data="get_kru_tech_req_menu"
 )
 
-kru_tech_req_waiting = InlineKeyboardButton(
+territorial_manager_tech_req_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_kru_tech_req_waiting"
 )
 
-kru_tech_req_history = InlineKeyboardButton(
+territorial_manager_tech_req_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_kru_tech_req_history"
 )
 
-kru_tech_req_menu = InlineKeyboardMarkup(
+territorial_manager_tech_req_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [kru_tech_req_waiting],
-        [kru_tech_req_history],
+        [territorial_manager_tech_req_waiting],
+        [territorial_manager_tech_req_history],
         [main_menu_button],
     ]
 )
