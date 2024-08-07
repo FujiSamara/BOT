@@ -48,11 +48,9 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_rate: rating_menu_button,
         FujiScope.bot_worker_bid: worker_bid_menu_button,
         FujiScope.bot_bid_create: create_bid_menu_button,
-
         FujiScope.bot_technical_request_worker: worker_tech_req_menu_button,
         FujiScope.bot_technical_request_repairman: repairman_tech_req_menu_button,
         FujiScope.bot_technical_request_kru: kru_tech_req_menu_button,
-
     }
 
 
