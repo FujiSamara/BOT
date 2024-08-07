@@ -52,4 +52,5 @@ class WorkerTechnicalRequestForm(StatesGroup):
 
 
 class RepairmanTechnicalRequestForm(StatesGroup):
+    department = State()
     photo = State()

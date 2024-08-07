@@ -888,9 +888,9 @@ def get_all_waiting_technical_requests_by_worker_TG_id(
     return requests
 
 
-def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_id(
+def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name(
     telegram_id: int,
-    # department_id: int,
+    department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -904,28 +904,30 @@ def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_id(
             f"Repairman with telegram id: {telegram_id} wasn't found"
         )
     else:
-        requests = orm.get_technical_requests_by_columns(
-            [
-                TechnicalRequest.repairman_id,
-                TechnicalRequest.state,
-                TechnicalRequest.department_id,
-            ],
-            [
-                repairman.id,
-                ApprovalStatus.pending,
-                # department_id
-            ],
-        )
-        if len(requests) == 0:
-            logging.getLogger("uvicorn.error").info(
-                f"Requests for repairman with id: {repairman.id} wasn't founds"
+        try:
+            department_id = (orm.find_departments_by_name(department_name)[0]).id
+        except IndexError:
+            logging.getLogger("uvicorn.error").error(
+                f"Department with name: {department_name} wasn't found"
             )
-        return requests
+        else:
+            requests = orm.get_technical_requests_by_columns(
+                [
+                    TechnicalRequest.repairman_id,
+                    TechnicalRequest.state,
+                    TechnicalRequest.department_id,
+                ],
+                [repairman.id, ApprovalStatus.pending, department_id],
+            )
+            if len(requests) == 0:
+                logging.getLogger("uvicorn.error").info(
+                    f"Requests for repairman with id: {repairman.id} wasn't founds"
+                )
+            return requests
 
 
-def get_all_history_technical_requests_by_repairman_TG_and_department_id(
-    telegram_id: int,
-    # department_id: int
+def get_all_history_technical_requests_by_repairman_TG_and_department_name(
+    telegram_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -939,14 +941,21 @@ def get_all_history_technical_requests_by_repairman_TG_and_department_id(
             f"Repairman with telegram id: {telegram_id} wasn't found"
         )
     else:
-        requests = orm.get_technical_requets_for_repairman_history(
-            repairman.id,  # department_id
-        )
-        if len(requests) == 0:
-            logging.getLogger("uvicorn.error").info(
-                f"Requests for repairman with id: {repairman.id} wasn't founds"
+        try:
+            department_id = (orm.find_departments_by_name(department_name)[0]).id
+        except IndexError:
+            logging.getLogger("uvicorn.error").error(
+                f"Department with name: {department_name} wasn't found"
             )
-        return requests
+        else:
+            requests = orm.get_technical_requets_for_repairman_history(
+                repairman.id, department_id
+            )
+            if len(requests) == 0:
+                logging.getLogger("uvicorn.error").info(
+                    f"Requests for repairman with id: {repairman.id} wasn't founds"
+                )
+            return requests
 
 
 def get_all_history_technical_requests_by_worker_TG_id(
@@ -987,3 +996,47 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         logging.getLogger("uvicorn.error").info(
             f"Requests with id: {request_id} wasn't founds"
         )
+
+
+def _get_deparments_by_worker_telegram_id_and_worker_column_id(
+    telegram_id: int, worker_column: Any
+) -> list[DepartmentSchema]:
+    try:
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        departments = orm.get_departments_by_worker_id_and_worker_column(
+            worker_column=worker_column, worker_id=worker.id
+        )
+        return departments
+
+
+def get_deparments_by_repairman_telegram_id(
+    telegram_id: int,
+) -> list[DepartmentSchema]:
+    departments = _get_deparments_by_worker_telegram_id_and_worker_column_id(
+        telegram_id=telegram_id, worker_column=Department.chief_technician_id
+    )
+    if len(departments) > 0:
+        return departments
+
+    departments = _get_deparments_by_worker_telegram_id_and_worker_column_id(
+        telegram_id=telegram_id, worker_column=Department.technician_id
+    )
+    if len(departments) > 0:
+        return departments
+
+    return _get_deparments_by_worker_telegram_id_and_worker_column_id(
+        telegram_id=telegram_id, worker_column=Department.electrician_id
+    )
+
+
+def get_deparments_by_kru_telegram_id(
+    telegram_id: int,
+) -> list[DepartmentSchema]:
+    return _get_deparments_by_worker_telegram_id_and_worker_column_id(
+        telegram_id=telegram_id, worker_column=Department.territorial_manager_id
+    )

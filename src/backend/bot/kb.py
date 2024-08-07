@@ -454,6 +454,11 @@ repairman_tech_req_menu_button = InlineKeyboardButton(
 )
 
 
+repairman_tech_req_change_department = InlineKeyboardButton(
+    text="Выбрать производство", callback_data="set_repairman_tech_req_department"
+)
+
+
 repairman_tech_req_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_repairman_tech_req_waiting"
 )
@@ -462,11 +467,18 @@ repairman_tech_req_history = InlineKeyboardButton(
     text="История", callback_data="get_repairman_tech_req_history"
 )
 
+repairman_tech_req_change_deparment_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [repairman_tech_req_change_department],
+        [main_menu_button],
+    ]
+)
+
 repairman_tech_req_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [repairman_tech_req_waiting],
         [repairman_tech_req_history],
-        [main_menu_button],
+        [repairman_tech_req_change_department],
     ]
 )
 

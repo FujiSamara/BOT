@@ -215,6 +215,21 @@ class Department(Base):
         "Worker", foreign_keys=[territorial_director_id]
     )
 
+    chief_technician_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    chief_technician: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[chief_technician_id]
+    )
+
+    technician_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=True)
+    technician: Mapped["Worker"] = relationship("Worker", foreign_keys=[technician_id])
+
+    electrician_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=True)
+    electrician: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[electrician_id]
+    )
+
     budget_records: Mapped[List["BudgetRecord"]] = relationship(
         "BudgetRecord", back_populates="department"
     )

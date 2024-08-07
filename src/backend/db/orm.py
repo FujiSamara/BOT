@@ -868,7 +868,7 @@ def get_technical_requests_by_columns(
 
 
 def get_technical_requets_for_repairman_history(
-    repairman_id: int,  # department_id: int
+    repairman_id: int, department_id: int
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -880,7 +880,7 @@ def get_technical_requets_for_repairman_history(
                         TechnicalRequest.state == ApprovalStatus.pending_approval,
                         TechnicalRequest.state == ApprovalStatus.approved,
                     ),
-                    # TechnicalRequest.department_id == department_id
+                    TechnicalRequest.department_id == department_id,
                 )
             )
             .all()
@@ -888,3 +888,12 @@ def get_technical_requets_for_repairman_history(
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
+
+
+def get_departments_by_worker_id_and_worker_column(
+    worker_column: Any,
+    worker_id: int,
+) -> list[DepartmentSchema]:
+    with session.begin() as s:
+        raw_models = s.query(Department).filter(worker_column == worker_id).all()
+        return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
