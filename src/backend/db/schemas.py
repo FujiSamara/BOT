@@ -237,9 +237,8 @@ class BidRecordSchema(BaseSchema):
             result = []
             for doc in val:
                 if isinstance(doc, UploadFile):
-                    result.append(service.get_file_data(doc.file.name, "api"))
-                elif isinstance(doc, str):
-                    result.append(service.get_file_data(doc, "api"))
+                    if hasattr(doc.file, "name"):
+                        result.append(service.get_file_data(doc.file.name, "api"))
                 else:
                     return val
             return result
