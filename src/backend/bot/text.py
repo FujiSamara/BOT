@@ -30,5 +30,6 @@ unclosed_shift_notify = "У вас осталась не закрытая сме
 unclosed_shift_request = "Закройте смену!"
 
 notifay_repairman = "У Вас новая техническая заявка!"
+notifay_repairman_reopen = "У Вас новая техническая заявка на доработку!"
 
 notifay_teritorial_manager = "У Вас новая техническая заявка для оценки!"

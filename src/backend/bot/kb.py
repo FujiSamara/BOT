@@ -449,12 +449,12 @@ worker_tech_req_menu = InlineKeyboardMarkup(
 )
 
 
-repairman_tech_req_menu_button = InlineKeyboardButton(
-    text="Тех. заявки", callback_data="get_repairman_tech_req_menu"
+repairman_tech_req_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_repairman_tech_req"
 )
 
 
-repairman_tech_req_change_department = InlineKeyboardButton(
+repairman_tech_req_change_department_button = InlineKeyboardButton(
     text="Выбрать производство", callback_data="set_repairman_tech_req_department"
 )
 
@@ -464,48 +464,63 @@ repairman_tech_req_waiting = InlineKeyboardButton(
 )
 
 repairman_tech_req_history = InlineKeyboardButton(
-    text="История", callback_data="get_repairman_tech_req_history"
+    text="История заявок", callback_data="get_repairman_tech_req_history"
 )
 
 repairman_tech_req_change_deparment_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [repairman_tech_req_change_department],
+        [repairman_tech_req_change_department_button],
         [main_menu_button],
     ]
 )
 
-repairman_tech_req_menu = InlineKeyboardMarkup(
+repairman_tech_req_menu_button = InlineKeyboardButton(
+    text="Назад", callback_data="get_repairman_tech_req_menu"
+)
+
+repairman_tech_req_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
         [repairman_tech_req_waiting],
         [repairman_tech_req_history],
-        [repairman_tech_req_change_department],
+        [repairman_tech_req_button],
     ]
 )
 
 
+territorial_manager_tech_req_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_territorial_manager_tech_req"
+)
+
 territorial_manager_tech_req_menu_button = InlineKeyboardButton(
-    text="Тех. заявки", callback_data="get_kru_tech_req_menu"
+    text="Назад", callback_data="get_territorial_manager_tech_req_menu"
 )
 
 territorial_manager_tech_req_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_kru_tech_req_waiting"
+    text="Ожидающие заявки", callback_data="get_territorial_manager_tech_req_waiting"
 )
 
 territorial_manager_tech_req_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_kru_tech_req_history"
+    text="История заявок", callback_data="get_territorial_manager_tech_req_history"
 )
 
-territorial_manager_tech_req_menu = InlineKeyboardMarkup(
+territorial_manager_tech_req_change_department_button = InlineKeyboardButton(
+    text="Выбрать производство",
+    callback_data="set_territorial_manager_tech_req_department",
+)
+
+territorial_manager_req_change_deparment_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [territorial_manager_tech_req_waiting],
-        [territorial_manager_tech_req_history],
+        [territorial_manager_tech_req_change_department_button],
         [main_menu_button],
     ]
 )
 
-
-tech_problem = InlineKeyboardButton(
-    text="Создать проблему", callback_data="create_tech_problem"
+territorial_manager_tech_req_menu_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [territorial_manager_tech_req_waiting],
+        [territorial_manager_tech_req_history],
+        [territorial_manager_tech_req_button],
+    ]
 )
 
 
@@ -540,9 +555,7 @@ async def worker_create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
     buttons = [
         [
-            InlineKeyboardButton(
-                text="Проблема", callback_data="problem_type_tech_req"
-            ),
+            InlineKeyboardButton(text="Поломка", callback_data="problem_type_tech_req"),
             InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
         ],
         [
@@ -552,7 +565,7 @@ async def worker_create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Фото", callback_data="photo_tech_req"),
+            InlineKeyboardButton(text="Фото поломки", callback_data="photo_tech_req"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
         [worker_tech_req_menu_button],
@@ -585,7 +598,7 @@ async def repairman_repair_tech_req_kb(
     buttons = [
         [
             InlineKeyboardButton(
-                text="Фото",
+                text="Фото после ремонта",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
                     end_point="get_photo",
@@ -622,32 +635,55 @@ async def repairman_repair_tech_req_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def create_tech_problem_kb(state: FSMContext) -> InlineKeyboardMarkup:
+async def territorial_manager_rate_tech_req_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
-    problem_name = data.get("problem_name")
+    mark = data.get("mark")
 
-    buttons = [
-        [
-            InlineKeyboardButton(text="Имя", callback_data="get_problem_name"),
-            InlineKeyboardButton(
-                text=str(problem_name),
-                callback_data="dummy",
-            ),
-        ]
-    ]
-
-    if not problem_name:
-        problem_name = ""
+    if not mark:
+        mark_text = ""
         form_complete = False
     else:
-        problem_name += " ✅"
+        mark_text = f"{mark} ✅"
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Оценка",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="territorial_manager_rate_tech_request",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{mark_text}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="territorial_manager_show_form_waiting",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ],
+    ]
 
     if form_complete:
+        if mark >= 3:
+            text = "Закрыть заявку"
+        else:
+            text = "Отправить на доработку"
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Отправить проблему", callback_data="send_tech_problem"
+                    text=text,
+                    callback_data=ShowRequestCallbackData(
+                        end_point="save_tech_req_territorial_manager_rate",
+                        request_id=callback_data.request_id,
+                    ).pack(),
                 )
             ]
         )

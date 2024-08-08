@@ -1,8 +1,10 @@
+import logging
 from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
     BudgetRecord,
+    Executor,
     Expenditure,
     FujiScope,
     Post,
@@ -807,7 +809,7 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
     return True
 
 
-def update_technical_request(record: TechnicalRequestSchema):
+def update_technical_request_from_repairman(record: TechnicalRequestSchema):
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
@@ -815,12 +817,27 @@ def update_technical_request(record: TechnicalRequestSchema):
 
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
+        cur_request.reopen_repair_date = record.reopen_repair_date
 
         for doc in record.repair_photos:
             file = TechnicalRequestRepairPhoto(
                 technical_request=cur_request, document=doc.document
             )
             s.add(file)
+    return True
+
+
+def update_technical_request_from_territorial_manager(record: TechnicalRequestSchema):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
+        )
+        cur_request.state = record.state
+        cur_request.close_date = record.close_date
+        cur_request.reopen_date = record.reopen_date
+        cur_request.confirmation_date = record.confirmation_date
+        cur_request.reopen_confirmation_date = record.reopen_confirmation_date
+        cur_request.score = record.score
     return True
 
 
@@ -834,6 +851,37 @@ def get_technical_requests_by_column(
     return get_technical_requests_by_columns([column], [value])
 
 
+def get_repairman_by_department_id_and_executor_type(
+    department_id: int, executor_type: str
+) -> WorkerSchema | None:
+    """
+    Return WorkerSchema for territorial manager by department id
+    """
+    with session.begin() as s:
+        repairman_id = None
+        q = s.query(Department)
+        match executor_type:
+            case Executor.chief_technician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().chief_technician_id
+                )
+            case Executor.technician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().technician_id
+                )
+            case Executor.electrician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().electrician_id
+                )
+
+        if repairman_id:
+            return WorkerSchema.model_validate(
+                s.query(Worker).filter(Worker.id == repairman_id).first()
+            )
+        else:
+            return None
+
+
 def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
     """
     Return WorkerSchema for territorial manager by department id
@@ -842,7 +890,7 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
         territorial_manager_id: int = (
             s.query(Department)
             .with_entities(Department.territorial_manager_id)
-            .where(Department.id == department_id)
+            .filter(Department.id == department_id)
             .first()
         )[0]
         return WorkerSchema.model_validate(
@@ -851,7 +899,7 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 
 
 def get_technical_requests_by_columns(
-    columns: list[Any], values: list[Any]
+    columns: list[Any], values: list[Any], history: bool = False
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
@@ -860,14 +908,20 @@ def get_technical_requests_by_columns(
         query = s.query(TechnicalRequest)
         for column, value in zip(columns, values):
             query = query.filter(column == value)
-
-        raw_models = query.all()
+        if history:
+            query = query.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.approved,
+                    TechnicalRequest.state == ApprovalStatus.skipped,
+                )
+            )
+        raw_models = query.limit(10).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
 
 
-def get_technical_requets_for_repairman_history(
+def get_technical_requests_for_repairman_history(
     repairman_id: int, department_id: int
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
@@ -879,10 +933,12 @@ def get_technical_requets_for_repairman_history(
                     or_(
                         TechnicalRequest.state == ApprovalStatus.pending_approval,
                         TechnicalRequest.state == ApprovalStatus.approved,
+                        TechnicalRequest.state == ApprovalStatus.skipped,
                     ),
                     TechnicalRequest.department_id == department_id,
                 )
             )
+            .limit(10)
             .all()
         )
         return [

@@ -29,8 +29,8 @@ from bot.kb import (
     worker_bid_menu_button,
     create_reply_keyboard,
     worker_tech_req_menu_button,
-    repairman_tech_req_menu_button,
-    territorial_manager_tech_req_menu_button,
+    repairman_tech_req_button,
+    territorial_manager_tech_req_button,
 )
 import asyncio
 
@@ -49,8 +49,8 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_worker_bid: worker_bid_menu_button,
         FujiScope.bot_bid_create: create_bid_menu_button,
         FujiScope.bot_technical_request_worker: worker_tech_req_menu_button,
-        FujiScope.bot_technical_request_repairman: repairman_tech_req_menu_button,
-        FujiScope.bot_technical_request_kru: territorial_manager_tech_req_menu_button,
+        FujiScope.bot_technical_request_repairman: repairman_tech_req_button,
+        FujiScope.bot_technical_request_kru: territorial_manager_tech_req_button,
     }
 
 

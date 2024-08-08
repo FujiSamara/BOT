@@ -200,6 +200,43 @@ class BudgetRecordSchema(BaseModel):
     department: Optional[DepartmentSchema] = None
 
 
+# Technical request
+class ProblemSchema(BaseSchema):
+    problem_name: str
+    executor: Executor
+    hours: float
+
+
+class TechnicalRequestSchema(BaseSchema):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    # Данные при создание
+    problem: ProblemSchema
+    description: str
+    problem_photos: list[DocumentSchema]
+    repair_photos: Optional[list[DocumentSchema]] = None
+
+    open_date: datetime.datetime
+    repair_date: Optional[datetime.datetime] = None
+    confirmation_date: Optional[datetime.datetime] = None
+    reopen_date: Optional[datetime.datetime] = None
+    reopen_repair_date: Optional[datetime.datetime] = None
+    reopen_confirmation_date: Optional[datetime.datetime] = None
+    close_date: Optional[datetime.datetime] = None
+
+    state: ApprovalStatus
+    score: Optional[int] = None
+
+    worker: WorkerSchema
+    repairman: WorkerSchema
+    territorial_manager: WorkerSchema
+    department: DepartmentSchema
+
+
 # endregion
 
 
@@ -247,38 +284,3 @@ class BidRecordSchema(BaseSchema):
 
 
 # endregion
-
-
-# Technical request
-class ProblemSchema(BaseSchema):
-    problem_name: str
-    executor: Executor
-    hours: float
-
-
-class TechnicalRequestSchema(BaseSchema):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-
-    # Данные при создание
-    problem: ProblemSchema
-    description: str
-    problem_photos: list[DocumentSchema]
-    repair_photos: Optional[list[DocumentSchema]] = None
-
-    open_date: datetime.datetime
-    repair_date: Optional[datetime.datetime] = None
-    confirmation_date: Optional[datetime.datetime] = None
-    reopen_date: Optional[datetime.datetime] = None
-    close_date: Optional[datetime.datetime] = None
-
-    state: ApprovalStatus
-    score: Optional[int] = None
-
-    worker: WorkerSchema
-    repairman: WorkerSchema
-    territorial_manager: WorkerSchema
-    department: DepartmentSchema

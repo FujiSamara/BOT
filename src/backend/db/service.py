@@ -783,13 +783,13 @@ def create_technical_request(
             f"Problem with name {problem_name} wasn't found"
         )
 
-    # repairman = orm.get_workers_with_post_by_columns([Worker.department, Worker.post], [worker.department, problem.executor])
-    # if not repairman:
-    #     logging.getLogger("uvicorn.error").error(
-    # f"Repairman with department {worker.department} and responsible by {problem.executor} wasn't found"
-    # )
-
-    repairman = worker
+    repairman = orm.get_repairman_by_department_id_and_executor_type(
+        department_id=worker.department.id, executor_type=problem.executor.name
+    )
+    if not repairman:
+        logging.getLogger("uvicorn.error").error(
+            f"Repairman from department id: {worker.department.id} and responsible by {problem.executor.name} wasn't found"
+        )
 
     territorial_manager = orm.get_territorial_manager_by_department_id(
         worker.department.id
@@ -826,7 +826,7 @@ def create_technical_request(
     return repairman.telegram_id
 
 
-def update_technical_request_repairman(
+def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
 ) -> int:
     """
@@ -836,32 +836,74 @@ def update_technical_request_repairman(
     cur_date = datetime.now()
 
     request = get_technical_request_by_id(request_id=request_id)
-    documents = []
-    try:
-        # Определяем index последнего файла, если ранее были добавлены фото после ремонта
-        index = int(
-            request.repair_photos[-1].name[
-                -1 * len(Path(request.repair_photos[-1].filename).suffix) - 1
-            ]
-        )
-    except IndexError:
-        index = 0
-    for doc in photo_files:
-        suffix = Path(doc.filename).suffix
-        filename = f"photo_repair_technical_request_{request_id}_{index + 1}{suffix}"
-        doc.filename = filename
-        documents.append(DocumentSchema(document=doc))
-        index += 1
 
-    request.repair_date = cur_date
-    request.repair_photos = documents
+    if request.reopen_date:
+        request.reopen_repair_date = cur_date
+        for index, doc in enumerate(photo_files):
+            suffix = Path(doc.filename).suffix
+            filename = f"photo_repair_technical_request_{request_id}_reopen_{index + 1}{suffix}"
+            doc.filename = filename
+            request.repair_photos.append(DocumentSchema(document=doc))
+    else:
+        request.repair_date = cur_date
+
+        documents = []
+        for index, doc in enumerate(photo_files):
+            suffix = Path(doc.filename).suffix
+            filename = (
+                f"photo_repair_technical_request_{request_id}_{index + 1}{suffix}"
+            )
+            doc.filename = filename
+            documents.append(DocumentSchema(document=doc))
+
+        request.repair_photos = documents
+
     request.state = ApprovalStatus.pending_approval
 
-    if not orm.update_technical_request(request):
+    if not orm.update_technical_request_from_repairman(request):
         logging.getLogger("uvicorn.error").error(
-            f"Technical problem with id {request.problem.id} record wasn't updated"
+            f"Technical problem with id {request.id} record wasn't updated"
         )
     return request.territorial_manager.telegram_id
+
+
+def update_technical_request_from_territorial_manager(
+    mark: int, request_id: int
+) -> int | None:
+    """
+    Update tecnical request
+    Return repairman telegram id if mark < 3 else None
+    """
+    cur_date = datetime.now()
+
+    request = get_technical_request_by_id(request_id=request_id)
+
+    request.score = mark
+
+    if mark >= 3:
+        request.state = ApprovalStatus.approved
+        request.close_date = cur_date
+        if request.reopen_date:
+            request.reopen_confirmation_date = cur_date
+        else:
+            request.confirmation_date = cur_date
+    else:
+        if request.reopen_date:
+            request.state = ApprovalStatus.skipped
+            request.close_date = cur_date
+            request.reopen_confirmation_date = cur_date
+        else:
+            request.state = ApprovalStatus.pending
+            request.confirmation_date = cur_date
+            request.reopen_date = cur_date
+
+    if not orm.update_technical_request_from_territorial_manager(request):
+        logging.getLogger("uvicorn.error").error(
+            f"Technical problem with id {request.id} record wasn't updated"
+        )
+
+    if request.state == ApprovalStatus.pending:
+        return request.repairman.telegram_id
 
 
 def get_all_waiting_technical_requests_by_worker_TG_id(
@@ -926,11 +968,53 @@ def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name(
             return requests
 
 
-def get_all_history_technical_requests_by_repairman_TG_and_department_name(
+def get_all_waiting_technical_requests_by_territorial_manager_TG_id_and_department_name(
+    telegram_id: int,
+    department_name: str,
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for territorial_manager
+    """
+    try:
+        territorial_manager = orm.get_workers_with_post_by_column(
+            Worker.telegram_id, telegram_id
+        )[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Territorial manager with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        try:
+            department_id = (orm.find_departments_by_name(department_name)[0]).id
+        except IndexError:
+            logging.getLogger("uvicorn.error").error(
+                f"Department with name: {department_name} wasn't found"
+            )
+        else:
+            requests = orm.get_technical_requests_by_columns(
+                [
+                    TechnicalRequest.repairman_id,
+                    TechnicalRequest.state,
+                    TechnicalRequest.department_id,
+                ],
+                [
+                    territorial_manager.id,
+                    ApprovalStatus.pending_approval,
+                    department_id,
+                ],
+            )
+            if len(requests) == 0:
+                logging.getLogger("uvicorn.error").info(
+                    f"Requests for territorial manager with id: {territorial_manager.id} wasn't founds"
+                )
+            return requests
+
+
+def get_all_history_technical_requests_by_repairman_TG_id_and_department_name(
     telegram_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all waiting technical requests by Telegram id for repairman
+    Return all history technical requests by Telegram id for repairman
     """
     try:
         repairman = orm.get_workers_with_post_by_column(
@@ -948,12 +1032,49 @@ def get_all_history_technical_requests_by_repairman_TG_and_department_name(
                 f"Department with name: {department_name} wasn't found"
             )
         else:
-            requests = orm.get_technical_requets_for_repairman_history(
+            requests = orm.get_technical_requests_for_repairman_history(
                 repairman.id, department_id
             )
             if len(requests) == 0:
                 logging.getLogger("uvicorn.error").info(
                     f"Requests for repairman with id: {repairman.id} wasn't founds"
+                )
+            return requests
+
+
+def get_all_history_technical_requests_by_territorial_manager_TG_id_and_department_name(
+    telegram_id: int, department_name: str
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all history technical requests by Telegram id for territorial_manager
+    """
+    try:
+        territorial_manager = orm.get_workers_with_post_by_column(
+            Worker.telegram_id, telegram_id
+        )[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Territorial manager with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        try:
+            department_id = (orm.find_departments_by_name(department_name)[0]).id
+        except IndexError:
+            logging.getLogger("uvicorn.error").error(
+                f"Department with name: {department_name} wasn't found"
+            )
+        else:
+            requests = orm.get_technical_requests_by_columns(
+                [
+                    TechnicalRequest.territorial_manager_id,
+                    TechnicalRequest.department_id,
+                ],
+                [territorial_manager.id, department_id],
+                history=True,
+            )
+            if len(requests) == 0:
+                logging.getLogger("uvicorn.error").info(
+                    f"Requests for territorial manager with id: {territorial_manager.id} wasn't founds"
                 )
             return requests
 
@@ -972,8 +1093,7 @@ def get_all_history_technical_requests_by_worker_TG_id(
         )
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.state],
-            [worker.id, ApprovalStatus.approved],
+            [TechnicalRequest.worker_id], [worker.id], history=True
         )
         if len(requests) == 0:
             logging.getLogger("uvicorn.error").info(
@@ -1034,7 +1154,7 @@ def get_deparments_by_repairman_telegram_id(
     )
 
 
-def get_deparments_by_kru_telegram_id(
+def get_deparments_by_territorial_manager_telegram_id(
     telegram_id: int,
 ) -> list[DepartmentSchema]:
     return _get_deparments_by_worker_telegram_id_and_worker_column_id(

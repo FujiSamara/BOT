@@ -23,7 +23,7 @@ from bot.handlers.tech_req.schemas import (
 )
 
 
-def create_keybord_with_end_point(
+def create_keybord_for_requests_with_end_point(
     requests: list[TechnicalRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
@@ -62,36 +62,61 @@ async def show_form(
         await state.update_data(msgs=[])
 
     request = get_technical_request_by_id(callback_data.request_id)
-    text = f"{hbold(request.problem.problem_name)} от {request.open_date.date()}. \n\
-Описание:\n{request.description} \n\
+    text = (
+        f"{hbold(request.problem.problem_name)} от "
+        + request.open_date.date().strftime(get_settings().date_format)
+        + f"\nОписание:\n{request.description}\n\
 Адресс: {request.worker.department.address}\n\
-ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}.\n\
-ФИО исполнителя: {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}.\n\
+ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
+ФИО исполнителя: {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\n\
 Статус: "
+    )
 
     match request.state:
         case ApprovalStatus.approved:
-            text += "Выполенно."
+            text += "Выполенно"
         case ApprovalStatus.pending:
-            text += "В процессе выполнения."
+            text += "В процессе выполнения"
         case ApprovalStatus.pending_approval:
-            text += "Ожидание оценки от ТУ."
+            text += "Ожидание оценки от ТУ"
         case ApprovalStatus.denied:
-            text += "Отправленно на доработку."
-    text += "\n"
+            text += "Отправленно на доработку"
+        case ApprovalStatus.skipped:
+            text += "Не выполненно"
+    text += "\n \n"
 
     if request.confirmation_date:
-        text += f"Дата утверждения проделанной работы {request.confirmation_date.strftype("%d.%m.%Y")}.\n"
+        text += (
+            "Дата утверждения проделанной работы "
+            + request.confirmation_date.date().strftime(get_settings().date_format)
+            + "\n"
+        )
         if request.close_date:
-            text += f"Дата закрытия заявки {request.close_date.strftype("%d.%m.%Y")}.\n"
+            text += (
+                "Дата закрытия заявки "
+                + request.close_date.date().strftime(get_settings().date_format)
+                + "\n"
+            )
         if request.reopen_date:
             text += (
-                f"Дата переоткрытия заявки {request.reopen_date.strftype("%d.%m.%Y")}."
+                "Дата переоткрытия заявки "
+                + request.reopen_date.date().strftime(get_settings().date_format)
+                + "\n"
             )
-
-    buttons.append(
-        [InlineKeyboardButton(text="Назад", callback_data=history_button.callback_data)]
-    )
+        if request.reopen_repair_date:
+            text += (
+                "Повторная дата ремонта "
+                + request.reopen_repair_date.date().strftime(get_settings().date_format)
+                + "\n"
+            )
+        if request.reopen_confirmation_date:
+            text += (
+                "Повторная дата утверждения "
+                + request.reopen_confirmation_date.date().strftime(
+                    get_settings().date_format
+                )
+                + "\n"
+            )
 
     buttons.append(
         [
@@ -106,7 +131,7 @@ async def show_form(
         ]
     )
 
-    if request.state == ApprovalStatus.pending_approval:
+    if request.repair_date:
         buttons.append(
             [
                 InlineKeyboardButton(
@@ -119,6 +144,10 @@ async def show_form(
                 )
             ]
         )
+
+    buttons.append(
+        [InlineKeyboardButton(text="Назад", callback_data=history_button.callback_data)]
+    )
 
     keybord = InlineKeyboardMarkup(inline_keyboard=buttons)
     await try_edit_or_answer(message=callback.message, text=text, reply_markup=keybord)
