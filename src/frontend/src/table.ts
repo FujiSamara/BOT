@@ -68,10 +68,28 @@ export class Table<T extends BaseSchema> {
 	}
 
 	//#region Rows handlers
+	private _nonIgnoredRows = computed(() => {
+		const result: Array<T> = [];
+
+		for (let index = 0; index < this._models.value.length; index++) {
+			const model: T = this._models.value[index];
+
+			let newModel: any = {};
+
+			for (const fieldName in model) {
+				if (this._ignored.find((rule) => rule === fieldName) === undefined) {
+					newModel[fieldName] = model[fieldName];
+				}
+			}
+
+			result.push(newModel as T);
+		}
+		return result;
+	});
 	private _searchedRows = computed(() => {
 		const searchResult: Array<T> = [];
-		for (let index = 0; index < this._models.value.length; index++) {
-			const model = this._models.value[index];
+		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
+			const model = this._nonIgnoredRows.value[index];
 			if (this.searcher.value(model)) {
 				searchResult.push(model);
 			}
@@ -118,7 +136,9 @@ export class Table<T extends BaseSchema> {
 		return result;
 	});
 	private _sortedRows = computed(() => {
-		const result = [...this._formattedRows.value];
+		const result: Array<{ id: number; columns: Array<Cell> }> = [
+			...this._formattedRows.value,
+		];
 
 		if (this.sortBy.value !== -1) {
 			result.sort(
@@ -146,6 +166,10 @@ export class Table<T extends BaseSchema> {
 		if (this._models.value.length === 0) return result;
 
 		for (const fieldName in this._models.value[0]) {
+			if (this._ignored.find((rule) => rule === fieldName) !== undefined) {
+				continue;
+			}
+
 			const alias = this.getAlias(fieldName);
 
 			const index = this._columsOrder.get(fieldName);
@@ -297,6 +321,8 @@ export class Table<T extends BaseSchema> {
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
 	protected _aliases: Map<string, string> = new Map<string, string>();
+	/** Specify ingored column */
+	protected _ignored: Array<string> = [];
 	/** Filters for rows. Must returns **true** if row need be shown. */
 	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
 	/** Searcher for rows. Must returns **true** if row need be shown. */
@@ -508,7 +534,6 @@ export class Table<T extends BaseSchema> {
 export class ExpenditureTable extends Table<ExpenditureSchema> {
 	constructor() {
 		super("expenditure");
-
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
