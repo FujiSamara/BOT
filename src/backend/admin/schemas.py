@@ -89,6 +89,8 @@ class DepartmentView(ModelView, model=Department):
         Department.territorial_manager_id,
         Department.territorial_director_id,
         Department.territorial_brand_chef_id,
+        Department.technical_request,
+        Department.budget_records,
     ]
     form_excluded_columns = [
         Department.workers,
@@ -99,6 +101,8 @@ class DepartmentView(ModelView, model=Department):
         Department.bs_import_error,
         Department.biosmart_strid,
         Department.workers_bids,
+        Department.technical_request,
+        Department.budget_records,
     ]
     can_export = False
 
@@ -120,6 +124,9 @@ class DepartmentView(ModelView, model=Department):
         Department.territorial_brand_chef: "Территориальный брендшеф",
         Department.delivery_manager: "Менеджер доставки",
         Department.territorial_director: "Территориальный директор",
+        Department.chief_technician: "Главный техник",
+        Department.technician: "Техник",
+        Department.electrician: "Электрик",
     }
 
     form_ajax_refs = {
@@ -140,6 +147,18 @@ class DepartmentView(ModelView, model=Department):
             "order_by": "l_name",
         },
         "territorial_brand_chef": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "chief_technician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "technician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "electrician": {
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },

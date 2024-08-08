@@ -85,6 +85,12 @@ async def show_form(
             text += "Не выполненно"
     text += "\n \n"
 
+    if request.repair_date:
+        text += (
+            "Дата ремонта "
+            + request.repair_date.date().strftime(get_settings().date_format)
+            + "\n"
+        )
     if request.confirmation_date:
         text += (
             "Дата утверждения проделанной работы "
