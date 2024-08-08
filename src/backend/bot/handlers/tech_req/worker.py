@@ -224,7 +224,7 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     for doc in photo:
         photo_files.append(await download_file(doc))
 
-    repairman_TG_id = create_technical_request(
+    ret_data = create_technical_request(
         problem_name=problem_name,
         description=description,
         photo_files=photo_files,
@@ -232,7 +232,9 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     )
 
     await notify_worker_by_telegram_id(
-        id=repairman_TG_id, message=text.notifay_repairman
+        id=ret_data["repairman_telegram_id"],
+        message=text.notifay_repairman
+        + f"\nНа производстве: {ret_data["department_name"]}",
     )
 
     await state.clear()

@@ -268,12 +268,14 @@ async def save_repairman_repair(
     for doc in photo:
         photo_files.append(await download_file(doc))
 
-    teritorial_manager_id = update_technical_request_from_repairman(
+    req_data = update_technical_request_from_repairman(
         photo_files=photo_files, request_id=callback_data.request_id
     )
 
     await notify_worker_by_telegram_id(
-        id=teritorial_manager_id, message=text.notifay_teritorial_manager
+        id=req_data["territorial_manager_telegram_id"],
+        message=text.notifay_teritorial_manager
+        + f"\n На производстве: {req_data["department_name"]}",
     )
 
     await state.clear()

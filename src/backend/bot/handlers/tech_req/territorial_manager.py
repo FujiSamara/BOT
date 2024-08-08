@@ -298,13 +298,15 @@ async def save_tech_req_territorial_manager_rate(
 ):
     mark = (await state.get_data()).get("mark")
     request_id = callback_data.request_id
-    repairman_TG_id = update_technical_request_from_territorial_manager(
+    ret_data = update_technical_request_from_territorial_manager(
         mark=mark, request_id=request_id
     )
 
-    if repairman_TG_id:
+    if ret_data:
         await notify_worker_by_telegram_id(
-            id=repairman_TG_id, message=text.notifay_repairman_reopen
+            id=ret_data["repairman_telegram_id"],
+            message=text.notifay_repairman_reopen
+            + f"\nНа производстве: {ret_data["department_name"]}",
         )
 
     await state.clear()

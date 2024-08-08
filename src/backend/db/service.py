@@ -760,7 +760,7 @@ def create_technical_request(
     description: str,
     photo_files: list[UploadFile],
     telegram_id: int,
-) -> int:
+) -> dict:
     """
     Create technical request
     Return: repairman telegram id
@@ -823,15 +823,18 @@ def create_technical_request(
             "Technical problem record wasn't created"
         )
 
-    return repairman.telegram_id
+    return {
+        "repairman_telegram_id": repairman.telegram_id,
+        "department_name": request.department.name,
+    }
 
 
 def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
-) -> int:
+) -> dict:
     """
     Update tecnical request
-    Return territorial manager telegram id
+    Return territorial manager telegram id and department name on dictionary
     """
     cur_date = datetime.now()
 
@@ -864,12 +867,16 @@ def update_technical_request_from_repairman(
         logging.getLogger("uvicorn.error").error(
             f"Technical problem with id {request.id} record wasn't updated"
         )
-    return request.territorial_manager.telegram_id
+    ret_dict = {
+        "territorial_manager_telegram_id": request.territorial_manager.telegram_id,
+        "department_name": request.department.name,
+    }
+    return ret_dict
 
 
 def update_technical_request_from_territorial_manager(
     mark: int, request_id: int
-) -> int | None:
+) -> dict | None:
     """
     Update tecnical request
     Return repairman telegram id if mark < 3 else None
@@ -903,7 +910,10 @@ def update_technical_request_from_territorial_manager(
         )
 
     if request.state == ApprovalStatus.pending:
-        return request.repairman.telegram_id
+        return {
+            "repairman_telegram_id": request.repairman.telegram_id,
+            "department_name": request.department.name,
+        }
 
 
 def get_all_waiting_technical_requests_by_worker_TG_id(
@@ -993,7 +1003,7 @@ def get_all_waiting_technical_requests_by_territorial_manager_TG_id_and_departme
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
-                    TechnicalRequest.repairman_id,
+                    TechnicalRequest.territorial_manager_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                 ],
