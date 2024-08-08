@@ -50,6 +50,12 @@ export class CellLine {
 	) {}
 }
 
+/** Presents class for external usage. */
+interface TableData {
+	rows: Array<{ id: number; columns: Array<Cell> }>;
+	headers: Array<string>;
+}
+
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
@@ -108,8 +114,11 @@ export class Table<T extends BaseSchema> {
 
 		return filterResult;
 	});
-	private _formattedRows = computed(() => {
-		const result: Array<{ id: number; columns: Array<Cell> }> = [];
+	private _formattedOrderedRows = computed(() => {
+		const result: TableData = {
+			headers: this.getHeaders(),
+			rows: [],
+		};
 
 		for (let index = 0; index < this._filteredRows.value.length; index++) {
 			const model = this._filteredRows.value[index];
@@ -130,18 +139,19 @@ export class Table<T extends BaseSchema> {
 				}
 			}
 
-			result.push({ id: model.id, columns: columns });
+			result.rows.push({ id: model.id, columns: columns });
 		}
 
 		return result;
 	});
 	private _sortedRows = computed(() => {
-		const result: Array<{ id: number; columns: Array<Cell> }> = [
-			...this._formattedRows.value,
-		];
+		const result: TableData = {
+			headers: this._formattedOrderedRows.value.headers,
+			rows: [...this._formattedOrderedRows.value.rows],
+		};
 
 		if (this.sortBy.value !== -1) {
-			result.sort(
+			result.rows.sort(
 				(
 					a: { id: number; columns: Array<Cell> },
 					b: { id: number; columns: Array<Cell> },
@@ -156,20 +166,16 @@ export class Table<T extends BaseSchema> {
 	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
-			return [];
+			return { headers: [], rows: [] };
 		}
 
 		return this._sortedRows.value;
 	});
-	public headers = computed(() => {
+	private getHeaders() {
 		const result: Array<string> = [];
-		if (this._models.value.length === 0) return result;
+		if (this._nonIgnoredRows.value.length === 0) return result;
 
-		for (const fieldName in this._models.value[0]) {
-			if (this._ignored.find((rule) => rule === fieldName) !== undefined) {
-				continue;
-			}
-
+		for (const fieldName in this._nonIgnoredRows.value[0]) {
 			const alias = this.getAlias(fieldName);
 
 			const index = this._columsOrder.get(fieldName);
@@ -181,7 +187,7 @@ export class Table<T extends BaseSchema> {
 			}
 		}
 		return result;
-	});
+	}
 	public allChecked = computed({
 		get: () => {
 			if (this._checked.value.length === 0) {
@@ -293,7 +299,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Return **true** if rows sorted by this column with **header**. */
 	public sorted(header: string): boolean {
-		const index = this.headers.value.findIndex(
+		const index = this.rows.value.headers.findIndex(
 			(val: string) => val === this.getAlias(header),
 		);
 
@@ -301,7 +307,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Sorts columns by specify **header** */
 	public sort(header: string) {
-		const index = this.headers.value.findIndex(
+		const index = this.rows.value.headers.findIndex(
 			(val: string) => val === this.getAlias(header),
 		);
 

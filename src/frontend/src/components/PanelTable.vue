@@ -47,7 +47,7 @@
 						</div>
 					</th>
 					<th
-						v-for="columnValue in props.table.headers.value"
+						v-for="columnValue in props.table.rows.value.headers"
 						:key="columnValue"
 					>
 						<div class="table-header">
@@ -61,7 +61,7 @@
 			</thead>
 			<tbody>
 				<tr
-					v-for="row in table.rows.value"
+					v-for="row in table.rows.value.rows"
 					:key="row.id"
 					@click.prevent="$emit('click', row.id)"
 					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
