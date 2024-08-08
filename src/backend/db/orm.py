@@ -1,4 +1,3 @@
-import logging
 from typing import Any
 from db.database import Base, engine, session
 from db.models import (
