@@ -14,39 +14,16 @@ from bot import text
 
 from db.models import ApprovalStatus
 from db.service import get_technical_request_by_id
-from db.schemas import DepartmentSchema, TechnicalRequestSchema
+from db.schemas import DepartmentSchema
 
 from bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
 from bot.kb import create_inline_keyboard, create_reply_keyboard
-from bot.handlers.tech_req.schemas import (
+from bot.handlers.tech_request.schemas import (
     ShowRequestCallbackData,
 )
-
-
-def create_keybord_for_requests_with_end_point(
-    requests: list[TechnicalRequestSchema],
-    end_point: str,
-    menu_button: InlineKeyboardButton,
-) -> InlineKeyboardMarkup:
-    buttons: list[list[InlineKeyboardButton]] = []
-    try:
-        for request in requests:
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text=f"{request.department.name} {request.id}",
-                        callback_data=ShowRequestCallbackData(
-                            request_id=request.id, end_point=end_point
-                        ).pack(),
-                    )
-                ]
-            )
-    finally:
-        buttons.append([menu_button])
-        return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 async def show_form(
@@ -228,6 +205,3 @@ async def handle_department(
             text=hbold(f"Производство: {message.text}"),
             reply_markup=reply_markup,
         )
-
-
-# univesral buttons for repairman

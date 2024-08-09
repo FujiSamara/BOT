@@ -739,7 +739,7 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
-# Technical Request
+# region Technical request
 def create_technical_problem(record: ProblemSchema) -> None:
     if not orm.create_technical_problem(record):
         logging.getLogger("uvicorn.error").error(
@@ -876,7 +876,7 @@ def update_technical_request_from_repairman(
 
 def update_technical_request_from_territorial_manager(
     mark: int, request_id: int
-) -> dict | None:
+) -> Optional[dict]:
     """
     Update tecnical request
     Return repairman telegram id if mark < 3 else None
@@ -916,7 +916,7 @@ def update_technical_request_from_territorial_manager(
         }
 
 
-def get_all_waiting_technical_requests_by_worker_TG_id(
+def get_all_waiting_technical_requests_for_worker(
     telegram_id: int,
 ) -> list[TechnicalRequestSchema]:
     """
@@ -940,7 +940,7 @@ def get_all_waiting_technical_requests_by_worker_TG_id(
     return requests
 
 
-def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name(
+def get_all_waiting_technical_requests_for_repairman(
     telegram_id: int,
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
@@ -978,7 +978,7 @@ def get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name(
             return requests
 
 
-def get_all_waiting_technical_requests_by_territorial_manager_TG_id_and_department_name(
+def get_all_waiting_technical_requests_for_territorial_manager(
     telegram_id: int,
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
@@ -1020,7 +1020,7 @@ def get_all_waiting_technical_requests_by_territorial_manager_TG_id_and_departme
             return requests
 
 
-def get_all_history_technical_requests_by_repairman_TG_id_and_department_name(
+def get_all_history_technical_requests_for_repairman(
     telegram_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
@@ -1052,7 +1052,7 @@ def get_all_history_technical_requests_by_repairman_TG_id_and_department_name(
             return requests
 
 
-def get_all_history_technical_requests_by_territorial_manager_TG_id_and_department_name(
+def get_all_history_technical_requests_for_territorial_manager(
     telegram_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
@@ -1089,7 +1089,7 @@ def get_all_history_technical_requests_by_territorial_manager_TG_id_and_departme
             return requests
 
 
-def get_all_history_technical_requests_by_worker_TG_id(
+def get_all_history_technical_requests_for_worker(
     telegram_id: int,
 ) -> list[TechnicalRequestSchema]:
     """
@@ -1128,9 +1128,12 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         )
 
 
-def _get_deparments_by_worker_telegram_id_and_worker_column_id(
+def _get_deparments_for_employee(
     telegram_id: int, worker_column: Any
 ) -> list[DepartmentSchema]:
+    """
+    Return departments by worker telegram id_and worker column id
+    """
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     except IndexError:
@@ -1144,29 +1147,32 @@ def _get_deparments_by_worker_telegram_id_and_worker_column_id(
         return departments
 
 
-def get_deparments_by_repairman_telegram_id(
+def get_deparments_for_repairman(
     telegram_id: int,
 ) -> list[DepartmentSchema]:
-    departments = _get_deparments_by_worker_telegram_id_and_worker_column_id(
+    departments = _get_deparments_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
     if len(departments) > 0:
         return departments
 
-    departments = _get_deparments_by_worker_telegram_id_and_worker_column_id(
+    departments = _get_deparments_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
     if len(departments) > 0:
         return departments
 
-    return _get_deparments_by_worker_telegram_id_and_worker_column_id(
+    return _get_deparments_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
     )
 
 
-def get_deparments_by_territorial_manager_telegram_id(
+def get_deparments_for_territorial_manager(
     telegram_id: int,
 ) -> list[DepartmentSchema]:
-    return _get_deparments_by_worker_telegram_id_and_worker_column_id(
+    return _get_deparments_for_employee(
         telegram_id=telegram_id, worker_column=Department.territorial_manager_id
     )
+
+
+# endregion

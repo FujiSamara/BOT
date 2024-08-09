@@ -2,6 +2,7 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    BidDocument,
     BudgetRecord,
     Executor,
     Expenditure,
@@ -166,30 +167,34 @@ def add_bid(bid: BidSchema):
         department = (
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
+        expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
+        )
 
-        bid = Bid(
+        bid_model = Bid(
             amount=bid.amount,
             payment_type=bid.payment_type,
             purpose=bid.purpose,
-            agreement=bid.agreement,
-            urgently=bid.urgently,
-            need_document=bid.need_document,
             comment=bid.comment,
             create_date=bid.create_date,
             department=department,
             worker=worker,
-            document=bid.document,
-            document1=bid.document1,
-            document2=bid.document2,
+            documents=[],
             kru_state=bid.kru_state,
             owner_state=bid.owner_state,
             accountant_card_state=bid.accountant_card_state,
             accountant_cash_state=bid.accountant_cash_state,
             teller_card_state=bid.teller_card_state,
             teller_cash_state=bid.teller_cash_state,
+            fac_state=bid.fac_state,
+            cc_state=bid.cc_state,
+            cc_supervisor_state=bid.cc_supervisor_state,
+            expenditure=expenditure,
         )
+        s.add(bid_model)
 
-        s.add(bid)
+        for document in bid.documents:
+            s.add(BidDocument(bid=bid_model, document=document.document))
 
 
 def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
@@ -283,18 +288,22 @@ def update_bid(bid: BidSchema):
         if not new_worker:
             return None
 
+        new_expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
+        )
+        if not new_expenditure:
+            return None
+
         cur_bid.amount = bid.amount
         cur_bid.payment_type = bid.payment_type
         cur_bid.purpose = bid.purpose
-        cur_bid.agreement = bid.agreement
-        cur_bid.urgently = bid.urgently
-        cur_bid.need_document = bid.need_document
         cur_bid.comment = bid.comment
         cur_bid.denying_reason = bid.denying_reason
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
         cur_bid.worker = new_worker
+        cur_bid.expenditure = new_expenditure
         # TODO: Update documents
         # cur_bid.document = bid.document
         # cur_bid.document1 = bid.document1
@@ -305,6 +314,9 @@ def update_bid(bid: BidSchema):
         cur_bid.accountant_cash_state = bid.accountant_cash_state
         cur_bid.teller_card_state = bid.teller_card_state
         cur_bid.teller_cash_state = bid.teller_cash_state
+        cur_bid.fac_state = bid.fac_state
+        cur_bid.cc_state = bid.cc_state
+        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
 
 
 def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchema]:
@@ -727,7 +739,7 @@ def get_bids() -> list[BidSchema]:
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-# Technical problem
+# region Technical problem
 def create_technical_problem(record: ProblemSchema) -> bool:
     """Creates technical problem
     Returns: `True` if technical problem record created, `False` otherwise.
@@ -952,3 +964,6 @@ def get_departments_by_worker_id_and_worker_column(
     with session.begin() as s:
         raw_models = s.query(Department).filter(worker_column == worker_id).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+# endregion

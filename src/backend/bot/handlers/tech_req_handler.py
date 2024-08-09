@@ -1,5 +1,5 @@
 from aiogram import Router
-from bot.handlers.tech_req import main
+from bot.handlers.tech_request import main
 
 
 router = Router(name="technical_request")

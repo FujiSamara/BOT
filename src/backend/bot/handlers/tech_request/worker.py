@@ -10,19 +10,10 @@ from aiogram.utils.markdown import hbold
 
 from fastapi import UploadFile
 
-from bot import text
+from bot import text, kb
 from bot.states import (
     Base,
     WorkerTechnicalRequestForm,
-)
-from bot.kb import (
-    worker_tech_req_menu_button,
-    worker_tech_req_menu,
-    worker_tech_req_waiting,
-    worker_tech_req_history,
-    worker_tech_req_create,
-    worker_create_tech_req_kb,
-    create_reply_keyboard,
 )
 from bot.handlers.utils import (
     notify_worker_by_telegram_id,
@@ -32,15 +23,13 @@ from bot.handlers.utils import (
     handle_documents_form,
     handle_documents,
 )
-from bot.handlers.tech_req.utils import (
-    create_keybord_for_requests_with_end_point,
-    show_form,
-)
-from bot.handlers.tech_req.schemas import ShowRequestCallbackData
+from bot.handlers.tech_request.utils import show_form
+from bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from bot.handlers.tech_request import kb as tech_kb
 
 from db.service import (
-    get_all_history_technical_requests_by_worker_TG_id,
-    get_all_waiting_technical_requests_by_worker_TG_id,
+    get_all_history_technical_requests_for_worker,
+    get_all_waiting_technical_requests_for_worker,
     get_technical_problem_names,
     create_technical_request,
 )
@@ -49,29 +38,33 @@ from db.service import (
 router = Router(name="technical_request_worker")
 
 
-@router.callback_query(F.data == worker_tech_req_menu_button.callback_data)
-async def worker_menu(callback: CallbackQuery):
+@router.callback_query(F.data == tech_kb.WR_menu_button.callback_data)
+async def show_worker_menu(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=worker_tech_req_menu,
+        reply_markup=tech_kb.WR_menu,
     )
 
 
-@router.callback_query(F.data == worker_tech_req_create.callback_data)
-async def worker_create_request_cb(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == tech_kb.WR_create.callback_data)
+async def show_worker_create_request_format_cb(
+    callback: CallbackQuery, state: FSMContext
+):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Создать заявку"),
-        reply_markup=await worker_create_tech_req_kb(state),
+        reply_markup=await tech_kb.WR_create_kb(state),
     )
 
 
-async def worker_create_request_ms(message: CallbackQuery, state: FSMContext):
+async def show_worker_create_request_format_ms(
+    message: CallbackQuery, state: FSMContext
+):
     await try_edit_or_answer(
         message=message,
         text=hbold("Создать заявку"),
-        reply_markup=await worker_create_tech_req_kb(state),
+        reply_markup=await tech_kb.WR_create_kb(state),
     )
 
 
@@ -83,7 +76,7 @@ async def get_problem(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите проблему:"),
-        reply_markup=create_reply_keyboard(
+        reply_markup=kb.create_reply_keyboard(
             "⏪ Назад", *[problem for problem in problems]
         ),
     )
@@ -99,19 +92,21 @@ async def set_problem(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == "⏪ Назад":
-        await worker_create_request_ms(message, state)
+        await show_worker_create_request_format_ms(message, state)
     else:
         problems = get_technical_problem_names()
         if message.text not in problems:
             problems.sort()
             msg = await message.answer(
                 text=text.format_err,
-                reply_markup=create_reply_keyboard(*[problem for problem in problems]),
+                reply_markup=kb.create_reply_keyboard(
+                    *[problem for problem in problems]
+                ),
             )
             await state.update_data(msg=msg)
             return
         await state.update_data(problem_name=message.text)
-        await worker_create_request_ms(message, state)
+        await show_worker_create_request_format_ms(message, state)
 
 
 @router.callback_query(F.data == "description_tech_req")
@@ -130,7 +125,7 @@ async def set_description(message: Message, state: FSMContext):
         await try_delete_message(msg)
     await state.update_data(description=message.text)
     await try_delete_message(message)
-    await worker_create_request_ms(message, state)
+    await show_worker_create_request_format_ms(message, state)
 
 
 @router.callback_query(F.data == "photo_tech_req")
@@ -142,12 +137,14 @@ async def get_worker_photo(callback: CallbackQuery, state: FSMContext):
 
 @router.message(WorkerTechnicalRequestForm.photo)
 async def set_worker_photo(message: Message, state: FSMContext):
-    await handle_documents(message, state, "photo", worker_create_request_ms)
+    await handle_documents(
+        message, state, "photo", show_worker_create_request_format_ms
+    )
 
 
-@router.callback_query(F.data == worker_tech_req_waiting.callback_data)
-async def worker_waiting(callback: CallbackQuery):
-    requests = get_all_waiting_technical_requests_by_worker_TG_id(
+@router.callback_query(F.data == tech_kb.WR_waiting.callback_data)
+async def show_worker_waiting_menu(callback: CallbackQuery):
+    requests = get_all_waiting_technical_requests_for_worker(
         telegram_id=callback.message.chat.id
     )
 
@@ -155,9 +152,9 @@ async def worker_waiting(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Ожидающие заявки"),
-        reply_markup=create_keybord_for_requests_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point(
             end_point="worker_show_form_waiting",
-            menu_button=worker_tech_req_menu_button,
+            menu_button=tech_kb.WR_menu_button,
             requests=requests,
         ),
     )
@@ -166,7 +163,7 @@ async def worker_waiting(callback: CallbackQuery):
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "worker_show_form_waiting")
 )
-async def worker_show_form_waiting(
+async def show_worker_waiting_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
@@ -175,13 +172,13 @@ async def worker_show_form_waiting(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=worker_tech_req_waiting,
+        history_or_waiting_button=tech_kb.WR_waiting,
     )
 
 
-@router.callback_query(F.data == worker_tech_req_history.callback_data)
-async def worker_history(callback: CallbackQuery):
-    requests = get_all_history_technical_requests_by_worker_TG_id(
+@router.callback_query(F.data == tech_kb.WR_history.callback_data)
+async def show_worker_history_menu(callback: CallbackQuery):
+    requests = get_all_history_technical_requests_for_worker(
         telegram_id=callback.message.chat.id
     )
 
@@ -189,9 +186,9 @@ async def worker_history(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=create_keybord_for_requests_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point(
             end_point="worker_show_form_history",
-            menu_button=worker_tech_req_menu_button,
+            menu_button=tech_kb.WR_menu_button,
             requests=requests,
         ),
     )
@@ -200,7 +197,7 @@ async def worker_history(callback: CallbackQuery):
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "worker_show_form_history")
 )
-async def worker_show_form_history(
+async def show_worker_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
@@ -209,7 +206,7 @@ async def worker_show_form_history(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=worker_tech_req_history,
+        history_or_waiting_button=tech_kb.WR_history,
     )
 
 
@@ -233,7 +230,7 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
 
     await notify_worker_by_telegram_id(
         id=ret_data["repairman_telegram_id"],
-        message=text.notifay_repairman
+        message=text.notification_repairman
         + f"\nНа производстве: {ret_data["department_name"]}",
     )
 
@@ -242,5 +239,5 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=worker_tech_req_menu,
+        reply_markup=tech_kb.WR_menu,
     )

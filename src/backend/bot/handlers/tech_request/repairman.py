@@ -1,5 +1,4 @@
 from aiogram import Router, F
-
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -10,22 +9,14 @@ from aiogram.utils.markdown import hbold
 
 from fastapi import UploadFile
 
-from bot import text
+from bot import text, kb
 from bot.states import (
     Base,
     RepairmanTechnicalRequestForm,
 )
-from bot.kb import (
-    create_reply_keyboard,
-    repairman_tech_req_button,
-    repairman_tech_req_menu_markup,
-    repairman_tech_req_menu_button,
-    repairman_tech_req_change_department_button,
-    repairman_tech_req_change_deparment_menu,
-    repairman_tech_req_waiting,
-    repairman_repair_tech_req_kb,
-    repairman_tech_req_history,
-)
+
+from bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from bot.handlers.tech_request import kb as tech_kb
 from bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_edit_or_answer,
@@ -34,50 +25,48 @@ from bot.handlers.utils import (
     handle_documents_form,
     handle_documents,
 )
-from bot.handlers.tech_req.utils import (
-    create_keybord_for_requests_with_end_point,
+from bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
 )
-from bot.handlers.tech_req.schemas import ShowRequestCallbackData
+
 
 from db.service import (
-    get_all_history_technical_requests_by_repairman_TG_id_and_department_name,
-    get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name,
-    get_deparments_by_repairman_telegram_id,
+    get_all_history_technical_requests_for_repairman,
+    get_all_waiting_technical_requests_for_repairman,
+    get_deparments_for_repairman,
     update_technical_request_from_repairman,
 )
+
 
 router = Router(name="technical_request_repairman")
 
 
-@router.callback_query(F.data == repairman_tech_req_button.callback_data)
-async def repairman_cb(callback: CallbackQuery):
+@router.callback_query(F.data == tech_kb.RM_button.callback_data)
+async def show_tech_req_format_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=repairman_tech_req_change_deparment_menu,
+        reply_markup=tech_kb.RM_change_deparment_menu,
     )
 
 
-async def repairman_ms(message: Message):
+async def show_tech_rec_format_ms(message: Message):
     await message.answer(
         text=hbold("Тех. заявки"),
-        reply_markup=repairman_tech_req_change_deparment_menu,
+        reply_markup=tech_kb.RM_change_deparment_menu,
     )
 
 
-@router.callback_query(
-    F.data == repairman_tech_req_change_department_button.callback_data
-)
-async def department_change(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == tech_kb.RM_change_department_button.callback_data)
+async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(RepairmanTechnicalRequestForm.department)
-    departments = get_deparments_by_repairman_telegram_id(callback.message.chat.id)
+    departments = get_deparments_for_repairman(callback.message.chat.id)
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=create_reply_keyboard(
+        reply_markup=kb.create_reply_keyboard(
             "⏪ Назад", *[department.name for department in departments]
         ),
     )
@@ -86,44 +75,40 @@ async def department_change(callback: CallbackQuery, state: FSMContext):
 
 @router.message(RepairmanTechnicalRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    departments = get_deparments_by_repairman_telegram_id(message.chat.id)
+    departments = get_deparments_for_repairman(message.chat.id)
     if await handle_department(
         message=message,
         state=state,
         departments=departments,
-        reply_markup=repairman_tech_req_menu_markup,
+        reply_markup=tech_kb.RM_menu_markup,
     ):
-        await repairman_ms(message)
+        await show_tech_rec_format_ms(message)
 
 
-@router.callback_query(F.data == repairman_tech_req_menu_button.callback_data)
-async def repairman_manager_tech_req_menu_button(
-    callback: CallbackQuery, state: FSMContext
-):
+@router.callback_query(F.data == tech_kb.RM_menu_button.callback_data)
+async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Производство: {department_name}"),
-        reply_markup=repairman_tech_req_menu_markup,
+        reply_markup=tech_kb.RM_menu_markup,
     )
 
 
-@router.callback_query(F.data == repairman_tech_req_history.callback_data)
-async def repairman_history(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == tech_kb.RM_history.callback_data)
+async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = (
-        get_all_history_technical_requests_by_repairman_TG_id_and_department_name(
-            telegram_id=callback.message.chat.id, department_name=department_name
-        )
+    requests = get_all_history_technical_requests_for_repairman(
+        telegram_id=callback.message.chat.id, department_name=department_name
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"История заявок.\nПроизводство: {department_name}"),
-        reply_markup=create_keybord_for_requests_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point(
             end_point="repairman_show_form_history",
-            menu_button=repairman_tech_req_menu_button,
+            menu_button=tech_kb.RM_menu_button,
             requests=requests,
         ),
     )
@@ -132,7 +117,7 @@ async def repairman_history(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "repairman_show_form_history")
 )
-async def repairman_show_form_history(
+async def show_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
@@ -141,25 +126,23 @@ async def repairman_show_form_history(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=repairman_tech_req_history,
+        history_or_waiting_button=tech_kb.RM_history,
     )
 
 
-@router.callback_query(F.data == repairman_tech_req_waiting.callback_data)
-async def repairman_waiting(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(F.data == tech_kb.RM_waiting.callback_data)
+async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = (
-        get_all_waiting_technical_requests_by_repairman_TG_id_and_department_name(
-            telegram_id=callback.message.chat.id, department_name=department_name
-        )
+    requests = get_all_waiting_technical_requests_for_repairman(
+        telegram_id=callback.message.chat.id, department_name=department_name
     )
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Ожидающие заявки\nПроизводство: {department_name}"),
-        reply_markup=create_keybord_for_requests_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point(
             end_point="repairman_show_form_waiting",
-            menu_button=repairman_tech_req_menu_button,
+            menu_button=tech_kb.RM_menu_button,
             requests=requests,
         ),
     )
@@ -168,7 +151,7 @@ async def repairman_waiting(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "repairman_show_form_waiting")
 )
-async def repairman_show_form_waiting(
+async def show_waiting_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = [
@@ -187,31 +170,31 @@ async def repairman_show_form_waiting(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=repairman_tech_req_waiting,
+        history_or_waiting_button=tech_kb.RM_waiting,
     )
 
 
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "repairman_repair_form")
 )
-async def repairman_repair_form_cb(
+async def show_repair_form_cb(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Выполнить заявку"),
-        reply_markup=await repairman_repair_tech_req_kb(
+        reply_markup=await tech_kb.RM_repair_kb(
             state=state, callback_data=callback_data
         ),
     )
 
 
-async def repairman_repair_form_ms(message: Message, state: FSMContext):
+async def show_repair_form_ms(message: Message, state: FSMContext):
     data = await state.get_data()
     await try_edit_or_answer(
         message=message,
         text=hbold("Выполнить заявку"),
-        reply_markup=await repairman_repair_tech_req_kb(
+        reply_markup=await tech_kb.RM_repair_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
@@ -221,8 +204,10 @@ async def repairman_repair_form_ms(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "get_photo"))
-async def get_repairman_photo(
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "get_repairman_photo")
+)
+async def get_photo(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await state.update_data(request_id=callback_data.request_id)
@@ -232,14 +217,14 @@ async def get_repairman_photo(
 
 
 @router.message(RepairmanTechnicalRequestForm.photo)
-async def set_repairman_photo(message: Message, state: FSMContext):
-    await handle_documents(message, state, "photo", repairman_repair_form_ms)
+async def set_photo(message: Message, state: FSMContext):
+    await handle_documents(message, state, "photo", show_repair_form_ms)
 
 
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "save_repairman_repair")
 )
-async def save_repairman_repair(
+async def save_repair(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     data = await state.get_data()
@@ -255,7 +240,7 @@ async def save_repairman_repair(
 
     await notify_worker_by_telegram_id(
         id=req_data["territorial_manager_telegram_id"],
-        message=text.notifay_teritorial_manager
+        message=text.notification_teritorial_manager
         + f"\n На производстве: {req_data["department_name"]}",
     )
 
@@ -264,5 +249,5 @@ async def save_repairman_repair(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=repairman_tech_req_change_deparment_menu,
+        reply_markup=tech_kb.RM_change_deparment_menu,
     )
