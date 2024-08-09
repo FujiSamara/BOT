@@ -43,7 +43,8 @@ class FujiScope(enum.Enum):
     bot_worker_bid = 13
     bot_technical_request_worker = 14
     bot_technical_request_repairman = 15
-    bot_technical_request_kru = 16
+    bot_technical_request_chief_technician = 16
+    bot_technical_request_territorial_manager = 17
 
 
 class DepartmentType(enum.Enum):

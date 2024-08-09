@@ -20,7 +20,7 @@ from bot.kb import (
     worker_tech_req_menu,
     worker_tech_req_waiting,
     worker_tech_req_history,
-    tech_req_create,
+    worker_tech_req_create,
     worker_create_tech_req_kb,
     create_reply_keyboard,
 )
@@ -58,7 +58,7 @@ async def worker_menu(callback: CallbackQuery):
     )
 
 
-@router.callback_query(F.data == tech_req_create.callback_data)
+@router.callback_query(F.data == worker_tech_req_create.callback_data)
 async def worker_create_request_cb(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
@@ -175,7 +175,7 @@ async def worker_show_form_waiting(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_button=worker_tech_req_waiting,
+        history_or_waiting_button=worker_tech_req_waiting,
     )
 
 
@@ -209,7 +209,7 @@ async def worker_show_form_history(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_button=worker_tech_req_history,
+        history_or_waiting_button=worker_tech_req_history,
     )
 
 

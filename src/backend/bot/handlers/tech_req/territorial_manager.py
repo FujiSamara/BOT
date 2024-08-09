@@ -162,7 +162,7 @@ async def territorial_manager_show_form_history(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_button=territorial_manager_tech_req_history,
+        history_or_waiting_button=territorial_manager_tech_req_history,
     )
 
 
@@ -208,7 +208,7 @@ async def territorial_manager_show_form_waiting(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_button=territorial_manager_tech_req_waiting,
+        history_or_waiting_button=territorial_manager_tech_req_waiting,
     )
 
 

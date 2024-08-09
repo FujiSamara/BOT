@@ -5,19 +5,22 @@ from aiogram.types import (
     InputMediaDocument,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
+    Message,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
+from bot import text
+
 from db.models import ApprovalStatus
 from db.service import get_technical_request_by_id
-from db.schemas import TechnicalRequestSchema
+from db.schemas import DepartmentSchema, TechnicalRequestSchema
 
 from bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from bot.kb import create_inline_keyboard
+from bot.kb import create_inline_keyboard, create_reply_keyboard
 from bot.handlers.tech_req.schemas import (
     ShowRequestCallbackData,
 )
@@ -34,9 +37,7 @@ def create_keybord_for_requests_with_end_point(
             buttons.append(
                 [
                     InlineKeyboardButton(
-                        text=request.open_date.date().strftime(
-                            get_settings().date_format
-                        ),
+                        text=f"{request.department.name} {request.id}",
                         callback_data=ShowRequestCallbackData(
                             request_id=request.id, end_point=end_point
                         ).pack(),
@@ -49,11 +50,12 @@ def create_keybord_for_requests_with_end_point(
 
 
 async def show_form(
-    callback: CallbackQuery,
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
-    history_button: InlineKeyboardButton,
+    history_or_waiting_button: InlineKeyboardButton,
     buttons: list[list[InlineKeyboardButton]],
+    callback: CallbackQuery | None = None,
+    message: Message | None = None,
 ):
     data = await state.get_data()
     if "msgs" in data:
@@ -152,11 +154,14 @@ async def show_form(
         )
 
     buttons.append(
-        [InlineKeyboardButton(text="Назад", callback_data=history_button.callback_data)]
+        [InlineKeyboardButton(text="Назад", callback_data=history_or_waiting_button.callback_data)]
     )
 
     keybord = InlineKeyboardMarkup(inline_keyboard=buttons)
-    await try_edit_or_answer(message=callback.message, text=text, reply_markup=keybord)
+    if callback:
+        await try_edit_or_answer(message=callback.message, text=text, reply_markup=keybord)
+    else:
+        await try_edit_or_answer(message=message, text=text, reply_markup=keybord)
 
 
 async def send_photos(
@@ -181,3 +186,42 @@ async def send_photos(
             )
         ),
     )
+
+
+async def handle_department(
+    message: Message,
+    state: FSMContext,
+    departments: list[DepartmentSchema],
+    reply_markup: InlineKeyboardMarkup,
+) -> bool | None:
+    """
+    Return True if message == '⏪ Назад' else answer on message
+    """
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await try_delete_message(message)
+
+    if message.text == "⏪ Назад":
+        return True
+    else:
+        deparment_names = [department.name for department in departments]
+        if message.text not in deparment_names:
+            deparment_names.sort()
+            msg = await message.answer(
+                text=text.format_err,
+                reply_markup=create_reply_keyboard(
+                    *[department for department in deparment_names]
+                ),
+            )
+            await state.update_data(msg=msg)
+
+        await state.update_data(department_name=message.text)
+        await message.answer(
+            text=hbold(f"Производство: {message.text}"),
+            reply_markup=reply_markup,
+        )
+
+
+# univesral buttons for repairman

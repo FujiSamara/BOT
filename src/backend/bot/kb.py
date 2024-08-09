@@ -426,8 +426,7 @@ worker_tech_req_menu_button = InlineKeyboardButton(
     text="Тех. заявки", callback_data="get_worker_tech_req_menu"
 )
 
-
-tech_req_create = InlineKeyboardButton(
+worker_tech_req_create = InlineKeyboardButton(
     text="Создать заявку", callback_data="get_tech_req_create"
 )
 
@@ -441,23 +440,29 @@ worker_tech_req_history = InlineKeyboardButton(
 
 worker_tech_req_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [tech_req_create],
+        [worker_tech_req_create],
         [worker_tech_req_waiting],
         [worker_tech_req_history],
         [main_menu_button],
     ]
 )
 
+worker_tech_req_staff = {
+    worker_tech_req_menu_button,
+    worker_tech_req_create,
+    worker_tech_req_waiting,
+    worker_tech_req_history,
+    worker_tech_req_menu,
+}
+
 
 repairman_tech_req_button = InlineKeyboardButton(
     text="Тех. заявки", callback_data="get_repairman_tech_req"
 )
 
-
 repairman_tech_req_change_department_button = InlineKeyboardButton(
     text="Выбрать производство", callback_data="set_repairman_tech_req_department"
 )
-
 
 repairman_tech_req_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_repairman_tech_req_waiting"
@@ -485,6 +490,16 @@ repairman_tech_req_menu_markup = InlineKeyboardMarkup(
         [repairman_tech_req_button],
     ]
 )
+
+repairman_tech_req_staff = {
+    repairman_tech_req_button,
+    repairman_tech_req_change_department_button,
+    repairman_tech_req_waiting,
+    repairman_tech_req_history,
+    repairman_tech_req_change_deparment_menu,
+    repairman_tech_req_menu_button,
+    repairman_tech_req_menu_markup,
+}
 
 
 territorial_manager_tech_req_button = InlineKeyboardButton(
@@ -522,6 +537,82 @@ territorial_manager_tech_req_menu_markup = InlineKeyboardMarkup(
         [territorial_manager_tech_req_button],
     ]
 )
+
+territorial_manager_tech_req_staff = {
+    territorial_manager_tech_req_button,
+    territorial_manager_tech_req_menu_button,
+    territorial_manager_tech_req_waiting,
+    territorial_manager_tech_req_history,
+    territorial_manager_tech_req_change_department_button,
+    territorial_manager_req_change_deparment_menu,
+    territorial_manager_tech_req_menu_markup,
+}
+
+
+chief_technician_tech_req_button = InlineKeyboardButton(
+    text="Тех. заявки", callback_data="get_chief_technician_tech_req"
+)
+
+chief_technician_tech_req_change_department_button = InlineKeyboardButton(
+    text="Выбрать производство",
+    callback_data="set_chief_technician_tech_req_department",
+)
+
+chief_technician_tech_req_rm = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [chief_technician_tech_req_change_department_button],
+        [main_menu_button],
+    ]
+)
+
+chief_technician_tech_req_own_button = InlineKeyboardButton(
+    text="Мои заявки", callback_data="chief_technician_tech_req_own"
+)
+
+chief_technician_tech_req_admin_button = InlineKeyboardButton(
+    text="Все заявки", callback_data="chief_technician_tech_req_admin"
+)
+
+chief_technician_tech_req_menu_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [chief_technician_tech_req_own_button],
+        [chief_technician_tech_req_admin_button],
+        [chief_technician_tech_req_button],
+    ]
+)
+
+chief_technician_tech_req_own_waiting = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="chief_technician_tech_req_own_waiting"
+)
+
+chief_technician_tech_req_own_history = InlineKeyboardButton(
+    text="История заявок", callback_data="chief_technician_tech_req_own_history"
+)
+
+chief_technician_tech_req_own_menu_button = InlineKeyboardButton(
+    text="Назад", callback_data=chief_technician_tech_req_own_button.callback_data
+)
+
+chief_technician_tech_req_own_menu_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [chief_technician_tech_req_own_waiting],
+        [chief_technician_tech_req_own_history],
+        [chief_technician_tech_req_button],
+    ]
+)
+
+chief_technician_tech_req_staff = {
+    chief_technician_tech_req_button,
+    chief_technician_tech_req_change_department_button,
+    chief_technician_tech_req_rm,
+    chief_technician_tech_req_own_button,
+    chief_technician_tech_req_admin_button,
+    chief_technician_tech_req_menu_markup,
+    chief_technician_tech_req_own_waiting,
+    chief_technician_tech_req_own_history,
+    chief_technician_tech_req_own_menu_button,
+    chief_technician_tech_req_own_menu_markup,
+}
 
 
 async def worker_create_tech_req_kb(state: FSMContext) -> InlineKeyboardMarkup:
@@ -626,6 +717,58 @@ async def repairman_repair_tech_req_kb(
                     text="Отметить выполненой",
                     callback_data=ShowRequestCallbackData(
                         end_point="save_repairman_repair",
+                        request_id=callback_data.request_id,
+                    ).pack(),
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def chief_technician_repair_tech_req_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    photo = data.get("photo")
+
+    if not photo or len(photo) == 0:
+        photo = ""
+        form_complete = False
+    else:
+        photo = f"{len(photo)} ✅"
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Фото после ремонта",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="get_photo",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="chief_technician_show_form_waiting",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отметить выполненой",
+                    callback_data=ShowRequestCallbackData(
+                        end_point="save_chief_technician_repair",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )

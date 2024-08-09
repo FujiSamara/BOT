@@ -56,6 +56,11 @@ class RepairmanTechnicalRequestForm(StatesGroup):
     photo = State()
 
 
+class ChiefTechnicianTechnicalRequestForm(StatesGroup):
+    department = State()
+    photo = State()
+
+
 class TerritorialManagerRequestForm(StatesGroup):
     department = State()
     mark = State()
