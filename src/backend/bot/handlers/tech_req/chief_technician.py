@@ -98,7 +98,9 @@ async def chief_technician_tech_req_own(callback: CallbackQuery, state: FSMConte
     )
 
 
-@router.callback_query(F.data == cts.chief_technician_tech_req_own_waiting.callback_data)
+@router.callback_query(
+    F.data == cts.chief_technician_tech_req_own_waiting.callback_data
+)
 async def chief_technician_tech_req_own_waiting(
     callback: CallbackQuery, state: FSMContext
 ):
@@ -228,7 +230,9 @@ async def chief_technician_repair_form(
     )
 
 
-@router.callback_query(F.data == cts.chief_technician_tech_req_own_history.callback_data)
+@router.callback_query(
+    F.data == cts.chief_technician_tech_req_own_history.callback_data
+)
 async def show_chief_technician_tech_req_own_history(
     callback: CallbackQuery, state: FSMContext
 ):

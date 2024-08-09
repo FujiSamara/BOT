@@ -154,12 +154,18 @@ async def show_form(
         )
 
     buttons.append(
-        [InlineKeyboardButton(text="Назад", callback_data=history_or_waiting_button.callback_data)]
+        [
+            InlineKeyboardButton(
+                text="Назад", callback_data=history_or_waiting_button.callback_data
+            )
+        ]
     )
 
     keybord = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
-        await try_edit_or_answer(message=callback.message, text=text, reply_markup=keybord)
+        await try_edit_or_answer(
+            message=callback.message, text=text, reply_markup=keybord
+        )
     else:
         await try_edit_or_answer(message=message, text=text, reply_markup=keybord)
 

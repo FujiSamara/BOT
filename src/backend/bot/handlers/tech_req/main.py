@@ -8,13 +8,20 @@ from aiogram.fsm.context import FSMContext
 
 from db.service import get_technical_request_by_id
 
-from bot.handlers.tech_req import worker, repairman, territorial_manager, chief_technician
+from bot.handlers.tech_req import (
+    worker,
+    repairman,
+    territorial_manager,
+    chief_technician,
+)
 from bot.handlers.tech_req.utils import send_photos
 from bot.handlers.tech_req.schemas import ShowRequestCallbackData
 
 router = Router(name="technical_request_main")
 
-router.include_routers(worker.router, repairman.router, chief_technician.router, territorial_manager.router)
+router.include_routers(
+    worker.router, repairman.router, chief_technician.router, territorial_manager.router
+)
 
 
 @router.callback_query(ShowRequestCallbackData.filter(F.end_point == "problem_docs"))
