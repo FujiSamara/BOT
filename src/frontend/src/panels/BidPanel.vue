@@ -1,48 +1,50 @@
 <template>
 	<div class="bid-content">
-		<div v-if="!editingElement" class="header-content">
+		<div class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
+					v-if="!elementViewing"
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
 				></PeriodTool>
-				<ToolSeparator></ToolSeparator>
-				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
-				<ToolSeparator></ToolSeparator>
+				<ToolSeparator v-if="!elementViewing"></ToolSeparator>
+				<SeacrhTool
+					v-if="!elementViewing"
+					id="topSearch"
+					v-model:value="searchString"
+				></SeacrhTool>
+				<ToolSeparator v-if="!elementViewing"></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
-			v-if="!editingElement"
+			v-if="!elementViewing"
 			:table="table"
 			@click="onRowClicked"
-			@create="onCreateClicked"
 			:can-delete="true"
 			:can-approve="true"
 			:can-reject="true"
 		></PanelTable>
+		<ViewPanelRow
+			v-if="elementViewing"
+			:viewer="viewer!"
+			class="view-page"
+		></ViewPanelRow>
 	</div>
 </template>
 <script setup lang="ts">
 import PanelTable from "@/components/PanelTable.vue";
+import ViewPanelRow from "@/components/ViewPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import {
-	computed,
-	onMounted,
-	Ref,
-	ref,
-	shallowRef,
-	ShallowRef,
-	watch,
-} from "vue";
+import { computed, onMounted, ref, shallowRef, ShallowRef, watch } from "vue";
 import { BidTable } from "@/table";
-import { ExpenditureEditor } from "@/editor";
+import { BidViewer } from "@/viewer";
 
 const props = defineProps({
 	id: {
@@ -55,13 +57,10 @@ const emit = defineEmits<{
 	(e: "notify", count: number, id: number): void;
 }>();
 
-const editingElement = ref(false);
+const elementViewing = ref(false);
 
 // Edit page
-const editor: ShallowRef<ExpenditureEditor> = shallowRef(
-	new ExpenditureEditor(),
-);
-const editingElementKey: Ref<number> = ref(-1);
+const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
 
 const table = new BidTable();
 const fromDateString = ref("");
@@ -84,11 +83,9 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 	};
 }).value;
 
-const onRowClicked = (_: number) => {};
-const onCreateClicked = () => {
-	editor.value = new ExpenditureEditor();
-	editingElementKey.value = -1;
-	editingElement.value = true;
+const onRowClicked = (rowKey: number) => {
+	viewer.value = new BidViewer(table.getModel(rowKey));
+	elementViewing.value = true;
 };
 const loadTable = async (silent: boolean = false) => {
 	await table.loadAll(silent);
@@ -126,11 +123,8 @@ onMounted(async () => {
 .top-tools {
 	margin-left: auto;
 }
-.edit-panel-element-wrapper {
-	height: 100%;
+.view-panel-element-wrapper {
 	display: flex;
 	flex-direction: column;
-	padding-top: 56px;
-	padding-bottom: 56px;
 }
 </style>

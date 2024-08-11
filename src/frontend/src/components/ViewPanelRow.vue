@@ -1,0 +1,393 @@
+<template>
+	<div class="table-wrapper">
+		<table>
+			<thead>
+				<tr>
+					<th>Раздел</th>
+					<th>Информация</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr v-for="field in props.viewer.fields">
+					<th>{{ field.header }}</th>
+					<th>
+						<ul class="table-cell">
+							<li class="table-cell-line" v-for="cellLine in field.cellLines">
+								<a
+									v-if="cellLine.href.length > 0"
+									@click.stop="
+										async () =>
+											await onHrefClicked(cellLine.href, cellLine.value)
+									"
+									>{{ cellLine.value }}</a
+								>
+								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+							</li>
+						</ul>
+					</th>
+				</tr>
+			</tbody>
+		</table>
+		<!-- <table>
+			<thead>
+				<tr>
+					<th>
+						<div class="table-tools">
+							<table-checkbox
+								v-model:checked="props.table.allChecked.value"
+								class="checkbox"
+								id="main"
+							></table-checkbox>
+							<div class="table-actions">
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canDelete"
+									class="icons"
+									img-src="/img/trash.svg"
+									@click="onDelete"
+								></clickable-icon>
+								<clickable-icon
+									v-show="!props.table.anyChecked.value"
+									v-if="canCreate"
+									class="icons"
+									img-src="/img/add-plus.svg"
+									@click="emit('create')"
+									style="filter: none !important"
+								></clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canApprove"
+									class="icons"
+									img-src="/img/check.svg"
+									:with-filter="false"
+									@click="onApprove"
+								>
+								</clickable-icon>
+								<clickable-icon
+									v-show="props.table.anyChecked.value"
+									v-if="canReject"
+									class="icons"
+									img-src="/img/reject.svg"
+									:with-filter="false"
+									@click="onReject"
+								></clickable-icon>
+							</div>
+						</div>
+					</th>
+					<th
+						v-for="columnValue in props.table.headers.value"
+						:key="columnValue"
+					>
+						<div class="table-header">
+							<p @click="props.table.sort(columnValue)" style="margin: 0">
+								{{ columnValue }}
+							</p>
+							<img v-if="props.table.sorted(columnValue)" src="/img/sort_icon.svg"></img>
+						</div>
+					</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr
+					v-for="row in table.rows.value"
+					:key="row.id"
+					@click.prevent="$emit('click', row.id)"
+					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
+					:class="{
+						highlighted:
+							table.checked.value.get(row.id)!.value ||
+							table.highlighted.value.get(row.id)!.value,
+					}"
+				>
+					<th>
+						<div class="table-tools">
+							<table-checkbox
+								:id="row.id.toString()"
+								v-model:checked="table.checked.value.get(row.id)!.value"
+								class="checkbox"
+							></table-checkbox>
+						</div>
+					</th>
+					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
+						<ul class="table-cell">
+							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
+								<a
+									v-if="cellLine.href.length > 0"
+									@click.stop="
+										async () =>
+											await onHrefClicked(cellLine.href, cellLine.value)
+									"
+									>{{ cellLine.value }}</a
+								>
+								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+							</li>
+						</ul>
+					</th>
+				</tr>
+				<tr>
+					<th style="border: none"></th>
+				</tr>
+			</tbody>
+		</table>
+		<Transition name="modal">
+			<ModalWindow
+				class="reject-modal"
+				v-if="modalVisible"
+				@close="modalVisible = false"
+			>
+				<div class="modal-form">
+					<border-input
+						placeholder="Причина отказа"
+						v-model:value="rejectReason"
+					></border-input>
+					<purple-button
+						class="modal-button"
+						@click.prevent="onRejectCommentSubmit"
+						><p style="margin: 0">Отказать</p></purple-button
+					>
+				</div>
+			</ModalWindow>
+		</Transition>
+		<div v-if="table.isLoading.value" class="loader-space">
+			<circle-loader></circle-loader>
+		</div> -->
+	</div>
+</template>
+<script setup lang="ts">
+import type { Viewer } from "@/viewer";
+import { type PropType } from "vue";
+import { BaseSchema } from "@/types";
+import { useNetworkStore } from "@/store/network";
+
+const props = defineProps({
+	viewer: {
+		type: Object as PropType<Viewer<BaseSchema>>,
+		required: true,
+	},
+});
+
+// const modalVisible = ref(false);
+// const rejectReason = ref("");
+const networkStore = useNetworkStore();
+
+const emit = defineEmits(["delete", "approve", "reject"]);
+
+const onHrefClicked = async (href: string, filename: string) => {
+	await networkStore.downloadFile(href, filename);
+};
+</script>
+<style scoped>
+/*#region Table */
+.table-wrapper {
+	background-color: #ffffff;
+	overflow-y: auto;
+	overflow-x: auto;
+	white-space: nowrap;
+	overscroll-behavior: none;
+	height: fit-content;
+
+	border-radius: 20px;
+	border: 1px solid #e6e6e6;
+	max-width: 100%;
+	width: 100%;
+}
+
+.table-wrapper::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+	border-radius: 2000px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+	background-color: #e7e7e7;
+	margin: 20px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:vertical,
+.table-wrapper::-webkit-scrollbar-thumb:horizontal {
+	height: 10px;
+	width: 5px;
+	height: 15px !important;
+	border-radius: 22px;
+	background-color: #993ca6;
+}
+
+table {
+	height: fit-content;
+
+	/** border */
+	border-collapse: collapse;
+	border-spacing: 0;
+	width: 100%;
+}
+/*#endregion Table */
+
+/** Cell border  */
+tbody tr th {
+	border-bottom: 1px solid #e6e6e6;
+	border-right: 1px solid #e6e6e6;
+}
+tbody tr:first-child th {
+	border-top: 1px solid #e6e6e6;
+}
+
+/** Empty up and down border */
+tbody tr th:last-child {
+	border-right: none;
+}
+tbody tr:last-child th {
+	border-bottom: none;
+}
+
+/** Bottom row */
+tbody tr:last-child th {
+	padding: 10px;
+}
+
+/** Table head settings  */
+thead tr th:first-child {
+	border-top-left-radius: 20px;
+}
+
+thead tr th:last-child {
+	border-top-right-radius: 20px;
+}
+
+thead {
+	position: sticky;
+	top: 0;
+	left: 0;
+	z-index: 1;
+}
+
+thead th {
+	border: none;
+	font-weight: 600;
+	padding-bottom: 20px;
+	padding-top: 20px;
+
+	color: #ffffff;
+	background-color: #993ca6;
+	user-select: none;
+}
+
+thead th p:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+thead th img {
+	height: 8px;
+}
+
+.table-header {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+}
+
+/** All cells */
+th {
+	padding: 20px;
+	color: #7f7f7f;
+	font-family: Stolzl;
+	font-size: 15px;
+	font-weight: 400;
+	min-width: fit-content;
+	text-align: center;
+	position: relative;
+}
+
+.highlighted {
+	background-color: #fdf7fd;
+}
+
+.table-tools {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 20px;
+}
+
+.table-actions {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+}
+
+.icons {
+	width: 20px;
+}
+
+.loader-space {
+	display: flex;
+	width: 100%;
+	min-height: 70px;
+	position: relative;
+	justify-content: center;
+}
+
+/*#region Table cell */
+.table-cell {
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+}
+.table-cell-line {
+	list-style-type: none;
+}
+.table-cell p {
+	margin: 0;
+	cursor: default;
+}
+.table-cell a {
+	color: #993ca6;
+	text-decoration: underline;
+	user-select: none;
+}
+/*#endregion */
+
+/*#region Modal window */
+
+/*#region Modal window transition */
+.modal-enter-active,
+.modal-leave-active {
+	transition: opacity 0.5s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+	opacity: 0;
+}
+/*#endregion */
+
+.modal-header {
+	font-size: 24px;
+}
+
+.modal-form {
+	display: flex;
+	width: 90%;
+	flex-direction: column;
+	align-items: center;
+	align-content: center;
+	gap: 15px;
+}
+
+.modal-form input {
+	width: 100%;
+}
+
+.modal-button {
+	width: 100%;
+}
+
+.modal-button p {
+	user-select: none;
+}
+/*#endregion */
+</style>
