@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Optional
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -847,7 +847,7 @@ def get_technical_requests_by_column(
 
 def get_repairman_by_department_id_and_executor_type(
     department_id: int, executor_type: str
-) -> WorkerSchema | None:
+) -> Optional[WorkerSchema]:
     """
     Return WorkerSchema for territorial manager by department id
     """
@@ -927,8 +927,8 @@ def get_rework_tech_request(
             .filter(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.repairman_id == repairman_id,
-                TechnicalRequest.reopen_repair_date == None,
-                TechnicalRequest.reopen_date != None,
+                TechnicalRequest.reopen_repair_date is None,
+                TechnicalRequest.reopen_date is not None,
             )
             .order_by(TechnicalRequest.id.desc())
             .limit(15)
@@ -983,7 +983,7 @@ def get_all_active_requests_in_department(
             s.query(TechnicalRequest)
             .filter(
                 TechnicalRequest.department_id == department_id,
-                TechnicalRequest.close_date == None,
+                TechnicalRequest.close_date is None,
             )
             .order_by(TechnicalRequest.id.desc())
             .limit(15)
