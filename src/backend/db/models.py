@@ -31,6 +31,9 @@ class FujiScope(enum.Enum):
     crm_bid = 2
     crm_budget = 3
     crm_expenditure = 4
+    crm_fac_bid = 18
+    crm_cc_bid = 19
+    crm_cc_supervisor_bid = 20
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6

@@ -18,6 +18,9 @@ export enum Access {
 	Expenditure,
 	Budget,
 	Admin,
+	FACBid,
+	CCBid,
+	CCSupervisorBid,
 }
 
 export const accessesDict: any = {
@@ -25,6 +28,9 @@ export const accessesDict: any = {
 	crm_bid: Access.Bid,
 	crm_budget: Access.Budget,
 	crm_expenditure: Access.Expenditure,
+	crm_fac_bid: Access.FACBid,
+	crm_cc_bid: Access.CCBid,
+	crm_cc_supervisor_bid: Access.CCSupervisorBid,
 };
 
 export interface PanelData extends NavigationData {

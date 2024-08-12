@@ -91,6 +91,9 @@ class DepartmentView(ModelView, model=Department):
         Department.territorial_brand_chef_id,
         Department.technical_requests,
         Department.budget_records,
+        Department.technician_id,
+        Department.electrician_id,
+        Department.chief_technician_id,
     ]
     form_excluded_columns = [
         Department.workers,
@@ -187,6 +190,10 @@ class WorkerView(ModelView, model=Worker):
         Worker.ccs,
         Worker.cc_supervisors,
         Worker.password,
+        Worker.repairman_technical_requests,
+        Worker.worker_technical_requests,
+        Worker.territorial_manager_technical_requests,
+        Worker.expenditures,
     ]
     can_export = False
 
