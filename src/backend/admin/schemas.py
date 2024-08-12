@@ -89,7 +89,7 @@ class DepartmentView(ModelView, model=Department):
         Department.territorial_manager_id,
         Department.territorial_director_id,
         Department.territorial_brand_chef_id,
-        Department.technical_request,
+        Department.technical_requests,
         Department.budget_records,
     ]
     form_excluded_columns = [
@@ -101,7 +101,7 @@ class DepartmentView(ModelView, model=Department):
         Department.bs_import_error,
         Department.biosmart_strid,
         Department.workers_bids,
-        Department.technical_request,
+        Department.technical_requests,
         Department.budget_records,
     ]
     can_export = False
