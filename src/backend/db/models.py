@@ -577,11 +577,12 @@ class BudgetRecord(Base):
     last_update: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
-# Technical Problem
+# region Technical Request
 class Problem(Base):
     __abstract__ = True
 
     id: Mapped[intpk]
+    problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
 
 
 class TechnicalProblem(Problem):
@@ -589,9 +590,8 @@ class TechnicalProblem(Problem):
 
     __tablename__ = "technical_problems"
 
-    problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
     executor: Mapped[Executor] = mapped_column(Enum(Executor), nullable=False)
-    hours: Mapped[float] = mapped_column(nullable=False)
+    sla: Mapped[int] = mapped_column(nullable=False)
     requests: Mapped[list["TechnicalRequest"]] = relationship(
         "TechnicalRequest", back_populates="problem"
     )
@@ -610,7 +610,7 @@ class TechicalRequestDocument(Base):
 
 
 class TechnicalRequestProblemPhoto(TechicalRequestDocument):
-    """Фото для тех заявок"""
+    """Фото поломок для тех заявок"""
 
     __tablename__ = "technical_requests_problem_photos"
 
@@ -620,7 +620,7 @@ class TechnicalRequestProblemPhoto(TechicalRequestDocument):
 
 
 class TechnicalRequestRepairPhoto(TechicalRequestDocument):
-    """Фото для тех заявок"""
+    """Фото ремонта для тех заявок"""
 
     __tablename__ = "technical_requests_repair_photos"
 
@@ -661,14 +661,20 @@ class TechnicalRequest(Base):
     )
 
     open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    deadline_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
     repair_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    confirmation_description: Mapped[str] = mapped_column(nullable=True)
 
     reopen_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_deadline_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
     reopen_repair_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     reopen_confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_description: Mapped[str] = mapped_column(nullable=True)
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     worker: Mapped["Worker"] = relationship(
@@ -697,3 +703,6 @@ class TechnicalRequest(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="technical_request"
     )
+
+
+# endregion

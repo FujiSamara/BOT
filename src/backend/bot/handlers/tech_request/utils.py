@@ -1,3 +1,5 @@
+from typing import Optional
+from bot.states import Base
 from settings import get_settings
 
 from aiogram.types import (
@@ -31,8 +33,8 @@ async def show_form(
     callback_data: ShowRequestCallbackData,
     history_or_waiting_button: InlineKeyboardButton,
     buttons: list[list[InlineKeyboardButton]],
-    callback: CallbackQuery | None = None,
-    message: Message | None = None,
+    callback: Optional[CallbackQuery] = None,
+    message: Optional[Message] = None,
 ):
     data = await state.get_data()
     if "msgs" in data:
@@ -41,7 +43,7 @@ async def show_form(
         await state.update_data(msgs=[])
 
     request = get_technical_request_by_id(callback_data.request_id)
-    text = (
+    text_form = (
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(get_settings().date_format)
         + f"\nОписание:\n{request.description}\n\
@@ -53,49 +55,49 @@ async def show_form(
 
     match request.state:
         case ApprovalStatus.approved:
-            text += "Выполенно"
+            text_form += "Выполенно"
         case ApprovalStatus.pending:
-            text += "В процессе выполнения"
+            text_form += "В процессе выполнения"
         case ApprovalStatus.pending_approval:
-            text += "Ожидание оценки от ТУ"
+            text_form += "Ожидание оценки от ТУ"
         case ApprovalStatus.denied:
-            text += "Отправленно на доработку"
+            text_form += "Отправленно на доработку"
         case ApprovalStatus.skipped:
-            text += "Не выполненно"
-    text += "\n \n"
+            text_form += "Не выполненно"
+    text_form += "\n \n"
 
     if request.repair_date:
-        text += (
+        text_form += (
             "Дата ремонта "
             + request.repair_date.date().strftime(get_settings().date_format)
             + "\n"
         )
     if request.confirmation_date:
-        text += (
+        text_form += (
             "Дата утверждения проделанной работы "
             + request.confirmation_date.date().strftime(get_settings().date_format)
             + "\n"
         )
         if request.close_date:
-            text += (
+            text_form += (
                 "Дата закрытия заявки "
                 + request.close_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
         if request.reopen_date:
-            text += (
+            text_form += (
                 "Дата переоткрытия заявки "
                 + request.reopen_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
         if request.reopen_repair_date:
-            text += (
+            text_form += (
                 "Повторная дата ремонта "
                 + request.reopen_repair_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
         if request.reopen_confirmation_date:
-            text += (
+            text_form += (
                 "Повторная дата утверждения "
                 + request.reopen_confirmation_date.date().strftime(
                     get_settings().date_format
@@ -109,7 +111,7 @@ async def show_form(
                 text="Фотографии поломки",
                 callback_data=ShowRequestCallbackData(
                     request_id=request.id,
-                    end_point="problem_docs",
+                    end_point="TR_problem_docs",
                     last_end_point=callback_data.end_point,
                 ).pack(),
             )
@@ -123,7 +125,21 @@ async def show_form(
                     text="Фотогарфии ремонта",
                     callback_data=ShowRequestCallbackData(
                         request_id=request.id,
-                        end_point="repair_docs",
+                        end_point="TR_repair_docs",
+                        last_end_point=callback_data.end_point,
+                    ).pack(),
+                )
+            ]
+        )
+
+    if request.reopen_repair_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Фотогарфии повторного ремонта",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request.id,
+                        end_point="TR_reopen_repair_docs",
                         last_end_point=callback_data.end_point,
                     ).pack(),
                 )
@@ -133,7 +149,7 @@ async def show_form(
     buttons.append(
         [
             InlineKeyboardButton(
-                text="Назад", callback_data=history_or_waiting_button.callback_data
+                text=text.back, callback_data=history_or_waiting_button.callback_data
             )
         ]
     )
@@ -141,10 +157,10 @@ async def show_form(
     keybord = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
         await try_edit_or_answer(
-            message=callback.message, text=text, reply_markup=keybord
+            message=callback.message, text=text_form, reply_markup=keybord
         )
     else:
-        await try_edit_or_answer(message=message, text=text, reply_markup=keybord)
+        await try_edit_or_answer(message=message, text=text_form, reply_markup=keybord)
 
 
 async def send_photos(
@@ -161,7 +177,7 @@ async def send_photos(
         text=hbold("Выберите действие:"),
         reply_markup=create_inline_keyboard(
             InlineKeyboardButton(
-                text="Назад",
+                text=text.back,
                 callback_data=ShowRequestCallbackData(
                     request_id=request_id,
                     end_point=callback_data.last_end_point,
@@ -186,7 +202,8 @@ async def handle_department(
         await try_delete_message(msg)
     await try_delete_message(message)
 
-    if message.text == "⏪ Назад":
+    if message.text == text.back:
+        await state.set_state(Base.none)
         return True
     else:
         deparment_names = [department.name for department in departments]
@@ -195,13 +212,15 @@ async def handle_department(
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=create_reply_keyboard(
-                    *[department for department in deparment_names]
+                    text.back, *[department for department in deparment_names]
                 ),
             )
             await state.update_data(msg=msg)
+            return
 
         await state.update_data(department_name=message.text)
         await message.answer(
             text=hbold(f"Производство: {message.text}"),
             reply_markup=reply_markup,
         )
+        await state.set_state(Base.none)

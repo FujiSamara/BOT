@@ -204,7 +204,7 @@ class BudgetRecordSchema(BaseModel):
 class ProblemSchema(BaseSchema):
     problem_name: str
     executor: Executor
-    hours: float
+    sla: float
 
 
 class TechnicalRequestSchema(BaseSchema):
@@ -221,12 +221,20 @@ class TechnicalRequestSchema(BaseSchema):
     repair_photos: Optional[list[DocumentSchema]] = None
 
     open_date: datetime.datetime
+    deadline_date: datetime.datetime
+
     repair_date: Optional[datetime.datetime] = None
     confirmation_date: Optional[datetime.datetime] = None
+    confirmation_description: Optional[str] = None
+
     reopen_date: Optional[datetime.datetime] = None
+    reopen_deadline_date: Optional[datetime.datetime] = None
+
     reopen_repair_date: Optional[datetime.datetime] = None
     reopen_confirmation_date: Optional[datetime.datetime] = None
+
     close_date: Optional[datetime.datetime] = None
+    close_description: Optional[str] = None
 
     state: ApprovalStatus
     score: Optional[int] = None
