@@ -20,14 +20,18 @@
 		</div>
 		<PanelTable
 			v-if="!elementViewing"
-			:table="table"
 			@click="onRowClicked"
+			:table="table"
 			:can-delete="true"
 			:can-approve="true"
 			:can-reject="true"
 		></PanelTable>
 		<ViewPanelRow
 			v-if="elementViewing"
+			@close="elementViewing = false"
+			@approve="onApprove"
+			@reject="onReject"
+			@delete="onDelete"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -42,7 +46,15 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { computed, onMounted, ref, shallowRef, ShallowRef, watch } from "vue";
+import {
+	computed,
+	onMounted,
+	Ref,
+	ref,
+	shallowRef,
+	ShallowRef,
+	watch,
+} from "vue";
 import { BidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
@@ -61,6 +73,7 @@ const elementViewing = ref(false);
 
 // Edit page
 const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
+const viewingID: Ref<number> = ref(-1);
 
 const table = new BidTable();
 const fromDateString = ref("");
@@ -83,9 +96,21 @@ table.searcher.value = computed((): ((instance: any) => boolean) => {
 	};
 }).value;
 
+const onDelete = async () => {
+	await table.delete(viewingID.value);
+};
+const onApprove = async () => {
+	await table.approve(viewingID.value);
+	elementViewing.value = false;
+};
+const onReject = async (reason: string) => {
+	await table.reject(viewingID.value, reason);
+	elementViewing.value = false;
+};
 const onRowClicked = (rowKey: number) => {
 	viewer.value = new BidViewer(table.getModel(rowKey));
 	elementViewing.value = true;
+	viewingID.value = rowKey;
 };
 const loadTable = async (silent: boolean = false) => {
 	await table.loadAll(silent);

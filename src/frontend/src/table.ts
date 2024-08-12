@@ -446,6 +446,7 @@ export class Table<T extends BaseSchema> {
 		await this._network.withAuthChecking(
 			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}`),
 		);
+		await this.erase(id);
 	}
 	public async erase(id: number): Promise<void> {
 		const deleteIndex = this._indexes.get(id);
@@ -467,7 +468,6 @@ export class Table<T extends BaseSchema> {
 
 			if (this._checked.value[index]) {
 				await this.delete(id);
-				await this.erase(id);
 				index--;
 			}
 		}
