@@ -3,7 +3,37 @@
 		<table>
 			<thead>
 				<tr>
-					<th>Раздел</th>
+					<th>
+						<div class="table-head">
+							<div class="table-actions">
+								<clickable-icon
+									class="icons"
+									style="width: 34px; margin-right: 15px"
+									img-src="/img/backward.svg"
+									@click="emit('close')"
+								></clickable-icon>
+								<clickable-icon
+									class="icons"
+									img-src="/img/trash.svg"
+									@click="emit('delete')"
+								></clickable-icon>
+								<clickable-icon
+									class="icons"
+									img-src="/img/check.svg"
+									:with-filter="false"
+									@click="emit('approve')"
+								>
+								</clickable-icon>
+								<clickable-icon
+									class="icons"
+									img-src="/img/reject.svg"
+									:with-filter="false"
+									@click="emit('reject')"
+								></clickable-icon>
+							</div>
+							<p style="margin: 0">Раздел</p>
+						</div>
+					</th>
 					<th>Информация</th>
 				</tr>
 			</thead>
@@ -28,129 +58,6 @@
 				</tr>
 			</tbody>
 		</table>
-		<!-- <table>
-			<thead>
-				<tr>
-					<th>
-						<div class="table-tools">
-							<table-checkbox
-								v-model:checked="props.table.allChecked.value"
-								class="checkbox"
-								id="main"
-							></table-checkbox>
-							<div class="table-actions">
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canDelete"
-									class="icons"
-									img-src="/img/trash.svg"
-									@click="onDelete"
-								></clickable-icon>
-								<clickable-icon
-									v-show="!props.table.anyChecked.value"
-									v-if="canCreate"
-									class="icons"
-									img-src="/img/add-plus.svg"
-									@click="emit('create')"
-									style="filter: none !important"
-								></clickable-icon>
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canApprove"
-									class="icons"
-									img-src="/img/check.svg"
-									:with-filter="false"
-									@click="onApprove"
-								>
-								</clickable-icon>
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canReject"
-									class="icons"
-									img-src="/img/reject.svg"
-									:with-filter="false"
-									@click="onReject"
-								></clickable-icon>
-							</div>
-						</div>
-					</th>
-					<th
-						v-for="columnValue in props.table.headers.value"
-						:key="columnValue"
-					>
-						<div class="table-header">
-							<p @click="props.table.sort(columnValue)" style="margin: 0">
-								{{ columnValue }}
-							</p>
-							<img v-if="props.table.sorted(columnValue)" src="/img/sort_icon.svg"></img>
-						</div>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="row in table.rows.value"
-					:key="row.id"
-					@click.prevent="$emit('click', row.id)"
-					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
-					:class="{
-						highlighted:
-							table.checked.value.get(row.id)!.value ||
-							table.highlighted.value.get(row.id)!.value,
-					}"
-				>
-					<th>
-						<div class="table-tools">
-							<table-checkbox
-								:id="row.id.toString()"
-								v-model:checked="table.checked.value.get(row.id)!.value"
-								class="checkbox"
-							></table-checkbox>
-						</div>
-					</th>
-					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
-						<ul class="table-cell">
-							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
-								<a
-									v-if="cellLine.href.length > 0"
-									@click.stop="
-										async () =>
-											await onHrefClicked(cellLine.href, cellLine.value)
-									"
-									>{{ cellLine.value }}</a
-								>
-								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
-							</li>
-						</ul>
-					</th>
-				</tr>
-				<tr>
-					<th style="border: none"></th>
-				</tr>
-			</tbody>
-		</table>
-		<Transition name="modal">
-			<ModalWindow
-				class="reject-modal"
-				v-if="modalVisible"
-				@close="modalVisible = false"
-			>
-				<div class="modal-form">
-					<border-input
-						placeholder="Причина отказа"
-						v-model:value="rejectReason"
-					></border-input>
-					<purple-button
-						class="modal-button"
-						@click.prevent="onRejectCommentSubmit"
-						><p style="margin: 0">Отказать</p></purple-button
-					>
-				</div>
-			</ModalWindow>
-		</Transition>
-		<div v-if="table.isLoading.value" class="loader-space">
-			<circle-loader></circle-loader>
-		</div> -->
 	</div>
 </template>
 <script setup lang="ts">
@@ -170,7 +77,7 @@ const props = defineProps({
 // const rejectReason = ref("");
 const networkStore = useNetworkStore();
 
-const emit = defineEmits(["delete", "approve", "reject"]);
+const emit = defineEmits(["delete", "approve", "reject", "close"]);
 
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
@@ -271,9 +178,8 @@ thead th {
 	user-select: none;
 }
 
-thead th p:hover {
-	text-decoration: underline;
-	cursor: pointer;
+thead th p {
+	font-weight: 600;
 }
 
 thead th img {
@@ -303,24 +209,28 @@ th {
 	background-color: #fdf7fd;
 }
 
-.table-tools {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: flex-start;
-	gap: 20px;
-}
-
-.table-actions {
+.table-head {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
+}
+
+.table-actions {
+	position: absolute;
+	filter: brightness(0) saturate(100%) invert(100%) sepia(7%) saturate(3904%)
+		hue-rotate(245deg) brightness(117%) contrast(105%);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+
+	left: 20px;
 	gap: 10px;
 }
 
 .icons {
-	width: 20px;
+	width: 17px;
 }
 
 .loader-space {
