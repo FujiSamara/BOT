@@ -32,6 +32,8 @@
 			@approve="onApprove"
 			@reject="onReject"
 			@delete="onDelete"
+			:canApprove="true"
+			:canReject="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -55,7 +57,7 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { BidTable } from "@/table";
+import { FACBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -75,7 +77,7 @@ const elementViewing = ref(false);
 const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
 const viewingID: Ref<number> = ref(-1);
 
-const table = new BidTable();
+const table = new FACBidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");

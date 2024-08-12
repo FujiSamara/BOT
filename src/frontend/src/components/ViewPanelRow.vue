@@ -13,11 +13,13 @@
 									@click="emit('close')"
 								></clickable-icon>
 								<clickable-icon
+									v-if="canDelete"
 									class="icons"
 									img-src="/img/trash.svg"
 									@click="emit('delete')"
 								></clickable-icon>
 								<clickable-icon
+									v-if="canApprove"
 									class="icons"
 									img-src="/img/check.svg"
 									:with-filter="false"
@@ -25,6 +27,7 @@
 								>
 								</clickable-icon>
 								<clickable-icon
+									v-if="canReject"
 									class="icons"
 									img-src="/img/reject.svg"
 									:with-filter="false"
@@ -90,6 +93,18 @@ const props = defineProps({
 	viewer: {
 		type: Object as PropType<Viewer<BaseSchema>>,
 		required: true,
+	},
+	canDelete: {
+		type: Boolean,
+		required: false,
+	},
+	canApprove: {
+		type: Boolean,
+		required: false,
+	},
+	canReject: {
+		type: Boolean,
+		required: false,
 	},
 });
 
