@@ -241,7 +241,7 @@ class Department(Base):
     max_close_order_distance: Mapped[int] = mapped_column(nullable=True)
     orders_collect_time: Mapped[int] = mapped_column(nullable=True)
 
-    technical_request: Mapped[List["TechnicalRequest"]] = relationship(
+    technical_requests: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest", back_populates="department"
     )
 
@@ -703,7 +703,7 @@ class TechnicalRequest(Base):
         ForeignKey("departments.id"), nullable=False
     )
     department: Mapped["Department"] = relationship(
-        "Department", back_populates="technical_request"
+        "Department", back_populates="technical_requests"
     )
 
 
