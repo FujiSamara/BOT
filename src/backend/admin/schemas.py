@@ -193,6 +193,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.repairman_technical_requests,
         Worker.worker_technical_requests,
         Worker.territorial_manager_technical_requests,
+        Worker.expenditures,
     ]
     can_export = False
 
