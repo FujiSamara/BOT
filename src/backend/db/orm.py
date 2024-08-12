@@ -1,13 +1,18 @@
-from typing import Any
+from typing import Any, Optional
 from db.database import Base, engine, session
 from db.models import (
     Bid,
     BidDocument,
     BudgetRecord,
+    Executor,
     Expenditure,
     FujiScope,
     Post,
     PostScope,
+    TechnicalProblem,
+    TechnicalRequest,
+    TechnicalRequestProblemPhoto,
+    TechnicalRequestRepairPhoto,
     WorkTime,
     Worker,
     Department,
@@ -22,13 +27,15 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
+    ProblemSchema,
+    TechnicalRequestSchema,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
     PostSchema,
 )
 from sqlalchemy.sql.expression import func
-from sqlalchemy import or_, and_, desc
+from sqlalchemy import null, or_, and_, desc
 
 
 def create_tables():
@@ -730,3 +737,284 @@ def get_bids() -> list[BidSchema]:
     with session.begin() as s:
         raw_models = s.query(Bid).all()
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+# region Technical problem
+
+
+def get_technical_problems() -> list[ProblemSchema]:
+    """Returns list of ProblemSchema"""
+    with session.begin() as s:
+        raw_models = s.query(TechnicalProblem).all()
+        return [ProblemSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_last_technical_request_id() -> int:
+    """
+    Returns last technical request id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(TechnicalRequest.id)).first()[0]
+
+
+def get_technical_problem_by_problem_name(problem_name: str) -> ProblemSchema:
+    with session.begin() as s:
+        return ProblemSchema.model_validate(
+            s.query(TechnicalProblem)
+            .filter(TechnicalProblem.problem_name == problem_name)
+            .first()
+        )
+
+
+def create_technical_request(record: TechnicalRequestSchema) -> bool:
+    """Creates technical problem
+    Returns: `True` if technical problem request record created, `False` otherwise.
+    """
+    with session.begin() as s:
+        technical_request = TechnicalRequest(
+            problem_id=record.problem.id,
+            description=record.description,
+            state=record.state,
+            score=None,
+            open_date=record.open_date,
+            deadline_date=record.deadline_date,
+            repair_date=None,
+            confirmation_date=None,
+            reopen_date=None,
+            close_date=None,
+            worker_id=record.worker.id,
+            territorial_manager_id=record.territorial_manager.id,
+            repairman_id=record.repairman.id,
+            department_id=record.department.id,
+        )
+        s.add(technical_request)
+
+        for doc in record.problem_photos:
+            file = TechnicalRequestProblemPhoto(
+                technical_request=technical_request, document=doc.document
+            )
+            s.add(file)
+
+    return True
+
+
+def update_technical_request_from_repairman(record: TechnicalRequestSchema):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
+        )
+
+        cur_request.state = record.state
+        cur_request.repair_date = record.repair_date
+        cur_request.reopen_repair_date = record.reopen_repair_date
+
+        for doc in record.repair_photos:
+            file = TechnicalRequestRepairPhoto(
+                technical_request=cur_request, document=doc.document
+            )
+            s.add(file)
+    return True
+
+
+def update_technical_request_from_territorial_manager(record: TechnicalRequestSchema):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
+        )
+
+        cur_request.state = record.state
+        cur_request.close_date = record.close_date
+        cur_request.reopen_date = record.reopen_date
+        cur_request.reopen_deadline_date = record.reopen_deadline_date
+        cur_request.confirmation_date = record.confirmation_date
+        cur_request.reopen_confirmation_date = record.reopen_confirmation_date
+        cur_request.score = record.score
+        cur_request.confirmation_description = record.confirmation_description
+        cur_request.close_description = record.close_description
+
+    return True
+
+
+def get_technical_requests_by_column(
+    column: Any, value: Any
+) -> list[TechnicalRequestSchema]:
+    """
+    Returns all `TechnicalReques` as `TechnicalRequesSchema` in database
+    by `column` with `value`.
+    """
+    return get_technical_requests_by_columns([column], [value])
+
+
+def get_repairman_by_department_id_and_executor_type(
+    department_id: int, executor_type: str
+) -> Optional[WorkerSchema]:
+    """
+    Return WorkerSchema for territorial manager by department id
+    """
+    with session.begin() as s:
+        repairman_id = None
+        q = s.query(Department)
+        match executor_type:
+            case Executor.chief_technician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().chief_technician_id
+                )
+            case Executor.technician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().technician_id
+                )
+            case Executor.electrician.name:
+                repairman_id: int = (
+                    q.filter(Department.id == department_id).first().electrician_id
+                )
+
+        if repairman_id:
+            return WorkerSchema.model_validate(
+                s.query(Worker).filter(Worker.id == repairman_id).first()
+            )
+        else:
+            return None
+
+
+def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
+    """
+    Return WorkerSchema for territorial manager by department id
+    """
+    with session.begin() as s:
+        territorial_manager: Worker = (
+            s.query(Department).filter(Department.id == department_id).first()
+        ).territorial_manager
+        return WorkerSchema.model_validate(territorial_manager)
+
+
+def get_technical_requests_by_columns(
+    columns: list[Any], values: list[Any], history: bool = False
+) -> list[TechnicalRequestSchema]:
+    """
+    Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
+    """
+    with session.begin() as s:
+        query = s.query(TechnicalRequest)
+        for column, value in zip(columns, values):
+            query = query.filter(column == value)
+        if history:
+            query = query.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.approved,
+                    TechnicalRequest.state == ApprovalStatus.skipped,
+                )
+            )
+        raw_models = query.all()
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_rework_tech_request(
+    department_id: int, repairman_id: int
+) -> list[TechnicalRequestSchema]:
+    """
+    Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
+    """
+    with session.begin() as s:
+        raw_models = (
+            s.query(TechnicalRequest)
+            .filter(
+                TechnicalRequest.department_id == department_id,
+                TechnicalRequest.repairman_id == repairman_id,
+                # TechnicalRequest.reopen_repair_date is None,
+                TechnicalRequest.reopen_repair_date == null(),
+                TechnicalRequest.confirmation_date != null(),
+                TechnicalRequest.state != ApprovalStatus.approved,
+                TechnicalRequest.state != ApprovalStatus.skipped,
+            )
+            .all()
+        )
+
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_technical_requests_for_repairman_history(
+    repairman_id: int, department_id: int
+) -> list[TechnicalRequestSchema]:
+    with session.begin() as s:
+        raw_models = (
+            s.query(TechnicalRequest)
+            .filter(
+                and_(
+                    TechnicalRequest.repairman_id == repairman_id,
+                    or_(
+                        TechnicalRequest.state == ApprovalStatus.pending_approval,
+                        TechnicalRequest.state == ApprovalStatus.approved,
+                        TechnicalRequest.state == ApprovalStatus.skipped,
+                    ),
+                    TechnicalRequest.department_id == department_id,
+                )
+            )
+            .order_by(TechnicalRequest.id.desc())
+            .limit(15)
+            .all()
+        )
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_departments_by_worker_id_and_worker_column(
+    worker_column: Any,
+    worker_id: int,
+) -> list[DepartmentSchema]:
+    with session.begin() as s:
+        raw_models = s.query(Department).filter(worker_column == worker_id).all()
+        return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_all_active_requests_in_department(
+    department_id: int,
+) -> list[TechnicalRequestSchema]:
+    with session.begin() as s:
+        raw_models = (
+            s.query(TechnicalRequest)
+            .filter(
+                TechnicalRequest.department_id == department_id,
+                TechnicalRequest.close_date == null(),
+            )
+            .all()
+        )
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_all_repairmans_in_department(
+    department_name: str,
+) -> list[WorkerSchema]:
+    with session.begin() as s:
+        raw_model = (
+            s.query(Department).filter(Department.name == department_name).first()
+        )
+
+        return [
+            WorkerSchema.model_validate(executor)
+            for executor in [
+                raw_model.chief_technician,
+                raw_model.technician,
+                raw_model.electrician,
+            ]
+        ]
+
+
+def update_tech_request_executor(request_id: int, repairman_id: int):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        repairman = s.query(Worker).filter(Worker.id == repairman_id)
+        cur_request.executor = repairman
+        cur_request.repairman_id = repairman_id
+    return True
+
+
+# endregion

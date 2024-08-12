@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import ApprovalStatus, FujiScope, Gender, PostScope
+from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
 import logging
 
@@ -198,6 +198,51 @@ class BudgetRecordSchema(BaseModel):
     limit: Optional[float] = None
     last_update: Optional[datetime.datetime] = None
     department: Optional[DepartmentSchema] = None
+
+
+# Technical request
+class ProblemSchema(BaseSchema):
+    problem_name: str
+    executor: Executor
+    sla: float
+
+
+class TechnicalRequestSchema(BaseSchema):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    # Данные при создание
+    problem: ProblemSchema
+    description: str
+    problem_photos: list[DocumentSchema]
+    repair_photos: Optional[list[DocumentSchema]] = None
+
+    open_date: datetime.datetime
+    deadline_date: datetime.datetime
+
+    repair_date: Optional[datetime.datetime] = None
+    confirmation_date: Optional[datetime.datetime] = None
+    confirmation_description: Optional[str] = None
+
+    reopen_date: Optional[datetime.datetime] = None
+    reopen_deadline_date: Optional[datetime.datetime] = None
+
+    reopen_repair_date: Optional[datetime.datetime] = None
+    reopen_confirmation_date: Optional[datetime.datetime] = None
+
+    close_date: Optional[datetime.datetime] = None
+    close_description: Optional[str] = None
+
+    state: ApprovalStatus
+    score: Optional[int] = None
+
+    worker: WorkerSchema
+    repairman: WorkerSchema
+    territorial_manager: WorkerSchema
+    department: DepartmentSchema
 
 
 # endregion
