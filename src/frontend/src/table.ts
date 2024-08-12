@@ -69,8 +69,8 @@ export class Table<T extends BaseSchema> {
 	 * @param tableContent
 	 * @param _searchFields Indexes of columns for searching.
 	 */
-	constructor(modelName: string) {
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${modelName}`;
+	constructor(endpoint: string) {
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
 	}
 
 	//#region Rows handlers
@@ -353,6 +353,14 @@ export class Table<T extends BaseSchema> {
 	});
 	/** Erases row after approving or rejecting if true. */
 	protected _deleteAfterStatusChanged: boolean = false;
+	// Additional endpoints.
+	protected _getEndpoint: string = "";
+	protected _getLastEndpoint: string = "";
+	protected _updateEndpoint: string = "";
+	protected _deleteEndpoint: string = "";
+	protected _createEndpoint: string = "";
+	protected _approveEndpoint: string = "";
+	protected _rejectEndpoint: string = "";
 	//#endregion
 
 	//#region CRUD
@@ -386,7 +394,7 @@ export class Table<T extends BaseSchema> {
 		this.isLoading.value = true && !silent;
 		let changesCount = 0;
 		const resp = await this._network.withAuthChecking(
-			axios.get(this._endpoint + "/"),
+			axios.get(this._endpoint + this._getEndpoint + "/"),
 		);
 		this.isLoading.value = false;
 		const models = resp.data;
@@ -421,11 +429,11 @@ export class Table<T extends BaseSchema> {
 	}
 	public async create(model: T): Promise<void> {
 		await this._network.withAuthChecking(
-			axios.post(`${this._endpoint}/`, model),
+			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
 		);
 
 		const resp = await this._network.withAuthChecking(
-			axios.get(`${this._endpoint}/last`),
+			axios.get(`${this._endpoint}${this._getLastEndpoint}/last`),
 		);
 		this.push(resp.data, false);
 	}
@@ -436,7 +444,10 @@ export class Table<T extends BaseSchema> {
 
 		if (elementChanged) {
 			await this._network.withAuthChecking(
-				axios.patch(`${this._endpoint}/`, this._models.value[index]),
+				axios.patch(
+					`${this._endpoint}${this._updateEndpoint}/`,
+					this._models.value[index],
+				),
 			);
 		}
 	}
@@ -444,7 +455,9 @@ export class Table<T extends BaseSchema> {
 		const deleteIndex = this._indexes.get(id)!;
 		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
 		await this._network.withAuthChecking(
-			axios.delete(`${this._endpoint}/${this._models.value[deleteIndex].id}`),
+			axios.delete(
+				`${this._endpoint}${this._deleteEndpoint}/${this._models.value[deleteIndex].id}`,
+			),
 		);
 		await this.erase(id);
 	}
@@ -484,7 +497,7 @@ export class Table<T extends BaseSchema> {
 
 		const resp = await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}/approve/${this._models.value[approveIndex].id}`,
+				`${this._endpoint}${this._approveEndpoint}/approve/${this._models.value[approveIndex].id}`,
 			),
 		);
 
@@ -511,7 +524,7 @@ export class Table<T extends BaseSchema> {
 
 		const resp = await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
+				`${this._endpoint}${this._rejectEndpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
 			),
 		);
 
@@ -587,6 +600,7 @@ export class BidTable extends Table<BidSchema> {
 		this._formatters.set("close_date", parser.formatDate);
 		this._formatters.set("documents", parser.formatDocuments);
 		this._formatters.set("payment_type", parser.formatPaymentType);
+		this._formatters.set("expenditure", parser.formatExpenditure);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
@@ -600,6 +614,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("comment", "Комментарий");
 		this._aliases.set("denying_reason", "Причина отказа");
 		this._aliases.set("documents", "Документы");
+		this._aliases.set("expenditure", "Статья");
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("create_date", 1);
@@ -613,6 +628,31 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("status", 9);
 		this._columsOrder.set("denying_reason", 10);
 		this._columsOrder.set("comment", 11);
+		this._columsOrder.set("expenditure", 12);
+	}
+}
+
+export class FACBidTable extends BidTable {
+	constructor() {
+		super();
+
+		this._getEndpoint = "/fac";
+	}
+}
+
+export class CCBidTable extends BidTable {
+	constructor() {
+		super();
+
+		this._getEndpoint = "/cc";
+	}
+}
+
+export class CCSupervisorBidTable extends BidTable {
+	constructor() {
+		super();
+
+		this._getEndpoint = "/cc_supervisor";
 	}
 }
 //#endregion
