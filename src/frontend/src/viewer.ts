@@ -1,5 +1,6 @@
 import { Cell, CellLine } from "@/table";
 import { BaseSchema, BidSchema } from "@/types";
+import * as parser from "@/parser";
 
 class HeaderedCell extends Cell {
 	constructor(
@@ -44,13 +45,9 @@ export class Viewer<T extends BaseSchema> {
 	}
 	// #endregion
 
-	constructor(model: T) {
-		this.initFields(model);
-	}
-
 	public fields: Array<HeaderedCell> = [];
 
-	private initFields(model: T) {
+	protected initFields(model: T) {
 		for (const fieldName in model) {
 			const alias = this.getAlias(fieldName);
 			const formatter = this.getFormatter(fieldName);
@@ -64,7 +61,29 @@ export class Viewer<T extends BaseSchema> {
 //#region Viewers
 export class BidViewer extends Viewer<BidSchema> {
 	constructor(model: BidSchema) {
-		super(model);
+		super();
+
+		this._formatters.set("department", parser.formatDepartment);
+		this._formatters.set("worker", parser.formatWorker);
+		this._formatters.set("create_date", parser.formatDate);
+		this._formatters.set("close_date", parser.formatDate);
+		this._formatters.set("documents", parser.formatDocuments);
+		this._formatters.set("payment_type", parser.formatPaymentType);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("amount", "Сумма");
+		this._aliases.set("payment_type", "Тип оплаты");
+		this._aliases.set("department", "Произовдство");
+		this._aliases.set("worker", "Работник");
+		this._aliases.set("purpose", "Цель");
+		this._aliases.set("create_date", "Дата создания");
+		this._aliases.set("close_date", "Дата закрытия");
+		this._aliases.set("status", "Статус");
+		this._aliases.set("comment", "Комментарий");
+		this._aliases.set("denying_reason", "Причина отказа");
+		this._aliases.set("documents", "Документы");
+
+		this.initFields(model);
 	}
 }
 //#endregion
