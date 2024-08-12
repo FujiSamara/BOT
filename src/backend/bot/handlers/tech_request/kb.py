@@ -4,6 +4,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
+from db.service import get_technical_request_by_id
 from bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from bot.kb import main_menu_button
 
@@ -42,8 +43,12 @@ CT_own_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="CT_TR_own_waiting"
 )
 
+CT_rework = InlineKeyboardButton(
+    text="Заявки на доработку", callback_data="get_CT_TR_rework"
+)
+
 CT_own_history = InlineKeyboardButton(
-    text="История заявок", callback_data="CTn_TR_own_history"
+    text="История заявок", callback_data="CT_TR_own_history"
 )
 
 CT_own_menu_button = InlineKeyboardButton(
@@ -53,6 +58,7 @@ CT_own_menu_button = InlineKeyboardButton(
 CT_own_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
         [CT_own_waiting],
+        [CT_rework],
         [CT_own_history],
         [CT_button],
     ]
@@ -475,7 +481,12 @@ async def TM_rate_kb(
     )
 
     if form_complete:
-        if mark >= 3:
+        if mark >= 3 or (
+            get_technical_request_by_id(
+                request_id=data.get("request_id")
+            ).reopen_repair_date
+            is not None
+        ):
             text = "Закрыть заявку"
         else:
             text = "Отправить на доработку"

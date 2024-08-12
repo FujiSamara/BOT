@@ -781,6 +781,7 @@ def create_technical_request(
     repairman = orm.get_repairman_by_department_id_and_executor_type(
         department_id=worker.department.id, executor_type=problem.executor.name
     )
+
     if not repairman:
         logging.getLogger("uvicorn.error").error(
             f"Repairman from department id: {worker.department.id} and responsible by {problem.executor.name} wasn't found"
@@ -789,7 +790,7 @@ def create_technical_request(
     territorial_manager = orm.get_territorial_manager_by_department_id(
         worker.department.id
     )
-    if not problem:
+    if not territorial_manager:
         logging.getLogger("uvicorn.error").error(
             f"Territorial manager wirh department id: {worker.department.id} wasn's found"
         )
@@ -979,11 +980,7 @@ def get_all_waiting_technical_requests_for_worker(
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
-        )
-        if len(requests) == 0:
-            logging.getLogger("uvicorn.error").info(
-                f"Requests for worker with id: {worker.id} wasn't founds"
-            )
+        )[:-15:-1]
 
     return requests
 
@@ -1019,11 +1016,8 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.confirmation_date,
                 ],
                 [repairman.id, ApprovalStatus.pending, department_id, None],
-            )
-            if len(requests) == 0:
-                logging.getLogger("uvicorn.error").info(
-                    f"Requests for repairman with id: {repairman.id} wasn't founds"
-                )
+            )[:-15:-1]
+
             return requests
 
 
@@ -1052,11 +1046,7 @@ def get_all_rework_technical_requests_for_repairman(
         else:
             requests = orm.get_rework_tech_request(
                 department_id=department_id, repairman_id=repairman.id
-            )
-            if len(requests) == 0:
-                logging.getLogger("uvicorn.error").info(
-                    f"Requests for repairman with id: {repairman.id} wasn't founds"
-                )
+            )[:-15:-1]
             return requests
 
 
@@ -1094,11 +1084,8 @@ def get_all_waiting_technical_requests_for_territorial_manager(
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
-            )
-            if len(requests) == 0:
-                logging.getLogger("uvicorn.error").info(
-                    f"Requests for territorial manager with id: {territorial_manager.id} wasn't founds"
-                )
+            )[:-15:-1]
+
             return requests
 
 
@@ -1127,10 +1114,7 @@ def get_all_history_technical_requests_for_repairman(
             requests = orm.get_technical_requests_for_repairman_history(
                 repairman.id, department_id
             )
-            if len(requests) == 0:
-                logging.getLogger("uvicorn.error").info(
-                    f"Requests for repairman with id: {repairman.id} wasn't founds"
-                )
+
             return requests
 
 
@@ -1163,11 +1147,8 @@ def get_all_history_technical_requests_for_territorial_manager(
                 ],
                 [territorial_manager.id, department_id],
                 history=True,
-            )
-            if len(requests) == 0:
-                logging.getLogger("uvicorn.error").info(
-                    f"Requests for territorial manager with id: {territorial_manager.id} wasn't founds"
-                )
+            )[:-15:-1]
+
             return requests
 
 
@@ -1186,11 +1167,7 @@ def get_all_history_technical_requests_for_worker(
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id], [worker.id], history=True
-        )
-        if len(requests) == 0:
-            logging.getLogger("uvicorn.error").info(
-                f"Requests for worker with id: {worker.id} wasn't founds"
-            )
+        )[:-15:-1]
 
         return requests
 
@@ -1205,8 +1182,8 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         ]
         return request
     except IndexError:
-        logging.getLogger("uvicorn.error").info(
-            f"Requests with id: {request_id} wasn't founds"
+        logging.getLogger("uvicorn.error").error(
+            f"Request with id: {request_id} wasn't founds"
         )
 
 
@@ -1266,15 +1243,11 @@ def get_all_active_requests_in_department(
     try:
         department_id = (orm.find_departments_by_name(department_name)[0]).id
     except IndexError:
-        logging.getLogger("uvicorn.error").info(
+        logging.getLogger("uvicorn.error").error(
             f"Department with name: {department_name} wasn't found"
         )
     else:
-        requests = orm.get_all_active_requests_in_department(department_id)
-        if len(requests) == 0:
-            logging.getLogger("uvicorn.error").info(
-                f"Requests in department with id: {department_id} wasn't founds"
-            )
+        requests = orm.get_all_active_requests_in_department(department_id)[:-15:-1]
         return requests
 
 
@@ -1286,33 +1259,34 @@ def get_all_repairmans_in_department(
     """
     repairmans = orm.get_all_repairmans_in_department(department_name)
     if len(repairmans) == 0:
-        logging.getLogger("uvicorn.error").info(
-            f"Repairmans in department wirh name: {department_name} wasn't founds"
+        logging.getLogger("uvicorn.error").error(
+            f"Repairmans in department with name: {department_name} wasn't founds"
         )
     return repairmans
 
 
 def update_tech_request_executor(
     request_id: int, reparirman_full_name: list[str]
-) -> None:
+) -> int:
     """
-    Update executor in technical request
+    Update executor in technical request return telegram id
     """
     try:
-        repairman_id = orm.get_workers_with_post_by_columns(
+        repairman = orm.get_workers_with_post_by_columns(
             [Worker.l_name, Worker.f_name, Worker.o_name], reparirman_full_name
-        )[0].id
+        )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").info(
+        logging.getLogger("uvicorn.error").error(
             f"Worker with full name: {reparirman_full_name} wasn't found"
         )
 
     if not orm.update_tech_request_executor(
-        request_id=request_id, repairman_id=repairman_id
+        request_id=request_id, repairman_id=repairman.id
     ):
         logging.getLogger("uvicorn.error").error(
             f"Technical request with id: {request_id} wasn't update executor"
         )
+    return repairman.telegram_id
 
 
 # endregion

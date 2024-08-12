@@ -29,6 +29,7 @@ from bot.handlers.tech_request.utils import (
 from db.service import (
     get_all_history_technical_requests_for_repairman,
     get_all_repairmans_in_department,
+    get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
     get_all_active_requests_in_department,
     get_deparments_for_repairman,
@@ -156,6 +157,65 @@ async def show_own_waiting_form_format_ms(message: Message, state: FSMContext):
                 request_id=data.get("request_id"),
                 end_point="CT_TR_repair_form",
             ),
+        ),
+    )
+
+
+@router.callback_query(F.data == tech_kb.CT_rework.callback_data)
+async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
+    department_name = (await state.get_data()).get("department_name")
+    requests = get_all_rework_technical_requests_for_repairman(
+        telegram_id=callback.message.chat.id, department_name=department_name
+    )
+    await try_delete_message(callback.message)
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold(f"Заявки на дорабоку\nПроизводство: {department_name}"),
+        reply_markup=tech_kb.create_kb_with_end_point(
+            end_point="CT_TR_show_form_rework",
+            menu_button=tech_kb.RM_menu_button,
+            requests=requests,
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_show_form_rework")
+)
+async def show_rework_form(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    buttons: list[list[InlineKeyboardButton]] = [
+        [
+            InlineKeyboardButton(
+                text="Выполнить заявку",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="CT_TR_repair_form",
+                ).pack(),
+            )
+        ]
+    ]
+    await show_form(
+        callback=callback,
+        callback_data=callback_data,
+        state=state,
+        buttons=buttons,
+        history_or_waiting_button=tech_kb.RM_rework,
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_repair_form")
+)
+async def show_repair_form_cb(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Выполнить заявку"),
+        reply_markup=await tech_kb.RM_repair_rework_kb(
+            state=state, callback_data=callback_data
         ),
     )
 
@@ -407,8 +467,14 @@ async def save_CT_TR_admin_form(
     reparirman_full_name = (
         (await state.get_data()).get("repairman_full_name_new").split(" ")
     )
-    update_tech_request_executor(
+    repairman_TG_id = update_tech_request_executor(
         request_id=request_id, reparirman_full_name=reparirman_full_name
+    )
+    data = await state.get_data()
+    await notify_worker_by_telegram_id(
+        id=repairman_TG_id,
+        message="Вас назначили на заявку"
+        + f"\n На производстве: {data.get("department_name")}",
     )
     await state.clear()
     await state.set_state(Base.none)

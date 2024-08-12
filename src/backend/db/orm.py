@@ -35,7 +35,7 @@ from db.schemas import (
     PostSchema,
 )
 from sqlalchemy.sql.expression import func
-from sqlalchemy import or_, and_, desc
+from sqlalchemy import null, or_, and_, desc
 
 
 def create_tables():
@@ -881,15 +881,10 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
     Return WorkerSchema for territorial manager by department id
     """
     with session.begin() as s:
-        territorial_manager_id: int = (
-            s.query(Department)
-            .with_entities(Department.territorial_manager_id)
-            .filter(Department.id == department_id)
-            .first()
-        )
-        return WorkerSchema.model_validate(
-            s.query(Worker).filter(Worker.id == territorial_manager_id).first()
-        )
+        territorial_manager: Worker = (
+            s.query(Department).filter(Department.id == department_id).first()
+        ).territorial_manager
+        return WorkerSchema.model_validate(territorial_manager)
 
 
 def get_technical_requests_by_columns(
@@ -909,7 +904,7 @@ def get_technical_requests_by_columns(
                     TechnicalRequest.state == ApprovalStatus.skipped,
                 )
             )
-        raw_models = query.order_by(TechnicalRequest.id.desc()).limit(15).all()
+        raw_models = query.all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -927,11 +922,12 @@ def get_rework_tech_request(
             .filter(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.repairman_id == repairman_id,
-                TechnicalRequest.reopen_repair_date is None,
-                TechnicalRequest.reopen_date is not None,
+                # TechnicalRequest.reopen_repair_date is None,
+                TechnicalRequest.reopen_repair_date == null(),
+                TechnicalRequest.confirmation_date != null(),
+                TechnicalRequest.state != ApprovalStatus.approved,
+                TechnicalRequest.state != ApprovalStatus.skipped,
             )
-            .order_by(TechnicalRequest.id.desc())
-            .limit(15)
             .all()
         )
 
@@ -983,10 +979,8 @@ def get_all_active_requests_in_department(
             s.query(TechnicalRequest)
             .filter(
                 TechnicalRequest.department_id == department_id,
-                TechnicalRequest.close_date is None,
+                TechnicalRequest.close_date == null(),
             )
-            .order_by(TechnicalRequest.id.desc())
-            .limit(15)
             .all()
         )
         return [

@@ -188,7 +188,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
         message=callback.message,
         text=hbold(f"Заявки на дорабоку\nПроизводство: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
-            end_point="RM_TR_show_form_waiting",
+            end_point="RM_TR_show_form_rework",
             menu_button=tech_kb.RM_menu_button,
             requests=requests,
         ),
