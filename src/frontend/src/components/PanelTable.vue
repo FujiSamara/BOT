@@ -177,9 +177,9 @@ const onReject = () => {
 const onRejectCommentSubmit = async () => {
 	modalVisible.value = false;
 	await props.table.rejectChecked(rejectReason.value);
+	rejectReason.value = "";
 	emit("reject");
 };
-
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
 };
