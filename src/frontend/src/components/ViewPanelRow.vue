@@ -28,7 +28,7 @@
 									class="icons"
 									img-src="/img/reject.svg"
 									:with-filter="false"
-									@click="emit('reject')"
+									@click="modalVisible = true"
 								></clickable-icon>
 							</div>
 							<p style="margin: 0">Раздел</p>
@@ -58,11 +58,31 @@
 				</tr>
 			</tbody>
 		</table>
+		<Transition name="modal">
+			<ModalWindow
+				class="reject-modal"
+				v-if="modalVisible"
+				@close="modalVisible = false"
+			>
+				<div class="modal-form">
+					<border-input
+						placeholder="Причина отказа"
+						v-model:value="rejectReason"
+					></border-input>
+					<purple-button
+						class="modal-button"
+						@click.prevent="onRejectCommentSubmit"
+						><p style="margin: 0">Отказать</p></purple-button
+					>
+				</div>
+			</ModalWindow>
+		</Transition>
 	</div>
 </template>
 <script setup lang="ts">
+import ModalWindow from "@/components/ModalWindow.vue";
 import type { Viewer } from "@/viewer";
-import { type PropType } from "vue";
+import { ref, type PropType } from "vue";
 import { BaseSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
 
@@ -73,12 +93,17 @@ const props = defineProps({
 	},
 });
 
-// const modalVisible = ref(false);
-// const rejectReason = ref("");
+const modalVisible = ref(false);
+const rejectReason = ref("");
 const networkStore = useNetworkStore();
 
 const emit = defineEmits(["delete", "approve", "reject", "close"]);
 
+const onRejectCommentSubmit = () => {
+	modalVisible.value = false;
+	emit("reject", rejectReason.value);
+	rejectReason.value = "";
+};
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
 };
