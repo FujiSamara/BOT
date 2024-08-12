@@ -13,59 +13,59 @@ from db.schemas import TechnicalRequestSchema
 
 # region Chief tecnician (CT)
 
-CT_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_CT_TR")
+ct_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_CT_TR")
 
-CT_change_department_button = InlineKeyboardButton(
+ct_change_department_button = InlineKeyboardButton(
     text="Выбрать производство",
     callback_data="set_CT_TR_department",
 )
 
-CT_rm = InlineKeyboardMarkup(
+ct_rm = InlineKeyboardMarkup(
     inline_keyboard=[
-        [CT_change_department_button],
+        [ct_change_department_button],
         [main_menu_button],
     ]
 )
 
-CT_own_button = InlineKeyboardButton(text="Мои заявки", callback_data="CT_TR_own")
+ct_own_button = InlineKeyboardButton(text="Мои заявки", callback_data="CT_TR_own")
 
-CT_admin_button = InlineKeyboardButton(text="Все заявки", callback_data="CT_TR_admin")
+ct_admin_button = InlineKeyboardButton(text="Все заявки", callback_data="CT_TR_admin")
 
-CT_menu_markup = InlineKeyboardMarkup(
+ct_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [CT_own_button],
-        [CT_admin_button],
-        [CT_button],
+        [ct_own_button],
+        [ct_admin_button],
+        [ct_button],
     ]
 )
 
-CT_own_waiting = InlineKeyboardButton(
+ct_own_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="CT_TR_own_waiting"
 )
 
-CT_rework = InlineKeyboardButton(
+ct_rework = InlineKeyboardButton(
     text="Заявки на доработку", callback_data="get_CT_TR_rework"
 )
 
-CT_own_history = InlineKeyboardButton(
+ct_own_history = InlineKeyboardButton(
     text="История заявок", callback_data="CT_TR_own_history"
 )
 
-CT_own_menu_button = InlineKeyboardButton(
-    text="Назад", callback_data=CT_own_button.callback_data
+ct_own_menu_button = InlineKeyboardButton(
+    text="Назад", callback_data=ct_own_button.callback_data
 )
 
-CT_own_menu_markup = InlineKeyboardMarkup(
+ct_own_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [CT_own_waiting],
-        [CT_rework],
-        [CT_own_history],
-        [CT_button],
+        [ct_own_waiting],
+        [ct_rework],
+        [ct_own_history],
+        [ct_button],
     ]
 )
 
 
-async def CT_repair_kb(
+async def ct_repair_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
@@ -117,7 +117,7 @@ async def CT_repair_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def CT_admin_kb(
+async def ct_admin_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
@@ -175,31 +175,31 @@ async def CT_admin_kb(
 
 # region Worker (WR)
 
-WR_menu_button = InlineKeyboardButton(
+wr_menu_button = InlineKeyboardButton(
     text="Тех. заявки", callback_data="get_WR_TR_menu"
 )
 
-WR_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
+wr_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
 
-WR_waiting = InlineKeyboardButton(
+wr_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_WR_TR_waiting"
 )
 
-WR_history = InlineKeyboardButton(
+wr_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_WR_TR_history"
 )
 
-WR_menu = InlineKeyboardMarkup(
+wr_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [WR_create],
-        [WR_waiting],
-        [WR_history],
+        [wr_create],
+        [wr_waiting],
+        [wr_history],
         [main_menu_button],
     ]
 )
 
 
-async def WR_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
+async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
     problem_name = data.get("problem_name")
@@ -241,7 +241,7 @@ async def WR_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [WR_menu_button],
+        [wr_menu_button],
     ]
 
     if form_complete:
@@ -260,44 +260,44 @@ async def WR_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
 # region Repairman (RM)
 
-RM_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_RM_TR")
+rm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_RM_TR")
 
-RM_change_department_button = InlineKeyboardButton(
+rm_change_department_button = InlineKeyboardButton(
     text="Выбрать производство", callback_data="set_RM_TR_department"
 )
 
-RM_waiting = InlineKeyboardButton(
+rm_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_RM_TR_waiting"
 )
 
-RM_rework = InlineKeyboardButton(
+rm_rework = InlineKeyboardButton(
     text="Заявки на доработку", callback_data="get_RM_TR_rework"
 )
 
-RM_history = InlineKeyboardButton(
+rm_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_RM_TR_history"
 )
 
-RM_change_deparment_menu = InlineKeyboardMarkup(
+rm_change_deparment_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [RM_change_department_button],
+        [rm_change_department_button],
         [main_menu_button],
     ]
 )
 
-RM_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_RM_TR_menu")
+rm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_RM_TR_menu")
 
-RM_menu_markup = InlineKeyboardMarkup(
+rm_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [RM_waiting],
-        [RM_rework],
-        [RM_history],
-        [RM_button],
+        [rm_waiting],
+        [rm_rework],
+        [rm_history],
+        [rm_button],
     ]
 )
 
 
-async def RM_repair_kb(
+async def rm_repair_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
     request_button: list[InlineKeyboardButton],
@@ -342,7 +342,7 @@ async def RM_repair_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def RM_repair_waiting_kb(
+async def rm_repair_waiting_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     request_button = [
@@ -355,12 +355,12 @@ async def RM_repair_waiting_kb(
             ).pack(),
         )
     ]
-    return await RM_repair_kb(
+    return await rm_repair_kb(
         state=state, callback_data=callback_data, request_button=request_button
     )
 
 
-async def RM_repair_rework_kb(
+async def rm_repair_rework_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     request_button = [
@@ -373,7 +373,7 @@ async def RM_repair_rework_kb(
             ).pack(),
         )
     ]
-    return await RM_repair_kb(
+    return await rm_repair_kb(
         state=state, callback_data=callback_data, request_button=request_button
     )
 
@@ -382,40 +382,40 @@ async def RM_repair_rework_kb(
 
 # region Territorial manager (TM)
 
-TM_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_TM_TR")
+tm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_TM_TR")
 
-TM_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
+tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
 
-TM_waiting = InlineKeyboardButton(
+tm_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_TM_TR_waiting"
 )
 
-TM_history = InlineKeyboardButton(
+tm_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_TM_TR_history"
 )
 
-TM_change_department_button = InlineKeyboardButton(
+tm_change_department_button = InlineKeyboardButton(
     text="Выбрать производство",
     callback_data="set_TM_TR_department",
 )
 
-TM_change_deparment_menu = InlineKeyboardMarkup(
+tm_change_deparment_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [TM_change_department_button],
+        [tm_change_department_button],
         [main_menu_button],
     ]
 )
 
-TM_menu_markup = InlineKeyboardMarkup(
+tm_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [TM_waiting],
-        [TM_history],
-        [TM_button],
+        [tm_waiting],
+        [tm_history],
+        [tm_button],
     ]
 )
 
 
-async def TM_rate_kb(
+async def tm_rate_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()

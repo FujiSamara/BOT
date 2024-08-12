@@ -34,12 +34,12 @@ from db.service import (
 router = Router(name="technical_request_territorial_manager")
 
 
-@router.callback_query(F.data == tech_kb.TM_button.callback_data)
+@router.callback_query(F.data == tech_kb.tm_button.callback_data)
 async def show_tech_req_menu_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.TM_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_deparment_menu,
     )
 
 
@@ -47,11 +47,11 @@ async def show_tech_req_menu_ms(message: Message):
     await try_edit_or_answer(
         message=message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.TM_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_deparment_menu,
     )
 
 
-@router.callback_query(F.data == tech_kb.TM_change_department_button.callback_data)
+@router.callback_query(F.data == tech_kb.tm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TerritorialManagerRequestForm.department)
     departments = get_deparments_for_territorial_manager(callback.message.chat.id)
@@ -74,22 +74,22 @@ async def set_department(message: Message, state: FSMContext):
         message=message,
         state=state,
         departments=get_deparments_for_territorial_manager(message.chat.id),
-        reply_markup=tech_kb.TM_menu_markup,
+        reply_markup=tech_kb.tm_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
 
 
-@router.callback_query(F.data == tech_kb.TM_menu_button.callback_data)
+@router.callback_query(F.data == tech_kb.tm_menu_button.callback_data)
 async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Производство: {department_name}"),
-        reply_markup=tech_kb.TM_menu_markup,
+        reply_markup=tech_kb.tm_menu_markup,
     )
 
 
-@router.callback_query(F.data == tech_kb.TM_history.callback_data)
+@router.callback_query(F.data == tech_kb.tm_history.callback_data)
 async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_territorial_manager(
@@ -102,7 +102,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
         text=hbold("История заявок"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="TM_TR_show_form_history",
-            menu_button=tech_kb.TM_menu_button,
+            menu_button=tech_kb.tm_menu_button,
             requests=requests,
         ),
     )
@@ -120,11 +120,11 @@ async def show_history_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.TM_history,
+        history_or_waiting_button=tech_kb.tm_history,
     )
 
 
-@router.callback_query(F.data == tech_kb.TM_waiting.callback_data)
+@router.callback_query(F.data == tech_kb.tm_waiting.callback_data)
 async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_waiting_technical_requests_for_territorial_manager(
@@ -136,7 +136,7 @@ async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
         text=hbold("Ожидающие заявки"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="TM_TR_show_form_waiting",
-            menu_button=tech_kb.TM_menu_button,
+            menu_button=tech_kb.tm_menu_button,
             requests=requests,
         ),
     )
@@ -164,7 +164,7 @@ async def show_waiting_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.TM_waiting,
+        history_or_waiting_button=tech_kb.tm_waiting,
     )
 
 
@@ -175,7 +175,7 @@ async def show_rate_form_cb(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Оценить заявку"),
-        reply_markup=await tech_kb.TM_rate_kb(state=state, callback_data=callback_data),
+        reply_markup=await tech_kb.tm_rate_kb(state=state, callback_data=callback_data),
     )
 
 
@@ -184,7 +184,7 @@ async def show_rate_form_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Оценить заявку"),
-        reply_markup=await tech_kb.TM_rate_kb(
+        reply_markup=await tech_kb.tm_rate_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
@@ -285,5 +285,5 @@ async def save_rate(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.TM_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_deparment_menu,
     )
