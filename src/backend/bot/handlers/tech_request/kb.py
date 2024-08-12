@@ -521,7 +521,7 @@ def create_kb_with_end_point(
             buttons.append(
                 [
                     InlineKeyboardButton(
-                        text=f"{request.id} {request.deadline_date.strftime("%d.%m")} до {request.deadline_date.strftime("%H")}",
+                        text=f"{request.department.name} {request.id} {request.deadline_date.strftime("%d.%m")} до {request.deadline_date.strftime("%H")}",
                         callback_data=ShowRequestCallbackData(
                             request_id=request.id, end_point=end_point
                         ).pack(),
