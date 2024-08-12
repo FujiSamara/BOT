@@ -322,20 +322,22 @@ class Worker(Base):
     dm_device_id: Mapped[str] = mapped_column(nullable=True)
     dm_add_info: Mapped[str] = mapped_column(nullable=True)
 
-    worker_technical_request: Mapped["TechnicalRequest"] = relationship(
+    worker_technical_request: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest",
         foreign_keys="[TechnicalRequest.worker_id]",
         back_populates="worker",
     )
-    repairman_technical_request: Mapped["TechnicalRequest"] = relationship(
+    repairman_technical_request: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest",
         foreign_keys="[TechnicalRequest.repairman_id]",
         back_populates="repairman",
     )
-    territorial_manager_technical_request: Mapped["TechnicalRequest"] = relationship(
-        "TechnicalRequest",
-        foreign_keys="[TechnicalRequest.territorial_manager_id]",
-        back_populates="territorial_manager",
+    territorial_manager_technical_request: Mapped[List["TechnicalRequest"]] = (
+        relationship(
+            "TechnicalRequest",
+            foreign_keys="[TechnicalRequest.territorial_manager_id]",
+            back_populates="territorial_manager",
+        )
     )
 
 
