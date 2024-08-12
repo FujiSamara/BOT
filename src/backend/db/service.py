@@ -719,12 +719,46 @@ def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
         purpose=bid.purpose,
         status=get_bid_state_info(bid),
         denying_reason=bid.denying_reason,
+        expenditure=bid.expenditure,
     )
 
 
 def get_bid_records() -> list[BidRecordSchema]:
     """Returns all bid records in database."""
     return [bid_to_bid_record(bid) for bid in orm.get_bids()]
+
+
+def get_fac_bid_records_by_fac_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all fac bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.fac.phone_number == phone:
+            result.append(record)
+
+    return result
+
+
+def get_fac_bid_records_by_cc_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all cc bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.cc.phone_number == phone:
+            result.append(record)
+
+    return result
+
+
+def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all cc supervisor bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.cc_supervisor.phone_number == phone:
+            result.append(record)
+
+    return result
 
 
 def get_chapters() -> list[str]:

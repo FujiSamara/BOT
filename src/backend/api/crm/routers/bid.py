@@ -44,3 +44,24 @@ async def reject_bid(
             bid, get_current_coordinator(bid), ApprovalStatus.denied
         )
     return service.bid_to_bid_record(bid)
+
+
+@router.get("/fac/")
+async def get_fac_bids(
+    user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
+) -> list[BidRecordSchema]:
+    return service.get_fac_bid_records_by_fac_phone(user.username)
+
+
+@router.get("/cc/")
+async def get_cc_bids(
+    user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
+) -> list[BidRecordSchema]:
+    return service.get_fac_bid_records_by_cc_phone(user.username)
+
+
+@router.get("/cc_supervisor/")
+async def get_cc_supervisor_bids(
+    user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
+) -> list[BidRecordSchema]:
+    return service.get_fac_bid_records_by_cc_supervisor_phone(user.username)
