@@ -286,7 +286,7 @@ async def save_repair(
     await notify_worker_by_telegram_id(
         id=req_data["territorial_manager_telegram_id"],
         message=text.notification_teritorial_manager
-        + f"\n На производстве: {req_data["department_name"]}",
+        + f"\n На производстве: {req_data['department_name']}",
     )
 
     await state.clear()

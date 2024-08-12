@@ -260,7 +260,7 @@ async def save_repair(
     await notify_worker_by_telegram_id(
         id=req_data["territorial_manager_telegram_id"],
         message=text.notification_teritorial_manager
-        + f"\n На производстве: {req_data["department_name"]}",
+        + f"\n На производстве: {req_data['department_name']}",
     )
 
     await state.set_state(Base.none)
@@ -474,7 +474,7 @@ async def save_CT_TR_admin_form(
     await notify_worker_by_telegram_id(
         id=repairman_TG_id,
         message="Вас назначили на заявку"
-        + f"\n На производстве: {data.get("department_name")}",
+        + f"\n На производстве: {data.get('department_name')}",
     )
     await state.clear()
     await state.set_state(Base.none)

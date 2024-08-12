@@ -234,7 +234,7 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     await notify_worker_by_telegram_id(
         id=ret_data["repairman_telegram_id"],
         message=text.notification_repairman
-        + f"\nНа производстве: {ret_data["department_name"]}",
+        + f"\nНа производстве: {ret_data['department_name']}",
     )
 
     await state.clear()
