@@ -1,5 +1,6 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
+import FACBidPanel from "@/panels/FACBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
 import { shallowRef } from "vue";
@@ -28,6 +29,14 @@ const panels: Array<PanelData> = [
 		isActive: false,
 		panel: shallowRef(BidPanel),
 		access: Access.Bid,
+	},
+	{
+		id: 4,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки ЦФО",
+		isActive: false,
+		panel: shallowRef(FACBidPanel),
+		access: Access.FACBid,
 	},
 ];
 
