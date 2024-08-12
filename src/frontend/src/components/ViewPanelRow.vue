@@ -171,11 +171,6 @@ tbody tr:last-child th {
 	border-bottom: none;
 }
 
-/** Bottom row */
-tbody tr:last-child th {
-	padding: 10px;
-}
-
 /** Table head settings  */
 thead tr th:first-child {
 	border-top-left-radius: 20px;
