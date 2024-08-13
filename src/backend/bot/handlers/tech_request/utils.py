@@ -47,23 +47,25 @@ async def show_form(
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(get_settings().date_format)
         + f"\nОписание:\n{request.description}\n\
-Адресс: {request.worker.department.address}\n\
+Адрес: {request.worker.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
+Номер телефона: {request.worker.phone_number}\n\
+Должность: {request.worker.post.name}\n\
 ФИО исполнителя: {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\n\
 Статус: "
     )
 
     match request.state:
         case ApprovalStatus.approved:
-            text_form += "Выполенно"
+            text_form += "Выполнено"
         case ApprovalStatus.pending:
             text_form += "В процессе выполнения"
         case ApprovalStatus.pending_approval:
             text_form += "Ожидание оценки от ТУ"
         case ApprovalStatus.denied:
-            text_form += "Отправленно на доработку"
+            text_form += "Отправлено на доработку"
         case ApprovalStatus.skipped:
-            text_form += "Не выполненно"
+            text_form += "Не выполнено"
     text_form += "\n \n"
 
     if request.repair_date:
@@ -78,18 +80,16 @@ async def show_form(
             + request.confirmation_date.date().strftime(get_settings().date_format)
             + "\n"
         )
-        if request.close_date:
-            text_form += (
-                "Дата закрытия заявки "
-                + request.close_date.date().strftime(get_settings().date_format)
-                + "\n"
-            )
         if request.reopen_date:
             text_form += (
                 "Дата переоткрытия заявки "
                 + request.reopen_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
+            if request.confirmation_description:
+                text_form += (
+                    "Комментарий ТУ: " + request.confirmation_description + "\n"
+                )
         if request.reopen_repair_date:
             text_form += (
                 "Повторная дата ремонта "
@@ -102,6 +102,15 @@ async def show_form(
                 + request.reopen_confirmation_date.date().strftime(
                     get_settings().date_format
                 )
+                + "\n"
+            )
+            if request.close_description:
+                text_form += "Комментарий ТУ: " + request.close_description + "\n"
+
+        if request.close_date:
+            text_form += (
+                "Дата закрытия заявки "
+                + request.close_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
 
@@ -122,7 +131,7 @@ async def show_form(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Фотогарфии ремонта",
+                    text="Фотографии ремонта",
                     callback_data=ShowRequestCallbackData(
                         request_id=request.id,
                         end_point="TR_repair_docs",
@@ -136,7 +145,7 @@ async def show_form(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Фотогарфии повторного ремонта",
+                    text="Фотографии повторного ремонта",
                     callback_data=ShowRequestCallbackData(
                         request_id=request.id,
                         end_point="TR_reopen_repair_docs",
@@ -154,13 +163,13 @@ async def show_form(
         ]
     )
 
-    keybord = InlineKeyboardMarkup(inline_keyboard=buttons)
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
         await try_edit_or_answer(
-            message=callback.message, text=text_form, reply_markup=keybord
+            message=callback.message, text=text_form, reply_markup=keyboard
         )
     else:
-        await try_edit_or_answer(message=message, text=text_form, reply_markup=keybord)
+        await try_edit_or_answer(message=message, text=text_form, reply_markup=keyboard)
 
 
 async def send_photos(
@@ -206,13 +215,13 @@ async def handle_department(
         await state.set_state(Base.none)
         return True
     else:
-        deparment_names = [department.name for department in departments]
-        if message.text not in deparment_names:
-            deparment_names.sort()
+        departments_names = [department.name for department in departments]
+        if message.text not in departments_names:
+            departments_names.sort()
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=create_reply_keyboard(
-                    text.back, *[department for department in deparment_names]
+                    text.back, *[department for department in departments_names]
                 ),
             )
             await state.update_data(msg=msg)

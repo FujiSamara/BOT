@@ -11,7 +11,7 @@ from bot.kb import main_menu_button
 from db.schemas import TechnicalRequestSchema
 
 
-# region Chief tecnician (CT)
+# region Chief technician (CT)
 
 ct_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_CT_TR")
 
@@ -105,7 +105,7 @@ async def ct_repair_kb(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Отметить выполненой",
+                    text="Отметить выполненной",
                     callback_data=ShowRequestCallbackData(
                         end_point="save_CT_TR_repair",
                         request_id=callback_data.request_id,
@@ -278,7 +278,7 @@ rm_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_RM_TR_history"
 )
 
-rm_change_deparment_menu = InlineKeyboardMarkup(
+rm_change_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [rm_change_department_button],
         [main_menu_button],
@@ -330,7 +330,7 @@ async def rm_repair_kb(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Отметить выполненой",
+                    text="Отметить выполненной",
                     callback_data=ShowRequestCallbackData(
                         end_point="save_RM_TR_repair",
                         request_id=callback_data.request_id,
@@ -399,7 +399,7 @@ tm_change_department_button = InlineKeyboardButton(
     callback_data="set_TM_TR_department",
 )
 
-tm_change_deparment_menu = InlineKeyboardMarkup(
+tm_change_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [tm_change_department_button],
         [main_menu_button],
@@ -506,6 +506,39 @@ async def tm_rate_kb(
 
 
 # endregion
+
+# region Department director
+
+dd_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_DD_TR")
+
+dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")
+
+
+dd_history = InlineKeyboardButton(
+    text="Открытые заявки", callback_data="get_DD_TR_history"
+)
+
+dd_change_department_button = InlineKeyboardButton(
+    text="Выбрать производство",
+    callback_data="set_DD_TR_department",
+)
+
+dd_change_department_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [dd_change_department_button],
+        [main_menu_button],
+    ]
+)
+
+dd_menu_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [dd_history],
+        [dd_button],
+    ]
+)
+
+# endregion
+
 
 # region Universal
 

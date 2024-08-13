@@ -32,7 +32,7 @@ from db.service import (
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
     get_all_active_requests_in_department,
-    get_deparments_for_repairman,
+    get_departments_for_repairman,
     get_technical_request_by_id,
     update_tech_request_executor,
     update_technical_request_from_repairman,
@@ -62,7 +62,7 @@ async def show_tech_req_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.ct_change_department_button.callback_data)
 async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ChiefTechnicianTechnicalRequestForm.department)
-    departments = get_deparments_for_repairman(callback.message.chat.id)
+    departments = get_departments_for_repairman(callback.message.chat.id)
     department_names = [department.name for department in departments]
     department_names.sort()
 
@@ -78,11 +78,11 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
 
 @router.message(ChiefTechnicianTechnicalRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    deparments = get_deparments_for_repairman(message.chat.id)
+    departments = get_departments_for_repairman(message.chat.id)
     if await handle_department(
         message=message,
         state=state,
-        departments=deparments,
+        departments=departments,
         reply_markup=tech_kb.ct_menu_markup,
     ):
         await show_tech_req_format_ms(message)
@@ -170,7 +170,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Заявки на дорабоку\nПроизводство: {department_name}"),
+        text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.rm_menu_button,
@@ -253,14 +253,18 @@ async def save_repair(
     for doc in photo:
         photo_files.append(await download_file(doc))
 
-    req_data = update_technical_request_from_repairman(
+    request_data = update_technical_request_from_repairman(
         photo_files=photo_files, request_id=callback_data.request_id
     )
 
     await notify_worker_by_telegram_id(
-        id=req_data["territorial_manager_telegram_id"],
-        message=text.notification_teritorial_manager
-        + f"\n На производстве: {req_data['department_name']}",
+        id=request_data["territorial_manager_telegram_id"],
+        message=text.notification_territorial_manager
+        + f"\n На производстве: {request_data['department_name']}",
+    )
+
+    await notify_worker_by_telegram_id(
+        id=request_data["worker_telegram_id"], message=text.notification_worker
     )
 
     await state.set_state(Base.none)
@@ -464,11 +468,11 @@ async def save_CT_TR_admin_form(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     request_id = callback_data.request_id
-    reparirman_full_name = (
+    repairman_full_name = (
         (await state.get_data()).get("repairman_full_name_new").split(" ")
     )
     repairman_TG_id = update_tech_request_executor(
-        request_id=request_id, reparirman_full_name=reparirman_full_name
+        request_id=request_id, repairman_full_name=repairman_full_name
     )
     data = await state.get_data()
     await notify_worker_by_telegram_id(

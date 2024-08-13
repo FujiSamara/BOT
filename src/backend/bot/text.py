@@ -35,4 +35,6 @@ back = "⏪ Назад"
 notification_repairman = "У Вас новая техническая заявка!"
 notification_repairman_reopen = "У Вас новая техническая заявка на доработку!"
 
-notification_teritorial_manager = "У Вас новая техническая заявка для оценки!"
+notification_territorial_manager = "У Вас новая техническая заявка для оценки!"
+
+notification_worker = "Статус технической заявки обновлён!"
