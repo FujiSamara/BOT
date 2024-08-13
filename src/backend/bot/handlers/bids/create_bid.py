@@ -1,4 +1,3 @@
-from io import BytesIO
 from aiogram import F, Router
 from aiogram.types import (
     CallbackQuery,
@@ -10,6 +9,8 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 import asyncio
+
+from fastapi import UploadFile
 
 # bot imports
 from bot.kb import (
@@ -36,10 +37,16 @@ from bot.handlers.bids.schemas import (
 
 from bot.handlers.bids.utils import (
     get_full_bid_info,
-    get_state_bid_info,
+    get_short_bid_info,
     get_bid_list_info,
 )
-from bot.handlers.utils import try_delete_message, try_edit_message, download_file
+from bot.handlers.utils import (
+    try_delete_message,
+    try_edit_message,
+    download_file,
+    handle_documents_form,
+    handle_documents,
+)
 
 # db imports
 from db.service import (
@@ -48,6 +55,8 @@ from db.service import (
     get_bids_by_worker_telegram_id,
     get_bid_by_id,
     get_pending_bids_by_worker_telegram_id,
+    get_chapters,
+    get_expenditures_names,
 )
 from db.models import ApprovalStatus
 
@@ -88,24 +97,19 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     payment_type = data.get("type")
     department = data.get("department")
     purpose = data.get("purpose")
-    agreement = data.get("agreement")
-    urgently = data.get("urgently")
-    need_document = data.get("need_document")
     comment = data.get("comment")
-    document = data.get("document1")
-    document1 = data.get("document2")
-    document2 = data.get("document3")
+    documents = data.get("document")
+    expenditure = data.get("expenditure")
 
-    files: list[BytesIO] = []
+    document_files: list[UploadFile] = []
 
-    if document:
-        files.append(await download_file(document))
-    if document1:
-        files.append(await download_file(document1))
-    if document2:
-        files.append(await download_file(document2))
+    for doc in documents:
+        document_files.append(await download_file(doc))
 
-    kru_state = ApprovalStatus.pending_approval
+    fac_state = ApprovalStatus.pending_approval
+    cc_state = ApprovalStatus.pending
+    cc_supervisor_state = ApprovalStatus.pending
+    kru_state = ApprovalStatus.pending
     owner_state = ApprovalStatus.pending
     if int(amount) <= 30000:
         owner_state = ApprovalStatus.skipped
@@ -125,15 +129,14 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         amount=amount,
         payment_type=payment_type,
         department=department,
-        file=files[0],
-        file1=files[1] if len(files) > 1 else None,
-        file2=files[2] if len(files) > 2 else None,
+        files=document_files,
         purpose=purpose,
-        agreement=agreement,
-        urgently=urgently,
-        need_document=need_document,
         comment=comment,
+        expenditure=expenditure,
         telegram_id=callback.message.chat.id,
+        fac_state=fac_state,
+        cc_state=cc_state,
+        cc_supervisor_state=cc_supervisor_state,
         kru_state=kru_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
@@ -216,6 +219,56 @@ async def set_department_type(message: Message, state: FSMContext):
         await message.answer(format_err)
 
 
+# Expenditure section
+async def send_expenditre_chapter_form(message: Message, state: FSMContext):
+    await state.set_state(BidCreating.expenditure_chapter)
+    chapters = get_chapters()
+    await try_delete_message(message)
+    await message.answer(
+        hbold("Выберите раздел:"),
+        reply_markup=create_reply_keyboard("⏪ Назад", *chapters),
+    )
+
+
+@router.callback_query(F.data == "get_expenditure_chapter_form")
+async def get_expenditure_chapter_form(callback: CallbackQuery, state: FSMContext):
+    await send_expenditre_chapter_form(callback.message, state)
+
+
+async def get_expenditure_form(message: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.expenditure)
+    exps = get_expenditures_names()
+    await try_delete_message(message)
+    await message.answer(
+        hbold("Выберите статью:"),
+        reply_markup=create_reply_keyboard("⏪ Назад", *exps),
+    )
+
+
+@router.message(BidCreating.expenditure)
+async def set_expenditure(message: Message, state: FSMContext):
+    exps = get_expenditures_names()
+    if message.text == "⏪ Назад":
+        await send_expenditre_chapter_form(message, state)
+    elif message.text in exps:
+        await state.update_data(expenditure=message.text)
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(format_err)
+
+
+@router.message(BidCreating.expenditure_chapter)
+async def set_expenditure_chapter(message: Message, state: FSMContext):
+    chapters = get_chapters()
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in chapters:
+        await state.update_data(chapter=message.text)
+        await get_expenditure_form(message, state)
+    else:
+        await message.answer(format_err)
+
+
 # Purpose section
 @router.callback_query(F.data == "get_purpose_form")
 async def get_purpose_form(callback: CallbackQuery, state: FSMContext):
@@ -229,27 +282,6 @@ async def get_purpose_form(callback: CallbackQuery, state: FSMContext):
 async def set_purpose(message: Message, state: FSMContext):
     await state.update_data(purpose=message.html_text)
     await clear_state_with_success(message, state)
-
-
-# Agreement existence
-@router.callback_query(F.data == "get_agreement_form")
-async def get_agreement_form(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.agreement_existence)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("У вас есть договор?"), reply_markup=create_reply_keyboard("Да", "Нет")
-    )
-
-
-@router.message(BidCreating.agreement_existence)
-async def set_agreement(message: Message, state: FSMContext):
-    if message.text == "⏪ Назад":
-        await clear_state_with_success(message, state, sleep_time=0)
-    elif message.text in ["Да", "Нет"]:
-        await state.update_data(agreement=message.text)
-        await clear_state_with_success(message, state)
-    else:
-        await message.answer(format_err)
 
 
 # Comment
@@ -268,109 +300,23 @@ async def set_comment(message: Message, state: FSMContext):
     await clear_state_with_success(message, state)
 
 
-# Urgently
-@router.callback_query(F.data == "get_urgently_form")
-async def get_urgently_form(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.urgently)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Заявка срочная?"), reply_markup=create_reply_keyboard("Да", "Нет")
+# Documents
+@router.callback_query(F.data == "get_document_form")
+async def get_documents_form(callback: CallbackQuery, state: FSMContext):
+    await handle_documents_form(callback.message, state, BidCreating.documents)
+
+
+@router.message(BidCreating.documents)
+async def set_documents(message: Message, state: FSMContext):
+    async def clear_state_with_success_caller(message: Message, state: FSMContext):
+        await clear_state_with_success(message, state, 0)
+
+    await handle_documents(
+        message,
+        state,
+        "document",
+        clear_state_with_success_caller,
     )
-
-
-@router.message(BidCreating.urgently)
-async def set_urgently(message: Message, state: FSMContext):
-    if message.text == "⏪ Назад":
-        await clear_state_with_success(message, state, sleep_time=0)
-    elif message.text in ["Да", "Нет"]:
-        await state.update_data(urgently=message.text)
-        await clear_state_with_success(message, state)
-    else:
-        await message.answer(format_err)
-
-
-# Need for a payment system
-@router.callback_query(F.data == "get_need_document_form")
-async def get_need_document_form(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.need_document)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Нужна платежка?"), reply_markup=create_reply_keyboard("Да", "Нет")
-    )
-
-
-@router.message(BidCreating.need_document)
-async def set_need_document(message: Message, state: FSMContext):
-    if message.text == "⏪ Назад":
-        await clear_state_with_success(message, state, sleep_time=0)
-    elif message.text in ["Да", "Нет"]:
-        await state.update_data(need_document=message.text)
-        await clear_state_with_success(message, state)
-    else:
-        await message.answer(format_err)
-
-
-# Document
-@router.callback_query(F.data == "get_document_form1")
-async def get_document_form1(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.document)
-    await state.update_data(document_num=1)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Прикрепите документ:"),
-        reply_markup=create_inline_keyboard(settings_bid_menu_button),
-    )
-
-
-@router.callback_query(F.data == "get_document_form2")
-async def get_document_form2(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.document)
-    await state.update_data(document_num=2)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Прикрепите документ:"),
-        reply_markup=create_inline_keyboard(settings_bid_menu_button),
-    )
-
-
-@router.callback_query(F.data == "get_document_form3")
-async def get_document_form3(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidCreating.document)
-    await state.update_data(document_num=3)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Прикрепите документ:"),
-        reply_markup=create_inline_keyboard(settings_bid_menu_button),
-    )
-
-
-@router.message(BidCreating.document)
-async def set_document(message: Message, state: FSMContext):
-    if message.document or message.photo:
-        data = await state.get_data()
-        num = data.get("document_num")
-        content = None
-        kwargs = {}
-        if message.content_type == "photo":
-            content = message.photo[-1]
-        elif message.content_type == "document":
-            content = message.document
-        match num:
-            case 1:
-                kwargs["document1"] = content
-            case 2:
-                kwargs["document2"] = content
-            case 3:
-                kwargs["document3"] = content
-            case _:
-                raise ValueError("Document_num not provided.")
-        await state.update_data(document_num=None)
-        await state.update_data(**kwargs)
-        await clear_state_with_success(message, state)
-    else:
-        await message.answer(
-            format_err, reply_markup=create_inline_keyboard(settings_bid_menu_button)
-        )
 
 
 # History section
@@ -497,7 +443,7 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData)
     bid = get_bid_by_id(bid_id)
     await try_delete_message(callback.message)
 
-    text = get_state_bid_info(bid)
+    text = get_short_bid_info(bid)
 
     await callback.message.answer(
         text=text, reply_markup=create_inline_keyboard(bid_create_pending_button)

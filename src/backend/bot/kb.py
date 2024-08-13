@@ -3,9 +3,9 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
+    Document,
 )
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Document
 
 from db.schemas import WorkTimeSchema
 from bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
@@ -78,15 +78,8 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     amount = data.get("amount")
     payment_type = data.get("type")
     department = data.get("department")
-    agreement = data.get("agreement")
-    urgently = data.get("urgently")
-    need_document = data.get("need_document")
-    document1: Document = data.get("document1")
-    document2: Document = data.get("document2")
-    document3: Document = data.get("document3")
-    document_text1 = "Отсутствует"
-    document_text2 = "Отсутствует"
-    document_text3 = "Отсутствует"
+    document = data.get("document")
+    expenditure = data.get("expenditure")
 
     all_field_exist = True
 
@@ -105,18 +98,11 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         department = "Не указано"
     else:
         department += " ✅"
-    if not agreement:
-        agreement = "Нет ✅"
+    if not expenditure:
+        all_field_exist = False
+        expenditure = "Не указано"
     else:
-        agreement += " ✅"
-    if not urgently:
-        urgently = "Нет ✅"
-    else:
-        urgently += " ✅"
-    if not need_document:
-        need_document = "Нет ✅"
-    else:
-        need_document += " ✅"
+        expenditure += " ✅"
 
     purpose_postfix = ""
     if "purpose" in data:
@@ -124,23 +110,11 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         all_field_exist = False
 
-    if not document1 and not document2 and not document3:
+    if not document or len(document) == 0:
         all_field_exist = False
-    if document1:
-        if hasattr(document1, "file_name"):
-            document_text1 = document1.file_name + " ✅"
-        else:
-            document_text1 = "Фотография" + " ✅"
-    if document2:
-        if hasattr(document2, "file_name"):
-            document_text2 = document2.file_name + " ✅"
-        else:
-            document_text2 = "Фотография" + " ✅"
-    if document3:
-        if hasattr(document3, "file_name"):
-            document_text3 = document3.file_name + " ✅"
-        else:
-            document_text3 = "Фотография" + " ✅"
+        document = "0"
+    else:
+        document = f"{len(document)} ✅"
 
     keyboard = [
         [
@@ -158,34 +132,14 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=department, callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Документ 1", callback_data="get_document_form1"),
-            InlineKeyboardButton(text=document_text1, callback_data="dummy"),
-        ],
-        [
-            InlineKeyboardButton(text="Документ 2", callback_data="get_document_form2"),
-            InlineKeyboardButton(text=document_text2, callback_data="dummy"),
-        ],
-        [
-            InlineKeyboardButton(text="Документ 3", callback_data="get_document_form3"),
-            InlineKeyboardButton(text=document_text3, callback_data="dummy"),
-        ],
-        [
             InlineKeyboardButton(
-                text="Наличие договора", callback_data="get_agreement_form"
+                text="Статья", callback_data="get_expenditure_chapter_form"
             ),
-            InlineKeyboardButton(text=agreement, callback_data="dummy"),
+            InlineKeyboardButton(text=expenditure, callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(
-                text="Заявка срочная?", callback_data="get_urgently_form"
-            ),
-            InlineKeyboardButton(text=urgently, callback_data="dummy"),
-        ],
-        [
-            InlineKeyboardButton(
-                text="Нужна платежка?", callback_data="get_need_document_form"
-            ),
-            InlineKeyboardButton(text=need_document, callback_data="dummy"),
+            InlineKeyboardButton(text="Документы", callback_data="get_document_form"),
+            InlineKeyboardButton(text=document, callback_data="dummy"),
         ],
         [
             InlineKeyboardButton(
@@ -547,3 +501,77 @@ async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ]  # send kuda to escho
         )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+# Repairman IT
+
+get_it_repairman_menu = InlineKeyboardButton(
+    text="IT заявки", callback_data="get_it_repairman_menu"
+)
+
+get_department_it_repairman = InlineKeyboardButton(
+    text="Выбрать предприятие", callback_data="get_department_it_repairman"
+)
+
+bids_pending_for_repairman = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="bids_pending_for_repairman"
+)
+
+
+repairman_department_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_department_it_repairman],
+        [main_menu_button],
+    ]
+)
+
+
+repairman_bids_it_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [bids_pending_for_repairman],
+        [get_department_it_repairman],
+    ]
+)
+
+
+async def get_create_repairman_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    photo: Document | None = data.get("photo")
+    photo_text = "Отсутствует"
+    all_field_exist = True
+
+    if photo is None:
+        all_field_exist = False
+    if photo:
+        if hasattr(photo, "file_name"):
+            photo_text = "✅ " + photo.file_name
+        else:
+            photo_text = "✅ " + "Фотография"
+
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Фото", callback_data="get_photo_rm"),
+            InlineKeyboardButton(text=photo_text, callback_data="dummy"),
+        ],
+    ]
+    if all_field_exist:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Выполнить заявку", callback_data="send_bid_it_rm"
+                )
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+take_bid_it_for_repairman = InlineKeyboardButton(
+    text="Выполнить заявку", callback_data="take_bid_it_for_repairman"
+)
+
+take_bid_it_for_repairman_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [take_bid_it_for_repairman],
+        [bids_pending_for_repairman],
+    ]
+)

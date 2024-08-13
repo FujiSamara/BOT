@@ -76,7 +76,8 @@ export const useNetworkStore = defineStore("network", {
 			const decoded: any = jwtDecode(token);
 			this.accesses = [];
 			for (const scope of decoded.scopes) {
-				if (accessesDict[scope]) this.accesses.push(accessesDict[scope]);
+				if (accessesDict[scope] !== undefined)
+					this.accesses.push(accessesDict[scope]);
 			}
 			this.username = decoded.sub;
 		},
@@ -107,7 +108,6 @@ export const useNetworkStore = defineStore("network", {
 			);
 
 			const file = resp.data as Uint8Array;
-			console.log(resp.data);
 
 			const fileBlob = new Blob([file], { type: "application/octet-stream" });
 

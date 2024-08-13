@@ -91,7 +91,6 @@ table.filters.value = computed((): Array<(instance: any) => boolean> => {
 		const rowDate = new Date(instance.create_date);
 		const fromDate = new Date(fromDateString.value);
 		const toDate = new Date(toDateString.value);
-		return true;
 
 		return rowDate <= toDate && rowDate >= fromDate;
 	};

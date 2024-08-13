@@ -1,4 +1,5 @@
 from typing import Any, Awaitable, Callable
+from functools import cache
 from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
@@ -12,9 +13,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
-from db.models import Access
+from db.models import FujiScope
 from db.schemas import WorkerSchema
-from db.service import get_workers_by_level, get_worker_level_by_telegram_id
+import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
     create_bid_menu_button,
@@ -28,38 +29,46 @@ from bot.kb import (
     rating_menu_button,
     worker_bid_menu_button,
     create_reply_keyboard,
+    get_it_repairman_menu,
 )
 import asyncio
 
 
-async def send_menu_by_level(message: Message, edit=None):
+@cache
+def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
+    """Returns cached scope-menu dict"""
+    return {
+        FujiScope.bot_bid_kru: kru_menu_button,
+        FujiScope.bot_bid_owner: owner_menu_button,
+        FujiScope.bot_bid_accountant_card: accountant_card_menu_button,
+        FujiScope.bot_bid_accountant_cash: accountant_cash_menu_button,
+        FujiScope.bot_bid_teller_card: teller_card_menu_button,
+        FujiScope.bot_bid_teller_cash: teller_cash_menu_button,
+        FujiScope.bot_rate: rating_menu_button,
+        FujiScope.bot_worker_bid: worker_bid_menu_button,
+        FujiScope.bot_bid_create: create_bid_menu_button,
+        FujiScope.bot_bid_it_create: create_bid_it_menu_button,
+        FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
+        # FujiScope.bot_bid_it_tm: ###,
+    }
+
+
+async def send_menu_by_scopes(message: Message, edit=None):
     """
     Sends specific menu for user by his role.
 
     If `edit = True` - calling `Message.edit_text` instead `Message.answer`
     """
-    level = get_worker_level_by_telegram_id(message.chat.id)
+    scopes = []
+    worker = service.get_worker_by_telegram_id(message.chat.id)
+    if worker:
+        scopes = worker.post.scopes
+
     menus = []
 
-    match get_access_by_level(level):
-        case Access.worker:
-            menus.append([create_bid_menu_button])
-            menus.append([worker_bid_menu_button])
-            menus.append([create_bid_it_menu_button])
-            if level == 6:
-                menus.append([rating_menu_button])
-        case Access.teller_cash:
-            menus.append([teller_cash_menu_button])
-        case Access.teller_card:
-            menus.append([teller_card_menu_button])
-        case Access.kru:
-            menus.append([kru_menu_button])
-        case Access.accountant_cash:
-            menus.append([accountant_cash_menu_button])
-        case Access.accountant_card:
-            menus.append([accountant_card_menu_button])
-        case Access.owner:
-            menus.append([owner_menu_button])
+    for scope, button in get_scope_menu_dict().items():
+        if scope in scopes or FujiScope.admin in scopes:
+            menus.append([button])
 
     menu = InlineKeyboardMarkup(inline_keyboard=menus)
 
@@ -74,56 +83,6 @@ async def send_menu_by_level(message: Message, edit=None):
         )
     else:
         await message.answer(hbold("Фуджи team"), reply_markup=menu)
-
-
-def get_access_by_level(level: int) -> Access:
-    """
-    Returns relevant worker post by `level`.
-    """
-
-    if level == 7:
-        return Access.teller_cash
-
-    if level == 8:
-        return Access.teller_card
-
-    if level == 16:
-        return Access.kru
-
-    if level == 17:
-        return Access.accountant_cash
-
-    if level == 18:
-        return Access.accountant_card
-
-    if level == 25:
-        return Access.owner
-
-    if level >= 5:
-        return Access.worker
-
-
-def get_levels_by_access(access: Access) -> list[int]:
-    """Returns level by access."""
-    match access:
-        case Access.worker:
-            return [5, 6]
-        case Access.kru:
-            return [16]
-        case Access.teller_cash:
-            return [7]
-        case Access.teller_card:
-            return [8]
-        case Access.kru:
-            return [16]
-        case Access.accountant_card:
-            return [18]
-        case Access.accountant_cash:
-            return [17]
-        case Access.owner:
-            return [25]
-        case _:
-            return []
 
 
 async def try_delete_message(message: Message) -> bool:
@@ -169,25 +128,17 @@ async def try_edit_or_answer(message: Message, text: str, reply_markup: Any = No
     return True
 
 
-async def notify_workers_by_level(level: int, message: str) -> None:
+async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     """
-    Sends notify `message` to workers by their `level`.
+    Sends notify `message` to workers by their `scope`.
     """
-    workers: list[WorkerSchema] = get_workers_by_level(level)
+    workers: list[WorkerSchema] = service.get_workers_by_scope(scope)
 
     for worker in workers:
         if not worker.telegram_id:
             continue
         msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
-        await send_menu_by_level(message=msg)
-
-
-async def notify_workers_by_access(access: Access, message: str) -> None:
-    """
-    Sends notify `message` to workers by their `access`.
-    """
-    for level in get_levels_by_access(access):
-        await notify_workers_by_level(level, message)
+        await send_menu_by_scopes(message=msg)
 
 
 async def notify_worker_by_telegram_id(id: int, message: str) -> Message:

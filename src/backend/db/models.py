@@ -25,14 +25,25 @@ class Gender(enum.Enum):
     woman = (2,)
 
 
-class Access(enum.Enum):
-    kru = (6,)
-    worker = (3,)
-    teller_cash = (4,)
-    teller_card = (5,)
-    accountant_cash = (7,)
-    accountant_card = (8,)
-    owner = (10,)
+class FujiScope(enum.Enum):
+    admin = 1
+    # CRM
+    crm_bid = 2
+    crm_budget = 3
+    crm_expenditure = 4
+    # BOT
+    bot_bid_create = 5
+    bot_bid_kru = 6
+    bot_bid_owner = 7
+    bot_bid_teller_cash = 8
+    bot_bid_teller_card = 9
+    bot_bid_accountant_cash = 10
+    bot_bid_accountant_card = 11
+    bot_rate = 12
+    bot_worker_bid = 13
+    bot_bid_it_create = 14
+    bot_bid_it_repairman = 15
+    bot_bid_it_tm = 16
 
 
 class DepartmentType(enum.Enum):
@@ -44,6 +55,21 @@ class DepartmentType(enum.Enum):
 approvalstatus = Annotated[
     ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
 ]
+
+
+class PostScope(Base):
+    """Доступы у должности"""
+
+    __tablename__ = "post_scopes"
+
+    def __str__(self) -> str:
+        return self.scope.name
+
+    id: Mapped[intpk]
+    scope: Mapped[FujiScope] = mapped_column(Enum(FujiScope), nullable=False)
+
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
+    post: Mapped["Post"] = relationship("Post", back_populates="scopes")
 
 
 class Post(Base):
@@ -59,7 +85,7 @@ class Post(Base):
     salary: Mapped[float] = mapped_column(nullable=True)
     level: Mapped[int] = mapped_column(
         CheckConstraint("level<=10 AND level>0"), nullable=False
-    )
+    )  # deprecated
 
     workers: Mapped[List["Worker"]] = relationship("Worker", back_populates="post")
 
@@ -70,6 +96,8 @@ class Post(Base):
     work_times: Mapped[List["WorkTime"]] = relationship(
         "WorkTime", back_populates="post"
     )
+
+    scopes: Mapped[List["PostScope"]] = relationship("PostScope", back_populates="post")
 
 
 class Company(Base):
@@ -187,6 +215,19 @@ class Department(Base):
         "BudgetRecord", back_populates="department"
     )
 
+    it_repairman_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    it_repairman: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[it_repairman_id]
+    )
+
+    # Мобилка
+    dm_id: Mapped[UUID] = mapped_column(nullable=True)
+    person_max_orders: Mapped[int] = mapped_column(nullable=True)
+    max_close_order_distance: Mapped[int] = mapped_column(nullable=True)
+    orders_collect_time: Mapped[int] = mapped_column(nullable=True)
+
 
 class Worker(Base):
     __tablename__ = "workers"
@@ -268,6 +309,11 @@ class Worker(Base):
     password: Mapped[str] = mapped_column(nullable=True)
     can_use_crm: Mapped[bool] = mapped_column(nullable=True, default=False)
 
+    # Поля мобилки
+    dm_id: Mapped[UUID] = mapped_column(nullable=True)
+    dm_device_id: Mapped[str] = mapped_column(nullable=True)
+    dm_add_info: Mapped[str] = mapped_column(nullable=True)
+
 
 class Bid(Base):
     """Заявки"""
@@ -281,9 +327,6 @@ class Bid(Base):
     amount: Mapped[int] = mapped_column(nullable=False)
     payment_type: Mapped[str] = mapped_column(nullable=False)
     purpose: Mapped[str] = mapped_column(nullable=False)
-    agreement: Mapped[str] = mapped_column(nullable=True, default="Нет")
-    urgently: Mapped[str] = mapped_column(nullable=True, default="Нет")
-    need_document: Mapped[str] = mapped_column(nullable=True, default="Нет")
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     denying_reason: Mapped[str] = mapped_column(nullable=True, default="")
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
@@ -295,21 +338,36 @@ class Bid(Base):
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     worker: Mapped["Worker"] = relationship("Worker", back_populates="bids")
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    document1: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage), nullable=True
+    expenditure_id: Mapped[int] = mapped_column(ForeignKey("expenditures.id"))
+    expenditure: Mapped["Expenditure"] = relationship(
+        "Expenditure", back_populates="bids"
     )
-    document2: Mapped[FileType] = mapped_column(
-        FileType(storage=get_settings().storage), nullable=True
+
+    documents: Mapped[List["BidDocument"]] = relationship(
+        "BidDocument", cascade="all,delete"
     )
 
     # States
+    fac_state: Mapped[approvalstatus]
+    cc_state: Mapped[approvalstatus]
+    cc_supervisor_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
     owner_state: Mapped[approvalstatus]
     accountant_cash_state: Mapped[approvalstatus]
     accountant_card_state: Mapped[approvalstatus]
     teller_cash_state: Mapped[approvalstatus]
     teller_card_state: Mapped[approvalstatus]
+
+
+class BidDocument(Base):
+    """Документы заявок на платежи"""
+
+    __tablename__ = "bids_documents"
+
+    id: Mapped[intpk]
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    bid_id: Mapped[int] = mapped_column(ForeignKey("bids.id"))
+    bid: Mapped["Bid"] = relationship("Bid", back_populates="documents")
 
 
 class WorkerBid(Base):
@@ -463,6 +521,13 @@ class Expenditure(Base):
         back_populates="expenditure",
         cascade="all,delete",
         foreign_keys="BudgetRecord.expenditure_id",
+    )
+
+    bids: Mapped[List["Bid"]] = relationship(
+        "Bid",
+        back_populates="expenditure",
+        cascade="all,delete",
+        foreign_keys="Bid.expenditure_id",
     )
 
 

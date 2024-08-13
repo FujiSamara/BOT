@@ -1,13 +1,9 @@
 # sqladmin shemas
-import datetime
-from io import BytesIO
-from typing import Any, List
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqladmin import ModelView, action
-from starlette.responses import StreamingResponse
 from db.models import (
-    Bid,
+    PostScope,
     Worker,
     Company,
     Department,
@@ -17,11 +13,26 @@ from db.models import (
     ApprovalStatus,
     Gender,
 )
-from xlsxwriter import Workbook
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
 from db import service
 from api.auth import encrypt_password
+
+
+class PostScopeView(ModelView, model=PostScope):
+    column_list = [PostScope.post, PostScope.scope]
+    column_searchable_list = [PostScope.scope]
+    form_columns = [PostScope.scope, PostScope.post]
+    column_details_exclude_list = [PostScope.post_id, PostScope.id]
+    can_export = False
+    can_edit = False
+
+    name_plural = "Доступы"
+    name = "Доступ"
+    column_labels = {
+        PostScope.post: "Должность",
+        PostScope.scope: "Доступ",
+    }
 
 
 class PostView(ModelView, model=Post):
@@ -38,6 +49,7 @@ class PostView(ModelView, model=Post):
         Post.level: "Уровень доступа",
         Post.workers: "Работники",
         Post.salary: "Зарплата",
+        Post.scopes: "Доступы",
     }
 
 
@@ -188,6 +200,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
         Worker.department,
+        Worker.telegram_id,
         Worker.post,
         Worker.b_date,
         Worker.employment_date,
@@ -225,172 +238,6 @@ class WorkerView(ModelView, model=Worker):
 
     column_formatters = {Worker.gender: gender_format}
     column_formatters_detail = column_formatters
-
-
-class BidView(ModelView, model=Bid):
-    details_template = "bid_details.html"
-    list_template = "bid_list.html"
-
-    can_create = False
-    can_edit = False
-
-    column_searchable_list = [
-        "worker.l_name",
-    ]
-    column_sortable_list = [Bid.amount, Bid.create_date, Bid.close_date, Bid.id]
-    column_list = [
-        Bid.id,
-        Bid.create_date,
-        Bid.close_date,
-        Bid.worker,
-        Bid.amount,
-        Bid.payment_type,
-        Bid.department,
-        Bid.purpose,
-        Bid.document,
-        Bid.document1,
-        Bid.document2,
-        Bid.agreement,
-        Bid.need_document,
-        Bid.urgently,
-        Bid.comment,
-        Bid.denying_reason,
-        Bid.kru_state,
-        Bid.owner_state,
-        Bid.accountant_cash_state,
-        Bid.accountant_card_state,
-        Bid.teller_cash_state,
-        Bid.teller_card_state,
-    ]
-
-    column_details_list = column_list
-
-    @staticmethod
-    def datetime_format(inst, columm):
-        format = "%H:%M %d.%m.%y"
-        value = getattr(inst, columm)
-        if value:
-            return value.strftime(format)
-        else:
-            return "Заявка не закрыта"
-
-    @staticmethod
-    def file_format(inst, columm):
-        value = getattr(inst, columm)
-        if not value:
-            return None
-        data = service.get_file_data(value)
-        return data
-
-    @staticmethod
-    def payment_type_format(inst, column):
-        value = getattr(inst, column)
-
-        return payment_type_dict.get(value)
-
-    @staticmethod
-    def approval_status_format(inst, columm):
-        value = getattr(inst, columm)
-
-        return approval_status_dict.get(value)
-
-    column_formatters = {
-        Bid.create_date: datetime_format,
-        Bid.close_date: datetime_format,
-        Bid.kru_state: approval_status_format,
-        Bid.owner_state: approval_status_format,
-        Bid.accountant_card_state: approval_status_format,
-        Bid.accountant_cash_state: approval_status_format,
-        Bid.teller_card_state: approval_status_format,
-        Bid.teller_cash_state: approval_status_format,
-        Bid.document: file_format,
-        Bid.document1: file_format,
-        Bid.document2: file_format,
-        Bid.payment_type: payment_type_format,
-    }
-    column_formatters_detail = column_formatters
-
-    column_export_exclude_list = [
-        Bid.department_id,
-        Bid.worker_id,
-        Bid.document,
-        Bid.document1,
-        Bid.document2,
-    ]
-
-    async def export_data(
-        self, data: List[Any], export_type: str = "csv"
-    ) -> StreamingResponse:
-        """
-        Overrides `ModelView.export_date`
-        to return `xlsx` tables instead `csv`.
-        """
-        CELL_LENGTH = 18
-
-        output = BytesIO()
-        workbook = Workbook(output)
-        worksheet = workbook.add_worksheet()
-        worksheet.set_column(0, len(self._export_prop_names), CELL_LENGTH)
-        worksheet.write_row(0, 0, [*self._export_prop_names, "Подпись"])
-        for index, elem in enumerate(data):
-            vals = []
-            for name in self._export_prop_names:
-                val = await self.get_prop_value(elem, name)
-                if isinstance(val, datetime.datetime):
-                    val = BidView.datetime_format(val)
-                if name.split("_")[-1] == "state":
-                    val = BidView.approval_status_format(elem, name)
-                if name == "payment_type":
-                    val = BidView.payment_type_format(elem, name)
-                vals.append(str(val))
-
-            worksheet.write_row(index + 1, 0, vals)
-
-        workbook.close()
-        output.seek(0)
-
-        return StreamingResponse(
-            content=output,
-            headers={"Content-Disposition": "attachment; filename=bids.xlsx"},
-        )
-
-    name_plural = "Заявки"
-    name = "Заявка"
-    column_labels = {
-        Bid.agreement: "Наличие соглашеия",
-        Bid.amount: "Сумма",
-        Bid.comment: "Комментарий",
-        Bid.denying_reason: "Причина отказа",
-        Bid.create_date: "Дата создания",
-        Bid.close_date: "Дата закрытия",
-        Bid.department: "Производство",
-        Bid.need_document: "Необходимость документа, подтверждающего оплату",
-        Bid.payment_type: "Тип оплаты",
-        Bid.purpose: "Цель платежа",
-        Bid.urgently: "Срочная",
-        Bid.worker: "Работник",
-        Bid.document: "Подтверждающий документ",
-        Bid.document1: "Подтверждающий документ 1",
-        Bid.document2: "Подтверждающий документ 2",
-        Bid.kru_state: "КРУ",
-        Bid.owner_state: "Собственник",
-        Bid.accountant_card_state: "Бухгалтер безнал.",
-        Bid.accountant_cash_state: "Бухгалтер нал.",
-        Bid.teller_card_state: "Кассир безнал.",
-        Bid.teller_cash_state: "Кассир нал.",
-        "worker.l_name": "Фамилия работника",
-    }
-
-    form_ajax_refs = {
-        "department": {
-            "fields": ("name",),
-            "order_by": "name",
-        },
-        "worker": {
-            "fields": ("f_name",),
-            "order_by": "l_name",
-        },
-    }
 
 
 class WorkerBidView(ModelView, model=WorkerBid):
@@ -449,6 +296,27 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
     form_columns = [WorkerBid.comment]
 
+    @staticmethod
+    def datetime_format(inst, columm):
+        format = "%H:%M %d.%m.%y"
+        value = getattr(inst, columm)
+        if value:
+            return value.strftime(format)
+        else:
+            return "Заявка не закрыта"
+
+    @staticmethod
+    def payment_type_format(inst, column):
+        value = getattr(inst, column)
+
+        return payment_type_dict.get(value)
+
+    @staticmethod
+    def approval_status_format(inst, columm):
+        value = getattr(inst, columm)
+
+        return approval_status_dict.get(value)
+
     @action(
         name="approve_worker_bid",
         label="Согласовать",
@@ -488,11 +356,11 @@ class WorkerBidView(ModelView, model=WorkerBid):
     name = "Заявка на работу"
 
     column_formatters = {
-        WorkerBid.state: BidView.approval_status_format,
+        WorkerBid.state: approval_status_format,
         WorkerBid.passport: files_format,
         WorkerBid.work_permission: files_format,
         WorkerBid.worksheet: files_format,
-        WorkerBid.create_date: BidView.datetime_format,
+        WorkerBid.create_date: datetime_format,
     }
 
     column_formatters_detail = column_formatters

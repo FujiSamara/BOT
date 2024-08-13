@@ -2,9 +2,12 @@ from typing import Any
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    BidDocument,
     BudgetRecord,
     Expenditure,
+    FujiScope,
     Post,
+    PostScope,
     WorkTime,
     Worker,
     Department,
@@ -161,30 +164,34 @@ def add_bid(bid: BidSchema):
         department = (
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
+        expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
+        )
 
-        bid = Bid(
+        bid_model = Bid(
             amount=bid.amount,
             payment_type=bid.payment_type,
             purpose=bid.purpose,
-            agreement=bid.agreement,
-            urgently=bid.urgently,
-            need_document=bid.need_document,
             comment=bid.comment,
             create_date=bid.create_date,
             department=department,
             worker=worker,
-            document=bid.document,
-            document1=bid.document1,
-            document2=bid.document2,
+            documents=[],
             kru_state=bid.kru_state,
             owner_state=bid.owner_state,
             accountant_card_state=bid.accountant_card_state,
             accountant_cash_state=bid.accountant_cash_state,
             teller_card_state=bid.teller_card_state,
             teller_cash_state=bid.teller_cash_state,
+            fac_state=bid.fac_state,
+            cc_state=bid.cc_state,
+            cc_supervisor_state=bid.cc_supervisor_state,
+            expenditure=expenditure,
         )
+        s.add(bid_model)
 
-        s.add(bid)
+        for document in bid.documents:
+            s.add(BidDocument(bid=bid_model, document=document.document))
 
 
 def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
@@ -278,18 +285,22 @@ def update_bid(bid: BidSchema):
         if not new_worker:
             return None
 
+        new_expenditure = (
+            s.query(Expenditure).filter(Expenditure.id == bid.expenditure.id).first()
+        )
+        if not new_expenditure:
+            return None
+
         cur_bid.amount = bid.amount
         cur_bid.payment_type = bid.payment_type
         cur_bid.purpose = bid.purpose
-        cur_bid.agreement = bid.agreement
-        cur_bid.urgently = bid.urgently
-        cur_bid.need_document = bid.need_document
         cur_bid.comment = bid.comment
         cur_bid.denying_reason = bid.denying_reason
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
         cur_bid.worker = new_worker
+        cur_bid.expenditure = new_expenditure
         # TODO: Update documents
         # cur_bid.document = bid.document
         # cur_bid.document1 = bid.document1
@@ -300,6 +311,9 @@ def update_bid(bid: BidSchema):
         cur_bid.accountant_cash_state = bid.accountant_cash_state
         cur_bid.teller_card_state = bid.teller_card_state
         cur_bid.teller_cash_state = bid.teller_cash_state
+        cur_bid.fac_state = bid.fac_state
+        cur_bid.cc_state = bid.cc_state
+        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
 
 
 def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchema]:
@@ -324,6 +338,21 @@ def get_workers_with_post_by_columns(
         for column, value in zip(columns, values):
             query = query.filter(column == value)
         raw_models = query.all()
+        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+
+
+def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
+    """
+    Returns all `Worker` as `WorkerSchema` in database
+    by `scope`.
+    """
+    with session.begin() as s:
+        raw_models = (
+            s.query(Worker)
+            .join(Worker.post)
+            .join(Post.scopes)
+            .filter(PostScope.scope == scope)
+        ).all()
         return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
 
 
@@ -787,3 +816,65 @@ def add_bid_it(bid_it: BidITSchema):
         )
 
         s.add(bid)
+
+
+def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.worker_id == worker.id,
+                    or_(
+                        BidIT.status == ApprovalStatus.pending_approval,
+                        BidIT.status == ApprovalStatus.pending,
+                    ),
+                )
+            )
+            .all()
+        )
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def find_departments_by_column(column: any, value: any) -> list[DepartmentSchema]:
+    """
+    Returns departments in database by `column` with `value`.
+    If department not exist return `[]`.
+    """
+    with session.begin() as s:
+        raw_deparments = s.query(Department).filter(column == value).all()
+        if not raw_deparments:
+            return []
+        return [
+            DepartmentSchema.model_validate(raw_deparment)
+            for raw_deparment in raw_deparments
+        ]
+
+
+def update_bid_it_rm(bid: BidITSchema):
+    """Updates bid IT by repairman."""
+    with session.begin() as s:
+        cur_bid = s.query(BidIT).filter(BidIT.id == bid.id).first()
+        if not cur_bid:
+            return None
+
+        repairman = s.query(Worker).filter(Worker.id == bid.repairman.id).first()
+        if not repairman:
+            return None
+
+        cur_bid.status = bid.status
+        cur_bid.done_date = bid.done_date
+        cur_bid.repairman = repairman
+        cur_bid.work_photo = bid.work_photo
+
+
+def get_bid_it_by_id(id: int) -> BidITSchema:
+    """Gets bid IT by its id."""
+    with session.begin() as s:
+        raw_bid = s.query(BidIT).filter(BidIT.id == id).first()
+        if not raw_bid:
+            return None
+        return BidITSchema.model_validate(raw_bid)
