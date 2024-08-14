@@ -1,3 +1,4 @@
+import logging
 from aiogram import Router, F
 from aiogram.types import (
     CallbackQuery,
@@ -8,6 +9,7 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
+from db.models import ApprovalStatus
 from bot import text, kb
 from bot.states import (
     Base,
@@ -27,7 +29,7 @@ from bot.handlers.utils import (
 from db.service import (
     get_all_history_technical_requests_for_territorial_manager,
     get_all_waiting_technical_requests_for_territorial_manager,
-    get_deparments_for_territorial_manager,
+    get_departments_for_territorial_manager,
     update_technical_request_from_territorial_manager,
 )
 
@@ -39,7 +41,7 @@ async def show_tech_req_menu_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.tm_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_department_menu,
     )
 
 
@@ -47,14 +49,14 @@ async def show_tech_req_menu_ms(message: Message):
     await try_edit_or_answer(
         message=message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.tm_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_department_menu,
     )
 
 
 @router.callback_query(F.data == tech_kb.tm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TerritorialManagerRequestForm.department)
-    departments = get_deparments_for_territorial_manager(callback.message.chat.id)
+    departments = get_departments_for_territorial_manager(callback.message.chat.id)
     department_names = [department.name for department in departments]
     department_names.sort()
 
@@ -62,7 +64,7 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
         reply_markup=kb.create_reply_keyboard(
-            text.back, *[deparment_name for deparment_name in department_names]
+            text.back, *[department_name for department_name in department_names]
         ),
     )
     await state.update_data(msg=msg)
@@ -73,7 +75,7 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments=get_deparments_for_territorial_manager(message.chat.id),
+        departments=get_departments_for_territorial_manager(message.chat.id),
         reply_markup=tech_kb.tm_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
@@ -220,7 +222,7 @@ async def set_mark(message: Message, state: FSMContext):
 
     if message.text == text.back:
         await state.set_state(Base.none)
-        await show_tech_req_menu_ms(message)
+        await show_rate_form_ms(message=message, state=state)
     else:
         if int(message.text) not in range(1, 6):
             msg = await message.answer(
@@ -269,21 +271,30 @@ async def save_rate(
     description = data.get("description")
     request_id = callback_data.request_id
 
-    ret_data = update_technical_request_from_territorial_manager(
+    request_data = update_technical_request_from_territorial_manager(
         mark=mark, request_id=request_id, description=description
     )
 
-    if ret_data:
+    logging.getLogger("uvicorn.error").error(request_data)
+
+    if mark < 3 and request_data["state"] not in [
+        ApprovalStatus.approved,
+        ApprovalStatus.skipped,
+    ]:
         await notify_worker_by_telegram_id(
-            id=ret_data["repairman_telegram_id"],
+            id=request_data["repairman_telegram_id"],
             message=text.notification_repairman_reopen
-            + f"\nНа производстве: {ret_data['department_name']}",
+            + f"\nНа производстве: {request_data['department_name']}",
         )
+
+    await notify_worker_by_telegram_id(
+        id=request_data["worker_telegram_id"], message=text.notification_worker
+    )
 
     await state.clear()
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Тех. заявки"),
-        reply_markup=tech_kb.tm_change_deparment_menu,
+        reply_markup=tech_kb.tm_change_department_menu,
     )

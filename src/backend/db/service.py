@@ -127,7 +127,7 @@ async def create_bid(
     comment: Optional[str] = None,
 ):
     """
-    Creates an bid wrapped in `BidShema` and adds it to database.
+    Creates an bid wrapped in `BidSchema` and adds it to database.
     """
     department_inst = orm.find_department_by_column(Department.name, department)
 
@@ -768,7 +768,7 @@ def get_chapters() -> list[str]:
 
 
 def get_expenditures_names() -> list[str]:
-    """Returns list of all expenduture names in db"""
+    """Returns list of all expenditure names in db"""
     expenditures = orm.get_expenditures()
     return [expenditure.name for expenditure in expenditures]
 
@@ -826,7 +826,7 @@ def create_technical_request(
     )
     if not territorial_manager:
         logging.getLogger("uvicorn.error").error(
-            f"Territorial manager wirh department id: {worker.department.id} wasn's found"
+            f"Territorial manager with department id: {worker.department.id} wasn't found"
         )
 
     documents = []
@@ -889,7 +889,7 @@ def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
 ) -> dict:
     """
-    Update tecnical request
+    Update technical request
     Return territorial manager telegram id and department name on dictionary
     """
     cur_date = datetime.now()
@@ -923,18 +923,20 @@ def update_technical_request_from_repairman(
         logging.getLogger("uvicorn.error").error(
             f"Technical problem with id {request.id} record wasn't updated"
         )
-    ret_dict = {
+    return_dict = {
         "territorial_manager_telegram_id": request.territorial_manager.telegram_id,
+        "worker_telegram_id": request.worker.telegram_id,
         "department_name": request.department.name,
     }
-    return ret_dict
+
+    return return_dict
 
 
 def update_technical_request_from_territorial_manager(
     mark: int, request_id: int, description: Optional[str]
 ) -> Optional[dict]:
     """
-    Update tecnical request
+    Update technical request
     Return repairman telegram id if mark < 3 else None
     """
     cur_date = datetime.now()
@@ -992,11 +994,12 @@ def update_technical_request_from_territorial_manager(
             f"Technical problem with id {request.id} record wasn't updated"
         )
 
-    if request.state == ApprovalStatus.pending:
-        return {
-            "repairman_telegram_id": request.repairman.telegram_id,
-            "department_name": request.department.name,
-        }
+    return {
+        "repairman_telegram_id": request.repairman.telegram_id,
+        "worker_telegram_id": request.worker.telegram_id,
+        "department_name": request.department.name,
+        "state": request.state,
+    }
 
 
 def get_all_waiting_technical_requests_for_worker(
@@ -1221,7 +1224,7 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         )
 
 
-def _get_deparments_for_employee(
+def _get_departments_for_employee(
     telegram_id: int, worker_column: Any
 ) -> list[DepartmentSchema]:
     """
@@ -1240,30 +1243,30 @@ def _get_deparments_for_employee(
         return departments
 
 
-def get_deparments_for_repairman(
+def get_departments_for_repairman(
     telegram_id: int,
 ) -> list[DepartmentSchema]:
-    departments = _get_deparments_for_employee(
+    departments = _get_departments_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
     if len(departments) > 0:
         return departments
 
-    departments = _get_deparments_for_employee(
+    departments = _get_departments_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
     if len(departments) > 0:
         return departments
 
-    return _get_deparments_for_employee(
+    return _get_departments_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
     )
 
 
-def get_deparments_for_territorial_manager(
+def get_departments_for_territorial_manager(
     telegram_id: int,
 ) -> list[DepartmentSchema]:
-    return _get_deparments_for_employee(
+    return _get_departments_for_employee(
         telegram_id=telegram_id, worker_column=Department.territorial_manager_id
     )
 
@@ -1300,18 +1303,18 @@ def get_all_repairmans_in_department(
 
 
 def update_tech_request_executor(
-    request_id: int, reparirman_full_name: list[str]
+    request_id: int, repairman_full_name: list[str]
 ) -> int:
     """
     Update executor in technical request return telegram id
     """
     try:
         repairman = orm.get_workers_with_post_by_columns(
-            [Worker.l_name, Worker.f_name, Worker.o_name], reparirman_full_name
+            [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
         )[0]
     except IndexError:
         logging.getLogger("uvicorn.error").error(
-            f"Worker with full name: {reparirman_full_name} wasn't found"
+            f"Worker with full name: {repairman_full_name} wasn't found"
         )
 
     if not orm.update_tech_request_executor(

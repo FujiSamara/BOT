@@ -839,7 +839,7 @@ def get_technical_requests_by_column(
     column: Any, value: Any
 ) -> list[TechnicalRequestSchema]:
     """
-    Returns all `TechnicalReques` as `TechnicalRequesSchema` in database
+    Returns all `TechnicalRequest` as `TechnicalRequestSchema` in database
     by `column` with `value`.
     """
     return get_technical_requests_by_columns([column], [value])
