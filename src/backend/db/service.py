@@ -830,7 +830,7 @@ def get_expenditures_names() -> list[str]:
 
 def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str]:
     """
-    Returns departments names by repairman id.
+    Returns departments names by id.
     """
     repairman = get_worker_by_telegram_id(telegram_id)
     departments_raw = orm.find_departments_by_column(
@@ -867,3 +867,14 @@ async def update_bid_it_rm(bid_id: int, photo: UploadFile, telegram_id: int):
     bid.status = ApprovalStatus.pending_approval
 
     orm.update_bid_it_rm(bid)
+
+def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
+    """
+    Returns departments names by id.
+    """
+    tm = get_worker_by_telegram_id(telegram_id)
+    departments_raw = orm.find_departments_by_column(
+        Department.territorial_manager_id, tm.id
+    )
+    result = [department.name for department in departments_raw]
+    return result

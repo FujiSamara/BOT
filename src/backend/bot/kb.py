@@ -575,3 +575,32 @@ take_bid_it_for_repairman_menu = InlineKeyboardMarkup(
         [bids_pending_for_repairman],
     ]
 )
+
+
+# Territorial manager IT
+
+get_it_tm_menu = InlineKeyboardButton(
+    text="IT заявки ТУ", callback_data="get_it_tm_menu"
+)
+
+bids_pending_for_tm = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="bids_pending_for_tm"
+)
+
+get_department_it_tm = InlineKeyboardButton(
+    text="Выбрать предприятие", callback_data="get_department_it_tm"
+)
+
+tm_department_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_department_it_tm],
+        [main_menu_button],
+    ]
+)
+
+tm_bids_it_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [bids_pending_for_tm],
+        [get_department_it_tm],
+    ]
+)

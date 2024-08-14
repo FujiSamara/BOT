@@ -56,3 +56,9 @@ class RepairmanBidForm(StatesGroup):
     department = State()
     photo = State()
     bid_id = State()
+
+
+# Territorial manager IT
+class TMForm(StatesGroup):
+    department = State()
+    rate = State()
