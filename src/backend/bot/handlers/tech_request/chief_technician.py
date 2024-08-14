@@ -354,7 +354,7 @@ async def show_admin_form(
     repairman_full_name_old = " ".join(
         [repairman.l_name, repairman.f_name, repairman.o_name]
     )
-    await state.update_data(repairman_full_name_old=repairman_full_name_old)
+    await state.update_data(repairman_full_name=repairman_full_name_old)
     buttons: list[list[InlineKeyboardButton]] = [
         [
             InlineKeyboardButton(
@@ -457,7 +457,7 @@ async def set_executor(message: Message, state: FSMContext):
             )
             await state.update_data(msg=msg)
 
-        await state.update_data(repairman_full_name_new=message.text)
+        await state.update_data(repairman_full_name=message.text)
         await show_change_executor_format_ms(message=message, state=state)
 
 
@@ -468,9 +468,7 @@ async def save_CT_TR_admin_form(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     request_id = callback_data.request_id
-    repairman_full_name = (
-        (await state.get_data()).get("repairman_full_name_new").split(" ")
-    )
+    repairman_full_name = (await state.get_data()).get("repairman_full_name").split(" ")
     repairman_TG_id = update_tech_request_executor(
         request_id=request_id, repairman_full_name=repairman_full_name
     )

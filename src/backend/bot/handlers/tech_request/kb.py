@@ -1,10 +1,11 @@
+import logging
 from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
 from aiogram.fsm.context import FSMContext
 
-from db.service import get_technical_request_by_id
+from db.service import get_technical_problem_by_id, get_technical_request_by_id
 from bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from bot.kb import main_menu_button
 
@@ -121,8 +122,11 @@ async def ct_admin_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
-    repairman_full_name_old = data.get("repairman_full_name_old")
-    repairman_full_name_new = data.get("repairman_full_name_new")
+    repairman = get_technical_request_by_id(callback_data.request_id).repairman
+    repairman_full_name_old = " ".join(
+        [repairman.l_name, repairman.f_name, repairman.o_name]
+    )
+    repairman_full_name_new = data.get("repairman_full_name")
     form_complete = True
 
     if repairman_full_name_new and repairman_full_name_new != repairman_full_name_old:
@@ -513,9 +517,12 @@ dd_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get
 
 dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")
 
+dd_active = InlineKeyboardButton(
+    text="Активные заявки", callback_data="get_DD_TR_active"
+)
 
 dd_history = InlineKeyboardButton(
-    text="Открытые заявки", callback_data="get_DD_TR_history"
+    text="История заявок", callback_data="get_DD_TR_history"
 )
 
 dd_change_department_button = InlineKeyboardButton(
@@ -532,10 +539,136 @@ dd_change_department_menu = InlineKeyboardMarkup(
 
 dd_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
+        [dd_active],
         [dd_history],
         [dd_button],
     ]
 )
+
+
+async def dd_update_kb_executor(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+
+    repairman_full_name = data.get("repairman_full_name")
+    repairman = get_technical_request_by_id(callback_data.request_id).repairman
+
+    repairman_full_name_old = " ".join(
+        [repairman.l_name, repairman.f_name, repairman.o_name]
+    )
+
+    if repairman_full_name and repairman_full_name != repairman_full_name_old:
+        repairman_full_name = repairman_full_name + " ✅"
+    else:
+        repairman_full_name = repairman_full_name_old
+        form_complete = False
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Исполнитель",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="get_DD_TR_executor",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=repairman_full_name, callback_data="dummy"),
+        ],
+    ]
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_show_form_active",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ]
+    )
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Изменить",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=callback_data.request_id,
+                        end_point="DD_TR_save_change_executor",
+                        last_end_point=callback_data.last_end_point,
+                    ).pack(),
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def dd_update_problem_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    problem_id = data.get("problem_id")
+    problem_old = get_technical_request_by_id(
+        request_id=callback_data.request_id
+    ).problem
+
+    if problem_id and problem_id != problem_old.id:
+        problem_text = (get_technical_problem_by_id(problem_id).problem_name) + " ✅"
+
+    else:
+        problem_text = problem_old.problem_name
+        form_complete = False
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Проблема",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="get_DD_TR_problem",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=problem_text, callback_data="dummy"),
+        ],
+    ]
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_show_form_active",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ]
+    )
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Изменить",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=callback_data.request_id,
+                        end_point="DD_TR_save_change_problem",
+                        last_end_point=callback_data.last_end_point,
+                    ).pack(),
+                )
+            ]
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
 
 # endregion
 

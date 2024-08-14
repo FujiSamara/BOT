@@ -201,7 +201,8 @@ class BudgetRecordSchema(BaseModel):
 
 
 # Technical request
-class ProblemSchema(BaseSchema):
+class TechnicalProblemSchema(BaseSchema):
+    id: Optional[int] = -1
     problem_name: str
     executor: Executor
     sla: float
@@ -215,7 +216,7 @@ class TechnicalRequestSchema(BaseSchema):
     id: Optional[int] = -1
 
     # Данные при создание
-    problem: ProblemSchema
+    problem: TechnicalProblemSchema
     description: str
     problem_photos: list[DocumentSchema]
     repair_photos: Optional[list[DocumentSchema]] = None
