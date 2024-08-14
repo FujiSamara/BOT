@@ -31,7 +31,6 @@ from db.service import (
     get_all_repairmans_in_department,
     get_technical_problem_by_name,
     get_technical_problem_names,
-    get_technical_request_by_id,
     update_tech_request_executor,
     update_technical_request_problem,
 )
