@@ -776,6 +776,33 @@ def get_expenditures_names() -> list[str]:
 # region Technical request
 
 
+def counting_date_sla(sla: int):
+    deadline_date = datetime.now()
+    start_work_day = 9
+    end_work_day = 18
+
+    if deadline_date.hour >= end_work_day:
+        deadline_date = deadline_date.replace(hour=start_work_day + 1)
+        deadline_date += timedelta(days=1)
+    elif deadline_date.hour <= start_work_day:
+        deadline_date = deadline_date.replace(hour=start_work_day + 1)
+
+    weekday = deadline_date.weekday()
+    if weekday > 4:  # 0 - понедельник, 6 - воскресенье
+        deadline_date += timedelta(days=(7 - weekday))
+
+    while sla > 8:
+        deadline_date += timedelta(days=1)
+        sla -= 9
+
+        weekday = deadline_date.weekday()
+        if weekday > 4:  # 0 - понедельник, 6 - воскресенье
+            deadline_date += timedelta(days=(7 - weekday))
+
+    deadline_date += timedelta(hours=sla)
+    return deadline_date
+
+
 def get_technical_problem_names() -> list[TechnicalProblemSchema]:
     return [problem.problem_name for problem in orm.get_technical_problems()]
 
@@ -844,30 +871,7 @@ def create_technical_request(
         doc.filename = filename
         documents.append(DocumentSchema(document=doc))
 
-    deadline_date = cur_date
-    sla = problem.sla
-    start_work_day = 9
-    end_work_day = 18
-
-    if deadline_date.hour >= end_work_day:
-        deadline_date = deadline_date.replace(hour=start_work_day + 1)
-        deadline_date += timedelta(days=1)
-    elif deadline_date.hour <= start_work_day:
-        deadline_date = deadline_date.replace(hour=start_work_day + 1)
-
-    weekday = deadline_date.weekday()
-    if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-        deadline_date += timedelta(days=(7 - weekday))
-
-    while sla > 8:
-        deadline_date += timedelta(days=1)
-        sla -= 9
-
-        weekday = deadline_date.weekday()
-        if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-            deadline_date += timedelta(days=(7 - weekday))
-
-    deadline_date += timedelta(hours=sla)
+    deadline_date = counting_date_sla(problem.sla)
 
     request = TechnicalRequestSchema(
         problem=problem,
@@ -972,30 +976,7 @@ def update_technical_request_from_territorial_manager(
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
 
-            deadline_date = cur_date
-            sla = 24
-            start_work_day = 9
-            end_work_day = 18
-
-            if deadline_date.hour >= end_work_day:
-                deadline_date = deadline_date.replace(hour=start_work_day + 1)
-                deadline_date += timedelta(days=1)
-            elif deadline_date.hour <= start_work_day:
-                deadline_date = deadline_date.replace(hour=start_work_day + 1)
-
-            weekday = deadline_date.weekday()
-            if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-                deadline_date += timedelta(days=(7 - weekday))
-
-            while sla > 8:
-                deadline_date += timedelta(days=1)
-                sla -= 9
-
-                weekday = deadline_date.weekday()
-                if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-                    deadline_date += timedelta(days=(7 - weekday))
-
-            request.reopen_deadline_date = deadline_date
+            request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
         logging.getLogger("uvicorn.error").error(
@@ -1361,7 +1342,7 @@ def get_all_departments(
     return departments
 
 
-def get_all_active_requests_in_department(
+def get_all_active_requests_in_department_for_chief_technician(
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """

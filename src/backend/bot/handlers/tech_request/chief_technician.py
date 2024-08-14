@@ -31,7 +31,7 @@ from db.service import (
     get_all_repairmans_in_department,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
-    get_all_active_requests_in_department,
+    get_all_active_requests_in_department_for_chief_technician,
     get_departments_for_repairman,
     get_technical_request_by_id,
     update_tech_request_executor,
@@ -332,7 +332,9 @@ async def show_own_history_form(
 @router.callback_query(F.data == tech_kb.ct_admin_button.callback_data)
 async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = get_all_active_requests_in_department(department_name)
+    requests = get_all_active_requests_in_department_for_chief_technician(
+        department_name
+    )
     await try_edit_or_answer(
         callback.message,
         text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
