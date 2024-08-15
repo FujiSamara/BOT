@@ -559,7 +559,7 @@ async def dd_update_kb_executor(
     )
 
     if repairman_full_name and repairman_full_name != repairman_full_name_old:
-        repairman_full_name = repairman_full_name + " ✅"
+        repairman_full_name = repairman_full_name.split(" ")[0] + "... ✅"
     else:
         repairman_full_name = repairman_full_name_old
         form_complete = False

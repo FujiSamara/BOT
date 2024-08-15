@@ -280,9 +280,10 @@ async def save_change_executor(
     repairman_TG_id = update_tech_request_executor(
         request_id=request_id, repairman_full_name=repairman_full_name
     )
-    notify_worker_by_telegram_id(
-        id=repairman_TG_id, message=text.notification_repairman
-    )
+    if repairman_TG_id:
+        await notify_worker_by_telegram_id(
+            id=repairman_TG_id, message=text.notification_repairman
+        )
     await show_active_request_form(
         callback=callback, callback_data=callback_data, state=state
     )
