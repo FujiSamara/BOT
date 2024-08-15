@@ -803,7 +803,6 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             worker_id=record.worker.id,
             territorial_manager_id=record.territorial_manager.id,
             repairman_id=record.repairman.id,
-            department_director=record.department_director.id,
             department_id=record.department.id,
         )
         s.add(technical_request)
@@ -871,8 +870,10 @@ def update_technical_request_problem(request_id: int, problem_id: int):
             s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
         )
         cur_request.problem_id = problem_id
-        # problem = get_technical_problem_by_id(problem_id)
-        # cur_request.problem = problem
+        problem = (
+            s.query(TechnicalProblem).filter(TechnicalProblem.id == problem_id).first()
+        )
+        cur_request.problem = problem
     return True
 
 
@@ -945,7 +946,7 @@ def get_technical_requests_by_columns(
                     TechnicalRequest.state == ApprovalStatus.skipped,
                 )
             )
-        raw_models = query.all()
+        raw_models = query.order_by(TechnicalRequest.id).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -977,7 +978,7 @@ def get_all_technical_requests_in_department(
                 )
             )
 
-        raw_models = query.all()
+        raw_models = query.order_by(TechnicalRequest.id).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -1000,6 +1001,7 @@ def get_rework_tech_request(
                 TechnicalRequest.state != ApprovalStatus.approved,
                 TechnicalRequest.state != ApprovalStatus.skipped,
             )
+            .order_by(TechnicalRequest.id)
             .all()
         )
 
@@ -1025,6 +1027,7 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
+            .order_by(TechnicalRequest.id)
             .all()
         )
         return [
@@ -1051,6 +1054,7 @@ def get_all_active_requests_in_department(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.close_date == null(),
             )
+            .order_by()
             .all()
         )
         return [
