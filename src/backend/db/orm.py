@@ -78,10 +78,10 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
     If department not exist return `None`.
     """
     with session.begin() as s:
-        raw_deparment = s.query(Department).filter(column == value).first()
-        if not raw_deparment:
+        raw_department = s.query(Department).filter(column == value).first()
+        if not raw_department:
             return None
-        return DepartmentSchema.model_validate(raw_deparment)
+        return DepartmentSchema.model_validate(raw_department)
 
 
 def find_post_by_column(column: any, value: any) -> PostSchema:
@@ -341,7 +341,7 @@ def get_workers_with_post_by_columns(
         for column, value in zip(columns, values):
             query = query.filter(column == value)
         raw_models = query.all()
-        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
@@ -356,7 +356,7 @@ def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
             .join(Post.scopes)
             .filter(PostScope.scope == scope)
         ).all()
-        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def get_work_time_records_by_columns(
@@ -375,7 +375,7 @@ def get_work_time_records_by_columns(
             query = query.limit(limit)
 
         raw_models = query.all()
-        return [WorkTimeSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkTimeSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def find_work_time_record_by_columns(
@@ -432,7 +432,7 @@ def get_posts() -> list[PostSchema]:
     """Returns all posts in database."""
     with session.begin() as s:
         raw_models = s.query(Post).all()
-        return [PostSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [PostSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def add_worker_bid(bid: WorkerBidSchema):
