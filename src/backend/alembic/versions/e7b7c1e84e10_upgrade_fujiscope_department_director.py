@@ -8,9 +8,6 @@ Create Date: 2024-08-15 12:16:44.870450
 
 from typing import Sequence, Union
 
-from alembic import op
-import sqlalchemy as sa
-
 import alembic_custom.enum as c_enum
 
 
