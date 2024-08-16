@@ -5,6 +5,7 @@ from bot.handlers.tech_request import (
     repairman,
     territorial_manager,
     chief_technician,
+    department_director,
     local_handlers,
 )
 
@@ -16,4 +17,5 @@ router.include_routers(
     chief_technician.router,
     territorial_manager.router,
     local_handlers.router,
+    department_director.router,
 )

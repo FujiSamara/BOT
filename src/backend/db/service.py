@@ -19,7 +19,7 @@ from db.schemas import (
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
-    ProblemSchema,
+    TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -776,12 +776,47 @@ def get_expenditures_names() -> list[str]:
 # region Technical request
 
 
-def get_technical_problem_names() -> list[ProblemSchema]:
+def counting_date_sla(sla: int):
+    deadline_date = datetime.now()
+    start_work_day = 9
+    end_work_day = 18
+
+    if deadline_date.hour >= end_work_day:
+        deadline_date = deadline_date.replace(hour=start_work_day + 1)
+        deadline_date += timedelta(days=1)
+    elif deadline_date.hour <= start_work_day:
+        deadline_date = deadline_date.replace(hour=start_work_day + 1)
+
+    weekday = deadline_date.weekday()
+    if weekday > 4:  # 0 - понедельник, 6 - воскресенье
+        deadline_date += timedelta(days=(7 - weekday))
+
+    while sla > 8:
+        deadline_date += timedelta(days=1)
+        sla -= 9
+
+        weekday = deadline_date.weekday()
+        if weekday > 4:  # 0 - понедельник, 6 - воскресенье
+            deadline_date += timedelta(days=(7 - weekday))
+
+    deadline_date += timedelta(hours=sla)
+    return deadline_date
+
+
+def get_technical_problem_names() -> list[TechnicalProblemSchema]:
     return [problem.problem_name for problem in orm.get_technical_problems()]
 
 
-def get_technical_problems() -> list[ProblemSchema]:
+def get_technical_problems() -> list[TechnicalProblemSchema]:
     return [problem for problem in orm.get_technical_problems()]
+
+
+def get_technical_problem_by_name(problem_name) -> TechnicalProblemSchema:
+    return orm.get_technical_problem_by_name(problem_name=problem_name)
+
+
+def get_technical_problem_by_id(problem_id) -> TechnicalProblemSchema:
+    return orm.get_technical_problem_by_id(problem_id=problem_id)
 
 
 def create_technical_request(
@@ -836,30 +871,7 @@ def create_technical_request(
         doc.filename = filename
         documents.append(DocumentSchema(document=doc))
 
-    deadline_date = cur_date
-    sla = problem.sla
-    start_work_day = 9
-    end_work_day = 18
-
-    if deadline_date.hour >= end_work_day:
-        deadline_date = deadline_date.replace(hour=start_work_day + 1)
-        deadline_date += timedelta(days=1)
-    elif deadline_date.hour <= start_work_day:
-        deadline_date = deadline_date.replace(hour=start_work_day + 1)
-
-    weekday = deadline_date.weekday()
-    if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-        deadline_date += timedelta(days=(7 - weekday))
-
-    while sla > 8:
-        deadline_date += timedelta(days=1)
-        sla -= 9
-
-        weekday = deadline_date.weekday()
-        if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-            deadline_date += timedelta(days=(7 - weekday))
-
-    deadline_date += timedelta(hours=sla)
+    deadline_date = counting_date_sla(problem.sla)
 
     request = TechnicalRequestSchema(
         problem=problem,
@@ -964,30 +976,7 @@ def update_technical_request_from_territorial_manager(
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
 
-            deadline_date = cur_date
-            sla = 24
-            start_work_day = 9
-            end_work_day = 18
-
-            if deadline_date.hour >= end_work_day:
-                deadline_date = deadline_date.replace(hour=start_work_day + 1)
-                deadline_date += timedelta(days=1)
-            elif deadline_date.hour <= start_work_day:
-                deadline_date = deadline_date.replace(hour=start_work_day + 1)
-
-            weekday = deadline_date.weekday()
-            if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-                deadline_date += timedelta(days=(7 - weekday))
-
-            while sla > 8:
-                deadline_date += timedelta(days=1)
-                sla -= 9
-
-                weekday = deadline_date.weekday()
-                if weekday > 4:  # 0 - понедельник, 6 - воскресенье
-                    deadline_date += timedelta(days=(7 - weekday))
-
-            request.reopen_deadline_date = deadline_date
+            request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
         logging.getLogger("uvicorn.error").error(
@@ -1000,6 +989,39 @@ def update_technical_request_from_territorial_manager(
         "department_name": request.department.name,
         "state": request.state,
     }
+
+
+def update_tech_request_executor(
+    request_id: int, repairman_full_name: list[str]
+) -> int:
+    """
+    Update executor in technical request return telegram id
+    """
+    try:
+        repairman = orm.get_workers_with_post_by_columns(
+            [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
+        )[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with full name: {repairman_full_name} wasn't found"
+        )
+
+    if not orm.update_tech_request_executor(
+        request_id=request_id, repairman_id=repairman.id
+    ):
+        logging.getLogger("uvicorn.error").error(
+            f"Technical request with id: {request_id} wasn't update executor"
+        )
+    return repairman.telegram_id
+
+
+def update_technical_request_problem(request_id: int, problem_id: int):
+    if not orm.update_technical_request_problem(
+        request_id=request_id, problem_id=problem_id
+    ):
+        logging.getLogger("uvicorn.error").error(
+            f"Technical request with id: {request_id} wasn't update problem"
+        )
 
 
 def get_all_waiting_technical_requests_for_worker(
@@ -1017,7 +1039,7 @@ def get_all_waiting_technical_requests_for_worker(
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
-        )[:-15:-1]
+        )[:-16:-1]
 
     return requests
 
@@ -1053,7 +1075,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.confirmation_date,
                 ],
                 [repairman.id, ApprovalStatus.pending, department_id, None],
-            )[:-15:-1]
+            )[:-16:-1]
 
             return requests
 
@@ -1083,7 +1105,7 @@ def get_all_rework_technical_requests_for_repairman(
         else:
             requests = orm.get_rework_tech_request(
                 department_id=department_id, repairman_id=repairman.id
-            )[:-15:-1]
+            )[:-16:-1]
             return requests
 
 
@@ -1121,9 +1143,30 @@ def get_all_waiting_technical_requests_for_territorial_manager(
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
-            )[:-15:-1]
+            )[:-16:-1]
 
             return requests
+
+
+def get_all_active_technical_requests_for_department_director(
+    telegram_id: int,
+    department_name: str,
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for department_director
+    """
+    try:
+        department = orm.find_departments_by_name(department_name)[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name {department_name} wasn't found"
+        )
+    else:
+        requests = orm.get_all_technical_requests_in_department(
+            department_id=department.id,
+            history_flag=False,
+        )[:-16:-1]
+        return requests
 
 
 def get_all_history_technical_requests_for_repairman(
@@ -1150,7 +1193,7 @@ def get_all_history_technical_requests_for_repairman(
         else:
             requests = orm.get_technical_requests_for_repairman_history(
                 repairman.id, department_id
-            )
+            )[:-16:-1]
 
             return requests
 
@@ -1184,7 +1227,7 @@ def get_all_history_technical_requests_for_territorial_manager(
                 ],
                 [territorial_manager.id, department_id],
                 history=True,
-            )[:-15:-1]
+            )[:-16:-1]
 
             return requests
 
@@ -1204,7 +1247,28 @@ def get_all_history_technical_requests_for_worker(
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id], [worker.id], history=True
-        )[:-15:-1]
+        )[:-16:-1]
+
+        return requests
+
+
+def get_all_history_technical_requests_for_department_director(
+    department_name: str,
+) -> list[TechnicalRequestSchema]:
+    """
+    Return history technical requests by Telegram id for worker
+    """
+    try:
+        department = orm.find_departments_by_name(department_name)[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name {department_name} wasn't found"
+        )
+    else:
+        requests = orm.get_all_technical_requests_in_department(
+            department_id=department.id,
+            history_flag=True,
+        )[:-16:-1]
 
         return requests
 
@@ -1271,7 +1335,14 @@ def get_departments_for_territorial_manager(
     )
 
 
-def get_all_active_requests_in_department(
+def get_all_departments(
+    telegram_id: int,
+) -> list[DepartmentSchema]:
+    departments = orm.get_all_department()
+    return departments
+
+
+def get_all_active_requests_in_department_for_chief_technician(
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """
@@ -1284,7 +1355,7 @@ def get_all_active_requests_in_department(
             f"Department with name: {department_name} wasn't found"
         )
     else:
-        requests = orm.get_all_active_requests_in_department(department_id)[:-15:-1]
+        requests = orm.get_all_active_requests_in_department(department_id)[:-16:-1]
         return requests
 
 
@@ -1300,30 +1371,6 @@ def get_all_repairmans_in_department(
             f"Repairmans in department with name: {department_name} wasn't founds"
         )
     return repairmans
-
-
-def update_tech_request_executor(
-    request_id: int, repairman_full_name: list[str]
-) -> int:
-    """
-    Update executor in technical request return telegram id
-    """
-    try:
-        repairman = orm.get_workers_with_post_by_columns(
-            [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
-        )[0]
-    except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with full name: {repairman_full_name} wasn't found"
-        )
-
-    if not orm.update_tech_request_executor(
-        request_id=request_id, repairman_id=repairman.id
-    ):
-        logging.getLogger("uvicorn.error").error(
-            f"Technical request with id: {request_id} wasn't update executor"
-        )
-    return repairman.telegram_id
 
 
 # endregion

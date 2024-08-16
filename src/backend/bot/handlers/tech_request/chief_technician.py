@@ -31,7 +31,7 @@ from db.service import (
     get_all_repairmans_in_department,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
-    get_all_active_requests_in_department,
+    get_all_active_requests_in_department_for_chief_technician,
     get_departments_for_repairman,
     get_technical_request_by_id,
     update_tech_request_executor,
@@ -332,7 +332,9 @@ async def show_own_history_form(
 @router.callback_query(F.data == tech_kb.ct_admin_button.callback_data)
 async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = get_all_active_requests_in_department(department_name)
+    requests = get_all_active_requests_in_department_for_chief_technician(
+        department_name
+    )
     await try_edit_or_answer(
         callback.message,
         text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
@@ -354,7 +356,7 @@ async def show_admin_form(
     repairman_full_name_old = " ".join(
         [repairman.l_name, repairman.f_name, repairman.o_name]
     )
-    await state.update_data(repairman_full_name_old=repairman_full_name_old)
+    await state.update_data(repairman_full_name=repairman_full_name_old)
     buttons: list[list[InlineKeyboardButton]] = [
         [
             InlineKeyboardButton(
@@ -457,7 +459,7 @@ async def set_executor(message: Message, state: FSMContext):
             )
             await state.update_data(msg=msg)
 
-        await state.update_data(repairman_full_name_new=message.text)
+        await state.update_data(repairman_full_name=message.text)
         await show_change_executor_format_ms(message=message, state=state)
 
 
@@ -468,9 +470,7 @@ async def save_CT_TR_admin_form(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     request_id = callback_data.request_id
-    repairman_full_name = (
-        (await state.get_data()).get("repairman_full_name_new").split(" ")
-    )
+    repairman_full_name = (await state.get_data()).get("repairman_full_name").split(" ")
     repairman_TG_id = update_tech_request_executor(
         request_id=request_id, repairman_full_name=repairman_full_name
     )

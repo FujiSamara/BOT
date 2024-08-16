@@ -66,3 +66,9 @@ class TerritorialManagerRequestForm(StatesGroup):
     department = State()
     mark = State()
     description = State()
+
+
+class DepartmentDirectorRequestForm(StatesGroup):
+    department = State()
+    executor = State()
+    problem = State()

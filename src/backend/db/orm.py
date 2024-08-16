@@ -27,7 +27,7 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
-    ProblemSchema,
+    TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
     WorkerSchema,
@@ -78,10 +78,10 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
     If department not exist return `None`.
     """
     with session.begin() as s:
-        raw_deparment = s.query(Department).filter(column == value).first()
-        if not raw_deparment:
+        raw_department = s.query(Department).filter(column == value).first()
+        if not raw_department:
             return None
-        return DepartmentSchema.model_validate(raw_deparment)
+        return DepartmentSchema.model_validate(raw_department)
 
 
 def find_post_by_column(column: any, value: any) -> PostSchema:
@@ -341,7 +341,7 @@ def get_workers_with_post_by_columns(
         for column, value in zip(columns, values):
             query = query.filter(column == value)
         raw_models = query.all()
-        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
@@ -356,7 +356,7 @@ def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
             .join(Post.scopes)
             .filter(PostScope.scope == scope)
         ).all()
-        return [WorkerSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def get_work_time_records_by_columns(
@@ -375,7 +375,7 @@ def get_work_time_records_by_columns(
             query = query.limit(limit)
 
         raw_models = query.all()
-        return [WorkTimeSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [WorkTimeSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def find_work_time_record_by_columns(
@@ -432,7 +432,7 @@ def get_posts() -> list[PostSchema]:
     """Returns all posts in database."""
     with session.begin() as s:
         raw_models = s.query(Post).all()
-        return [PostSchema.model_validate(raw_wodel) for raw_wodel in raw_models]
+        return [PostSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 def add_worker_bid(bid: WorkerBidSchema):
@@ -742,11 +742,29 @@ def get_bids() -> list[BidSchema]:
 # region Technical problem
 
 
-def get_technical_problems() -> list[ProblemSchema]:
+def get_technical_problems() -> list[TechnicalProblemSchema]:
     """Returns list of ProblemSchema"""
     with session.begin() as s:
         raw_models = s.query(TechnicalProblem).all()
-        return [ProblemSchema.model_validate(raw_model) for raw_model in raw_models]
+        return [
+            TechnicalProblemSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_technical_problem_by_id(problem_id: int) -> TechnicalProblemSchema:
+    with session.begin() as s:
+        return TechnicalProblemSchema.model_validate(
+            s.query(TechnicalProblem).filter(TechnicalProblem.id == problem_id).first()
+        )
+
+
+def get_technical_problem_by_name(problem_name: str) -> TechnicalProblemSchema:
+    with session.begin() as s:
+        return TechnicalProblemSchema.model_validate(
+            s.query(TechnicalProblem)
+            .filter(TechnicalProblem.problem_name == problem_name)
+            .first()
+        )
 
 
 def get_last_technical_request_id() -> int:
@@ -757,9 +775,9 @@ def get_last_technical_request_id() -> int:
         return s.query(func.max(TechnicalRequest.id)).first()[0]
 
 
-def get_technical_problem_by_problem_name(problem_name: str) -> ProblemSchema:
+def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblemSchema:
     with session.begin() as s:
-        return ProblemSchema.model_validate(
+        return TechnicalProblemSchema.model_validate(
             s.query(TechnicalProblem)
             .filter(TechnicalProblem.problem_name == problem_name)
             .first()
@@ -835,6 +853,30 @@ def update_technical_request_from_territorial_manager(record: TechnicalRequestSc
     return True
 
 
+def update_tech_request_executor(request_id: int, repairman_id: int):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        repairman = s.query(Worker).filter(Worker.id == repairman_id)
+        cur_request.executor = repairman
+        cur_request.repairman_id = repairman_id
+    return True
+
+
+def update_technical_request_problem(request_id: int, problem_id: int):
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        cur_request.problem_id = problem_id
+        problem = (
+            s.query(TechnicalProblem).filter(TechnicalProblem.id == problem_id).first()
+        )
+        cur_request.problem = problem
+    return True
+
+
 def get_technical_requests_by_column(
     column: Any, value: Any
 ) -> list[TechnicalRequestSchema]:
@@ -904,7 +946,39 @@ def get_technical_requests_by_columns(
                     TechnicalRequest.state == ApprovalStatus.skipped,
                 )
             )
-        raw_models = query.all()
+        raw_models = query.order_by(TechnicalRequest.id).all()
+        return [
+            TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
+        ]
+
+
+def get_all_technical_requests_in_department(
+    department_id: int, history_flag: bool = False
+) -> list[TechnicalRequestSchema]:
+    """
+    Returns all TechnicalRequest as TechnicalRequestSchema for department director.
+    """
+    with session.begin() as s:
+        query = s.query(TechnicalRequest).filter(
+            TechnicalRequest.department_id == department_id,
+        )
+
+        if history_flag:
+            query = query.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.approved,
+                    TechnicalRequest.state == ApprovalStatus.skipped,
+                )
+            )
+        else:
+            query = query.filter(
+                and_(
+                    TechnicalRequest.state != ApprovalStatus.approved,
+                    TechnicalRequest.state != ApprovalStatus.skipped,
+                )
+            )
+
+        raw_models = query.order_by(TechnicalRequest.id).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -922,12 +996,12 @@ def get_rework_tech_request(
             .filter(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.repairman_id == repairman_id,
-                # TechnicalRequest.reopen_repair_date is None,
                 TechnicalRequest.reopen_repair_date == null(),
                 TechnicalRequest.confirmation_date != null(),
                 TechnicalRequest.state != ApprovalStatus.approved,
                 TechnicalRequest.state != ApprovalStatus.skipped,
             )
+            .order_by(TechnicalRequest.id)
             .all()
         )
 
@@ -953,8 +1027,7 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
-            .order_by(TechnicalRequest.id.desc())
-            .limit(15)
+            .order_by(TechnicalRequest.id)
             .all()
         )
         return [
@@ -981,6 +1054,7 @@ def get_all_active_requests_in_department(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.close_date == null(),
             )
+            .order_by()
             .all()
         )
         return [
@@ -1006,15 +1080,10 @@ def get_all_repairmans_in_department(
         ]
 
 
-def update_tech_request_executor(request_id: int, repairman_id: int):
+def get_all_department() -> list[DepartmentSchema]:
     with session.begin() as s:
-        cur_request = (
-            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
-        )
-        repairman = s.query(Worker).filter(Worker.id == repairman_id)
-        cur_request.executor = repairman
-        cur_request.repairman_id = repairman_id
-    return True
+        raw_models = s.query(Department)
+        return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
 # endregion
