@@ -868,6 +868,7 @@ async def update_bid_it_rm(bid_id: int, photo: UploadFile, telegram_id: int):
 
     orm.update_bid_it_rm(bid)
 
+
 def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
     """
     Returns departments names by id.
@@ -878,3 +879,53 @@ def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
     )
     result = [department.name for department in departments_raw]
     return result
+
+
+def get_bids_it_with_status(department_name: str, status: ApprovalStatus) -> list[str]:
+    """
+    Returns bids IT by department name and telegram id with status.
+    """
+
+    department_list: list[DepartmentSchema] = orm.find_departments_by_column(
+        Department.name, department_name
+    )
+
+    if len(department_list) == 0:
+        return None
+
+    department: DepartmentSchema = department_list[0]
+    bids_raw = orm.get_pending_bids_it_by_department_with_status(department, status)
+
+    return bids_raw
+
+
+def update_bid_it_tm(
+    bid_id: int, mark: int, work_comment: str | None, telegram_id: int
+):
+    """
+    Updates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    bid = orm.get_bid_it_by_id(bid_id)
+
+    cur_date = datetime.now()
+    tm_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not tm_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id '{telegram_id}' not found"
+        )
+        return
+
+    bid.territorial_manager = tm_inst
+
+    if mark == 1 or mark == 2:
+        bid.reopening_date = cur_date
+        bid.work_comment = work_comment
+        bid.status = ApprovalStatus.denied
+    else:
+        bid.status = ApprovalStatus.approved
+        bid.approve_date = cur_date
+        bid.close_date = cur_date
+
+    orm.update_bid_it_tm(bid)

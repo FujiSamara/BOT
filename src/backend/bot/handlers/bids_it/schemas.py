@@ -22,7 +22,6 @@ class BidITCallbackData(CallbackData, prefix="bid_it"):
 
 class WorkerBidITCallbackData(CallbackData, prefix="worker_bid_it"):
     id: int
-    mode: BidITViewMode
     endpoint_name: str
 
 
@@ -35,8 +34,3 @@ class BidActionData(CallbackData, prefix="bid_it_action"):
     bid_id: int
     action: ActionType
     endpoint_name: str
-
-class RepairmanBidITCallbackData(CallbackData, prefix="repairman_bid_it"):
-    id: int
-    endpoint_name: str
-

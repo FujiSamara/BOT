@@ -837,6 +837,24 @@ def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
             .all()
         )
         return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+    
+
+def get_pending_bids_it_by_department_with_status(department: DepartmentSchema, status: ApprovalStatus) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.department_id == department.id,
+                    BidIT.status == status,
+                )
+            )
+            .all()
+        )
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
 def find_departments_by_column(column: any, value: any) -> list[DepartmentSchema]:
@@ -878,3 +896,23 @@ def get_bid_it_by_id(id: int) -> BidITSchema:
         if not raw_bid:
             return None
         return BidITSchema.model_validate(raw_bid)
+
+
+def update_bid_it_tm(bid: BidITSchema):
+    """Updates bid IT by repairman."""
+    with session.begin() as s:
+        cur_bid = s.query(BidIT).filter(BidIT.id == bid.id).first()
+        if not cur_bid:
+            return None
+
+        territorial_manager = s.query(Worker).filter(Worker.id == bid.territorial_manager.id).first()
+        if not territorial_manager:
+            return None
+
+        cur_bid.status = bid.status
+        cur_bid.mark = bid.mark
+        cur_bid.reopening_date = bid.reopening_date
+        cur_bid.approve_date = bid.approve_date
+        cur_bid.close_date = bid.close_date
+        cur_bid.territorial_manager = territorial_manager
+        cur_bid.work_comment = bid.work_comment

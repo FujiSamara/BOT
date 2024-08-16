@@ -258,8 +258,11 @@ class Worker(Base):
     bids_it: Mapped[List["BidIT"]] = relationship(
         "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
     )
-    repairman_bids_it: Mapped[List["BidIT"]] = relationship(
+    repairman_it: Mapped[List["BidIT"]] = relationship(
         "BidIT", back_populates="repairman", foreign_keys="[BidIT.repairman_id]"
+    )
+    territorial_manager_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="territorial_manager", foreign_keys="[BidIT.territorial_manager_id]"
     )
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
@@ -600,7 +603,13 @@ class BidIT(Base):
         ForeignKey("workers.id"), nullable=True
     )
     repairman: Mapped["Worker"] = relationship(
-        "Worker", back_populates="repairman_bids_it", foreign_keys=[repairman_id]
+        "Worker", back_populates="repairman_it", foreign_keys=[repairman_id]
+    )
+    territorial_manager_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_manager: Mapped["Worker"] = relationship(
+        "Worker", back_populates="territorial_manager_it", foreign_keys=[territorial_manager_id]
     )
     department_id: Mapped[int] = mapped_column(
         ForeignKey("departments.id"), nullable=False

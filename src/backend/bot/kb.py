@@ -62,6 +62,15 @@ def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=text)] for text in texts])
 
 
+def create_reply_keyboard_resize(*texts: list[str]) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=text)] for text in texts], resize_keyboard=True)
+
+
+def create_reply_keyboard_raw(*texts: list[str]) -> ReplyKeyboardMarkup:
+    keyboard = [KeyboardButton(text=text) for text in texts]
+    return ReplyKeyboardMarkup(keyboard=[keyboard], resize_keyboard=True)
+
+
 # Bid
 bid_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -604,3 +613,55 @@ tm_bids_it_menu = InlineKeyboardMarkup(
         [get_department_it_tm],
     ]
 )
+
+
+async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    mark: int | None = data.get("mark")
+    mark_text = "Отсутствует"
+    work_comment: str | None = data.get("work_comment")
+    work_comment_text = "Отсутствует"
+
+    all_field_exist = True
+    is_bad_work = False
+
+    if mark is None:
+        all_field_exist = False
+    elif mark in range(1, 3):
+        is_bad_work = True
+        mark_text = f"✅ {mark}"
+    elif mark in range(3, 6):
+        mark_text = f"✅ {mark}"
+    else:
+        all_field_exist = False
+
+    if mark is not None and is_bad_work:
+        if work_comment is None:
+            all_field_exist = False
+        else:
+            work_comment_text = f"✅ {work_comment}"
+    
+    keyboard = [
+        [
+            InlineKeyboardButton(text="Оценка работы", callback_data="get_mark_tm"),
+            InlineKeyboardButton(text=mark_text, callback_data="dummy"),
+        ],
+    ]
+    if is_bad_work:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Комментарий", callback_data="get_work_comment_tm"
+                ),
+                InlineKeyboardButton(text=work_comment_text, callback_data="dummy"),
+            ]
+        )
+    if all_field_exist:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Закрыть заявку", callback_data="send_bid_it_tm"
+                )
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

@@ -225,6 +225,7 @@ class BidITSchema(BaseModel):
     close_date: Optional[datetime.datetime] = None
     status: ApprovalStatus
     repairman: Optional[WorkerSchema] = None
+    territorial_manager: Optional[WorkerSchema] = None
     mark: Optional[int] = None
     work_photo: Optional[UploadFile | str] = None
     work_comment: Optional[str] = None

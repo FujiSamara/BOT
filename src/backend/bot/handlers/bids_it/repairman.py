@@ -17,7 +17,7 @@ from bot.text import format_err
 
 from bot.kb import (
     get_department_it_repairman,
-    create_reply_keyboard,
+    create_reply_keyboard_resize,
     repairman_bids_it_menu,
     repairman_department_menu,
     create_inline_keyboard,
@@ -43,16 +43,17 @@ from bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITViewType,
     BidITCallbackData,
-    RepairmanBidITCallbackData,
+    WorkerBidITCallbackData,
 )
 
 
 from db.service import (
     update_bid_it_rm,
     get_departments_names_by_repairman_telegram_id,
-    get_pending_bids_it_by_worker_telegram_id,
+    get_bids_it_with_status,
     get_bid_it_by_id,
 )
+from db.models import ApprovalStatus
 
 router = Router(name="bid_it_repairman")
 
@@ -83,7 +84,7 @@ async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await callback.message.answer(
         hbold("Выберите производство:"),
-        reply_markup=create_reply_keyboard("⏪ Назад", *dep),
+        reply_markup=create_reply_keyboard_resize("⏪ Назад", *dep),
     )
 
 
@@ -122,7 +123,7 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
                 [
                     InlineKeyboardButton(
                         text="Выполнить заявку",
-                        callback_data=RepairmanBidITCallbackData(
+                        callback_data=WorkerBidITCallbackData(
                             id=callback_data.id,
                             endpoint_name="take_bid_it_for_repairman",
                         ).pack(),
@@ -136,7 +137,8 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
 
 @router.callback_query(F.data == "bids_pending_for_repairman")
 async def get_pending_bids_for_repairman(callback: CallbackQuery, state: FSMContext):
-    bids = get_pending_bids_it_by_worker_telegram_id(callback.message.chat.id)
+    dep = (await state.get_data()).get("department")
+    bids = get_bids_it_with_status(dep, ApprovalStatus.pending)
     bids = sorted(bids, key=lambda bid: bid.opening_date, reverse=True)
     keyboard = create_inline_keyboard(
         *(
@@ -161,12 +163,12 @@ async def get_pending_bids_for_repairman(callback: CallbackQuery, state: FSMCont
 
 
 @router.callback_query(
-    RepairmanBidITCallbackData.filter(F.endpoint_name == "take_bid_it_for_repairman")
+    WorkerBidITCallbackData.filter(F.endpoint_name == "take_bid_it_for_repairman")
 )
 async def get_bid_it_for_repairman(
     callback: CallbackQuery,
     state: FSMContext,
-    callback_data: RepairmanBidITCallbackData,
+    callback_data: WorkerBidITCallbackData,
 ):
     print(callback_data.id)
     await state.update_data(bid_id=callback_data.id)
@@ -187,7 +189,7 @@ async def get_photo_rm(callback: CallbackQuery, state: FSMContext):
         reply_markup=create_inline_keyboard(
             InlineKeyboardButton(
                 text="Вернуться к заявке",
-                callback_data=RepairmanBidITCallbackData(
+                callback_data=WorkerBidITCallbackData(
                     id=(await state.get_data()).get("bid_id"),
                     endpoint_name="take_bid_it_for_repairman",
                 ).pack(),
@@ -234,9 +236,3 @@ async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
     await try_edit_message(message=callback.message, text="Успешно!")
     await asyncio.sleep(1)
     await send_department_menu_for_repairman(callback.message, state)
-    # await try_edit_or_answer(
-    #     message=callback.message,
-    #     text=hbold("IT заявки"),
-    #     reply_markup=repairman_department_menu,
-    # )
-    # await state.clear()

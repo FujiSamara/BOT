@@ -14,7 +14,7 @@ import asyncio
 # bot imports
 from bot.kb import (
     get_create_bid_it_menu,
-    create_reply_keyboard,
+    create_reply_keyboard_resize,
     settings_bid_it_menu_button,
     bid_it_create_history_button,
     create_inline_keyboard,
@@ -126,7 +126,7 @@ async def get_problem_type(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await callback.message.answer(
         hbold("Выберите тип проблемы:"),
-        reply_markup=create_reply_keyboard("⏪ Назад", *problems),
+        reply_markup=create_reply_keyboard_resize("⏪ Назад", *problems),
     )
 
 

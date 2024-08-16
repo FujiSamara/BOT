@@ -61,4 +61,5 @@ class RepairmanBidForm(StatesGroup):
 # Territorial manager IT
 class TMForm(StatesGroup):
     department = State()
-    rate = State()
+    mark = State()
+    work_comment = State()
