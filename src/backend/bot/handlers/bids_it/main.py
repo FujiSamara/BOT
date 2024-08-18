@@ -32,4 +32,6 @@ async def get_menu(callback: CallbackQuery, state: FSMContext):
 # Create section
 # coordinate_bid.build_coordinations() # хз что это
 
-router.include_routers(create_bid_it.router, repairman.router, territorial_manager.router)
+router.include_routers(
+    create_bid_it.router, repairman.router, territorial_manager.router
+)
