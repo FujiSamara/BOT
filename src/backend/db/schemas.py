@@ -215,7 +215,7 @@ class BidITSchema(BaseModel):
     id: Optional[int] = -1
     problem: ProblemITSchema
     problem_comment: str
-    problem_photo: UploadFile | str
+    problem_photo: list[DocumentSchema]
     worker: WorkerSchema
     department: DepartmentSchema
     opening_date: datetime.datetime
@@ -227,21 +227,8 @@ class BidITSchema(BaseModel):
     repairman: Optional[WorkerSchema] = None
     territorial_manager: Optional[WorkerSchema] = None
     mark: Optional[int] = None
-    work_photo: Optional[UploadFile | str] = None
+    work_photo: list[DocumentSchema] = None
     work_comment: Optional[str] = None
-
-    @field_validator("problem_photo", "work_photo", mode="before")
-    @classmethod
-    def upload_file_validate(cls, val):
-        if isinstance(val, StorageFile):
-            if Path(val.path).is_file():
-                return UploadFile(val.open(), filename=val.name)
-            else:
-                logging.getLogger("uvicorn.error").warning(
-                    f"File with path: {val.path} not exist"
-                )
-                return val.path
-        return val
 
 
 # endregion

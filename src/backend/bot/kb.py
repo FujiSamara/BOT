@@ -63,7 +63,9 @@ def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
 
 
 def create_reply_keyboard_resize(*texts: list[str]) -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=text)] for text in texts], resize_keyboard=True)
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=text)] for text in texts], resize_keyboard=True
+    )
 
 
 def create_reply_keyboard_raw(*texts: list[str]) -> ReplyKeyboardMarkup:
@@ -460,7 +462,7 @@ bid_it_menu = InlineKeyboardMarkup(
 async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     problem = data.get("problem")
-    photo: Document | None = data.get("photo")
+    document = data.get("photo")
     photo_text = "Отсутствует"
     comment = data.get("comment")
     all_field_exist = True
@@ -477,13 +479,11 @@ async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         comment = "✅ " + comment
 
-    if photo is None:
+    if not document or len(document) == 0:
         all_field_exist = False
-    if photo:
-        if hasattr(photo, "file_name"):
-            photo_text = "✅ " + photo.file_name
-        else:
-            photo_text = "✅ " + "Фотография"
+        photo_text = "0"
+    else:
+        photo_text = f"✅ {len(document)}"
 
     keyboard = [
         [
@@ -503,11 +503,7 @@ async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     ]
     if all_field_exist:
         keyboard.append(
-            [
-                InlineKeyboardButton(
-                    text="Отправить заявку", callback_data="send_bid_it"
-                )
-            ]  # send kuda to escho
+            [InlineKeyboardButton(text="Отправить заявку", callback_data="send_bid_it")]
         )
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
@@ -526,6 +522,12 @@ bids_pending_for_repairman = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="bids_pending_for_repairman"
 )
 
+bid_it_rm_create_history_button = InlineKeyboardButton(
+    text="История заявок", callback_data="get_create_history_bid_it_rm"
+)
+
+back_repairman_button = InlineKeyboardButton(text="Назад", callback_data="get_back_rm")
+
 
 repairman_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -538,6 +540,7 @@ repairman_department_menu = InlineKeyboardMarkup(
 repairman_bids_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [bids_pending_for_repairman],
+        [bid_it_rm_create_history_button],
         [get_department_it_repairman],
     ]
 )
@@ -596,9 +599,16 @@ bids_pending_for_tm = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="bids_pending_for_tm"
 )
 
+bid_it_tm_create_history_button = InlineKeyboardButton(
+    text="История заявок", callback_data="get_create_history_bid_it_tm"
+)
+
 get_department_it_tm = InlineKeyboardButton(
     text="Выбрать предприятие", callback_data="get_department_it_tm"
 )
+
+back_tm_button = InlineKeyboardButton(text="Назад", callback_data="get_back_tm")
+
 
 tm_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -610,6 +620,7 @@ tm_department_menu = InlineKeyboardMarkup(
 tm_bids_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [bids_pending_for_tm],
+        [bid_it_tm_create_history_button],
         [get_department_it_tm],
     ]
 )
@@ -640,7 +651,7 @@ async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
             all_field_exist = False
         else:
             work_comment_text = f"✅ {work_comment}"
-    
+
     keyboard = [
         [
             InlineKeyboardButton(text="Оценка работы", callback_data="get_mark_tm"),

@@ -18,6 +18,8 @@ from db.models import (
     WorkerBidWorkPermission,
     ProblemIT,
     BidIT,
+    BidITDocument,
+    BidITRepairmanDocument,
 )
 from db.schemas import (
     BidSchema,
@@ -797,25 +799,29 @@ def add_bid_it(bid_it: BidITSchema):
         )
         problem = s.query(ProblemIT).filter(ProblemIT.id == bid_it.problem.id).first()
 
-        bid = BidIT(
+        bid_model = BidIT(
             problem_comment=bid_it.problem_comment,
-            problem_photo=bid_it.problem_photo,
+            problem_photo=[],
             problem=problem,
             department=department,
             worker=worker,
             status=bid_it.status,
             opening_date=bid_it.opening_date,
-            done_date=None,
-            reopening_date=None,
-            approve_date=None,
-            close_date=None,
-            mark=None,
-            repairman=None,
-            work_photo=None,
-            work_comment=None,
+            repairman=problem.repairman,
+            territorial_manager=department.territorial_manager,
+            # done_date=None,
+            # reopening_date=None,
+            # approve_date=None,
+            # close_date=None,
+            # mark=None,
+            # work_photo=None,
+            # work_comment=None,
         )
 
-        s.add(bid)
+        s.add(bid_model)
+
+        for document in bid_it.problem_photo:
+            s.add(BidITDocument(bid_it=bid_model, document=document.document))
 
 
 def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
@@ -837,9 +843,11 @@ def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
             .all()
         )
         return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
-    
 
-def get_pending_bids_it_by_department_with_status(department: DepartmentSchema, status: ApprovalStatus) -> list[BidITSchema]:
+
+def get_bids_it_with_status(
+    worker: WorkerSchema, department: DepartmentSchema, status: ApprovalStatus
+) -> list[BidITSchema]:
     """
     Returns all bids IT in database by worker.
     """
@@ -850,6 +858,11 @@ def get_pending_bids_it_by_department_with_status(department: DepartmentSchema, 
                 and_(
                     BidIT.department_id == department.id,
                     BidIT.status == status,
+                    or_(
+                        BidIT.repairman_id == worker.id,
+                        BidIT.territorial_manager_id == worker.id,
+                        # BidIT.worker_id == worker.id,
+                    ),
                 )
             )
             .all()
@@ -886,7 +899,10 @@ def update_bid_it_rm(bid: BidITSchema):
         cur_bid.status = bid.status
         cur_bid.done_date = bid.done_date
         cur_bid.repairman = repairman
-        cur_bid.work_photo = bid.work_photo
+        cur_bid.work_photo = []
+
+        for document in bid.work_photo:
+            s.add(BidITRepairmanDocument(bid_it=cur_bid, document=document.document))
 
 
 def get_bid_it_by_id(id: int) -> BidITSchema:
@@ -905,7 +921,9 @@ def update_bid_it_tm(bid: BidITSchema):
         if not cur_bid:
             return None
 
-        territorial_manager = s.query(Worker).filter(Worker.id == bid.territorial_manager.id).first()
+        territorial_manager = (
+            s.query(Worker).filter(Worker.id == bid.territorial_manager.id).first()
+        )
         if not territorial_manager:
             return None
 
@@ -916,3 +934,24 @@ def update_bid_it_tm(bid: BidITSchema):
         cur_bid.close_date = bid.close_date
         cur_bid.territorial_manager = territorial_manager
         cur_bid.work_comment = bid.work_comment
+
+
+def get_bids_it_by_repairman(
+    repairman: WorkerSchema, department: DepartmentSchema
+) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by repairman and department.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.repairman_id == repairman.id,
+                    BidIT.department_id == department.id,
+                )
+            )
+            .all()
+        )
+
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]

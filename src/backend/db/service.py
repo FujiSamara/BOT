@@ -756,7 +756,7 @@ def get_bid_it_by_id(id: int) -> BidITSchema:
 async def create_bid_it(
     problem_id: str,
     comment: str,
-    photo: UploadFile,
+    files: list[UploadFile],
     telegram_id: int,
 ):
     """
@@ -786,18 +786,21 @@ async def create_bid_it(
     if not last_bid_it_id:
         last_bid_it_id = 0
 
-    if photo:
-        suffix = Path(photo.filename).suffix
+    documents = []
+    for file in files:
+        suffix = Path(file.filename).suffix
         filename = f"document_bid_IT_{last_bid_it_id + 1}{suffix}"
-        photo.filename = filename
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
 
     bid_it = BidITSchema(
         problem=problem_inst,
         problem_comment=comment,
-        problem_photo=photo,
+        problem_photo=documents,
         worker=worker_inst,
         department=department_inst,
         opening_date=cur_date,
+        repairman=problem_inst.repairman,
         status=ApprovalStatus.pending,
     )
 
@@ -806,7 +809,7 @@ async def create_bid_it(
 
 def get_pending_bids_it_by_worker_telegram_id(id: int) -> list[BidITSchema]:
     """
-    Returns all bids IT own to worker with specified phone number.
+    Returns pending bids IT own to worker with specified telegram id.
     """
     worker = orm.find_worker_by_column(Worker.telegram_id, id)
 
@@ -830,7 +833,7 @@ def get_expenditures_names() -> list[str]:
 
 def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str]:
     """
-    Returns departments names by id.
+    Returns departments names for repairman by id.
     """
     repairman = get_worker_by_telegram_id(telegram_id)
     departments_raw = orm.find_departments_by_column(
@@ -840,7 +843,7 @@ def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str
     return result
 
 
-async def update_bid_it_rm(bid_id: int, photo: UploadFile, telegram_id: int):
+async def update_bid_it_rm(bid_id: int, files: UploadFile, telegram_id: int):
     """
     Updates an bid IT wrapped in `BidITShema` and adds it to database.
     """
@@ -856,14 +859,16 @@ async def update_bid_it_rm(bid_id: int, photo: UploadFile, telegram_id: int):
         )
         return
 
-    if photo:
-        suffix = Path(photo.filename).suffix
-        filename = f"document_bid_IT_repairman{suffix}"
-        photo.filename = filename
+    documents = []
+    for file in files:
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_IT_repairman{bid_id}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
 
     bid.done_date = cur_date
     bid.repairman = repairman_inst
-    bid.work_photo = photo
+    bid.work_photo = documents
     bid.status = ApprovalStatus.pending_approval
 
     orm.update_bid_it_rm(bid)
@@ -871,7 +876,7 @@ async def update_bid_it_rm(bid_id: int, photo: UploadFile, telegram_id: int):
 
 def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
     """
-    Returns departments names by id.
+    Returns departments names for TM by telegram id.
     """
     tm = get_worker_by_telegram_id(telegram_id)
     departments_raw = orm.find_departments_by_column(
@@ -881,9 +886,11 @@ def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
     return result
 
 
-def get_bids_it_with_status(department_name: str, status: ApprovalStatus) -> list[str]:
+def get_bids_it_with_status(
+    telegram_id: str, department_name: str, status: ApprovalStatus
+) -> list[str]:
     """
-    Returns bids IT by department name and telegram id with status.
+    Returns bids IT by worker telegram id, department name and telegram id with status.
     """
 
     department_list: list[DepartmentSchema] = orm.find_departments_by_column(
@@ -894,7 +901,10 @@ def get_bids_it_with_status(department_name: str, status: ApprovalStatus) -> lis
         return None
 
     department: DepartmentSchema = department_list[0]
-    bids_raw = orm.get_pending_bids_it_by_department_with_status(department, status)
+    worker = get_worker_by_telegram_id(telegram_id)
+    if worker is None:
+        return None
+    bids_raw = orm.get_bids_it_with_status(worker, department, status)
 
     return bids_raw
 
@@ -929,3 +939,26 @@ def update_bid_it_tm(
         bid.close_date = cur_date
 
     orm.update_bid_it_tm(bid)
+
+
+def get_bids_it_by_repairman(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_bids_it_by_repairman(worker, department)
+    bids = filter(lambda bid: bid.status != ApprovalStatus.pending, bids)
+
+    return bids

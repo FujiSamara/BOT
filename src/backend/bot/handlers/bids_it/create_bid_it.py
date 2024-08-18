@@ -1,11 +1,12 @@
-from io import BytesIO
-from typing import Optional
+from fastapi import UploadFile
 from aiogram import F, Router
 from aiogram.types import (
     CallbackQuery,
     Message,
     ReplyKeyboardRemove,
     InlineKeyboardButton,
+    BufferedInputFile,
+    InputMediaDocument,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
@@ -32,11 +33,13 @@ from bot.handlers.bids_it.utils import (
     get_bid_it_list_info,
     get_full_bid_it_info,
     get_short_bid_it_info,
+    handle_documents,
 )
 from bot.handlers.utils import (
     try_edit_message,
     try_delete_message,
     download_file,
+    handle_documents_form,
 )
 
 from bot.handlers.bids_it.schemas import (
@@ -54,7 +57,7 @@ from db.service import (
     get_bid_it_by_id,
     get_pending_bids_it_by_worker_telegram_id,
 )
-
+# from db.models import ApprovalStatus
 
 router = Router(name="bid_it_creating")
 
@@ -91,20 +94,21 @@ async def send_bid_it(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await state.set_state(Base.none)
     problem = data.get("problem")
-    photo = data.get("photo")
+    photos = data.get("photo")
     comment = data.get("comment")
     telegram_id = data.get("telegram_id")
-    file: Optional[BytesIO] = None
 
-    if photo:
-        file = await download_file(photo)
+    document_files: list[UploadFile] = []
+
+    for doc in photos:
+        document_files.append(await download_file(doc))
 
     problem_id = get_id_by_problem_type(problem, get_problems_it_schema())
 
     await create_bid_it(
         problem_id=problem_id,
         comment=comment,
-        photo=file,
+        files=document_files,
         telegram_id=telegram_id,
     )
 
@@ -147,28 +151,17 @@ async def set_problem_type(message: Message, state: FSMContext):
 # Photo
 @router.callback_query(F.data == "get_photo")
 async def get_photo(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(BidITCreating.photo)
-    await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Приложите фото:"),
-        reply_markup=create_inline_keyboard(settings_bid_it_menu_button),
-    )
+    await handle_documents_form(callback.message, state, BidITCreating.photo)
 
 
 @router.message(BidITCreating.photo)
 async def set_photo(message: Message, state: FSMContext):
-    if message.document or message.photo:
-        content = None
-        if message.content_type == "photo":
-            content = message.photo[-1]
-        elif message.content_type == "document":
-            content = message.document
-        await state.update_data(photo=content)
-        await clear_state_with_success_it(message, state)
-    else:
-        await message.answer(
-            format_err, reply_markup=create_inline_keyboard(settings_bid_it_menu_button)
-        )
+    await handle_documents(
+        message,
+        state,
+        "photo",
+        clear_state_with_success_it,
+    )
 
 
 # Comment
@@ -192,6 +185,7 @@ async def set_comment(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_create_history_bid_it")
 async def get_bids_it_history(callback: CallbackQuery):
     bids = get_bids_it_by_worker_telegram_id(callback.message.chat.id)
+    # bids = filter(lambda bid: bid.status == ApprovalStatus.approved, bids)
     bids = sorted(bids, key=lambda bid: bid.opening_date, reverse=True)[:10]
     keyboard = create_inline_keyboard(
         *(
@@ -234,7 +228,6 @@ async def get_bid(
         message=callback.message,
         text=caption,
         reply_markup=create_inline_keyboard(
-            bid_it_create_history_button,
             InlineKeyboardButton(
                 text="Показать документы",
                 callback_data=BidITCallbackData(
@@ -244,6 +237,7 @@ async def get_bid(
                     endpoint_name="create_documents",
                 ).pack(),
             ),
+            bid_it_create_history_button,
         ),
     )
 
@@ -287,3 +281,40 @@ async def get_bids_it_pending(callback: CallbackQuery):
     )
     await try_delete_message(callback.message)
     await callback.message.answer("Ожидающие заявки:", reply_markup=keyboard)
+
+
+@router.callback_query(
+    BidITCallbackData.filter(F.type == BidITViewType.creation),
+    BidITCallbackData.filter(F.endpoint_name == "create_documents"),
+)
+async def get_documents(
+    callback: CallbackQuery, callback_data: BidITCallbackData, state: FSMContext
+):
+    bid = get_bid_it_by_id(callback_data.id)
+    print(len(bid.problem_photo))
+    media: list[InputMediaDocument] = [
+        InputMediaDocument(
+            media=BufferedInputFile(
+                file=bid.problem_photo[i].document.file.read(),
+                filename=bid.problem_photo[i].document.filename,
+            )
+        )
+        for i in range(len(bid.problem_photo))
+    ]
+    await try_delete_message(callback.message)
+    msgs = await callback.message.answer_media_group(media=media)
+    await state.update_data(msgs_for_delete=msgs)
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=BidITCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidITViewType.creation,
+                    endpoint_name="create_bid_it_info",
+                ).pack(),
+            )
+        ),
+    )
