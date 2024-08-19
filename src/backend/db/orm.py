@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Type
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -23,6 +23,7 @@ from db.models import (
     WorkerBidWorkPermission,
 )
 from db.schemas import (
+    BaseSchema,
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
@@ -737,6 +738,29 @@ def get_bids() -> list[BidSchema]:
     with session.begin() as s:
         raw_models = s.query(Bid).all()
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_model_count(model_type: Type[Base]) -> int:
+    """Return count of `model` in bd."""
+    with session.begin() as s:
+        return s.query(model_type).count()
+
+
+def get_models_by_page(
+    model_type: Type[Base],
+    schema_type: Type[BaseSchema],
+    page: int,
+    records_per_page: int,
+) -> list[BaseSchema]:
+    """Return `model_type` schemas"""
+    with session.begin() as s:
+        raw_models = (
+            s.query(model_type)
+            .offset((page - 1) * records_per_page)
+            .limit(records_per_page)
+        )
+
+        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
 
 
 # region Technical problem

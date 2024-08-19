@@ -3,7 +3,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from db import service
-from db.schemas import ExpenditureSchema
+from db.schemas import ExpenditureSchema, TalbeInfoSchema
 
 from api.auth import User, get_current_user
 
@@ -11,11 +11,28 @@ from api.auth import User, get_current_user
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/page/info")
+async def get_pages_info(
+    records_per_page: int = 15,
+    _: User = Security(get_current_user, scopes=["crm_expenditure"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_expenditure_count()
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        records_per_page=records_per_page,
+    )
+
+
+@router.get("/page/{page}")
 async def get_expenditures(
+    page: int,
+    records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> list[ExpenditureSchema]:
-    return service.get_expenditures()
+    return service.get_expenditures_at_page(page, records_per_page)
 
 
 @router.get("/last")

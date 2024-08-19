@@ -773,6 +773,20 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
+def get_expenditure_count() -> int:
+    """Return expenditure count in bd."""
+    return orm.get_model_count(Expenditure)
+
+
+def get_expenditures_at_page(
+    page: int, records_per_page: int
+) -> list[ExpenditureSchema]:
+    """Return `records_per_page` expenditures at `page`"""
+    return orm.get_models_by_page(
+        Expenditure, ExpenditureSchema, page, records_per_page
+    )
+
+
 # region Technical request
 
 

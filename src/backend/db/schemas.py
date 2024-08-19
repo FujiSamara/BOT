@@ -292,4 +292,10 @@ class BidRecordSchema(BaseSchema):
         return val
 
 
+class TalbeInfoSchema(BaseModel):
+    page_count: int
+    record_count: int
+    records_per_page: int
+
+
 # endregion
