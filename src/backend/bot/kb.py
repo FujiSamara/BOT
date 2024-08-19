@@ -3,7 +3,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     KeyboardButton,
     ReplyKeyboardMarkup,
-    Document,
 )
 from aiogram.fsm.context import FSMContext
 
@@ -548,17 +547,15 @@ repairman_bids_it_menu = InlineKeyboardMarkup(
 
 async def get_create_repairman_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
-    photo: Document | None = data.get("photo")
+    photo = data.get("photo")
     photo_text = "Отсутствует"
     all_field_exist = True
 
-    if photo is None:
+    if not photo or len(photo) == 0:
         all_field_exist = False
-    if photo:
-        if hasattr(photo, "file_name"):
-            photo_text = "✅ " + photo.file_name
-        else:
-            photo_text = "✅ " + "Фотография"
+        photo_text = "0"
+    else:
+        photo_text = f"✅ {len(photo)}"
 
     keyboard = [
         [

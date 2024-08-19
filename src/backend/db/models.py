@@ -607,9 +607,6 @@ class BidIT(Base):
 
     id: Mapped[intpk]
     problem_comment: Mapped[str] = mapped_column(nullable=False)
-    # problem_photo: Mapped[FileType] = mapped_column(
-    #     FileType(storage=get_settings().storage), nullable=False
-    # )
     problem_photo: Mapped[List["BidITDocument"]] = relationship(
         "BidITDocument", cascade="all,delete"
     )

@@ -892,13 +892,8 @@ def update_bid_it_rm(bid: BidITSchema):
         if not cur_bid:
             return None
 
-        repairman = s.query(Worker).filter(Worker.id == bid.repairman.id).first()
-        if not repairman:
-            return None
-
         cur_bid.status = bid.status
         cur_bid.done_date = bid.done_date
-        cur_bid.repairman = repairman
         cur_bid.work_photo = []
 
         for document in bid.work_photo:
@@ -921,18 +916,11 @@ def update_bid_it_tm(bid: BidITSchema):
         if not cur_bid:
             return None
 
-        territorial_manager = (
-            s.query(Worker).filter(Worker.id == bid.territorial_manager.id).first()
-        )
-        if not territorial_manager:
-            return None
-
         cur_bid.status = bid.status
         cur_bid.mark = bid.mark
         cur_bid.reopening_date = bid.reopening_date
         cur_bid.approve_date = bid.approve_date
         cur_bid.close_date = bid.close_date
-        cur_bid.territorial_manager = territorial_manager
         cur_bid.work_comment = bid.work_comment
 
 
