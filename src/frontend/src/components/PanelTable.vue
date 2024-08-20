@@ -176,11 +176,11 @@ const rejectReason = ref("");
 const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
 const onDelete = async () => {
-	//await props.table.deleteChecked();
+	await props.table.deleteChecked();
 	emit("delete");
 };
 const onApprove = async () => {
-	//await props.table.approveChecked();
+	await props.table.approveChecked();
 	emit("approve");
 };
 const onReject = () => {
@@ -188,7 +188,7 @@ const onReject = () => {
 };
 const onRejectCommentSubmit = async () => {
 	modalVisible.value = false;
-	//await props.table.rejectChecked(rejectReason.value);
+	await props.table.rejectChecked(rejectReason.value);
 	rejectReason.value = "";
 	emit("reject");
 };
