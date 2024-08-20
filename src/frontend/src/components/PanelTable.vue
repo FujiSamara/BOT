@@ -68,7 +68,7 @@
 					<tr
 						v-for="(row, index) in table.rows.value.rows"
 						:key="row.id"
-						@click.prevent="$emit('click', row.id)"
+						@click.prevent="$emit('click', index)"
 						@mouseleave="table.highlighted.value[index].value = false"
 						:class="{
 							highlighted:

@@ -40,15 +40,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import {
-	computed,
-	onMounted,
-	Ref,
-	ref,
-	shallowRef,
-	ShallowRef,
-	watch,
-} from "vue";
+import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
@@ -85,32 +77,6 @@ const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");
 
-table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	const periodFilter = (instance: any): boolean => {
-		const rowDate = new Date(instance.create_date);
-		const fromDate = new Date(fromDateString.value);
-		const toDate = new Date(toDateString.value);
-
-		return rowDate <= toDate && rowDate >= fromDate;
-	};
-	return [periodFilter];
-}).value;
-table.searcher.value = computed((): ((instance: any) => boolean) => {
-	return (instance: any): boolean => {
-		const name: string = instance.name;
-		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
-			return true;
-		}
-		const chapter: string = instance.chapter;
-		if (
-			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
-		) {
-			return true;
-		}
-		return false;
-	};
-}).value;
-
 const onRowClicked = (rowKey: number) => {
 	editor.value = new ExpenditureEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
@@ -121,15 +87,8 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
-const loadTable = async (silent: boolean = false) => {
-	await table.loadAll(silent);
-	setTimeout(loadTable, 20000, true);
-};
 watch(table.highlightedCount, () => {
 	emit("notify", table.highlightedCount.value, props.id);
-});
-onMounted(async () => {
-	await loadTable();
 });
 </script>
 <style scoped>

@@ -69,7 +69,7 @@ export class Table<T extends BaseSchema> {
 	constructor(endpoint: string) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
 
-		watch(this._completedQuery, async () => {
+		watch([this._completedQuery, this._refreshKey, this.rowCount], async () => {
 			this.emulateLoading(true);
 			const resp = await this._network.withAuthChecking(
 				axios.get(this._datedQuery.value),
@@ -114,10 +114,10 @@ export class Table<T extends BaseSchema> {
 		this.rowCount.value = resp.data.record_count;
 	}
 	protected refreshQuery() {
-		this._refreshKey.value++;
+		const limit = 3;
+		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
 	private _query = computed(() => {
-		this._refreshKey;
 		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?records_per_page=${this._rowsPerPage}`;
 	});
 	private _searchedQuery = computed(() => {
