@@ -1,4 +1,4 @@
-import { computed, ref, Ref } from "vue";
+import { computed, ref, Ref, watch } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
@@ -59,26 +59,98 @@ interface TableData {
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
-	/**  Key - ID, Value - index in internal arrays. */
-	protected _indexes: Map<number, number> = new Map();
-	protected _models: Ref<Array<T>> = ref([]);
-	private _endpoint: string = "";
+	private _loadedRows: Ref<Array<T>> = ref([]);
 	private _network = useNetworkStore();
+	private _refreshKey: Ref<number> = ref(0);
 
 	/**
-	 * @param tableContent
-	 * @param _searchFields Indexes of columns for searching.
+	 * @param endpoint Endpoint name for api.
 	 */
 	constructor(endpoint: string) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+
+		watch(this._completedQuery, async () => {
+			this.emulateLoading(true);
+			const resp = await this._network.withAuthChecking(
+				axios.get(this._datedQuery.value),
+			);
+			this.emulateLoading(false);
+
+			this._loadedRows.value = resp.data;
+			this._checked.value = Array<boolean>(this._rowsPerPage).fill(
+				false,
+				0,
+				this._rowsPerPage,
+			);
+			this._highlighted.value = Array<boolean>(this._rowsPerPage).fill(
+				false,
+				0,
+				this._rowsPerPage,
+			);
+		});
+
+		this.startInfoUpdatingLoop();
+		this.currentPage.value = 1;
 	}
 
-	//#region Rows handlers
+	//#region Rows
+	private async startInfoUpdatingLoop() {
+		await this.refreshInfo();
+		setTimeout(
+			async () => await this.startInfoUpdatingLoop(),
+			this.updateTimeout * 1000,
+		);
+	}
+	/** Updates info about table:
+	 * 1) Page count
+	 * 2) Row count
+	 */
+	private async refreshInfo() {
+		const infoEndpoint = `${this._endpoint}${this._infoEndpoint}/page/info?records_per_page=${this._rowsPerPage}`;
+
+		const resp = await this._network.withAuthChecking(axios.get(infoEndpoint));
+
+		this.pageCount.value = resp.data.page_count;
+		this.rowCount.value = resp.data.record_count;
+	}
+	protected refreshQuery() {
+		this._refreshKey.value++;
+	}
+	private _query = computed(() => {
+		this._refreshKey;
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?records_per_page=${this._rowsPerPage}`;
+	});
+	private _searchedQuery = computed(() => {
+		return this._query.value;
+	});
+	private _datedQuery = computed(() => {
+		return this._searchedQuery.value;
+	});
+	private _completedQuery = computed(() => {
+		return this._datedQuery.value;
+	});
+	private getHeaders() {
+		const result: Array<string> = [];
+		if (this._nonIgnoredRows.value.length === 0) return result;
+
+		for (const fieldName in this._nonIgnoredRows.value[0]) {
+			const alias = this.getAlias(fieldName);
+
+			const index = this._columsOrder.get(fieldName);
+
+			if (index && result.length > index) {
+				result.splice(index, 0, alias);
+			} else {
+				result.push(alias);
+			}
+		}
+		return result;
+	}
 	private _nonIgnoredRows = computed(() => {
 		const result: Array<T> = [];
 
-		for (let index = 0; index < this._models.value.length; index++) {
-			const model: T = this._models.value[index];
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const model: T = this._loadedRows.value[index];
 
 			let newModel: any = {};
 
@@ -92,36 +164,14 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
-	private _searchedRows = computed(() => {
-		const searchResult: Array<T> = [];
-		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
-			const model = this._nonIgnoredRows.value[index];
-			if (this.searcher.value(model)) {
-				searchResult.push(model);
-			}
-		}
-		return searchResult;
-	});
-	private _filteredRows = computed(() => {
-		const filterResult: Array<T> = this._searchedRows.value.filter(
-			(model: T) => {
-				for (const filter of this.filters.value) {
-					if (!filter(model)) return false;
-				}
-				return true;
-			},
-		);
-
-		return filterResult;
-	});
 	private _formattedOrderedRows = computed(() => {
 		const result: TableData = {
 			headers: this.getHeaders(),
 			rows: [],
 		};
 
-		for (let index = 0; index < this._filteredRows.value.length; index++) {
-			const model = this._filteredRows.value[index];
+		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
+			const model = this._nonIgnoredRows.value[index];
 			const columns: Array<Cell> = [];
 
 			for (const fieldName in model) {
@@ -144,50 +194,13 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	private _sortedRows = computed(() => {
-		const result: TableData = {
-			headers: this._formattedOrderedRows.value.headers,
-			rows: [...this._formattedOrderedRows.value.rows],
-		};
-
-		if (this.sortBy.value !== -1) {
-			result.rows.sort(
-				(
-					a: { id: number; columns: Array<Cell> },
-					b: { id: number; columns: Array<Cell> },
-				) =>
-					a.columns[this.sortBy.value]
-						.toString()
-						.localeCompare(b.columns[this.sortBy.value].toString()),
-			);
-		}
-
-		return result;
-	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
-			return { headers: [], rows: [] };
+			return { headers: this._formattedOrderedRows.value.headers, rows: [] };
 		}
-
-		return this._sortedRows.value;
+		return this._formattedOrderedRows.value;
 	});
-	private getHeaders() {
-		const result: Array<string> = [];
-		if (this._nonIgnoredRows.value.length === 0) return result;
 
-		for (const fieldName in this._nonIgnoredRows.value[0]) {
-			const alias = this.getAlias(fieldName);
-
-			const index = this._columsOrder.get(fieldName);
-
-			if (index && result.length > index) {
-				result.splice(index, 0, alias);
-			} else {
-				result.push(alias);
-			}
-		}
-		return result;
-	}
 	public allChecked = computed({
 		get: () => {
 			if (this._checked.value.length === 0) {
@@ -214,24 +227,17 @@ export class Table<T extends BaseSchema> {
 		}
 		return false;
 	});
-	private _elementChecked(id: number, newValue: boolean) {
-		const index = this._indexes.get(id)!;
-
+	private _elementChecked(index: number, newValue: boolean) {
 		this._checked.value[index] = newValue;
 	}
 	public checked = computed(() => {
-		const result: Map<number, TableElementObserver<boolean>> = new Map<
-			number,
-			TableElementObserver<boolean>
-		>();
-		for (let index = 0; index < this._models.value.length; index++) {
-			const modelID = this._models.value[index].id;
+		const result: Array<TableElementObserver<boolean>> = [];
 
-			result.set(
-				modelID,
+		for (let index = 0; index < this.rows.value.rows.length; index++) {
+			result.push(
 				new TableElementObserver(
-					this._checked.value[this._indexes.get(modelID)!],
-					modelID,
+					this._checked.value[index],
+					index,
 					this._elementChecked.bind(this),
 				),
 			);
@@ -239,25 +245,17 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	private _elementHighlighted(id: number, newValue: boolean) {
-		const index = this._indexes.get(id)!;
-
+	private _elementHighlighted(index: number, newValue: boolean) {
 		this._highlighted.value[index] = newValue;
 	}
 	public highlighted = computed(() => {
-		const result: Map<number, TableElementObserver<boolean>> = new Map<
-			number,
-			TableElementObserver<boolean>
-		>();
+		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this._models.value.length; index++) {
-			const modelID = this._models.value[index].id;
-
-			result.set(
-				modelID,
+		for (let index = 0; index < this.rows.value.rows.length; index++) {
+			result.push(
 				new TableElementObserver(
-					this._highlighted.value[this._indexes.get(modelID)!],
-					modelID,
+					this._highlighted.value[index],
+					index,
 					this._elementHighlighted.bind(this),
 				),
 			);
@@ -267,7 +265,60 @@ export class Table<T extends BaseSchema> {
 	});
 	//#endregion
 
-	//#region Auxiliary fields
+	//#region Auxiliary
+	/** Table update timeout in second. */
+	public updateTimeout: number = 20;
+	/** Indicates current page */
+	public currentPage: Ref<number> = ref(0);
+	/** Indicates page count */
+	public pageCount: Ref<number> = ref(0);
+	/** Indicates row count */
+	public rowCount: Ref<number> = ref(0);
+	/** Rows per page. */
+	protected _rowsPerPage: number = 15;
+	/** True when table is execute large loading operations. */
+	public isLoading: Ref<boolean> = ref(false);
+	/** Hides all row if true */
+	public isHidden: Ref<boolean> = ref(false);
+	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true** */
+	public emulateLoading(value: boolean) {
+		this.isLoading.value = value;
+		this.isHidden.value = value;
+	}
+	/** Return **true** if rows sorted by this column with **header**. */
+	public sorted(header: string): boolean {
+		return this.getAlias(this._sortBy.value) === header;
+	}
+	/** Sorts columns by specify **header** */
+	public sort(header: string) {
+		if (header === this.getAlias(this._sortBy.value)) {
+			this.sortDesc.value = !this.sortDesc.value;
+			return;
+		}
+
+		if (this._loadedRows.value.length === 0) {
+			return;
+		}
+
+		const column = Object.keys(this._loadedRows.value[0]).find(
+			(fieldName) => this.getAlias(fieldName) === header,
+		);
+
+		if (column !== undefined) {
+			this._sortBy.value = column;
+			this.sortDesc.value = false;
+		}
+	}
+	/** If sorts column by row[**index**]. */
+	protected _sortBy: Ref<string> = ref("id");
+	/** If equal **true** sorted corresponding column in **DESC** mode. */
+	public sortDesc: Ref<boolean> = ref(false);
+	/** Order of column in table */
+	protected _columsOrder: Map<string, number> = new Map<string, number>();
+	/** Aliases for column names */
+	protected _aliases: Map<string, string> = new Map<string, string>();
+	/** Specify ingored column */
+	protected _ignored: Array<string> = [];
 	/** Default forrmatter for column value */
 	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
 		if (value === null) {
@@ -281,6 +332,7 @@ export class Table<T extends BaseSchema> {
 		string,
 		(value: any) => Cell
 	>();
+	/** Returns actual formatter for specified **fieldName** */
 	private getFormatter(fieldName: string): (value: any) => Cell {
 		const formatter = this._formatters.get(fieldName);
 
@@ -290,6 +342,7 @@ export class Table<T extends BaseSchema> {
 			return this._defaultFormatter;
 		}
 	}
+	/** Returns actual alias for specified **fieldName** */
 	private getAlias(fieldName: string): string {
 		let alias = this._aliases.get(fieldName);
 		if (alias === undefined) {
@@ -297,51 +350,7 @@ export class Table<T extends BaseSchema> {
 		}
 		return alias;
 	}
-	/** Return **true** if rows sorted by this column with **header**. */
-	public sorted(header: string): boolean {
-		const index = this.rows.value.headers.findIndex(
-			(val: string) => val === this.getAlias(header),
-		);
-
-		return index === -1 ? false : index === this.sortBy.value;
-	}
-	/** Sorts columns by specify **header** */
-	public sort(header: string) {
-		const index = this.rows.value.headers.findIndex(
-			(val: string) => val === this.getAlias(header),
-		);
-
-		if (index === -1) {
-			return;
-		}
-
-		if (this.sortBy.value === index) {
-			this.sortBy.value = -1;
-		} else {
-			this.sortBy.value = index;
-		}
-	}
-	/** If not equal **-1** sorts column by row[**index**]. */
-	protected sortBy: Ref<number> = ref(-1);
-	/** Order of column in table */
-	protected _columsOrder: Map<string, number> = new Map<string, number>();
-	/** Aliases for column names */
-	protected _aliases: Map<string, string> = new Map<string, string>();
-	/** Specify ingored column */
-	protected _ignored: Array<string> = [];
-	/** Filters for rows. Must returns **true** if row need be shown. */
-	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
-	/** Searcher for rows. Must returns **true** if row need be shown. */
-	public searcher: Ref<(model: any) => boolean> = ref((_) => true);
-	/** True when table is execute large loading operations. */
-	public isLoading: Ref<boolean> = ref(false);
-	/** Hides all row if true */
-	public isHidden: Ref<boolean> = ref(false);
-	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true** */
-	public emulateLoading(value: boolean) {
-		this.isLoading.value = value;
-		this.isHidden.value = value;
-	}
+	/** Returns count of highlighted rows. */
 	public highlightedCount = computed(() => {
 		let result = 0;
 		for (const elemHighlighted of this._highlighted.value) {
@@ -351,19 +360,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
-	/** Erases row after approving or rejecting if true. */
+	/** If equal **true** rows will be erase after approving or rejecting happens. */
 	protected _deleteAfterStatusChanged: boolean = false;
-	// Additional endpoints.
-	protected _getEndpoint: string = "";
-	protected _getLastEndpoint: string = "";
-	protected _updateEndpoint: string = "";
-	protected _deleteEndpoint: string = "";
-	protected _createEndpoint: string = "";
-	protected _approveEndpoint: string = "";
-	protected _rejectEndpoint: string = "";
-	//#endregion
-
-	//#region CRUD
 	/** Updates **source** model by **target** model if have difference.
 	 * - Returns **true** if **source** model updated, **false** otherwise.
 	 */
@@ -384,167 +382,109 @@ export class Table<T extends BaseSchema> {
 
 		return modelChanged;
 	}
-	public push(model: T, highlighted: boolean = false): void {
-		this._indexes.set(model.id, this._models.value.length);
-		this._models.value.push(model);
-		this._checked.value.push(false);
-		this._highlighted.value.push(highlighted);
+	/** Return model by index. */
+	public getModel(index: number): any {
+		return this._loadedRows.value[index];
 	}
-	public async loadAll(silent: boolean = false): Promise<number> {
-		this.isLoading.value = true && !silent;
-		let changesCount = 0;
-		const resp = await this._network.withAuthChecking(
-			axios.get(this._endpoint + this._getEndpoint + "/"),
-		);
-		this.isLoading.value = false;
-		const models = resp.data;
-		for (let i = 0; i < models.length; i++) {
-			const model: T = models[i];
-
-			let modelFounded = false;
-			for (let j = 0; j < this._models.value.length; j++) {
-				const oldModel = this._models.value[j];
-
-				if (oldModel.id !== model.id) {
-					continue;
-				}
-
-				modelFounded = true;
-
-				// Changes fields in model which was changed in new model.
-				if (this.updateModel(oldModel, model)) {
-					this._highlighted.value[j] = true;
-					changesCount++;
-				}
-				break;
-			}
-
-			if (!modelFounded) {
-				changesCount++;
-				this.push(model, silent);
+	/** Executes **action** for checked rows. */
+	private async manageChecked(action: (index: number) => Promise<void>) {
+		this.emulateLoading(true);
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			if (this._checked.value[index]) {
+				await action(index);
 			}
 		}
-
-		return changesCount;
+		await this.refreshInfo();
+		this.emulateLoading(false);
 	}
+	// Endpoints.
+	private _endpoint: string = "";
+	protected _getEndpoint: string = "";
+	protected _infoEndpoint: string = "";
+	protected _createEndpoint: string = "";
+	protected _updateEndpoint: string = "";
+	protected _deleteEndpoint: string = "";
+	protected _approveEndpoint: string = "";
+	protected _rejectEndpoint: string = "";
+	//#endregion
+
+	//#region CRUD
 	public async create(model: T): Promise<void> {
 		await this._network.withAuthChecking(
 			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
 		);
 
-		const resp = await this._network.withAuthChecking(
-			axios.get(`${this._endpoint}${this._getLastEndpoint}/last`),
-		);
-		this.push(resp.data, false);
+		await this.refreshInfo();
 	}
-	public async update(model: T, id: number): Promise<void> {
-		const index = this._indexes.get(id);
-		if (index === undefined) throw new Error(`ID ${id} not exist`);
-		let elementChanged = this.updateModel(this._models.value[index], model);
+	public async update(model: T, index: number): Promise<void> {
+		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
 			await this._network.withAuthChecking(
 				axios.patch(
 					`${this._endpoint}${this._updateEndpoint}/`,
-					this._models.value[index],
+					this._loadedRows.value[index],
 				),
 			);
 		}
 	}
-	public async delete(id: number): Promise<void> {
-		const deleteIndex = this._indexes.get(id)!;
-		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
+	public async delete(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
 		await this._network.withAuthChecking(
 			axios.delete(
-				`${this._endpoint}${this._deleteEndpoint}/${this._models.value[deleteIndex].id}`,
+				`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
 			),
 		);
-		await this.erase(id);
-	}
-	public async erase(id: number): Promise<void> {
-		const deleteIndex = this._indexes.get(id);
-		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
-		this._indexes.delete(id);
 
-		this._checked.value.splice(deleteIndex, 1);
-		this._highlighted.value.splice(deleteIndex, 1);
-		this._models.value.splice(deleteIndex, 1);
-		for (let index = deleteIndex; index < this._models.value.length; index++) {
-			const model = this._models.value[index];
-			this._indexes.set(model.id, this._indexes.get(model.id)! - 1);
+		if (needRefresh) {
+			await this.refreshInfo();
 		}
 	}
 	public async deleteChecked(): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.delete(id);
-				index--;
-			}
-		}
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.delete(index),
+		);
 	}
-	public getModel(id: number): any {
-		const index = this._indexes.get(id);
-		if (index === undefined) throw new Error(`ID ${id} not exist`);
-
-		return this._models.value[index];
-	}
-	public async approve(id: number): Promise<void> {
-		const approveIndex = this._indexes.get(id)!;
-
-		const resp = await this._network.withAuthChecking(
+	public async approve(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
+		await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}${this._approveEndpoint}/approve/${this._models.value[approveIndex].id}`,
+				`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
 			),
 		);
 
-		this.updateModel(this._models.value[approveIndex], resp.data);
-
-		if (this._deleteAfterStatusChanged) {
-			this.erase(id);
+		if (needRefresh) {
+			await this.refreshInfo();
 		}
 	}
 	public async approveChecked(): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.approve(id);
-			}
-		}
-		this.allChecked.value = false;
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.approve(index),
+		);
 	}
-	public async reject(id: number, reason: string): Promise<void> {
-		const approveIndex = this._indexes.get(id)!;
-
-		const resp = await this._network.withAuthChecking(
+	public async reject(
+		index: number,
+		needRefresh: boolean = false,
+		reason: string,
+	): Promise<void> {
+		await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}${this._rejectEndpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
+				`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
 			),
 		);
 
-		this.updateModel(this._models.value[approveIndex], resp.data);
-
-		if (this._deleteAfterStatusChanged) {
-			this.erase(id);
+		if (needRefresh) {
+			await this.refreshInfo();
 		}
 	}
 	public async rejectChecked(reason: string): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.reject(id, reason);
-			}
-		}
-		this.allChecked.value = false;
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number) => await this.reject(index, false, reason),
+		);
 	}
 	//#endregion
 }
