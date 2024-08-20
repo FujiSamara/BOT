@@ -59,6 +59,7 @@ class RepairmanTechnicalRequestForm(StatesGroup):
 class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     department = State()
     executor = State()
+    group = State()
     photo = State()
 
 
@@ -71,4 +72,5 @@ class TerritorialManagerRequestForm(StatesGroup):
 class DepartmentDirectorRequestForm(StatesGroup):
     department = State()
     executor = State()
+    group = State()
     problem = State()

@@ -28,7 +28,8 @@ from db.service import (
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
     get_all_departments,
-    get_all_repairmans_in_department,
+    get_all_worker_in_group,
+    get_groups_names,
     get_technical_problem_by_name,
     get_technical_problem_names,
     update_tech_request_executor,
@@ -58,7 +59,7 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
-    departments = get_all_departments(callback.message.chat.id)
+    departments = get_all_departments()
     department_names = [department.name for department in departments]
     department_names.sort()
 
@@ -77,7 +78,7 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments=get_all_departments(message.chat.id),
+        departments=get_all_departments(),
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
@@ -214,27 +215,68 @@ async def update_executor_format_ms(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_executor")
+    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_executor_group")
 )
-async def get_executor(
+async def get_group(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
-    await state.set_state(DepartmentDirectorRequestForm.executor)
-    department_name = (await state.get_data()).get("department_name")
-    repairmans = get_all_repairmans_in_department(department_name)
+    groups_names = get_groups_names()
+
+    await state.set_state(DepartmentDirectorRequestForm.group)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите исполнителя:"),
+        text=hbold("Выберите отдел:"),
         reply_markup=kb.create_reply_keyboard(
             text.back,
-            *[
-                " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-                for repairman in repairmans
-            ],
+            *groups_names,
         ),
     )
     await state.update_data(msg=msg)
     await state.update_data(request_id=callback_data.request_id)
+
+
+@router.message(DepartmentDirectorRequestForm.group)
+async def set_group(message: Message, state: FSMContext):
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await try_delete_message(message)
+
+    if message.text == text.back:
+        await update_executor_format_ms(message)
+    else:
+        groups_names = get_groups_names()
+        if message.text not in groups_names:
+            groups_names.sort()
+            msg = await message.answer(
+                text=text.format_err,
+                reply_markup=kb.create_reply_keyboard(
+                    *[group_name for group_name in groups_names]
+                ),
+            )
+            await state.update_data(msg=msg)
+
+        await state.update_data(group_name=message.text)
+        await get_executor(message=message, state=state)
+
+
+async def get_executor(message: Message, state: FSMContext):
+    await state.set_state(DepartmentDirectorRequestForm.executor)
+    group_name = (await state.get_data()).get("group_name")
+    workers = get_all_worker_in_group(group_name)
+    await try_delete_message(message)
+    msg = await message.answer(
+        text=hbold(f"Выберите исполнителя в отделе '{group_name}':"),
+        reply_markup=kb.create_reply_keyboard(
+            text.back,
+            *[
+                " ".join([worker.l_name, worker.f_name, worker.o_name])
+                for worker in workers
+            ],
+        ),
+    )
+    await state.update_data(msg=msg)
 
 
 @router.message(DepartmentDirectorRequestForm.executor)
@@ -248,18 +290,16 @@ async def set_executor(message: Message, state: FSMContext):
     if message.text == text.back:
         await update_executor_format_ms(message)
     else:
-        LFO_repairmans = [
-            " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-            for repairman in get_all_repairmans_in_department(
-                data.get("department_name")
-            )
+        LFO_workers = [
+            " ".join([worker.l_name, worker.f_name, worker.o_name])
+            for worker in get_all_worker_in_group(data.get("group_name"))
         ]
-        if message.text not in LFO_repairmans:
-            LFO_repairmans.sort()
+        if message.text not in LFO_workers:
+            LFO_workers.sort()
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=kb.create_reply_keyboard(
-                    *[LFO_repairman for LFO_repairman in LFO_repairmans]
+                    *[LFO_worker for LFO_worker in LFO_workers]
                 ),
             )
             await state.update_data(msg=msg)

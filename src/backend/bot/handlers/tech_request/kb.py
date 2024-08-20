@@ -140,7 +140,7 @@ async def ct_admin_kb(
                 text="Ответственный",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="get_CT_TR_executor",
+                    end_point="get_CT_TR_executor_group",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -570,7 +570,7 @@ async def dd_update_kb_executor(
                 text="Исполнитель",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="get_DD_TR_executor",
+                    end_point="get_DD_TR_executor_group",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),

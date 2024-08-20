@@ -7,6 +7,7 @@ from db.models import (
     Executor,
     Expenditure,
     FujiScope,
+    Group,
     Post,
     PostScope,
     TechnicalProblem,
@@ -27,6 +28,7 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
+    GroupSchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
@@ -739,6 +741,27 @@ def get_bids() -> list[BidSchema]:
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
+def get_groups() -> list[GroupSchema]:
+    """Returns all groups in database."""
+    with session.begin() as s:
+        raw_models = s.query(Group).all()
+        return [GroupSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_group_by_name(name: str) -> GroupSchema:
+    """Returns GroupSchema by name"""
+    with session.begin() as s:
+        raw_model = s.query(Group).filter(Group.name == name).first()
+        return GroupSchema.model_validate(raw_model)
+
+
+def get_all_worker_in_group(group_id: int) -> list[WorkerSchema]:
+    """Return all workers in group"""
+    with session.begin() as s:
+        raw_models = s.query(Worker).filter(Worker.group_id == group_id)
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
 # region Technical problem
 
 
@@ -1062,27 +1085,9 @@ def get_all_active_requests_in_department(
         ]
 
 
-def get_all_repairmans_in_department(
-    department_name: str,
-) -> list[WorkerSchema]:
-    with session.begin() as s:
-        raw_model = (
-            s.query(Department).filter(Department.name == department_name).first()
-        )
-
-        return [
-            WorkerSchema.model_validate(executor)
-            for executor in [
-                raw_model.chief_technician,
-                raw_model.technician,
-                raw_model.electrician,
-            ]
-        ]
-
-
 def get_all_department() -> list[DepartmentSchema]:
     with session.begin() as s:
-        raw_models = s.query(Department)
+        raw_models = s.query(Department).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
 
 

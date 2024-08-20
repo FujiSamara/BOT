@@ -773,6 +773,12 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
+def get_groups_names() -> list[str]:
+    """Returns list of all groups names in db"""
+    groups = orm.get_groups()
+    return [group.name for group in groups]
+
+
 # region Technical request
 
 
@@ -1335,9 +1341,7 @@ def get_departments_for_territorial_manager(
     )
 
 
-def get_all_departments(
-    telegram_id: int,
-) -> list[DepartmentSchema]:
+def get_all_departments() -> list[DepartmentSchema]:
     departments = orm.get_all_department()
     return departments
 
@@ -1359,18 +1363,23 @@ def get_all_active_requests_in_department_for_chief_technician(
         return requests
 
 
-def get_all_repairmans_in_department(
-    department_name: str,
+def get_all_worker_in_group(
+    group_name: str,
 ) -> list[WorkerSchema]:
     """
-    Return all request in department
+    Return all workers in group
     """
-    repairmans = orm.get_all_repairmans_in_department(department_name)
-    if len(repairmans) == 0:
+    group = orm.get_group_by_name(group_name)
+    if not group:
         logging.getLogger("uvicorn.error").error(
-            f"Repairmans in department with name: {department_name} wasn't founds"
+            f"Group with name: {group_name} wasn't found"
         )
-    return repairmans
+    workers = orm.get_all_worker_in_group(group.id)
+    if len(workers) == 0:
+        logging.getLogger("uvicorn.error").error(
+            f"Workers with group id: {group.id} wasn't founds"
+        )
+    return workers
 
 
 # endregion
