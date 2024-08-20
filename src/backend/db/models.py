@@ -18,6 +18,7 @@ class ApprovalStatus(enum.Enum):
     denied = (3,)
     pending_approval = (4,)
     skipped = (5,)
+    not_relevant = (6,)
 
 
 class Gender(enum.Enum):
@@ -144,6 +145,9 @@ class Company(Base):
     bs_import_error: Mapped[bool] = mapped_column(nullable=True)
 
 
+# region Department
+
+
 class Department(Base):
     """Подразделения (рестораны)"""
 
@@ -250,6 +254,34 @@ class Department(Base):
     )
 
 
+# endregion
+# region Group
+
+
+class Group(Base):
+    """Технические заявки"""
+
+    def __str__(self) -> str:
+        return self.name
+
+    id: Mapped[intpk]
+
+    __tablename__ = "groups"
+
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+
+    workers: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="group",
+        foreign_keys="Worker.group_id",
+        cascade="all,delete",
+    )
+
+
+# endregion
+# region Worker
+
+
 class Worker(Base):
     __tablename__ = "workers"
 
@@ -270,6 +302,11 @@ class Worker(Base):
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship(
         "Department", back_populates="workers", foreign_keys=[department_id]
+    )
+
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
+    group: Mapped["Group"] = relationship(
+        "Group", back_populates="workers", foreign_keys=[group_id]
     )
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
@@ -343,6 +380,9 @@ class Worker(Base):
             back_populates="territorial_manager",
         )
     )
+
+
+# endregion
 
 
 class Bid(Base):

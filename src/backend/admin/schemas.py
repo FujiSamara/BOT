@@ -12,6 +12,7 @@ from db.models import (
     WorkerBidDocument,
     ApprovalStatus,
     Gender,
+    Group,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -168,6 +169,29 @@ class DepartmentView(ModelView, model=Department):
     }
 
 
+class GroupView(ModelView, model=Group):
+    column_list = [
+        Group.id,
+        Group.name,
+    ]
+    column_searchable_list = [
+        Group.name,
+    ]
+    form_columns = [
+        Group.id,
+        Group.name,
+    ]
+    can_export = False
+
+    name_plural = "Отделы"
+    name = "Отдел"
+    column_labels = {
+        Group.id: "id",
+        Group.name: "Отдел",
+        Group.workers: "Сотрудники",
+    }
+
+
 class WorkerView(ModelView, model=Worker):
     column_searchable_list = [
         Worker.f_name,
@@ -175,9 +199,15 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
     ]
-    column_list = [Worker.f_name, Worker.l_name, Worker.o_name, Worker.phone_number]
+    column_list = [
+        Worker.f_name,
+        Worker.l_name,
+        Worker.o_name,
+        Worker.phone_number,
+    ]
     column_details_exclude_list = [
         Worker.department_id,
+        Worker.group_id,
         Worker.post_id,
         Worker.bids,
         Worker.work_times,
@@ -204,6 +234,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
         Worker.department: "Производство",
+        Worker.group: "Отдел",
         Worker.post: "Должность",
         Worker.b_date: "Дата рождения",
         Worker.bids: "Заявки",
@@ -226,6 +257,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
         Worker.department,
+        Worker.group,
         Worker.telegram_id,
         Worker.post,
         Worker.b_date,
@@ -244,6 +276,10 @@ class WorkerView(ModelView, model=Worker):
             "order_by": "name",
         },
         "post": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "group": {
             "fields": ("name",),
             "order_by": "name",
         },
