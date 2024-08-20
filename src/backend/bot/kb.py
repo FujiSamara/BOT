@@ -525,6 +525,10 @@ bid_it_rm_create_history_button = InlineKeyboardButton(
     text="История заявок", callback_data="get_create_history_bid_it_rm"
 )
 
+bids_it_denied_for_repairman = InlineKeyboardButton(
+    text="Отклоненные заявки", callback_data="bids_it_denied_for_repairman"
+)
+
 back_repairman_button = InlineKeyboardButton(text="Назад", callback_data="get_back_rm")
 
 
@@ -539,8 +543,10 @@ repairman_department_menu = InlineKeyboardMarkup(
 repairman_bids_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [bids_pending_for_repairman],
+        [bids_it_denied_for_repairman],
         [bid_it_rm_create_history_button],
-        [get_department_it_repairman],
+        # [get_department_it_repairman],
+        [get_it_repairman_menu],
     ]
 )
 
@@ -618,7 +624,7 @@ tm_bids_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [bids_pending_for_tm],
         [bid_it_tm_create_history_button],
-        [get_department_it_tm],
+        [get_it_tm_menu],
     ]
 )
 
@@ -629,7 +635,6 @@ async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
     mark_text = "Отсутствует"
     work_comment: str | None = data.get("work_comment")
     work_comment_text = "Отсутствует"
-
     all_field_exist = True
     is_bad_work = False
 

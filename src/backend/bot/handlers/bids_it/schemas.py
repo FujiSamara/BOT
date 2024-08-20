@@ -5,7 +5,7 @@ from aiogram.filters.callback_data import CallbackData
 class BidITViewMode(str, Enum):
     full = 1
     state_only = 2
-    full_with_approve = 3
+    full_with_deny = 3
 
 
 class BidITViewType(str, Enum):

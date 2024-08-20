@@ -11,7 +11,11 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from bot.text import format_err
+from bot.text import (
+    format_err,
+    notification_it_repairman_reopen,
+    notification_worker,
+)
 
 from bot.kb import (
     tm_department_menu,
@@ -24,18 +28,19 @@ from bot.kb import (
     back_tm_button,
     bid_it_tm_create_history_button,
 )
-from bot.states import TMForm  # , Base
+from bot.states import TMForm, Base
 
 from bot.handlers.utils import (
+    notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
     try_edit_message,
 )
 from bot.handlers.bids_it.utils import (
     get_bid_it_list_info,
-    get_short_bid_it_info,
-    get_full_bid_it_info_tm,
+    get_bid_it_info,
     clear_state_with_success_it_tm,
+    filter_media_by_reopen,
 )
 from bot.handlers.bids_it.schemas import (
     BidITViewMode,
@@ -48,7 +53,8 @@ from bot.handlers.bids_it.schemas import (
 from db.service import (
     update_bid_it_tm,
     get_departments_names_by_tm_telegram_id,
-    get_bids_it_with_status,
+    get_pending_bids_it_for_territorial_manager,
+    get_history_bids_it_for_territorial_manager,
     get_bid_it_by_id,
 )
 from db.models import ApprovalStatus
@@ -70,7 +76,8 @@ async def get_tm_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == "get_it_tm_menu")
-async def get_tm_it_menu(callback: CallbackQuery):
+async def get_tm_it_menu(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(Base.none)
     await try_edit_message(
         message=callback.message,
         text="IT заявки ТУ",
@@ -117,7 +124,7 @@ async def set_department_type(message: Message, state: FSMContext):
 async def show_pending_bids_it_tm(callback: CallbackQuery, state: FSMContext):
     dep = (await state.get_data()).get("department")
     telegram_id = callback.message.chat.id
-    bids = get_bids_it_with_status(telegram_id, dep, ApprovalStatus.pending_approval)
+    bids = get_pending_bids_it_for_territorial_manager(telegram_id, dep)
     bids = sorted(bids, key=lambda bid: bid.opening_date, reverse=True)
     keyboard = create_inline_keyboard(
         *(
@@ -151,7 +158,7 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
     bid = get_bid_it_by_id(bid_id)
     await try_delete_message(callback.message)
 
-    text = get_short_bid_it_info(bid)
+    text = get_bid_it_info(bid)
 
     await callback.message.answer(
         text=text,
@@ -198,10 +205,10 @@ async def get_bid_it_for_tm(
     await try_delete_message(callback.message)
 
     bid = get_bid_it_by_id(callback_data.id)
-    problem_text = get_full_bid_it_info_tm(bid)
+    problem_text = get_bid_it_info(bid)
     await try_edit_or_answer(
         callback.message,
-        f"Заявка:\n{problem_text}",
+        problem_text,
         await get_create_tm_bid_it_menu(state),
     )
 
@@ -255,7 +262,6 @@ async def send_bid_it_tm(callback: CallbackQuery, state: FSMContext):
         bid_id=bid_id,
         mark=mark,
         work_comment=work_comment,
-        telegram_id=callback.message.chat.id,
     )
 
     await try_edit_message(message=callback.message, text="Успешно!")
@@ -268,6 +274,14 @@ async def send_bid_it_tm(callback: CallbackQuery, state: FSMContext):
         reply_markup=tm_bids_it_menu,
     )
 
+    bid = get_bid_it_by_id(bid_id)
+
+    if bid.status == ApprovalStatus.denied:
+        await notify_worker_by_telegram_id(
+            bid.repairman.telegram_id, notification_it_repairman_reopen
+        )
+    await notify_worker_by_telegram_id(bid.worker.telegram_id, notification_worker)
+
 
 # Get bids IT history
 
@@ -276,7 +290,7 @@ async def send_bid_it_tm(callback: CallbackQuery, state: FSMContext):
 async def get_history_bids_for_tm(callback: CallbackQuery, state: FSMContext):
     telegram_id = callback.message.chat.id
     dep = (await state.get_data()).get("department")
-    bids = get_bids_it_with_status(telegram_id, dep, ApprovalStatus.approved)
+    bids = get_history_bids_it_for_territorial_manager(telegram_id, dep)
     bids = sorted(bids, key=lambda bid: bid.opening_date, reverse=True)
     keyboard = create_inline_keyboard(
         *(
@@ -315,7 +329,7 @@ async def get_bid_tm(
             await try_delete_message(msg)
         await state.update_data(msgs_for_delete=[])
 
-    caption = get_full_bid_it_info_tm(bid_it)
+    caption = get_bid_it_info(bid_it)
 
     await try_edit_message(
         message=callback.message,
@@ -355,15 +369,18 @@ async def get_documents_problem_tm(
     callback: CallbackQuery, callback_data: BidITCallbackData, state: FSMContext
 ):
     bid = get_bid_it_by_id(callback_data.id)
-    media: list[InputMediaDocument] = [
-        InputMediaDocument(
-            media=BufferedInputFile(
-                file=bid.problem_photo[i].document.file.read(),
-                filename=bid.problem_photo[i].document.filename,
+    media: list[InputMediaDocument] = []
+
+    for document in bid.problem_photo:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=document.document.file.read(),
+                    filename=document.document.filename,
+                ),
             )
         )
-        for i in range(len(bid.problem_photo))
-    ]
+
     await try_delete_message(callback.message)
     msgs = await callback.message.answer_media_group(media=media)
     await state.update_data(msgs_for_delete=msgs)
@@ -391,15 +408,19 @@ async def get_documents_solve_tm(
     callback: CallbackQuery, callback_data: BidITCallbackData, state: FSMContext
 ):
     bid = get_bid_it_by_id(callback_data.id)
-    media: list[InputMediaDocument] = [
-        InputMediaDocument(
-            media=BufferedInputFile(
-                file=bid.work_photo[i].document.file.read(),
-                filename=bid.work_photo[i].document.filename,
+    media: list[InputMediaDocument] = []
+
+    for document in bid.work_photo:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=document.document.file.read(),
+                    filename=document.document.filename,
+                ),
             )
         )
-        for i in range(len(bid.work_photo))
-    ]
+    filter_media_by_reopen(media)
+
     await try_delete_message(callback.message)
     msgs = await callback.message.answer_media_group(media=media)
     await state.update_data(msgs_for_delete=msgs)

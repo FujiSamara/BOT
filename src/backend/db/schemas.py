@@ -4,7 +4,7 @@ from pydantic import BaseModel, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import ApprovalStatus, FujiScope, Gender, PostScope
+from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
 import logging
 
@@ -231,6 +231,52 @@ class BidITSchema(BaseModel):
     work_comment: Optional[str] = None
 
 
+# Technical request
+class TechnicalProblemSchema(BaseSchema):
+    id: Optional[int] = -1
+    problem_name: str
+    executor: Executor
+    sla: float
+
+
+class TechnicalRequestSchema(BaseSchema):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    # Данные при создание
+    problem: TechnicalProblemSchema
+    description: str
+    problem_photos: list[DocumentSchema]
+    repair_photos: Optional[list[DocumentSchema]] = None
+
+    open_date: datetime.datetime
+    deadline_date: datetime.datetime
+
+    repair_date: Optional[datetime.datetime] = None
+    confirmation_date: Optional[datetime.datetime] = None
+    confirmation_description: Optional[str] = None
+
+    reopen_date: Optional[datetime.datetime] = None
+    reopen_deadline_date: Optional[datetime.datetime] = None
+
+    reopen_repair_date: Optional[datetime.datetime] = None
+    reopen_confirmation_date: Optional[datetime.datetime] = None
+
+    close_date: Optional[datetime.datetime] = None
+    close_description: Optional[str] = None
+
+    state: ApprovalStatus
+    score: Optional[int] = None
+
+    worker: WorkerSchema
+    repairman: WorkerSchema
+    territorial_manager: WorkerSchema
+    department: DepartmentSchema
+
+
 # endregion
 
 
@@ -257,6 +303,8 @@ class BidRecordSchema(BaseSchema):
     documents: list[FileSchema]
     status: str
     comment: Optional[str]
+    denying_reason: Optional[str]
+    expenditure: ExpenditureSchema
 
     @field_validator("documents", mode="before")
     @classmethod
@@ -267,9 +315,8 @@ class BidRecordSchema(BaseSchema):
             result = []
             for doc in val:
                 if isinstance(doc, UploadFile):
-                    result.append(service.get_file_data(doc.file.name, "api"))
-                elif isinstance(doc, str):
-                    result.append(service.get_file_data(doc, "api"))
+                    if hasattr(doc.file, "name"):
+                        result.append(service.get_file_data(doc.file.name, "api"))
                 else:
                     return val
             return result

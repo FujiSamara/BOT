@@ -4,6 +4,7 @@ from aiogram.types import (
     ReplyKeyboardRemove,
     Message,
     ContentType,
+    InputMediaDocument,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
@@ -41,73 +42,76 @@ def get_bid_it_list_info(bid: BidITSchema) -> str:
     )
 
 
-def get_full_bid_it_info(bid: BidITSchema) -> str:
+def get_bid_it_state_info(bid: BidITSchema) -> str:
     stage = ""
 
-    if bid.status == ApprovalStatus.pending:
-        stage = "В ожидании у ответственного специалиста"
-    elif bid.status == ApprovalStatus.approved:
-        stage = "Выполнена"
-    elif bid.status == ApprovalStatus.pending_approval:
-        stage = "В ожидании оценки ТУ"
-    elif bid.status == ApprovalStatus.denied:
-        stage = "Работа специалиста не прошла проверку ТУ. В ожидании у ответственного специалиста"
-
-    bid_info = f"""{hbold("Номер заявки")}: {bid.id}
-{hbold("Проблема")}: {bid.problem.problem}
-{hbold("Описание проблемы")}: {bid.problem_comment}
-{hbold("Фото")}: Прикреплено к сообщению.
-{hbold("Дата создания")}: {bid.opening_date.strftime('%d.%m.%Y')}
-{hbold("Текущий этап")}: {stage}
-"""
-
-    return bid_info
-
-
-def get_bid_it_state_info(bid: BidITSchema) -> str:
-    stage = "На согласовании у "
-
-    if bid.status == ApprovalStatus.pending_approval:
-        stage += "ТУ"
-    elif bid.status == ApprovalStatus.pending:
-        stage += "ответственного специалиста"
-    # elif (
-    #     bid.kru_state == ApprovalStatus.denied
-    # ):
-    #     stage = "Отказано"
-    else:
-        stage = "Выполнено"
-
+    match bid.status:
+        case ApprovalStatus.pending:
+            stage = "В ожидании у IT специалиста"
+        case ApprovalStatus.approved:
+            stage = "Выполнено"
+        case ApprovalStatus.pending_approval:
+            stage = "В ожидании оценки ТУ"
+        case ApprovalStatus.denied:
+            stage = "Отправлено на доработку"
+        case ApprovalStatus.skipped:
+            stage = "Не выполнено"
     return stage
 
 
-def get_full_bid_it_info_tm(bid: BidITSchema) -> str:
-    stage = ""
+def get_bid_it_info(bid: BidITSchema) -> str:
+    text_form = (
+        f"{hbold(bid.problem.problem)} от "
+        + bid.opening_date.strftime("%d.%m.%Y")
+        + f"\nОписание:\n{bid.problem_comment}\n\
+Адрес: {bid.worker.department.address}\n\
+ФИО сотрудника: {bid.worker.l_name} {bid.worker.f_name} {bid.worker.o_name}\n\
+Номер телефона: {bid.worker.phone_number}\n\
+Должность: {bid.worker.post.name}\n\
+ФИО исполнителя: {bid.repairman.l_name} {bid.repairman.f_name} {bid.repairman.o_name}\n\
+Статус: "
+    )
 
-    if bid.status == ApprovalStatus.pending:
-        stage = "В ожидании у ответственного специалиста"
-    elif bid.status == ApprovalStatus.approved:
-        stage = "Выполнена"
-    elif bid.status == ApprovalStatus.pending_approval:
-        stage = "В ожидании оценки ТУ"
-    elif bid.status == ApprovalStatus.denied:
-        stage = "Работа специалиста не прошла проверку ТУ. В ожидании у ответственного специалиста"
+    text_form += get_bid_it_state_info(bid)
+    text_form += "\n \n"
 
-    bid_info = f"""{hbold("Номер заявки")}: {bid.id}
-{hbold("Проблема")}: {bid.problem.problem}
-{hbold("Описание проблемы")}: {bid.problem_comment}
-{hbold("Фото проблемы")}: Прикреплено к сообщению.
-{hbold("Фото выполненной работы")}: Прикреплено к сообщению.
-{hbold("Дата создания")}: {bid.opening_date.strftime('%d.%m.%Y')}
-{hbold("Текущий этап")}: {stage}
-"""
+    if bid.done_date:
+        text_form += "Дата ремонта " + bid.done_date.strftime("%d.%m.%Y") + "\n"
+    if bid.approve_date:
+        text_form += (
+            "Дата утверждения проделанной работы "
+            + bid.approve_date.strftime("%d.%m.%Y")
+            + "\n"
+        )
+        if bid.reopening_date:
+            text_form += (
+                "Дата переоткрытия заявки "
+                + bid.reopening_date.strftime("%d.%m.%Y")
+                + "\n"
+            )
+            if bid.work_comment:
+                text_form += "Комментарий ТУ: " + bid.confirmation_description + "\n"
+        # if bid.reopen_repair_date:
+        #     text_form += (
+        #         "Повторная дата ремонта "
+        #         + bid.reopening_repair_date.strftime('%d.%m.%Y')
+        #         + "\n"
+        #     )
+        # if bid.reopen_approve_date:
+        #     text_form += (
+        #         "Повторная дата утверждения "
+        #         + bid.reopen_approve_date.strftime('%d.%m.%Y')
+        #         + "\n"
+        #     )
+        # if bid.reopen_work_comment:
+        #     text_form += "Комментарий ТУ: " + bid.reopen_work_comment + "\n"
 
-    return bid_info
+        if bid.close_date:
+            text_form += (
+                "Дата закрытия заявки " + bid.close_date.strftime("%d.%m.%Y") + "\n"
+            )
 
-
-def get_short_bid_it_info(bid: BidITSchema) -> str:
-    return f"""Заявка {bid.id} от {bid.opening_date.date()}: {bid.problem.problem}.
-Статус: {get_bid_it_state_info(bid)}"""
+    return text_form
 
 
 async def clear_state_with_success_it_tm(
@@ -118,7 +122,7 @@ async def clear_state_with_success_it_tm(
     await ans.delete()
     await state.set_state(Base.none)
     bid = get_bid_it_by_id((await state.get_data()).get("bid_id"))
-    problem_text = get_full_bid_it_info_tm(bid)
+    problem_text = get_bid_it_info(bid)
     if edit:
         await try_edit_message(
             message=message,
@@ -212,7 +216,7 @@ async def clear_state_with_success_rm(
     await state.set_state(Base.none)
     bid_id = (await state.get_data()).get("bid_id")
     bid = get_bid_it_by_id(bid_id)
-    text = get_full_bid_it_info_tm(bid)
+    text = get_bid_it_info(bid)
 
     if edit:
         await try_edit_message(
@@ -225,3 +229,11 @@ async def clear_state_with_success_rm(
             text=hbold(bid_create_greet) + "\n" + text,
             reply_markup=await get_create_repairman_it_menu(state),
         )
+
+
+def filter_media_by_reopen(media: list[InputMediaDocument]) -> None:
+    rm = [doc for doc in media if doc.media.filename.find("reopen") == -1]
+    if len(rm) == len(media):
+        return
+    for doc in rm:
+        media.remove(doc)

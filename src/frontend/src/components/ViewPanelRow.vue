@@ -4,85 +4,48 @@
 			<thead>
 				<tr>
 					<th>
-						<div class="table-tools">
-							<table-checkbox
-								v-model:checked="props.table.allChecked.value"
-								class="checkbox"
-								id="main"
-							></table-checkbox>
+						<div class="table-head">
 							<div class="table-actions">
 								<clickable-icon
-									v-show="props.table.anyChecked.value"
+									class="icons"
+									style="width: 34px; margin-right: 15px"
+									img-src="/img/backward.svg"
+									@click="emit('close')"
+								></clickable-icon>
+								<clickable-icon
 									v-if="canDelete"
 									class="icons"
 									img-src="/img/trash.svg"
-									@click="onDelete"
+									@click="emit('delete')"
 								></clickable-icon>
 								<clickable-icon
-									v-show="!props.table.anyChecked.value"
-									v-if="canCreate"
-									class="icons"
-									img-src="/img/add-plus.svg"
-									@click="emit('create')"
-									style="filter: none !important"
-								></clickable-icon>
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
 									v-if="canApprove"
 									class="icons"
 									img-src="/img/check.svg"
 									:with-filter="false"
-									@click="onApprove"
+									@click="emit('approve')"
 								>
 								</clickable-icon>
 								<clickable-icon
-									v-show="props.table.anyChecked.value"
 									v-if="canReject"
 									class="icons"
 									img-src="/img/reject.svg"
 									:with-filter="false"
-									@click="onReject"
+									@click="modalVisible = true"
 								></clickable-icon>
 							</div>
+							<p style="margin: 0">Раздел</p>
 						</div>
 					</th>
-					<th
-						v-for="columnValue in props.table.rows.value.headers"
-						:key="columnValue"
-					>
-						<div class="table-header">
-							<p @click="props.table.sort(columnValue)" style="margin: 0">
-								{{ columnValue }}
-							</p>
-							<img v-if="props.table.sorted(columnValue)" src="/img/sort_icon.svg"></img>
-						</div>
-					</th>
+					<th>Информация</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr
-					v-for="row in table.rows.value.rows"
-					:key="row.id"
-					@click.prevent="$emit('click', row.id)"
-					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
-					:class="{
-						highlighted:
-							table.checked.value.get(row.id)!.value ||
-							table.highlighted.value.get(row.id)!.value,
-					}"
-				>
+				<tr v-for="field in props.viewer.fields">
+					<th>{{ field.header }}</th>
 					<th>
-						<div class="table-tools">
-							<table-checkbox
-								:id="row.id.toString()"
-								v-model:checked="table.checked.value.get(row.id)!.value"
-								class="checkbox"
-							></table-checkbox>
-						</div>
-					</th>
-					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
 						<ul class="table-cell">
-							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
+							<li class="table-cell-line" v-for="cellLine in field.cellLines">
 								<a
 									v-if="cellLine.href.length > 0"
 									@click.stop="
@@ -95,9 +58,6 @@
 							</li>
 						</ul>
 					</th>
-				</tr>
-				<tr>
-					<th style="border: none"></th>
 				</tr>
 			</tbody>
 		</table>
@@ -120,27 +80,19 @@
 				</div>
 			</ModalWindow>
 		</Transition>
-		<div v-if="table.isLoading.value" class="loader-space">
-			<circle-loader></circle-loader>
-		</div>
 	</div>
 </template>
 <script setup lang="ts">
-import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 import ModalWindow from "@/components/ModalWindow.vue";
-import type { Table } from "@/table";
+import type { Viewer } from "@/viewer";
 import { ref, type PropType } from "vue";
 import { BaseSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
-	table: {
-		type: Object as PropType<Table<BaseSchema>>,
+	viewer: {
+		type: Object as PropType<Viewer<BaseSchema>>,
 		required: true,
-	},
-	canCreate: {
-		type: Boolean,
-		required: false,
 	},
 	canDelete: {
 		type: Boolean,
@@ -156,35 +108,23 @@ const props = defineProps({
 	},
 });
 
-const networkStore = useNetworkStore();
-
 const modalVisible = ref(false);
 const rejectReason = ref("");
+const networkStore = useNetworkStore();
 
-const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
+const emit = defineEmits(["delete", "approve", "reject", "close"]);
 
-const onDelete = async () => {
-	await props.table.deleteChecked();
-	emit("delete");
-};
-const onApprove = async () => {
-	await props.table.approveChecked();
-	emit("approve");
-};
-const onReject = () => {
-	modalVisible.value = true;
-};
-const onRejectCommentSubmit = async () => {
+const onRejectCommentSubmit = () => {
 	modalVisible.value = false;
-	await props.table.rejectChecked(rejectReason.value);
+	emit("reject", rejectReason.value);
 	rejectReason.value = "";
-	emit("reject");
 };
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
 };
 </script>
 <style scoped>
+/*#region Table */
 .table-wrapper {
 	background-color: #ffffff;
 	overflow-y: auto;
@@ -196,7 +136,7 @@ const onHrefClicked = async (href: string, filename: string) => {
 	border-radius: 20px;
 	border: 1px solid #e6e6e6;
 	max-width: 100%;
-	width: min-content;
+	width: 100%;
 }
 
 .table-wrapper::-webkit-scrollbar {
@@ -225,7 +165,9 @@ table {
 	/** border */
 	border-collapse: collapse;
 	border-spacing: 0;
+	width: 100%;
 }
+/*#endregion Table */
 
 /** Cell border  */
 tbody tr th {
@@ -242,16 +184,6 @@ tbody tr th:last-child {
 }
 tbody tr:last-child th {
 	border-bottom: none;
-}
-
-/** Bottom row */
-tbody tr:last-child th {
-	padding: 10px;
-}
-
-/** Row selection */
-tr:not(:last-child):hover {
-	background-color: #fdf7fd;
 }
 
 /** Table head settings  */
@@ -274,16 +206,15 @@ thead th {
 	border: none;
 	font-weight: 600;
 	padding-bottom: 20px;
-	padding-top: 30px;
+	padding-top: 20px;
 
-	color: black;
-	background-color: #ffffff;
+	color: #ffffff;
+	background-color: #993ca6;
 	user-select: none;
 }
 
-thead th p:hover {
-	text-decoration: underline;
-	cursor: pointer;
+thead th p {
+	font-weight: 600;
 }
 
 thead th img {
@@ -304,7 +235,7 @@ th {
 	font-family: Stolzl;
 	font-size: 15px;
 	font-weight: 400;
-	min-width: 60px;
+	min-width: fit-content;
 	text-align: center;
 	position: relative;
 }
@@ -313,24 +244,28 @@ th {
 	background-color: #fdf7fd;
 }
 
-.table-tools {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: flex-start;
-	gap: 20px;
-}
-
-.table-actions {
+.table-head {
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 	justify-content: center;
+}
+
+.table-actions {
+	position: absolute;
+	filter: brightness(0) saturate(100%) invert(100%) sepia(7%) saturate(3904%)
+		hue-rotate(245deg) brightness(117%) contrast(105%);
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+
+	left: 20px;
 	gap: 10px;
 }
 
 .icons {
-	width: 20px;
+	width: 17px;
 }
 
 .loader-space {

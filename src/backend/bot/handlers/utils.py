@@ -32,6 +32,13 @@ from bot.kb import (
     get_it_repairman_menu,
     get_it_tm_menu,
 )
+from bot.handlers.tech_request.kb import (
+    wr_menu_button,  # worker
+    rm_button,  # repairman
+    ct_button,  # chief technician
+    tm_button,  # territorial manager
+    dd_button,  # department director
+)
 import asyncio
 
 
@@ -48,6 +55,11 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_rate: rating_menu_button,
         FujiScope.bot_worker_bid: worker_bid_menu_button,
         FujiScope.bot_bid_create: create_bid_menu_button,
+        FujiScope.bot_technical_request_worker: wr_menu_button,
+        FujiScope.bot_technical_request_repairman: rm_button,
+        FujiScope.bot_technical_request_chief_technician: ct_button,
+        FujiScope.bot_technical_request_territorial_manager: tm_button,
+        FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_create: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
         FujiScope.bot_bid_it_tm: get_it_tm_menu,
@@ -133,7 +145,10 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     """
     Sends notify `message` to workers by their `scope`.
     """
-    workers: list[WorkerSchema] = service.get_workers_by_scope(scope)
+    workers: list[WorkerSchema] = [
+        *service.get_workers_by_scope(scope),
+        *service.get_workers_by_scope(FujiScope.admin),
+    ]
 
     for worker in workers:
         if not worker.telegram_id:
