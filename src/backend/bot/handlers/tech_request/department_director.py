@@ -244,7 +244,7 @@ async def set_group(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await update_executor_format_ms(message)
+        await update_executor_format_ms(message=message, state=state)
     else:
         groups_names = get_groups_names()
         if message.text not in groups_names:
@@ -288,7 +288,7 @@ async def set_executor(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await update_executor_format_ms(message)
+        await update_executor_format_ms(message=message, state=state)
     else:
         LFO_workers = [
             " ".join([worker.l_name, worker.f_name, worker.o_name])
