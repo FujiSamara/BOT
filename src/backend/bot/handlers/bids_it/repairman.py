@@ -6,6 +6,8 @@ from aiogram.types import (
     InlineKeyboardButton,
     BufferedInputFile,
     InputMediaDocument,
+    ReplyKeyboardRemove,
+    InlineKeyboardMarkup,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
@@ -15,7 +17,7 @@ from fastapi import UploadFile
 from bot.text import (
     format_err,
     notification_it_territorial_manager,
-    notification_worker,
+    notification_it_worker,
 )
 
 from bot.kb import (
@@ -40,10 +42,12 @@ from bot.handlers.utils import (
     notify_worker_by_telegram_id,
 )
 from bot.handlers.bids_it.utils import (
+    create_buttons_for_repairman,
     get_bid_it_list_info,
     clear_state_with_success_rm,
     get_bid_it_info,
     filter_media_by_reopen,
+    filter_media_by_done,
 )
 from bot.handlers.bids_it.schemas import (
     BidITViewMode,
@@ -104,6 +108,12 @@ async def set_department_type(message: Message, state: FSMContext):
     if message.text == "⏪ Назад":
         await send_department_menu_for_repairman(message, state)
     elif message.text in dep:
+        ans = await message.answer(
+            hbold("Успешно!"), reply_markup=ReplyKeyboardRemove()
+        )
+        await asyncio.sleep(1)
+        await ans.delete()
+        await state.set_state(Base.none)
         await state.update_data(department=message.text)
         await try_edit_or_answer(
             message=message,
@@ -245,7 +255,6 @@ async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
 
     await try_edit_message(message=callback.message, text="Успешно!")
     await asyncio.sleep(1)
-    # await send_department_menu_for_repairman(callback.message, state)
     await state.clear()
     await state.update_data(department=department_name)
     await try_edit_or_answer(
@@ -259,8 +268,7 @@ async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
     await notify_worker_by_telegram_id(
         bid.territorial_manager.telegram_id, notification_it_territorial_manager
     )
-
-    await notify_worker_by_telegram_id(bid.worker.telegram_id, notification_worker)
+    await notify_worker_by_telegram_id(bid.worker.telegram_id, notification_it_worker)
 
 
 # Denied bids IT
@@ -311,37 +319,25 @@ async def get_denied_bid_repairman(
 
     caption = get_bid_it_info(bid_it)
 
-    await try_edit_message(
-        message=callback.message,
-        text=caption,
-        reply_markup=create_inline_keyboard(
+    buttons = create_buttons_for_repairman(bid_it, callback_data)
+    buttons.insert(
+        0,
+        [
             InlineKeyboardButton(
                 text="Выполнить заявку",
                 callback_data=WorkerBidITCallbackData(
                     id=callback_data.id,
                     endpoint_name="take_bid_it_for_repairman",
                 ).pack(),
-            ),
-            InlineKeyboardButton(
-                text="Показать фото проблемы",
-                callback_data=BidITCallbackData(
-                    id=bid_it.id,
-                    mode=callback_data.mode,
-                    type=BidITViewType.creation,
-                    endpoint_name="create_documents_problem_rm",
-                ).pack(),
-            ),
-            InlineKeyboardButton(
-                text="Показать фото выполненной работы",
-                callback_data=BidITCallbackData(
-                    id=bid_it.id,
-                    mode=callback_data.mode,
-                    type=BidITViewType.creation,
-                    endpoint_name="create_documents_solve_rm",
-                ).pack(),
-            ),
-            bids_it_denied_for_repairman,
-        ),
+            )
+        ],
+    )
+    buttons.append([bids_it_denied_for_repairman])
+
+    await try_edit_message(
+        message=callback.message,
+        text=caption,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
     )
 
 
@@ -393,30 +389,13 @@ async def get_bid_repairman(
 
     caption = get_bid_it_info(bid_it)
 
+    buttons = create_buttons_for_repairman(bid_it, callback_data)
+    buttons.append([bid_it_rm_create_history_button])
+
     await try_edit_message(
         message=callback.message,
         text=caption,
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Показать фото проблемы",
-                callback_data=BidITCallbackData(
-                    id=bid_it.id,
-                    mode=callback_data.mode,
-                    type=BidITViewType.creation,
-                    endpoint_name="create_documents_problem_rm",
-                ).pack(),
-            ),
-            InlineKeyboardButton(
-                text="Показать фото выполненной работы",
-                callback_data=BidITCallbackData(
-                    id=bid_it.id,
-                    mode=callback_data.mode,
-                    type=BidITViewType.creation,
-                    endpoint_name="create_documents_solve_rm",
-                ).pack(),
-            ),
-            bid_it_rm_create_history_button,
-        ),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
     )
 
 
@@ -463,9 +442,50 @@ async def get_documents_problem_rm(
 
 @router.callback_query(
     BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.endpoint_name == "create_documents_solve_rm"),
+    BidITCallbackData.filter(F.endpoint_name == "create_documents_done_rm"),
 )
-async def get_documents_solve_rm(
+async def get_documents_done_rm(
+    callback: CallbackQuery, callback_data: BidITCallbackData, state: FSMContext
+):
+    bid = get_bid_it_by_id(callback_data.id)
+    media: list[InputMediaDocument] = []
+
+    for document in bid.work_photo:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=document.document.file.read(),
+                    filename=document.document.filename,
+                ),
+            )
+        )
+
+    filter_media_by_done(media)
+
+    await try_delete_message(callback.message)
+    msgs = await callback.message.answer_media_group(media=media)
+    await state.update_data(msgs_for_delete=msgs)
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=BidITCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    type=BidITViewType.creation,
+                    endpoint_name="create_bid_it_info_rm",
+                ).pack(),
+            )
+        ),
+    )
+
+
+@router.callback_query(
+    BidITCallbackData.filter(F.type == BidITViewType.creation),
+    BidITCallbackData.filter(F.endpoint_name == "create_documents_done_reopen_rm"),
+)
+async def get_documents_done_reopen_rm(
     callback: CallbackQuery, callback_data: BidITCallbackData, state: FSMContext
 ):
     bid = get_bid_it_by_id(callback_data.id)

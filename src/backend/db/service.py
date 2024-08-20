@@ -1499,11 +1499,14 @@ def update_bid_it_rm(bid_id: int, files: UploadFile):
 
     bid = orm.get_bid_it_by_id(bid_id)
 
+    cur_date = datetime.now()
+
     part = ""
     if bid.reopening_date:
+        bid.reopen_done_date = cur_date
         part = "_reopen_"
-
-    cur_date = datetime.now()
+    else:
+        bid.done_date = cur_date
 
     documents = []
     for index, file in enumerate(files):
@@ -1512,7 +1515,6 @@ def update_bid_it_rm(bid_id: int, files: UploadFile):
         file.filename = filename
         documents.append(DocumentSchema(document=file))
 
-    bid.done_date = cur_date
     bid.work_photo = documents
     bid.status = ApprovalStatus.pending_approval
 
@@ -1563,19 +1565,26 @@ def update_bid_it_tm(bid_id: int, mark: int, work_comment: str | None):
 
     cur_date = datetime.now()
     bid.mark = mark
+    bid.approve_date = cur_date
 
-    if mark in range(1, 3) and bid.reopening_date:
-        bid.status = ApprovalStatus.skipped
-        bid.work_comment = work_comment
-        bid.close_date = cur_date
-    elif mark in range(1, 3):
-        bid.reopening_date = cur_date
-        bid.work_comment = work_comment
-        bid.status = ApprovalStatus.denied
-    elif mark in range(3, 6):
-        bid.status = ApprovalStatus.approved
-        bid.approve_date = cur_date
-        bid.close_date = cur_date
+    if bid.reopening_date:
+        if mark in range(1, 3):
+            bid.status = ApprovalStatus.skipped
+            bid.reopen_work_comment = work_comment
+            bid.reopen_approve_date = cur_date
+            bid.close_date = cur_date
+        else:
+            bid.status = ApprovalStatus.approved
+            bid.reopen_approve_date = cur_date
+            bid.close_date = cur_date
+    else:
+        if mark in range(1, 3):
+            bid.reopening_date = cur_date
+            bid.work_comment = work_comment
+            bid.status = ApprovalStatus.denied
+        else:
+            bid.status = ApprovalStatus.approved
+            bid.close_date = cur_date
 
     orm.update_bid_it_tm(bid)
 

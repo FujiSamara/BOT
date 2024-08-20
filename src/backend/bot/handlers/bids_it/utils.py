@@ -5,9 +5,11 @@ from aiogram.types import (
     Message,
     ContentType,
     InputMediaDocument,
+    InlineKeyboardButton,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
+from bot.handlers.bids_it.schemas import BidITCallbackData, BidITViewType
 from db.schemas import (
     ProblemITSchema,
     BidITSchema,
@@ -90,21 +92,21 @@ def get_bid_it_info(bid: BidITSchema) -> str:
                 + "\n"
             )
             if bid.work_comment:
-                text_form += "Комментарий ТУ: " + bid.confirmation_description + "\n"
-        # if bid.reopen_repair_date:
-        #     text_form += (
-        #         "Повторная дата ремонта "
-        #         + bid.reopening_repair_date.strftime('%d.%m.%Y')
-        #         + "\n"
-        #     )
-        # if bid.reopen_approve_date:
-        #     text_form += (
-        #         "Повторная дата утверждения "
-        #         + bid.reopen_approve_date.strftime('%d.%m.%Y')
-        #         + "\n"
-        #     )
-        # if bid.reopen_work_comment:
-        #     text_form += "Комментарий ТУ: " + bid.reopen_work_comment + "\n"
+                text_form += "Комментарий ТУ: " + bid.work_comment + "\n"
+        if bid.reopen_done_date:
+            text_form += (
+                "Повторная дата ремонта "
+                + bid.reopen_done_date.strftime("%d.%m.%Y")
+                + "\n"
+            )
+        if bid.reopen_approve_date:
+            text_form += (
+                "Повторная дата утверждения "
+                + bid.reopen_approve_date.strftime("%d.%m.%Y")
+                + "\n"
+            )
+        if bid.reopen_work_comment:
+            text_form += "Комментарий ТУ: " + bid.reopen_work_comment + "\n"
 
         if bid.close_date:
             text_form += (
@@ -237,3 +239,154 @@ def filter_media_by_reopen(media: list[InputMediaDocument]) -> None:
         return
     for doc in rm:
         media.remove(doc)
+
+
+def filter_media_by_done(media: list[InputMediaDocument]) -> None:
+    rm = [doc for doc in media if doc.media.filename.find("reopen") != -1]
+    if len(rm) == len(media):
+        return
+    for doc in rm:
+        media.remove(doc)
+
+
+def create_buttons_for_repairman(bid_it: BidITSchema, callback_data: BidITCallbackData):
+    buttons = []
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Показать фото проблемы",
+                callback_data=BidITCallbackData(
+                    id=bid_it.id,
+                    mode=callback_data.mode,
+                    type=BidITViewType.creation,
+                    endpoint_name="create_documents_problem_rm",
+                ).pack(),
+            )
+        ]
+    )
+    if bid_it.done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото выполненной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done_rm",
+                    ).pack(),
+                )
+            ]
+        )
+    if bid_it.reopen_done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото переделанной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done_reopen_rm",
+                    ).pack(),
+                )
+            ]
+        )
+
+    return buttons
+
+
+def create_buttons_for_worker(bid_it: BidITSchema, callback_data: BidITCallbackData):
+    buttons = []
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Показать фото проблемы",
+                callback_data=BidITCallbackData(
+                    id=bid_it.id,
+                    mode=callback_data.mode,
+                    type=BidITViewType.creation,
+                    endpoint_name="create_documents_problem",
+                ).pack(),
+            )
+        ]
+    )
+    if bid_it.done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото выполненной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done",
+                    ).pack(),
+                )
+            ]
+        )
+    if bid_it.reopen_done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото переделанной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done_reopen",
+                    ).pack(),
+                )
+            ]
+        )
+
+    return buttons
+
+
+def create_buttons_for_territorial_manager(
+    bid_it: BidITSchema, callback_data: BidITCallbackData
+):
+    buttons = []
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Показать фото проблемы",
+                callback_data=BidITCallbackData(
+                    id=bid_it.id,
+                    mode=callback_data.mode,
+                    type=BidITViewType.creation,
+                    endpoint_name="create_documents_problem_tm",
+                ).pack(),
+            )
+        ]
+    )
+    if bid_it.done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото выполненной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done_tm",
+                    ).pack(),
+                )
+            ]
+        )
+    if bid_it.reopen_done_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Показать фото переделанной работы",
+                    callback_data=BidITCallbackData(
+                        id=bid_it.id,
+                        mode=callback_data.mode,
+                        type=BidITViewType.creation,
+                        endpoint_name="create_documents_done_reopen_tm",
+                    ).pack(),
+                )
+            ]
+        )
+
+    return buttons

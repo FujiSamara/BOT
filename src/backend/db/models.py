@@ -660,6 +660,7 @@ class BidIT(Base):
 
     problem_comment: Mapped[str] = mapped_column(nullable=False)
     work_comment: Mapped[str] = mapped_column(nullable=True)
+    reopen_work_comment: Mapped[str] = mapped_column(nullable=True)
 
     problem_photo: Mapped[List["BidITDocument"]] = relationship(
         "BidITDocument", cascade="all,delete", back_populates="bid_it"
@@ -711,6 +712,8 @@ class BidIT(Base):
     reopening_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_done_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
 # region Technical Request

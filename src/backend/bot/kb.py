@@ -512,6 +512,9 @@ async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
 get_it_repairman_menu = InlineKeyboardButton(
     text="IT заявки", callback_data="get_it_repairman_menu"
 )
+get_it_repairman_menu_bts = InlineKeyboardButton(
+    text="Выбрать предприятие", callback_data="get_it_repairman_menu"
+)
 
 get_department_it_repairman = InlineKeyboardButton(
     text="Выбрать предприятие", callback_data="get_department_it_repairman"
@@ -545,8 +548,7 @@ repairman_bids_it_menu = InlineKeyboardMarkup(
         [bids_pending_for_repairman],
         [bids_it_denied_for_repairman],
         [bid_it_rm_create_history_button],
-        # [get_department_it_repairman],
-        [get_it_repairman_menu],
+        [get_it_repairman_menu_bts],
     ]
 )
 
@@ -597,6 +599,9 @@ take_bid_it_for_repairman_menu = InlineKeyboardMarkup(
 get_it_tm_menu = InlineKeyboardButton(
     text="IT заявки ТУ", callback_data="get_it_tm_menu"
 )
+get_it_tm_menu_bts = InlineKeyboardButton(
+    text="Выбрать предприятие", callback_data="get_it_tm_menu"
+)
 
 bids_pending_for_tm = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="bids_pending_for_tm"
@@ -624,7 +629,7 @@ tm_bids_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [bids_pending_for_tm],
         [bid_it_tm_create_history_button],
-        [get_it_tm_menu],
+        [get_it_tm_menu_bts],
     ]
 )
 

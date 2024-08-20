@@ -221,7 +221,9 @@ class BidITSchema(BaseModel):
     opening_date: datetime.datetime
     done_date: Optional[datetime.datetime] = None
     reopening_date: Optional[datetime.datetime] = None
+    reopen_done_date: Optional[datetime.datetime] = None
     approve_date: Optional[datetime.datetime] = None
+    reopen_approve_date: Optional[datetime.datetime] = None
     close_date: Optional[datetime.datetime] = None
     status: ApprovalStatus
     repairman: Optional[WorkerSchema] = None
@@ -229,6 +231,7 @@ class BidITSchema(BaseModel):
     mark: Optional[int] = None
     work_photo: list[DocumentSchema] = None
     work_comment: Optional[str] = None
+    reopen_work_comment: Optional[str] = None
 
 
 # Technical request

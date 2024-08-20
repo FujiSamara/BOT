@@ -1270,6 +1270,7 @@ def update_bid_it_rm(bid: BidITSchema):
 
         cur_bid.status = bid.status
         cur_bid.done_date = bid.done_date
+        cur_bid.reopen_done_date = bid.reopen_done_date
         # cur_bid.work_photo = []
 
         for document in bid.work_photo:
@@ -1298,6 +1299,9 @@ def update_bid_it_tm(bid: BidITSchema):
         cur_bid.approve_date = bid.approve_date
         cur_bid.close_date = bid.close_date
         cur_bid.work_comment = bid.work_comment
+        cur_bid.reopen_approve_date = bid.reopen_approve_date
+        cur_bid.reopen_done_date = bid.reopen_done_date
+        cur_bid.reopen_work_comment = bid.reopen_work_comment
 
 
 def get_bids_it_by_repairman_with_status(
