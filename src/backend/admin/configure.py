@@ -5,6 +5,7 @@ from admin.schemas import (
     PostView,
     WorkerView,
     WorkerBidView,
+    TechnicalRequestView,
 )
 
 
@@ -20,3 +21,4 @@ def configure(admin: FujiAdmin):
     admin.add_view(PostView)
     admin.add_view(WorkerView)
     admin.add_view(WorkerBidView)
+    admin.add_view(TechnicalRequestView)

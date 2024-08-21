@@ -2,8 +2,10 @@
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqladmin import ModelView, action
+from sqlalchemy import Select, or_, select
 from db.models import (
     PostScope,
+    TechnicalProblem,
     Worker,
     Company,
     Department,
@@ -12,6 +14,7 @@ from db.models import (
     WorkerBidDocument,
     ApprovalStatus,
     Gender,
+    TechnicalRequest,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -387,6 +390,101 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.work_permission: files_format,
         WorkerBid.worksheet: files_format,
         WorkerBid.create_date: datetime_format,
+    }
+
+    column_formatters_detail = column_formatters
+
+
+class TechnicalRequestView(ModelView, model=TechnicalRequest):
+    details_template = "tech_req_details.html"
+
+    column_labels = {
+        TechnicalRequest.description: "описание проблемы",
+        TechnicalRequest.state: "Статус выполнения",
+        TechnicalRequest.score: "Оценка ТУ",
+        TechnicalRequest.open_date: "Дата открытия заявки",
+        TechnicalRequest.deadline_date: "Крайний срок ремонта",
+        TechnicalRequest.repair_date: "Дата ремонта",
+        TechnicalRequest.confirmation_date: "Дата утверждения ремонта",
+        TechnicalRequest.confirmation_description: "Описания доработки",
+        TechnicalRequest.reopen_date: "Дата пере открытия",
+        TechnicalRequest.reopen_deadline_date: "Крайний срок ремонта при пере открытие",
+        TechnicalRequest.reopen_repair_date: "Дата повторного ремонта",
+        TechnicalRequest.reopen_confirmation_date: "Дата повторного утверждения",
+        TechnicalRequest.close_date: "Дата закрытия заявки",
+        TechnicalRequest.close_description: "Комментарий ТУ при закрытие заявки",
+        TechnicalRequest.repair_photos: "Фотографии ремонта",
+        TechnicalRequest.problem_photos: "Фотографии проблемы",
+        TechnicalRequest.repairman: "Исполнитель",
+        TechnicalRequest.department: "Производство",
+        TechnicalRequest.problem: "Проблема",
+        TechnicalRequest.territorial_manager: "Территориальный менеджер",
+        TechnicalRequest.worker: "Создатель",
+    }
+
+    column_list = [
+        TechnicalRequest.id,
+        TechnicalRequest.department,
+        TechnicalRequest.problem,
+        TechnicalRequest.repairman,
+        TechnicalRequest.state,
+        TechnicalRequest.description,
+    ]
+
+    column_details_exclude_list = [
+        TechnicalRequest.department_id,
+        TechnicalRequest.worker_id,
+        TechnicalRequest.problem_id,
+        TechnicalRequest.repairman_id,
+        TechnicalRequest.department_id,
+        TechnicalRequest.territorial_manager_id,
+    ]
+
+    column_sortable_list = [
+        TechnicalRequest.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        # Searches corresponding depatrmtens and problems
+        deps = select(Department.id).filter(Department.name.ilike(f"%{term}%"))
+        probs = select(TechnicalProblem.id).filter(
+            TechnicalProblem.problem_name.ilike(f"%{term}%")
+        )
+
+        # Chooses requests with found deps or probs.
+        return select(TechnicalRequest).filter(
+            or_(
+                TechnicalRequest.department_id.in_(deps),
+                TechnicalRequest.problem_id.in_(probs),
+            )
+        )
+
+    column_searchable_list = [TechnicalRequest.department, TechnicalRequest.problem]
+
+    can_create = False
+    can_edit = False
+    can_export = False
+    name_plural = "Технические заявки"
+    name = "Техническая заявка"
+
+    @staticmethod
+    def files_format(inst, column):
+        return WorkerBidView.files_format(inst, column)
+
+    column_formatters = {
+        TechnicalRequest.state: WorkerBidView.approval_status_format,
+        TechnicalRequest.repair_photos: files_format,
+        TechnicalRequest.problem_photos: files_format,
+        TechnicalRequest.open_date: WorkerBidView.datetime_format,
+        TechnicalRequest.close_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_date: WorkerBidView.datetime_format,
+        TechnicalRequest.repair_date: WorkerBidView.datetime_format,
+        TechnicalRequest.deadline_date: WorkerBidView.datetime_format,
+        TechnicalRequest.confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_repair_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_deadline_date: WorkerBidView.datetime_format,
     }
 
     column_formatters_detail = column_formatters

@@ -29,6 +29,7 @@ old_options = (
     "bot_technical_request_repairman",
     "bot_technical_request_chief_technician",
     "bot_technical_request_territorial_manager",
+    "bot_technical_request_department_director",
 )
 
 
