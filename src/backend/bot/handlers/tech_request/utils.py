@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 from bot.states import Base
 from settings import get_settings
@@ -17,7 +16,6 @@ from bot import text
 
 from db.models import ApprovalStatus
 from db.service import get_technical_request_by_id
-from db.schemas import DepartmentSchema
 
 from bot.handlers.utils import (
     try_delete_message,
