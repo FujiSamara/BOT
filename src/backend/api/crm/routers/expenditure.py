@@ -29,17 +29,12 @@ async def get_pages_info(
 @router.get("/page/{page}")
 async def get_expenditures(
     page: int,
+    order_by: Optional[str] = None,
+    desc: bool = False,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> list[ExpenditureSchema]:
-    return service.get_expenditures_at_page(page, records_per_page)
-
-
-@router.get("/last")
-async def get_last_expenditure(
-    _: User = Security(get_current_user, scopes=["crm_expenditure"]),
-) -> Optional[ExpenditureSchema]:
-    return service.get_last_expenditure()
+    return service.get_expenditures_at_page(page, records_per_page, order_by, desc)
 
 
 @router.get("/find")

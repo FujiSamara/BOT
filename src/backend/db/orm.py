@@ -1,4 +1,5 @@
 from typing import Any, Optional, Type
+import typing
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -35,8 +36,10 @@ from db.schemas import (
     WorkTimeSchema,
     PostSchema,
 )
+from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy import null, or_, and_, desc
+from sqlalchemy.orm.query import Query
 
 
 def create_tables():
@@ -740,29 +743,6 @@ def get_bids() -> list[BidSchema]:
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-def get_model_count(model_type: Type[Base]) -> int:
-    """Return count of `model` in bd."""
-    with session.begin() as s:
-        return s.query(model_type).count()
-
-
-def get_models_by_page(
-    model_type: Type[Base],
-    schema_type: Type[BaseSchema],
-    page: int,
-    records_per_page: int,
-) -> list[BaseSchema]:
-    """Return `model_type` schemas"""
-    with session.begin() as s:
-        raw_models = (
-            s.query(model_type)
-            .offset((page - 1) * records_per_page)
-            .limit(records_per_page)
-        )
-
-        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
-
-
 # region Technical problem
 
 
@@ -1108,6 +1088,72 @@ def get_all_department() -> list[DepartmentSchema]:
     with session.begin() as s:
         raw_models = s.query(Department)
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+# endregion
+
+
+# region Query generator
+def order_by_worker(query: Query, column: any, is_desc: bool = False) -> Query:
+    columns = [Worker.l_name, Worker.f_name, Worker.o_name]
+    if is_desc:
+        columns = [desc(w_column) for w_column in columns]
+    return query.join(column).order_by(*columns)
+
+
+def order_by(
+    query: Query,
+    schema_type: Type[BaseModel],
+    model_type: Type[Base],
+    column_name: str,
+    desc: bool = False,
+) -> None:
+    """Wraps `query` by adding order_by instruction."""
+    # Type inference
+    column_model_hint = typing.get_type_hints(schema_type)[column_name]
+    column_model_type = None
+    if typing.get_origin(column_model_hint) == typing.Union:
+        column_model_type = typing.get_args(column_model_hint)[0]
+    else:
+        column_model_type = column_model_hint
+
+    if column_model_type == WorkerSchema:
+        order_by_worker(query, getattr(model_type, column_name), desc)
+
+
+# endregion
+
+
+# region Model general
+def get_model_count(model_type: Type[Base]) -> int:
+    """Return count of `model` in bd."""
+    with session.begin() as s:
+        return s.query(model_type).count()
+
+
+def get_models_by_page(
+    model_type: Type[Base],
+    schema_type: Type[BaseModel],
+    page: int,
+    records_per_page: int,
+    order_by_column: Optional[str],
+    desc: bool = False,
+) -> list[BaseSchema]:
+    """Return `model_type` schemas
+
+    :param model_type: model type extended `Base`.
+    :param schema_type: model type extended `BaseModel`.
+    :param order_by_column: name of column for ordering.
+    """
+    with session.begin() as s:
+        query = s.query(model_type)
+
+        if order_by_column:
+            order_by(query, schema_type, model_type, order_by_column, desc)
+
+        raw_models = query.offset((page - 1) * records_per_page).limit(records_per_page)
+
+        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
 
 
 # endregion

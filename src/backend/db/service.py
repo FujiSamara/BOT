@@ -608,45 +608,6 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     await send_menu_by_scopes(msg)
 
 
-def get_expenditures() -> list[ExpenditureSchema]:
-    """Returns all expenditures in database."""
-    return orm.get_expenditures()
-
-
-def create_expenditure(expenditure: ExpenditureSchema) -> None:
-    """Creates expenditure"""
-    if not orm.create_expenditure(expenditure):
-        logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
-    updated_expenditure = get_last_expenditure()
-    budget_record = BudgetRecordSchema(
-        expenditure=updated_expenditure,
-        department=None,
-        limit=None,
-        last_update=None,
-    )
-    create_budget_record(budget_record)
-
-
-def remove_expenditure(id: int) -> None:
-    orm.remove_expenditure(id)
-
-
-def update_expenditure(expenditure: ExpenditureSchema) -> None:
-    """Updates expenditure by `ExpenditureSchema.id`"""
-    if not orm.update_expenditure(expenditure):
-        logging.getLogger("uvicorn.error").error("Expenditure wasn't updated.")
-
-
-def get_expenditure_by_id(id: int) -> ExpenditureSchema:
-    """Finds expenditure by this `id`."""
-    return orm.find_expenditure_by_column(Expenditure.id, id)
-
-
-def get_last_expenditure() -> ExpenditureSchema:
-    """Returns last expenditure in db."""
-    return orm.get_last_expenditrure()
-
-
 def find_workers(record: str) -> list[WorkerSchema]:
     """Finds workers by given `record`.
 
@@ -684,14 +645,6 @@ def get_budget_record_by_id(id: int) -> BudgetRecordSchema:
 def get_last_budget_record() -> BudgetRecordSchema:
     """Returns last budget record in db."""
     return orm.get_last_budget_record()
-
-
-def find_expenditures(record: str) -> list[WorkerSchema]:
-    """Finds expenditures by given `record`.
-
-    Search is carried out by name and chapter.
-    """
-    return orm.find_expenditures_by_name(record)
 
 
 def find_department_by_name(record: str) -> list[DepartmentSchema]:
@@ -765,26 +718,6 @@ def get_chapters() -> list[str]:
     """Returns list of all chapters in db"""
     expenditures = orm.get_expenditures()
     return [expenditure.chapter for expenditure in expenditures]
-
-
-def get_expenditures_names() -> list[str]:
-    """Returns list of all expenditure names in db"""
-    expenditures = orm.get_expenditures()
-    return [expenditure.name for expenditure in expenditures]
-
-
-def get_expenditure_count() -> int:
-    """Return expenditure count in bd."""
-    return orm.get_model_count(Expenditure)
-
-
-def get_expenditures_at_page(
-    page: int, records_per_page: int
-) -> list[ExpenditureSchema]:
-    """Return `records_per_page` expenditures at `page`"""
-    return orm.get_models_by_page(
-        Expenditure, ExpenditureSchema, page, records_per_page
-    )
 
 
 # region Technical request
@@ -1385,6 +1318,80 @@ def get_all_repairmans_in_department(
             f"Repairmans in department with name: {department_name} wasn't founds"
         )
     return repairmans
+
+
+# endregion
+
+
+# region Expenditure
+def get_expenditures_names() -> list[str]:
+    """Returns list of all expenditure names in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.name for expenditure in expenditures]
+
+
+def get_expenditure_count() -> int:
+    """Return expenditure count in bd."""
+    return orm.get_model_count(Expenditure)
+
+
+def get_expenditures_at_page(
+    page: int, records_per_page: int, order_by_column: Optional[str], desc: bool = False
+) -> list[ExpenditureSchema]:
+    """Return `records_per_page` expenditures at `page`
+
+    :param order_by_column: name of column for ordering.
+    """
+    return orm.get_models_by_page(
+        Expenditure, ExpenditureSchema, page, records_per_page, order_by_column, desc
+    )
+
+
+def find_expenditures(record: str) -> list[WorkerSchema]:
+    """Finds expenditures by given `record`.
+
+    Search is carried out by name and chapter.
+    """
+    return orm.find_expenditures_by_name(record)
+
+
+def get_expenditures() -> list[ExpenditureSchema]:
+    """Returns all expenditures in database."""
+    return orm.get_expenditures()
+
+
+def create_expenditure(expenditure: ExpenditureSchema) -> None:
+    """Creates expenditure"""
+    if not orm.create_expenditure(expenditure):
+        logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
+    updated_expenditure = get_last_expenditure()
+    budget_record = BudgetRecordSchema(
+        expenditure=updated_expenditure,
+        department=None,
+        limit=None,
+        last_update=None,
+    )
+    create_budget_record(budget_record)
+
+
+def remove_expenditure(id: int) -> None:
+    orm.remove_expenditure(id)
+
+
+def update_expenditure(expenditure: ExpenditureSchema) -> None:
+    """Updates expenditure by `ExpenditureSchema.id`"""
+    if not orm.update_expenditure(expenditure):
+        logging.getLogger("uvicorn.error").error("Expenditure wasn't updated.")
+
+
+def get_expenditure_by_id(id: int) -> ExpenditureSchema:
+    """Finds expenditure by this `id`."""
+    return orm.find_expenditure_by_column(Expenditure.id, id)
+
+
+def get_last_expenditure() -> ExpenditureSchema:
+    """Returns last expenditure in db."""
+    return orm.get_last_expenditrure()
 
 
 # endregion
