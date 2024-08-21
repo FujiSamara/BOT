@@ -1341,8 +1341,8 @@ def get_departments_for_territorial_manager(
     )
 
 
-def get_all_departments() -> list[DepartmentSchema]:
-    departments = orm.get_all_department()
+def get_departments() -> list[DepartmentSchema]:
+    departments = orm.get_departments()
     return departments
 
 

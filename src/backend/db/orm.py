@@ -1085,7 +1085,7 @@ def get_all_active_requests_in_department(
         ]
 
 
-def get_all_department() -> list[DepartmentSchema]:
+def get_departments() -> list[DepartmentSchema]:
     with session.begin() as s:
         raw_models = s.query(Department).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]

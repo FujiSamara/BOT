@@ -145,9 +145,6 @@ class Company(Base):
     bs_import_error: Mapped[bool] = mapped_column(nullable=True)
 
 
-# region Department
-
-
 class Department(Base):
     """Подразделения (рестораны)"""
 
@@ -254,10 +251,6 @@ class Department(Base):
     )
 
 
-# endregion
-# region Group
-
-
 class Group(Base):
     """Технические заявки"""
 
@@ -276,10 +269,6 @@ class Group(Base):
         foreign_keys="Worker.group_id",
         cascade="all,delete",
     )
-
-
-# endregion
-# region Worker
 
 
 class Worker(Base):
@@ -380,9 +369,6 @@ class Worker(Base):
             back_populates="territorial_manager",
         )
     )
-
-
-# endregion
 
 
 class Bid(Base):
@@ -646,7 +632,7 @@ class TechnicalProblem(Problem):
     )
 
 
-class TechicalRequestDocument(Base):
+class TechnicalRequestDocument(Base):
     """Общий класс для документов у заявок на тех. ремонт"""
 
     __abstract__ = True
@@ -658,7 +644,7 @@ class TechicalRequestDocument(Base):
     )
 
 
-class TechnicalRequestProblemPhoto(TechicalRequestDocument):
+class TechnicalRequestProblemPhoto(TechnicalRequestDocument):
     """Фото поломок для тех заявок"""
 
     __tablename__ = "technical_requests_problem_photos"
@@ -668,7 +654,7 @@ class TechnicalRequestProblemPhoto(TechicalRequestDocument):
     )
 
 
-class TechnicalRequestRepairPhoto(TechicalRequestDocument):
+class TechnicalRequestRepairPhoto(TechnicalRequestDocument):
     """Фото ремонта для тех заявок"""
 
     __tablename__ = "technical_requests_repair_photos"

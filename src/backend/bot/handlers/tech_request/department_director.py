@@ -27,7 +27,7 @@ from bot.handlers.utils import (
 from db.service import (
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
-    get_all_departments,
+    get_departments,
     get_all_worker_in_group,
     get_groups_names,
     get_technical_problem_by_name,
@@ -59,7 +59,7 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
-    departments = get_all_departments()
+    departments = get_departments()
     department_names = [department.name for department in departments]
     department_names.sort()
 
@@ -78,7 +78,7 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments=get_all_departments(),
+        departments=get_departments(),
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)

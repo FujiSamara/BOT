@@ -181,7 +181,6 @@ class GroupView(ModelView, model=Group):
         Group.name,
     ]
     form_columns = [
-        Group.id,
         Group.name,
     ]
     can_export = False
@@ -189,8 +188,7 @@ class GroupView(ModelView, model=Group):
     name_plural = "Отделы"
     name = "Отдел"
     column_labels = {
-        Group.id: "id",
-        Group.name: "Отдел",
+        Group.name: "Название",
         Group.workers: "Сотрудники",
     }
 
