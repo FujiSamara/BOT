@@ -52,12 +52,12 @@
 							:key="columnName"
 						>
 							<div class="table-header">
-								<p @click="props.table.sort(columnName)" style="margin: 0">
+								<p @click="props.table.order(columnName)" style="margin: 0">
 									{{ columnName }}
 								</p>
 								<img
-									v-if="props.table.sorted(columnName)"
-									:class="{ rotated: props.table.sortDesc.value }"
+									v-if="props.table.ordered(columnName)"
+									:class="{ rotated: props.table.desc.value }"
 									src="/img/sort_icon.svg"
 								/>
 							</div>

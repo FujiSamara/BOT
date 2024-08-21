@@ -69,10 +69,10 @@ export class Table<T extends BaseSchema> {
 	constructor(endpoint: string) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
 
-		watch([this._completedQuery, this._refreshKey, this.rowCount], async () => {
+		watch([this._rowsQuery, this._refreshKey, this.rowCount], async () => {
 			this.emulateLoading(true);
 			const resp = await this._network.withAuthChecking(
-				axios.get(this._datedQuery.value),
+				axios.get(this._rowsQuery.value),
 			);
 			this.emulateLoading(false);
 
@@ -106,9 +106,17 @@ export class Table<T extends BaseSchema> {
 	 * 2) Row count
 	 */
 	private async refreshInfo() {
-		const infoEndpoint = `${this._endpoint}${this._infoEndpoint}/page/info?records_per_page=${this._rowsPerPage}`;
+		if (this.isLoading.value) {
+			return;
+		}
 
-		const resp = await this._network.withAuthChecking(axios.get(infoEndpoint));
+		const resp = await this._network.withAuthChecking(
+			axios.get(this._infoQuery.value),
+		);
+
+		if (this.isLoading.value) {
+			return;
+		}
 
 		this.pageCount.value = resp.data.page_count;
 		this.rowCount.value = resp.data.record_count;
@@ -118,7 +126,7 @@ export class Table<T extends BaseSchema> {
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
 	private _query = computed(() => {
-		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?records_per_page=${this._rowsPerPage}`;
+		return `records_per_page=${this._rowsPerPage}`;
 	});
 	private _searchedQuery = computed(() => {
 		return this._query.value;
@@ -126,8 +134,26 @@ export class Table<T extends BaseSchema> {
 	private _datedQuery = computed(() => {
 		return this._searchedQuery.value;
 	});
-	private _completedQuery = computed(() => {
-		return this._datedQuery.value;
+	private _orderedQuery = computed(() => {
+		let query = this._datedQuery.value;
+
+		if (this._orderBy.value) {
+			query += `&order_by=${this._orderBy.value}`;
+		}
+
+		if (this.desc) {
+			query += "&desc=true";
+		}
+
+		console.log(query);
+
+		return query;
+	});
+	private _rowsQuery = computed(() => {
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._orderedQuery.value}`;
+	});
+	private _infoQuery = computed(() => {
+		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._orderedQuery.value}`;
 	});
 	private getHeaders() {
 		const result: Array<string> = [];
@@ -286,13 +312,13 @@ export class Table<T extends BaseSchema> {
 		this.isHidden.value = value;
 	}
 	/** Return **true** if rows sorted by this column with **header**. */
-	public sorted(header: string): boolean {
-		return this.getAlias(this._sortBy.value) === header;
+	public ordered(header: string): boolean {
+		return this.getAlias(this._orderBy.value) === header;
 	}
 	/** Sorts columns by specify **header** */
-	public sort(header: string) {
-		if (header === this.getAlias(this._sortBy.value)) {
-			this.sortDesc.value = !this.sortDesc.value;
+	public order(header: string) {
+		if (header === this.getAlias(this._orderBy.value)) {
+			this.desc.value = !this.desc.value;
 			return;
 		}
 
@@ -305,14 +331,14 @@ export class Table<T extends BaseSchema> {
 		);
 
 		if (column !== undefined) {
-			this._sortBy.value = column;
-			this.sortDesc.value = false;
+			this._orderBy.value = column;
+			this.desc.value = false;
 		}
 	}
 	/** If sorts column by row[**index**]. */
-	protected _sortBy: Ref<string> = ref("id");
+	protected _orderBy: Ref<string> = ref("creator");
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
-	public sortDesc: Ref<boolean> = ref(false);
+	public desc: Ref<boolean> = ref(false);
 	/** Order of column in table */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */
