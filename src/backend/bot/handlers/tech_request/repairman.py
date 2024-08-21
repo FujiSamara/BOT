@@ -35,7 +35,7 @@ from db.service import (
     get_all_history_technical_requests_for_repairman,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
-    get_departments_for_repairman,
+    get_departments_names_for_repairman,
     update_technical_request_from_repairman,
 )
 
@@ -62,27 +62,23 @@ async def show_tech_rec_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.rm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(RepairmanTechnicalRequestForm.department)
-    departments = get_departments_for_repairman(callback.message.chat.id)
-    department_names = [department.name for department in departments]
+    department_names = get_departments_names_for_repairman(callback.message.chat.id)
     department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=kb.create_reply_keyboard(
-            text.back, *[department_name for department_name in department_names]
-        ),
+        reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
 
 @router.message(RepairmanTechnicalRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    departments = get_departments_for_repairman(message.chat.id)
     if await handle_department(
         message=message,
         state=state,
-        departments=departments,
+        departments_names=get_departments_names_for_repairman(message.chat.id),
         reply_markup=tech_kb.rm_menu_markup,
     ):
         await show_tech_rec_format_ms(message)

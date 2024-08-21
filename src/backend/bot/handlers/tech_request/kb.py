@@ -65,8 +65,11 @@ ct_own_menu_markup = InlineKeyboardMarkup(
 )
 
 
-async def ct_repair_kb(
-    state: FSMContext, callback_data: ShowRequestCallbackData
+async def _ct_repair_kb(
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    back_button: list[InlineKeyboardButton],
+    photo_button: InlineKeyboardButton,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
@@ -79,26 +82,10 @@ async def ct_repair_kb(
         photo = f"{len(photo)} ✅"
     buttons = [
         [
-            InlineKeyboardButton(
-                text="Фото после ремонта",
-                callback_data=ShowRequestCallbackData(
-                    request_id=callback_data.request_id,
-                    end_point="get_CT_TR_photo",
-                    last_end_point=callback_data.last_end_point,
-                ).pack(),
-            ),
+            photo_button,
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [
-            InlineKeyboardButton(
-                text="К заявке",
-                callback_data=ShowRequestCallbackData(
-                    request_id=callback_data.request_id,
-                    end_point="CT_TR_show_form_waiting",
-                    last_end_point=callback_data.last_end_point,
-                ).pack(),
-            )
-        ],
+        back_button,
     ]
 
     if form_complete:
@@ -117,8 +104,67 @@ async def ct_repair_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def ct_admin_kb(
+async def ct_repair_waiting_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    back_button = [
+        InlineKeyboardButton(
+            text="К заявке",
+            callback_data=ShowRequestCallbackData(
+                request_id=callback_data.request_id,
+                end_point="CT_TR_show_form_waiting",
+                last_end_point=callback_data.last_end_point,
+            ).pack(),
+        )
+    ]
+    photo_button = InlineKeyboardButton(
+        text="Фото после ремонта",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="get_CT_TR_photo_waiting",
+            last_end_point=callback_data.last_end_point,
+        ).pack(),
+    )
+    return await _ct_repair_kb(
+        state=state,
+        callback_data=callback_data,
+        back_button=back_button,
+        photo_button=photo_button,
+    )
+
+
+async def ct_repair_rework_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    back_button = [
+        InlineKeyboardButton(
+            text="К заявке",
+            callback_data=ShowRequestCallbackData(
+                request_id=callback_data.request_id,
+                end_point="CT_TR_show_form_rework",
+                last_end_point=callback_data.last_end_point,
+            ).pack(),
+        )
+    ]
+    photo_button = InlineKeyboardButton(
+        text="Фото после ремонта",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="get_CT_TR_photo_rework",
+            last_end_point=callback_data.last_end_point,
+        ).pack(),
+    )
+    return await _ct_repair_kb(
+        state=state,
+        callback_data=callback_data,
+        back_button=back_button,
+        photo_button=photo_button,
+    )
+
+
+async def ct_admin_kb(
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     repairman = get_technical_request_by_id(callback_data.request_id).repairman

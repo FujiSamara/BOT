@@ -1067,6 +1067,18 @@ def get_departments_by_worker_id_and_worker_column(
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
+def get_departments_names_by_worker_id_and_worker_column(
+    worker_column: Any,
+    worker_id: int,
+) -> list[DepartmentSchema]:
+    with session.begin() as s:
+        raw_models = s.query(Department).filter(worker_column == worker_id).all()
+        return [
+            (DepartmentSchema.model_validate(raw_model)).name
+            for raw_model in raw_models
+        ]
+
+
 def get_all_active_requests_in_department(
     department_id: int,
 ) -> list[TechnicalRequestSchema]:

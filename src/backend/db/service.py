@@ -1294,9 +1294,9 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         )
 
 
-def _get_departments_for_employee(
+def _get_departments_names_for_employee(
     telegram_id: int, worker_column: Any
-) -> list[DepartmentSchema]:
+) -> list[str]:
     """
     Return departments by worker telegram id and worker column id
     """
@@ -1307,43 +1307,38 @@ def _get_departments_for_employee(
             f"Worker with telegram id: {telegram_id} wasn't found"
         )
     else:
-        departments = orm.get_departments_by_worker_id_and_worker_column(
+        departments_names = orm.get_departments_names_by_worker_id_and_worker_column(
             worker_column=worker_column, worker_id=worker.id
         )
-        return departments
+        return departments_names
 
 
-def get_departments_for_repairman(
+def get_departments_names_for_repairman(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    departments = _get_departments_for_employee(
+) -> list[str]:
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
     if len(departments) > 0:
         return departments
 
-    departments = _get_departments_for_employee(
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
     if len(departments) > 0:
         return departments
 
-    return _get_departments_for_employee(
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
     )
 
 
-def get_departments_for_territorial_manager(
+def get_departments_names_for_territorial_manager(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    return _get_departments_for_employee(
+) -> list[str]:
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.territorial_manager_id
     )
-
-
-def get_departments() -> list[DepartmentSchema]:
-    departments = orm.get_departments()
-    return departments
 
 
 def get_all_active_requests_in_department_for_chief_technician(

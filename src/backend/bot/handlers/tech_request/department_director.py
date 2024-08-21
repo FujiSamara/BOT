@@ -27,8 +27,8 @@ from bot.handlers.utils import (
 from db.service import (
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
-    get_departments,
     get_all_worker_in_group,
+    get_departments_names,
     get_groups_names,
     get_technical_problem_by_name,
     get_technical_problem_names,
@@ -59,16 +59,13 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
-    departments = get_departments()
-    department_names = [department.name for department in departments]
+    department_names = get_departments_names()
     department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=kb.create_reply_keyboard(
-            text.back, *[department_name for department_name in department_names]
-        ),
+        reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
@@ -78,7 +75,7 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments=get_departments(),
+        departments_names=get_departments_names(),
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
