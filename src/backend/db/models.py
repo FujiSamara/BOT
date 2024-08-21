@@ -630,6 +630,9 @@ class Problem(Base):
     id: Mapped[intpk]
     problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
 
+    def __str__(self):
+        return self.problem_name
+
 
 class TechnicalProblem(Problem):
     """Виды технических проблем"""
