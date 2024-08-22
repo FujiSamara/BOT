@@ -618,9 +618,9 @@ class ProblemIT(Base):
         return self.name
 
     id: Mapped[intpk]
-    problem: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(nullable=False)
-    hours: Mapped[float] = mapped_column(nullable=False)
+    sla: Mapped[float] = mapped_column(nullable=False)
     repairman_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     repairman: Mapped["Worker"] = relationship(
         "Worker", back_populates="repairman_problems_it", foreign_keys=[repairman_id]
@@ -630,25 +630,29 @@ class ProblemIT(Base):
 
 
 class BidITDocument(Base):
-    """Документы заявок в IT отдел"""
+    """Общий класс для документов заявок в IT отдел"""
 
-    __tablename__ = "bids_it_documents"
+    __abstract__ = True
 
     id: Mapped[intpk]
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     bid_id: Mapped[int] = mapped_column(ForeignKey("bids_it.id"))
-    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="problem_photo")
 
 
-class BidITRepairmanDocument(Base):
+class BidITWorkerDocument(BidITDocument):
+    """Документы заявок заявителей в IT отдел"""
+
+    __tablename__ = "bids_it_documents_worker"
+
+    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="problem_photos")
+
+
+class BidITRepairmanDocument(BidITDocument):
     """Документы специалистов IT отдела о выполненной работе"""
 
     __tablename__ = "bids_it_documents_repairman"
 
-    id: Mapped[intpk]
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    bid_id: Mapped[int] = mapped_column(ForeignKey("bids_it.id"))
-    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="work_photo")
+    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="work_photos")
 
 
 class BidIT(Base):
@@ -662,10 +666,10 @@ class BidIT(Base):
     work_comment: Mapped[str] = mapped_column(nullable=True)
     reopen_work_comment: Mapped[str] = mapped_column(nullable=True)
 
-    problem_photo: Mapped[List["BidITDocument"]] = relationship(
-        "BidITDocument", cascade="all,delete", back_populates="bid_it"
+    problem_photos: Mapped[List["BidITWorkerDocument"]] = relationship(
+        "BidITWorkerDocument", cascade="all,delete", back_populates="bid_it"
     )
-    work_photo: Mapped[List["BidITRepairmanDocument"]] = relationship(
+    work_photos: Mapped[List["BidITRepairmanDocument"]] = relationship(
         "BidITRepairmanDocument", cascade="all,delete", back_populates="bid_it"
     )
 

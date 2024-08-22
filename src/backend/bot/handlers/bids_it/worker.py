@@ -39,13 +39,13 @@ from bot.handlers.bids_it.utils import (
     get_id_by_problem_type,
     get_bid_it_list_info,
     get_bid_it_info,
-    handle_documents,
     create_buttons_for_worker,
 )
 from bot.handlers.utils import (
     try_edit_message,
     try_delete_message,
     download_file,
+    handle_documents,
     handle_documents_form,
     notify_worker_by_telegram_id,
 )
@@ -243,8 +243,8 @@ async def get_bid(
         await state.update_data(msgs_for_delete=[])
 
     caption = get_bid_it_info(bid_it)
-
-    buttons = create_buttons_for_worker(bid_it, callback_data)
+    buttons = []
+    create_buttons_for_worker(buttons, bid_it, callback_data)
     buttons.append([bid_it_create_history_button])
 
     await try_edit_message(
@@ -265,7 +265,8 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
     bid = get_bid_it_by_id(bid_id)
     await try_delete_message(callback.message)
     text = get_bid_it_info(bid)
-    buttons = create_buttons_for_worker(bid, callback_data)
+    buttons = []
+    create_buttons_for_worker(buttons, bid, callback_data)
     buttons.append([bid_it_create_pending_button])
     await callback.message.answer(
         text=text, reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -305,7 +306,7 @@ async def get_documents_problem(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.problem_photo:
+    for document in bid.problem_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -343,7 +344,7 @@ async def get_documents_done(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -384,7 +385,7 @@ async def get_documents_done_reopen(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(

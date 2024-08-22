@@ -1,15 +1,17 @@
-from typing import Awaitable, Callable, Optional, Any
+from typing import Optional
 import asyncio
 from aiogram.types import (
     ReplyKeyboardRemove,
     Message,
-    ContentType,
     InputMediaDocument,
     InlineKeyboardButton,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-from bot.handlers.bids_it.schemas import BidITCallbackData, BidITViewType
+from bot.handlers.bids_it.schemas import (
+    BidITCallbackData,
+    BidITViewType,
+)
 from db.schemas import (
     ProblemITSchema,
     BidITSchema,
@@ -18,7 +20,6 @@ from bot.states import Base
 from bot.text import bid_create_greet
 from bot.handlers.utils import (
     try_edit_message,
-    try_delete_message,
 )
 from db.service import get_bid_it_by_id
 from db.models import ApprovalStatus
@@ -32,7 +33,7 @@ def get_id_by_problem_type(
     problem_type: str, problems: list[ProblemITSchema]
 ) -> Optional[int]:
     for problem in problems:
-        if problem_type == problem.problem:
+        if problem_type == problem.name:
             return problem.id
     return None
 
@@ -40,7 +41,7 @@ def get_id_by_problem_type(
 def get_bid_it_list_info(bid: BidITSchema) -> str:
     return (
         f"{bid.id}: {bid.worker.l_name} "
-        + f"{bid.opening_date.strftime('%d.%m.%Y')} {bid.problem.problem}"
+        + f"{bid.opening_date.strftime('%d.%m.%Y')} {bid.problem.name}"
     )
 
 
@@ -63,7 +64,7 @@ def get_bid_it_state_info(bid: BidITSchema) -> str:
 
 def get_bid_it_info(bid: BidITSchema) -> str:
     text_form = (
-        f"{hbold(bid.problem.problem)} от "
+        f"{hbold(bid.problem.name)} от "
         + bid.opening_date.strftime("%d.%m.%Y")
         + f"\nОписание:\n{bid.problem_comment}\n\
 Адрес: {bid.worker.department.address}\n\
@@ -138,77 +139,6 @@ async def clear_state_with_success_it_tm(
         )
 
 
-async def handle_documents(
-    message: Message,
-    state: FSMContext,
-    document_name: str,
-    on_complete: Callable[[Any, Any], Awaitable[Any]],
-):
-    if message.content_type == ContentType.TEXT:
-        if message.text == "Готово":
-            data = await state.get_data()
-            msgs = data.get("msgs")
-            documents = data.get("documents")
-            if msgs:
-                for msg in msgs:
-                    await try_delete_message(msg)
-                await state.update_data(msgs=[])
-            if documents:
-                specified_documents = data.get(document_name)
-                if not specified_documents:
-                    specified_documents = []
-                specified_documents.extend(documents)
-                await state.update_data(documents=[])
-                await state.update_data({document_name: specified_documents})
-            msg = data.get("msg")
-            if msg:
-                await try_delete_message(msg)
-            await try_delete_message(message)
-            await on_complete(message, state)
-        elif message.text == "Сбросить":
-            data = await state.get_data()
-            msgs = data.get("msgs")
-            documents = data.get("documents")
-            if msgs:
-                for msg in msgs:
-                    await try_delete_message(msg)
-                await state.update_data(msgs=[])
-            await state.update_data(documents=[])
-            await state.update_data({document_name: []})
-            msg = data.get("msg")
-            if msg:
-                await try_delete_message(msg)
-            await try_delete_message(message)
-            await on_complete(message, state)
-        else:
-            await try_delete_message(message)
-            msg = await message.answer("Отправьте документ или фото!")
-            await asyncio.sleep(1)
-            await try_delete_message(msg)
-    elif (
-        message.content_type == ContentType.DOCUMENT
-        or message.content_type == ContentType.PHOTO
-    ):
-        data = await state.get_data()
-        documents: list = data.get("documents")
-        msgs: list = data.get("msgs")
-        if not documents:
-            documents = []
-        if message.content_type == ContentType.PHOTO:
-            documents.append(message.photo[-1])
-        else:
-            documents.append(message.document)
-        if not msgs:
-            msgs = []
-        msgs.append(message)
-        await state.update_data(msgs=msgs, documents=documents)
-    else:
-        await try_delete_message(message)
-        msg = await message.answer("Отправьте документ или фото!")
-        await asyncio.sleep(1)
-        await try_delete_message(msg)
-
-
 async def clear_state_with_success_rm(
     message: Message, state: FSMContext, sleep_time=1, edit=False
 ):
@@ -249,8 +179,9 @@ def filter_media_by_done(media: list[InputMediaDocument]) -> None:
         media.remove(doc)
 
 
-def create_buttons_for_repairman(bid_it: BidITSchema, callback_data: BidITCallbackData):
-    buttons = []
+def create_buttons_for_repairman(
+    buttons, bid_it: BidITSchema, callback_data: BidITCallbackData
+):
     buttons.append(
         [
             InlineKeyboardButton(
@@ -293,11 +224,10 @@ def create_buttons_for_repairman(bid_it: BidITSchema, callback_data: BidITCallba
             ]
         )
 
-    return buttons
 
-
-def create_buttons_for_worker(bid_it: BidITSchema, callback_data: BidITCallbackData):
-    buttons = []
+def create_buttons_for_worker(
+    buttons, bid_it: BidITSchema, callback_data: BidITCallbackData
+):
     buttons.append(
         [
             InlineKeyboardButton(
@@ -340,13 +270,10 @@ def create_buttons_for_worker(bid_it: BidITSchema, callback_data: BidITCallbackD
             ]
         )
 
-    return buttons
-
 
 def create_buttons_for_territorial_manager(
-    bid_it: BidITSchema, callback_data: BidITCallbackData
+    buttons, bid_it: BidITSchema, callback_data: BidITCallbackData
 ):
-    buttons = []
     buttons.append(
         [
             InlineKeyboardButton(
@@ -388,5 +315,3 @@ def create_buttons_for_territorial_manager(
                 )
             ]
         )
-
-    return buttons

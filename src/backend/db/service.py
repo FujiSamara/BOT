@@ -770,7 +770,7 @@ def get_problems_it_types() -> list[str]:
     Returns all existed IT problems types.
     """
     problems: list[ProblemITSchema] = orm.get_problems_it_columns()
-    return [problem.problem for problem in problems]
+    return [problem.name for problem in problems]
 
 
 def get_problems_it_schema() -> list[ProblemITSchema]:
@@ -843,7 +843,7 @@ def create_bid_it(
     bid_it = BidITSchema(
         problem=problem_inst,
         problem_comment=comment,
-        problem_photo=documents,
+        problem_photos=documents,
         worker=worker_inst,
         department=department_inst,
         opening_date=cur_date,
@@ -1515,7 +1515,7 @@ def update_bid_it_rm(bid_id: int, files: UploadFile):
         file.filename = filename
         documents.append(DocumentSchema(document=file))
 
-    bid.work_photo = documents
+    bid.work_photos = documents
     bid.status = ApprovalStatus.pending_approval
 
     orm.update_bid_it_rm(bid)

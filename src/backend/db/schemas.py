@@ -201,9 +201,9 @@ class BudgetRecordSchema(BaseModel):
 
 
 class ProblemITSchema(BaseSchema):
-    problem: str
+    name: str
     category: str
-    hours: float
+    sla: float
     repairman: WorkerSchema
 
 
@@ -215,7 +215,7 @@ class BidITSchema(BaseModel):
     id: Optional[int] = -1
     problem: ProblemITSchema
     problem_comment: str
-    problem_photo: list[DocumentSchema]
+    problem_photos: list[DocumentSchema]
     worker: WorkerSchema
     department: DepartmentSchema
     opening_date: datetime.datetime
@@ -229,7 +229,7 @@ class BidITSchema(BaseModel):
     repairman: Optional[WorkerSchema] = None
     territorial_manager: Optional[WorkerSchema] = None
     mark: Optional[int] = None
-    work_photo: list[DocumentSchema] = None
+    work_photos: list[DocumentSchema] = None
     work_comment: Optional[str] = None
     reopen_work_comment: Optional[str] = None
 

@@ -319,9 +319,8 @@ async def get_denied_bid_repairman(
 
     caption = get_bid_it_info(bid_it)
 
-    buttons = create_buttons_for_repairman(bid_it, callback_data)
-    buttons.insert(
-        0,
+    buttons = []
+    buttons.append(
         [
             InlineKeyboardButton(
                 text="Выполнить заявку",
@@ -332,6 +331,7 @@ async def get_denied_bid_repairman(
             )
         ],
     )
+    create_buttons_for_repairman(buttons, bid_it, callback_data)
     buttons.append([bids_it_denied_for_repairman])
 
     await try_edit_message(
@@ -388,8 +388,8 @@ async def get_bid_repairman(
         await state.update_data(msgs_for_delete=[])
 
     caption = get_bid_it_info(bid_it)
-
-    buttons = create_buttons_for_repairman(bid_it, callback_data)
+    buttons = []
+    create_buttons_for_repairman(buttons, bid_it, callback_data)
     buttons.append([bid_it_rm_create_history_button])
 
     await try_edit_message(
@@ -412,7 +412,7 @@ async def get_documents_problem_rm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.problem_photo:
+    for document in bid.problem_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -450,7 +450,7 @@ async def get_documents_done_rm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -491,7 +491,7 @@ async def get_documents_done_reopen_rm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(

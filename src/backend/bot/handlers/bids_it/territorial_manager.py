@@ -168,7 +168,19 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
     await try_delete_message(callback.message)
 
     text = get_bid_it_info(bid)
-    buttons = create_buttons_for_territorial_manager(bid, callback_data)
+    buttons = []
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Выполнить заявку",
+                callback_data=WorkerBidITCallbackData(
+                    id=bid_id,
+                    endpoint_name="take_bid_it_for_tm",
+                ).pack(),
+            ),
+        ]
+    )
+    create_buttons_for_territorial_manager(buttons, bid, callback_data)
     buttons.append([bids_pending_for_tm])
 
     await callback.message.answer(
@@ -314,7 +326,8 @@ async def get_bid_tm(
 
     caption = get_bid_it_info(bid_it)
 
-    buttons = create_buttons_for_territorial_manager(bid_it, callback_data)
+    buttons = []
+    create_buttons_for_territorial_manager(buttons, bid_it, callback_data)
     buttons.append([bid_it_tm_create_history_button])
 
     await try_edit_message(
@@ -337,7 +350,7 @@ async def get_documents_problem_tm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.problem_photo:
+    for document in bid.problem_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -376,7 +389,7 @@ async def get_documents_done_tm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(
@@ -416,7 +429,7 @@ async def get_documents_done_reopen_tm(
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
 
-    for document in bid.work_photo:
+    for document in bid.work_photos:
         media.append(
             InputMediaDocument(
                 media=BufferedInputFile(

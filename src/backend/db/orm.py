@@ -23,7 +23,7 @@ from db.models import (
     WorkerBidWorkPermission,
     ProblemIT,
     BidIT,
-    BidITDocument,
+    BidITWorkerDocument,
     BidITRepairmanDocument,
 )
 from db.schemas import (
@@ -1177,7 +1177,7 @@ def add_bid_it(bid_it: BidITSchema):
 
         bid_model = BidIT(
             problem_comment=bid_it.problem_comment,
-            problem_photo=[],
+            problem_photos=[],
             problem=problem,
             department=department,
             worker=worker,
@@ -1185,19 +1185,12 @@ def add_bid_it(bid_it: BidITSchema):
             opening_date=bid_it.opening_date,
             repairman=problem.repairman,
             territorial_manager=department.territorial_manager,
-            # done_date=None,
-            # reopening_date=None,
-            # approve_date=None,
-            # close_date=None,
-            # mark=None,
-            # work_photo=None,
-            # work_comment=None,
         )
 
         s.add(bid_model)
 
-        for document in bid_it.problem_photo:
-            s.add(BidITDocument(bid_it=bid_model, document=document.document))
+        for document in bid_it.problem_photos:
+            s.add(BidITWorkerDocument(bid_it=bid_model, document=document.document))
 
 
 def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
@@ -1271,9 +1264,8 @@ def update_bid_it_rm(bid: BidITSchema):
         cur_bid.status = bid.status
         cur_bid.done_date = bid.done_date
         cur_bid.reopen_done_date = bid.reopen_done_date
-        # cur_bid.work_photo = []
 
-        for document in bid.work_photo:
+        for document in bid.work_photos:
             s.add(BidITRepairmanDocument(bid_it=cur_bid, document=document.document))
 
 
