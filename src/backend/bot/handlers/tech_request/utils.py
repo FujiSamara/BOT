@@ -65,6 +65,9 @@ async def show_form(
             text_form += "Отправлено на доработку"
         case ApprovalStatus.skipped:
             text_form += "Не выполнено"
+        case ApprovalStatus.not_relevant:
+            text_form += "Не актуально"
+
     text_form += "\n \n"
 
     if request.repair_date:
