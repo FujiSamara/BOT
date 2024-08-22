@@ -1,4 +1,6 @@
 from pathlib import Path
+
+from sqlalchemy import null
 from settings import get_settings
 import db.orm as orm
 from db.models import (
@@ -1044,7 +1046,8 @@ def get_all_waiting_technical_requests_for_worker(
         )
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
+            [TechnicalRequest.worker_id, TechnicalRequest.close_date],
+            [worker.id, null()],
         )[:-16:-1]
 
     return requests
@@ -1080,7 +1083,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.department_id,
                     TechnicalRequest.confirmation_date,
                 ],
-                [repairman.id, ApprovalStatus.pending, department_id, None],
+                [repairman.id, ApprovalStatus.pending, department_id, null()],
             )[:-16:-1]
 
             return requests

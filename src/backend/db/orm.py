@@ -968,6 +968,7 @@ def get_technical_requests_by_columns(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         raw_models = query.order_by(TechnicalRequest.id).all()
@@ -992,6 +993,7 @@ def get_all_technical_requests_in_department(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         else:
@@ -1024,6 +1026,7 @@ def get_rework_tech_request(
                 TechnicalRequest.confirmation_date != null(),
                 TechnicalRequest.state != ApprovalStatus.approved,
                 TechnicalRequest.state != ApprovalStatus.skipped,
+                TechnicalRequest.state != ApprovalStatus.not_relevant,
             )
             .order_by(TechnicalRequest.id)
             .all()
@@ -1047,6 +1050,7 @@ def get_technical_requests_for_repairman_history(
                         TechnicalRequest.state == ApprovalStatus.pending_approval,
                         TechnicalRequest.state == ApprovalStatus.approved,
                         TechnicalRequest.state == ApprovalStatus.skipped,
+                        TechnicalRequest.state == ApprovalStatus.not_relevant,
                     ),
                     TechnicalRequest.department_id == department_id,
                 )
