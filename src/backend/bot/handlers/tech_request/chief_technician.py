@@ -27,6 +27,7 @@ from bot.handlers.tech_request.utils import (
 )
 
 from db.service import (
+    close_request,
     get_all_history_technical_requests_for_repairman,
     get_all_worker_in_group,
     get_all_rework_technical_requests_for_repairman,
@@ -65,7 +66,6 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ChiefTechnicianTechnicalRequestForm.department)
     department_names = get_departments_names_for_repairman(callback.message.chat.id)
     department_names.sort()
-
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
@@ -388,6 +388,7 @@ async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
 async def show_admin_form(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
+    await state.update_data(request_id=callback_data.request_id)
     repairman = get_technical_request_by_id(callback_data.request_id).repairman
     repairman_full_name_old = " ".join(
         [repairman.l_name, repairman.f_name, repairman.o_name]
@@ -402,7 +403,16 @@ async def show_admin_form(
                     end_point="show_CT_TR_change_executor",
                 ).pack(),
             )
-        ]
+        ],
+        [
+            InlineKeyboardButton(
+                text="Закрыть заявку",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="CT_TR_close_request",
+                ).pack(),
+            )
+        ],
     ]
 
     await show_form(
@@ -420,6 +430,7 @@ async def show_admin_form(
 async def show_change_executor_format_cb(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
+    await state.update_data(request_id=callback_data.request_id)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Сменить исполнителя"),
@@ -462,7 +473,6 @@ async def get_group(
         ),
     )
     await state.update_data(msg=msg)
-    await state.update_data(request_id=callback_data.request_id)
 
 
 @router.message(ChiefTechnicianTechnicalRequestForm.group)
@@ -474,7 +484,7 @@ async def set_group(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await show_tech_req_format_ms(message)
+        await show_change_executor_format_ms(message=message, state=state)
     else:
         groups_names = get_groups_names()
         if message.text not in groups_names:
@@ -558,6 +568,111 @@ async def save_CT_TR_admin_form(
     await state.clear()
     await state.set_state(Base.none)
     await show_tech_req_format_cb(callback=callback)
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_close_request")
+)
+async def close_request_change(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    yes_button = InlineKeyboardButton(
+        text="Да",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="CT_TR_close_request_yes",
+        ).pack(),
+    )
+    no_button = InlineKeyboardButton(
+        text="Нет",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="show_CT_TR_admin_form",
+        ).pack(),
+    )
+
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Вы уверены, что хотите закрыть заявку?"),
+        reply_markup=kb.create_inline_keyboard(yes_button, no_button),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_close_request_yes")
+)
+async def close_request_form_format_cb(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.ct_close_request_kb(
+            state=state,
+            callback_data=callback_data,
+        ),
+    )
+
+
+async def close_request_form_format_ms(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_edit_or_answer(
+        message=message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.ct_close_request_kb(
+            state=state,
+            callback_data=ShowRequestCallbackData(
+                request_id=data.get("request_id"),
+                end_point="CT_TR_close_request_yes",
+            ),
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_close_request_description")
+)
+async def get_description(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await state.set_state(ChiefTechnicianTechnicalRequestForm.description)
+    await try_delete_message(callback.message)
+    msg = await callback.message.answer(text=hbold("Укажите причину закрытия заявки:"))
+    await state.update_data(msg=msg)
+
+
+@router.message(ChiefTechnicianTechnicalRequestForm.description)
+async def set_description(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await state.update_data(description=message.text)
+    await try_delete_message(message)
+    await close_request_form_format_ms(message, state)
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_save_close_request")
+)
+async def save_close_request(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    data = await state.get_data()
+    creator_tg_id = close_request(
+        request_id=data.get("request_id"),
+        description="Главный техник: " + data.get("description"),
+    )
+    if creator_tg_id:
+        await notify_worker_by_telegram_id(
+            id=creator_tg_id,
+            message=text.notification_worker,
+        )
+    await show_admin_menu(
+        callback=callback,
+        state=state,
+    )
 
 
 # endregion

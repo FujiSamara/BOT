@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 from db.database import Base, engine, session
 from db.models import (
@@ -1101,6 +1102,25 @@ def get_departments() -> list[DepartmentSchema]:
     with session.begin() as s:
         raw_models = s.query(Department).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def close_request(
+    request_id: int,
+    description: str,
+    close_date: datetime,
+) -> int:
+    """
+    Close request by Chief Technician or Department Director
+    Return creator TG id
+    """
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        cur_request.state = ApprovalStatus.not_relevant
+        cur_request.close_description = description
+        cur_request.close_date = close_date
+        return cur_request.worker.telegram_id
 
 
 # endregion

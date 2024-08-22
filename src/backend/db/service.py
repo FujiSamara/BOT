@@ -1377,4 +1377,27 @@ def get_all_worker_in_group(
     return workers
 
 
+def close_request(
+    request_id: int,
+    description: str,
+) -> int:
+    """
+    Close request by Chief Technician or Department Director
+    Return creator TG id
+    """
+    cur_date = datetime.now()
+    tg_id = orm.close_request(
+        request_id=request_id,
+        description=description,
+        close_date=cur_date,
+    )
+
+    if not tg_id:
+        logging.getLogger("uvicorn.error").error(
+            f"Request with id: {request_id} wasn't close"
+        )
+
+    return tg_id
+
+
 # endregion
