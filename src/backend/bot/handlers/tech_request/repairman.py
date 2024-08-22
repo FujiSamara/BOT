@@ -35,7 +35,7 @@ from db.service import (
     get_all_history_technical_requests_for_repairman,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
-    get_departments_for_repairman,
+    get_departments_names_for_repairman,
     update_technical_request_from_repairman,
 )
 
@@ -62,27 +62,23 @@ async def show_tech_rec_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.rm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(RepairmanTechnicalRequestForm.department)
-    departments = get_departments_for_repairman(callback.message.chat.id)
-    department_names = [department.name for department in departments]
+    department_names = get_departments_names_for_repairman(callback.message.chat.id)
     department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=kb.create_reply_keyboard(
-            text.back, *[department_name for department_name in department_names]
-        ),
+        reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
 
 @router.message(RepairmanTechnicalRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    departments = get_departments_for_repairman(message.chat.id)
     if await handle_department(
         message=message,
         state=state,
-        departments=departments,
+        departments_names=get_departments_names_for_repairman(message.chat.id),
         reply_markup=tech_kb.rm_menu_markup,
     ):
         await show_tech_rec_format_ms(message)
@@ -163,7 +159,7 @@ async def show_waiting_form(
                 text="Выполнить заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="RM_TR_repair_form",
+                    end_point="RM_TR_repair_waiting_form",
                 ).pack(),
             )
         ]
@@ -175,6 +171,53 @@ async def show_waiting_form(
         buttons=buttons,
         history_or_waiting_button=tech_kb.rm_waiting,
     )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "RM_TR_repair_waiting_form")
+)
+async def show_repair_waiting_form_cb(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Выполнить заявку"),
+        reply_markup=await tech_kb.rm_repair_waiting_kb(
+            state=state, callback_data=callback_data
+        ),
+    )
+
+
+async def show_repair_waiting_form_ms(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_edit_or_answer(
+        message=message,
+        text=hbold("Выполнить заявку"),
+        reply_markup=await tech_kb.rm_repair_waiting_kb(
+            state=state,
+            callback_data=ShowRequestCallbackData(
+                request_id=data.get("request_id"),
+                end_point="RM_TR_repair_waiting_form",
+            ),
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "get_RM_TR_waiting_photo")
+)
+async def get_waiting_photo(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    await state.update_data(request_id=callback_data.request_id)
+    await handle_documents_form(
+        callback.message, state, RepairmanTechnicalRequestForm.photo_waiting
+    )
+
+
+@router.message(RepairmanTechnicalRequestForm.photo_waiting)
+async def set_waiting_photo(message: Message, state: FSMContext):
+    await handle_documents(message, state, "photo", show_repair_waiting_form_ms)
 
 
 @router.callback_query(F.data == tech_kb.rm_rework.callback_data)
@@ -207,7 +250,7 @@ async def show_rework_form(
                 text="Выполнить заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="RM_TR_repair_form",
+                    end_point="RM_TR_repair_rework_form",
                 ).pack(),
             )
         ]
@@ -222,9 +265,9 @@ async def show_rework_form(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "RM_TR_repair_form")
+    ShowRequestCallbackData.filter(F.end_point == "RM_TR_repair_rework_form")
 )
-async def show_repair_form_cb(
+async def show_repair_rework_form_cb(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await try_edit_or_answer(
@@ -236,34 +279,36 @@ async def show_repair_form_cb(
     )
 
 
-async def show_repair_form_ms(message: Message, state: FSMContext):
+async def show_repair_rework_form_ms(message: Message, state: FSMContext):
     data = await state.get_data()
     await try_edit_or_answer(
         message=message,
         text=hbold("Выполнить заявку"),
-        reply_markup=await tech_kb.rm_repair_waiting_kb(
+        reply_markup=await tech_kb.rm_repair_rework_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="RM_TR_repair_form",
+                end_point="RM_TR_repair_rework_form",
             ),
         ),
     )
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "get_RM_TR_photo"))
-async def get_photo(
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "get_RM_TR_rework_photo")
+)
+async def get_rework_photo(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await state.update_data(request_id=callback_data.request_id)
     await handle_documents_form(
-        callback.message, state, RepairmanTechnicalRequestForm.photo
+        callback.message, state, RepairmanTechnicalRequestForm.photo_rework
     )
 
 
-@router.message(RepairmanTechnicalRequestForm.photo)
-async def set_photo(message: Message, state: FSMContext):
-    await handle_documents(message, state, "photo", show_repair_form_ms)
+@router.message(RepairmanTechnicalRequestForm.photo_rework)
+async def set_rework_photo(message: Message, state: FSMContext):
+    await handle_documents(message, state, "photo", show_repair_rework_form_ms)
 
 
 @router.callback_query(

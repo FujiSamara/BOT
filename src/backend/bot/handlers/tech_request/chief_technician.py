@@ -28,11 +28,12 @@ from bot.handlers.tech_request.utils import (
 
 from db.service import (
     get_all_history_technical_requests_for_repairman,
-    get_all_repairmans_in_department,
+    get_all_worker_in_group,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
     get_all_active_requests_in_department_for_chief_technician,
-    get_departments_for_repairman,
+    get_departments_names_for_repairman,
+    get_groups_names,
     get_technical_request_by_id,
     update_tech_request_executor,
     update_technical_request_from_repairman,
@@ -62,27 +63,23 @@ async def show_tech_req_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.ct_change_department_button.callback_data)
 async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ChiefTechnicianTechnicalRequestForm.department)
-    departments = get_departments_for_repairman(callback.message.chat.id)
-    department_names = [department.name for department in departments]
+    department_names = get_departments_names_for_repairman(callback.message.chat.id)
     department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=kb.create_reply_keyboard(
-            text.back, *[department_name for department_name in department_names]
-        ),
+        reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
 
 @router.message(ChiefTechnicianTechnicalRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    departments = get_departments_for_repairman(message.chat.id)
     if await handle_department(
         message=message,
         state=state,
-        departments=departments,
+        departments_names=get_departments_names_for_repairman(message.chat.id),
         reply_markup=tech_kb.ct_menu_markup,
     ):
         await show_tech_req_format_ms(message)
@@ -131,7 +128,7 @@ async def show_own_waiting_form_format_cb(
                 text="Выполнить заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="CT_TR_repair_form",
+                    end_point="CT_TR_repair_waiting_form",
                 ).pack(),
             )
         ]
@@ -151,13 +148,50 @@ async def show_own_waiting_form_format_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Выполнить заявку"),
-        reply_markup=await tech_kb.ct_repair_kb(
+        reply_markup=await tech_kb.ct_repair_waiting_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="CT_TR_repair_form",
+                end_point="CT_TR_repair_waiting_form",
             ),
         ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_repair_waiting_form")
+)
+async def show_waiting_repair_form_cb(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Выполнить заявку"),
+        reply_markup=await tech_kb.ct_repair_waiting_kb(
+            state=state, callback_data=callback_data
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "get_CT_TR_photo_waiting")
+)
+async def get_waiting_repairman_photo(
+    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
+):
+    await state.update_data(request_id=callback_data.request_id)
+    await handle_documents_form(
+        callback.message, state, ChiefTechnicianTechnicalRequestForm.photo_waiting
+    )
+
+
+@router.message(ChiefTechnicianTechnicalRequestForm.photo_waiting)
+async def set_waiting_repairman_photo(message: Message, state: FSMContext):
+    await handle_documents(
+        message,
+        state,
+        "photo",
+        show_own_waiting_form_format_ms,
     )
 
 
@@ -173,7 +207,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
         text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="CT_TR_show_form_rework",
-            menu_button=tech_kb.rm_menu_button,
+            menu_button=tech_kb.ct_own_button,
             requests=requests,
         ),
     )
@@ -182,7 +216,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(
     ShowRequestCallbackData.filter(F.end_point == "CT_TR_show_form_rework")
 )
-async def show_rework_form(
+async def show_rework_form_format_cb(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = [
@@ -191,7 +225,7 @@ async def show_rework_form(
                 text="Выполнить заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="CT_TR_repair_form",
+                    end_point="CT_TR_repair_rework_form",
                 ).pack(),
             )
         ]
@@ -201,42 +235,59 @@ async def show_rework_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.rm_rework,
+        history_or_waiting_button=tech_kb.ct_rework,
+    )
+
+
+async def show_rework_form_format_ms(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_edit_or_answer(
+        message=message,
+        text=hbold("Выполнить заявку"),
+        reply_markup=await tech_kb.ct_repair_rework_kb(
+            state=state,
+            callback_data=ShowRequestCallbackData(
+                request_id=data.get("request_id"),
+                end_point="CT_TR_repair_rework_form",
+            ),
+        ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "CT_TR_repair_form")
+    ShowRequestCallbackData.filter(F.end_point == "CT_TR_repair_rework_form")
 )
-async def show_repair_form_cb(
+async def show_rework_repair_form_cb(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Выполнить заявку"),
-        reply_markup=await tech_kb.rm_repair_rework_kb(
+        reply_markup=await tech_kb.ct_repair_rework_kb(
             state=state, callback_data=callback_data
         ),
     )
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "get_CT_TR_photo"))
-async def get_repairman_photo(
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "get_CT_TR_photo_rework")
+)
+async def get_rework_repairman_photo(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     await state.update_data(request_id=callback_data.request_id)
     await handle_documents_form(
-        callback.message, state, ChiefTechnicianTechnicalRequestForm.photo
+        callback.message, state, ChiefTechnicianTechnicalRequestForm.photo_rework
     )
 
 
-@router.message(ChiefTechnicianTechnicalRequestForm.photo)
-async def set_repairman_photo(message: Message, state: FSMContext):
+@router.message(ChiefTechnicianTechnicalRequestForm.photo_rework)
+async def set_rework_repairman_photo(message: Message, state: FSMContext):
     await handle_documents(
         message,
         state,
         "photo",
-        show_own_waiting_form_format_ms,
+        show_rework_form_format_ms,
     )
 
 
@@ -272,21 +323,6 @@ async def save_repair(
         message=callback.message,
         text=hbold(tech_kb.ct_button.text),
         reply_markup=tech_kb.ct_rm,
-    )
-
-
-@router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "CT_TR_repair_form")
-)
-async def show_repair_form(
-    callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
-):
-    await try_edit_or_answer(
-        message=callback.message,
-        text=hbold("Выполнить заявку"),
-        reply_markup=await tech_kb.ct_repair_kb(
-            state=state, callback_data=callback_data
-        ),
     )
 
 
@@ -409,27 +445,68 @@ async def show_change_executor_format_ms(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "get_CT_TR_executor")
+    ShowRequestCallbackData.filter(F.end_point == "get_CT_TR_executor_group")
 )
-async def get_executor(
+async def get_group(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
-    await state.set_state(ChiefTechnicianTechnicalRequestForm.executor)
-    department_name = (await state.get_data()).get("department_name")
-    repairmans = get_all_repairmans_in_department(department_name)
+    groups_names = get_groups_names()
+
+    await state.set_state(ChiefTechnicianTechnicalRequestForm.group)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите исполнителя:"),
+        text=hbold("Выберите отдел:"),
         reply_markup=kb.create_reply_keyboard(
             text.back,
-            *[
-                " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-                for repairman in repairmans
-            ],
+            *groups_names,
         ),
     )
     await state.update_data(msg=msg)
     await state.update_data(request_id=callback_data.request_id)
+
+
+@router.message(ChiefTechnicianTechnicalRequestForm.group)
+async def set_group(message: Message, state: FSMContext):
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await try_delete_message(message)
+
+    if message.text == text.back:
+        await show_tech_req_format_ms(message)
+    else:
+        groups_names = get_groups_names()
+        if message.text not in groups_names:
+            groups_names.sort()
+            msg = await message.answer(
+                text=text.format_err,
+                reply_markup=kb.create_reply_keyboard(
+                    *[group_name for group_name in groups_names]
+                ),
+            )
+            await state.update_data(msg=msg)
+
+        await state.update_data(group_name=message.text)
+        await get_executor(message=message, state=state)
+
+
+async def get_executor(message: Message, state: FSMContext):
+    await state.set_state(ChiefTechnicianTechnicalRequestForm.executor)
+    group_name = (await state.get_data()).get("group_name")
+    workers = get_all_worker_in_group(group_name)
+    await try_delete_message(message)
+    msg = await message.answer(
+        text=hbold(f"Выберите исполнителя в отделе '{group_name}':"),
+        reply_markup=kb.create_reply_keyboard(
+            text.back,
+            *[
+                " ".join([worker.l_name, worker.f_name, worker.o_name])
+                for worker in workers
+            ],
+        ),
+    )
+    await state.update_data(msg=msg)
 
 
 @router.message(ChiefTechnicianTechnicalRequestForm.executor)
@@ -443,18 +520,16 @@ async def set_executor(message: Message, state: FSMContext):
     if message.text == text.back:
         await show_tech_req_format_ms(message)
     else:
-        LFO_repairmans = [
+        LFO_workers = [
             " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-            for repairman in get_all_repairmans_in_department(
-                data.get("department_name")
-            )
+            for repairman in get_all_worker_in_group(data.get("group_name"))
         ]
-        if message.text not in LFO_repairmans:
-            LFO_repairmans.sort()
+        if message.text not in LFO_workers:
+            LFO_workers.sort()
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=kb.create_reply_keyboard(
-                    *[LFO_repairman for LFO_repairman in LFO_repairmans]
+                    *[LFO_repairman for LFO_repairman in LFO_workers]
                 ),
             )
             await state.update_data(msg=msg)

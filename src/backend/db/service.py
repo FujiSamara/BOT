@@ -773,6 +773,12 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
+def get_groups_names() -> list[str]:
+    """Returns list of all groups names in db"""
+    groups = orm.get_groups()
+    return [group.name for group in groups]
+
+
 # region Technical request
 
 
@@ -1288,9 +1294,9 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         )
 
 
-def _get_departments_for_employee(
+def _get_departments_names_for_employee(
     telegram_id: int, worker_column: Any
-) -> list[DepartmentSchema]:
+) -> list[str]:
     """
     Return departments by worker telegram id and worker column id
     """
@@ -1301,45 +1307,38 @@ def _get_departments_for_employee(
             f"Worker with telegram id: {telegram_id} wasn't found"
         )
     else:
-        departments = orm.get_departments_by_worker_id_and_worker_column(
+        departments_names = orm.get_departments_names_by_worker_id_and_worker_column(
             worker_column=worker_column, worker_id=worker.id
         )
-        return departments
+        return departments_names
 
 
-def get_departments_for_repairman(
+def get_departments_names_for_repairman(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    departments = _get_departments_for_employee(
+) -> list[str]:
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
     if len(departments) > 0:
         return departments
 
-    departments = _get_departments_for_employee(
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
     if len(departments) > 0:
         return departments
 
-    return _get_departments_for_employee(
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
     )
 
 
-def get_departments_for_territorial_manager(
+def get_departments_names_for_territorial_manager(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    return _get_departments_for_employee(
+) -> list[str]:
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.territorial_manager_id
     )
-
-
-def get_all_departments(
-    telegram_id: int,
-) -> list[DepartmentSchema]:
-    departments = orm.get_all_department()
-    return departments
 
 
 def get_all_active_requests_in_department_for_chief_technician(
@@ -1359,18 +1358,23 @@ def get_all_active_requests_in_department_for_chief_technician(
         return requests
 
 
-def get_all_repairmans_in_department(
-    department_name: str,
+def get_all_worker_in_group(
+    group_name: str,
 ) -> list[WorkerSchema]:
     """
-    Return all request in department
+    Return all workers in group
     """
-    repairmans = orm.get_all_repairmans_in_department(department_name)
-    if len(repairmans) == 0:
+    group = orm.get_group_by_name(group_name)
+    if not group:
         logging.getLogger("uvicorn.error").error(
-            f"Repairmans in department with name: {department_name} wasn't founds"
+            f"Group with name: {group_name} wasn't found"
         )
-    return repairmans
+    workers = orm.get_all_worker_in_group(group.id)
+    if len(workers) == 0:
+        logging.getLogger("uvicorn.error").error(
+            f"Workers with group id: {group.id} wasn't founds"
+        )
+    return workers
 
 
 # endregion
