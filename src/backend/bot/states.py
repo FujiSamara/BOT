@@ -53,7 +53,8 @@ class WorkerTechnicalRequestForm(StatesGroup):
 
 class RepairmanTechnicalRequestForm(StatesGroup):
     department = State()
-    photo = State()
+    photo_waiting = State()
+    photo_rework = State()
 
 
 class ChiefTechnicianTechnicalRequestForm(StatesGroup):
