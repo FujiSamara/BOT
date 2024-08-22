@@ -42,8 +42,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    c_enum.update_enum(old_options, new_options, "fujiscope", "post_scopes", "scope")
+    c_enum.update_enum(
+        old_options, new_options, "fujiscope", ["post_scopes"], ["scope"]
+    )
 
 
 def downgrade() -> None:
-    c_enum.update_enum(new_options, old_options, "fujiscope", "post_scopes", "scope")
+    c_enum.update_enum(
+        new_options, old_options, "fujiscope", ["post_scopes"], ["scope"]
+    )
