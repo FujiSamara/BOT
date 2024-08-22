@@ -46,6 +46,10 @@ class DepartmentSchema(BaseSchema):
     company: CompanySchema
 
 
+class GroupSchema(BaseSchema):
+    name: str
+
+
 class WorkerSchema(BaseSchema):
     f_name: str
     l_name: str

@@ -16,7 +16,6 @@ from bot import text
 
 from db.models import ApprovalStatus
 from db.service import get_technical_request_by_id
-from db.schemas import DepartmentSchema
 
 from bot.handlers.utils import (
     try_delete_message,
@@ -199,7 +198,7 @@ async def send_photos(
 async def handle_department(
     message: Message,
     state: FSMContext,
-    departments: list[DepartmentSchema],
+    departments_names: list[str],
     reply_markup: InlineKeyboardMarkup,
 ) -> bool | None:
     """
@@ -215,14 +214,11 @@ async def handle_department(
         await state.set_state(Base.none)
         return True
     else:
-        departments_names = [department.name for department in departments]
         if message.text not in departments_names:
             departments_names.sort()
             msg = await message.answer(
                 text=text.format_err,
-                reply_markup=create_reply_keyboard(
-                    text.back, *[department for department in departments_names]
-                ),
+                reply_markup=create_reply_keyboard(text.back, *departments_names),
             )
             await state.update_data(msg=msg)
             return
