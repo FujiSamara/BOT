@@ -968,6 +968,7 @@ def update_technical_request_from_territorial_manager(
     if mark >= 3:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
+        request.acceptor_post = request.territorial_manager.post
         if request.reopen_date:
             request.reopen_confirmation_date = cur_date
         else:
@@ -1383,16 +1384,22 @@ def get_all_worker_in_group(
 def close_request(
     request_id: int,
     description: str,
+    telegram_id: int,
 ) -> int:
     """
-    Close request by Chief Technician or Department Director
+    Close request by acceptor_post
     Return creator TG id
     """
     cur_date = datetime.now()
+    logging.getLogger("uvicorn.error").error(12)
+    acceptor_post_id = (
+        orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    ).post.id
     tg_id = orm.close_request(
         request_id=request_id,
         description=description,
         close_date=cur_date,
+        acceptor_post_id=acceptor_post_id,
     )
 
     if not tg_id:

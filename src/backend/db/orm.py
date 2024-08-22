@@ -873,6 +873,7 @@ def update_technical_request_from_territorial_manager(record: TechnicalRequestSc
         cur_request.score = record.score
         cur_request.confirmation_description = record.confirmation_description
         cur_request.close_description = record.close_description
+        cur_request.acceptor_post = record.acceptor_post
 
     return True
 
@@ -1001,6 +1002,7 @@ def get_all_technical_requests_in_department(
                 and_(
                     TechnicalRequest.state != ApprovalStatus.approved,
                     TechnicalRequest.state != ApprovalStatus.skipped,
+                    TechnicalRequest.state != ApprovalStatus.not_relevant,
                 )
             )
 
@@ -1112,6 +1114,7 @@ def close_request(
     request_id: int,
     description: str,
     close_date: datetime,
+    acceptor_post_id: int,
 ) -> int:
     """
     Close request by Chief Technician or Department Director
@@ -1124,7 +1127,10 @@ def close_request(
         cur_request.state = ApprovalStatus.not_relevant
         cur_request.close_description = description
         cur_request.close_date = close_date
-        return cur_request.worker.telegram_id
+        cur_request.acceptor_post = (
+            s.query(Post).filter(Post.id == acceptor_post_id).first()
+        )
+        return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
 # endregion

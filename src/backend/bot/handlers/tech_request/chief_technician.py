@@ -662,7 +662,8 @@ async def save_close_request(
     data = await state.get_data()
     creator_tg_id = close_request(
         request_id=data.get("request_id"),
-        description="Главный техник: " + data.get("description"),
+        description=data.get("description"),
+        telegram_id=callback.message.chat.id,
     )
     if creator_tg_id:
         await notify_worker_by_telegram_id(
