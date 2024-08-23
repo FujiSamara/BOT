@@ -34,6 +34,10 @@ old_options = (
     "bot_technical_request_repairman",
     "bot_technical_request_chief_technician",
     "bot_technical_request_territorial_manager",
+    "bot_technical_request_department_director",
+    "crm_fac_bid",
+    "crm_cc_bid",
+    "crm_cc_supervisor_bid",
 )
 new_options = sorted(
     old_options
