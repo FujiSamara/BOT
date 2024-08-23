@@ -15,13 +15,15 @@ import asyncio
 
 # bot imports
 from bot.kb import (
-    get_create_bid_it_menu,
     create_reply_keyboard_resize,
+    create_inline_keyboard,
+    create_bid_it_menu_button,
+)
+from bot.handlers.bids_it.kb import (
+    get_create_bid_it_menu,
     settings_bid_it_menu_button,
     bid_it_create_history_button,
-    create_inline_keyboard,
     bid_it_menu,
-    create_bid_it_menu_button,
     bid_it_create_pending_button,
 )
 
@@ -93,6 +95,7 @@ async def clear_state_with_success_it(
 
 @router.callback_query(F.data == "get_create_bid_it_menu")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
+    await state.clear()
     await state.set_state(Base.none)
     await callback.message.edit_text(
         hbold("Заявка в IT отдел"), reply_markup=bid_it_menu
@@ -150,19 +153,26 @@ async def get_problem_type(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidITCreating.problem)
     problems = get_problems_it_types()
     await try_delete_message(callback.message)
-    await callback.message.answer(
-        hbold("Выберите тип проблемы:"),
+    msg = await callback.message.answer(
+        hbold("Выберите проблему из списка:"),
         reply_markup=create_reply_keyboard_resize("⏪ Назад", *problems),
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(BidITCreating.problem)
 async def set_problem_type(message: Message, state: FSMContext):
     await state.update_data(telegram_id=message.from_user.id)
     problems = get_problems_it_types()
+    data = await state.get_data()
+    msg = data.get("msg")
     if message.text == "⏪ Назад":
+        await try_delete_message(message)
+        await try_delete_message(msg)
         await clear_state_with_success_it(message, state, sleep_time=0)
     elif message.text in problems:
+        await try_delete_message(message)
+        await try_delete_message(msg)
         await state.update_data(problem=message.text)
         await clear_state_with_success_it(message, state)
     else:
@@ -190,15 +200,21 @@ async def set_photo(message: Message, state: FSMContext):
 async def get_comment_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(BidITCreating.comment)
     await try_delete_message(callback.message)
-    await callback.message.answer(
+    msg = await callback.message.answer(
         hbold("Введите комментарий:"),
         reply_markup=create_inline_keyboard(settings_bid_it_menu_button),
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(BidITCreating.comment)
 async def set_comment(message: Message, state: FSMContext):
-    await state.update_data(comment=message.html_text)
+    data = await state.get_data()
+    msg = data.get("msg")
+    await state.update_data(comment=message.text)
+    # await asyncio.sleep(1)
+    await try_delete_message(message)
+    await try_delete_message(msg)
     await clear_state_with_success_it(message, state)
 
 

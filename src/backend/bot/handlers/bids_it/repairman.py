@@ -19,12 +19,13 @@ from bot.text import (
     notification_it_territorial_manager,
     notification_it_worker,
 )
-
 from bot.kb import (
     create_reply_keyboard_resize,
+    create_inline_keyboard,
+)
+from bot.handlers.bids_it.kb import (
     repairman_bids_it_menu,
     repairman_department_menu,
-    create_inline_keyboard,
     bids_pending_for_repairman,
     bid_it_rm_create_history_button,
     back_repairman_button,
@@ -74,6 +75,7 @@ router = Router(name="bid_it_repairman")
 
 async def send_department_menu_for_repairman(message: Message, state: FSMContext):
     await state.clear()
+    await state.set_state(Base.none)
     await try_edit_or_answer(
         message=message,
         text=hbold("IT заявки"),
@@ -96,16 +98,26 @@ async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(RepairmanBidForm.department)
     dep = get_departments_names_by_repairman_telegram_id(callback.message.chat.id)
     await try_delete_message(callback.message)
-    await callback.message.answer(
+    msg = await callback.message.answer(
         hbold("Выберите производство:"),
         reply_markup=create_reply_keyboard_resize("⏪ Назад", *dep),
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(RepairmanBidForm.department)
 async def set_department_type(message: Message, state: FSMContext):
     dep = get_departments_names_by_repairman_telegram_id(message.from_user.id)
+    data = await state.get_data()
+    msg = data.get("msg")
     if message.text == "⏪ Назад":
+        ans = await message.answer(
+            hbold("Успешно!"), reply_markup=ReplyKeyboardRemove()
+        )
+        await asyncio.sleep(1)
+        await ans.delete()
+        await try_delete_message(message)
+        await try_delete_message(msg)
         await send_department_menu_for_repairman(message, state)
     elif message.text in dep:
         ans = await message.answer(
@@ -115,6 +127,8 @@ async def set_department_type(message: Message, state: FSMContext):
         await ans.delete()
         await state.set_state(Base.none)
         await state.update_data(department=message.text)
+        await try_delete_message(message) #########
+        await try_delete_message(msg) ##########
         await try_edit_or_answer(
             message=message,
             text=hbold(f'Заявки на производстве "{message.text}"'),
@@ -166,6 +180,9 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
 @router.callback_query(F.data == "get_back_rm")
 async def get_repairman_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department")
+    await state.clear()
+    await state.update_data(department=department_name)
+    await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f'Заявки на производстве "{department_name}"'),
@@ -269,7 +286,7 @@ async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
         bid.territorial_manager.telegram_id, notification_it_territorial_manager
     )
     await notify_worker_by_telegram_id(bid.worker.telegram_id, notification_it_worker)
-
+    
 
 # Denied bids IT
 

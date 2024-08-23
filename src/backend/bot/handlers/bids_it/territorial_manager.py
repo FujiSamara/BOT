@@ -20,13 +20,15 @@ from bot.text import (
 )
 
 from bot.kb import (
-    tm_department_menu,
     create_reply_keyboard_resize,
-    tm_bids_it_menu,
     create_inline_keyboard,
+    create_reply_keyboard_raw,
+)
+from bot.handlers.bids_it.kb import (
+    tm_department_menu,
+    tm_bids_it_menu,
     get_create_tm_bid_it_menu,
     bids_pending_for_tm,
-    create_reply_keyboard_raw,
     back_tm_button,
     bid_it_tm_create_history_button,
 )
@@ -71,6 +73,9 @@ router = Router(name="bid_it_territorial_manager")
 @router.callback_query(F.data == "get_back_tm")
 async def get_tm_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department")
+    await state.clear()
+    await state.update_data(department=department_name)
+    await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f'IT заявки ТУ на производстве "{department_name}"'),
@@ -93,17 +98,23 @@ async def get_tm_department_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TMForm.department)
     dep = get_departments_names_by_tm_telegram_id(callback.message.chat.id)
     await try_delete_message(callback.message)
-    await callback.message.answer(
+    msg = await callback.message.answer(
         hbold("Выберите производство:"),
         reply_markup=create_reply_keyboard_resize("⏪ Назад", *dep),
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(TMForm.department)
 async def set_department_type(message: Message, state: FSMContext):
     dep = get_departments_names_by_tm_telegram_id(message.from_user.id)
+    data = await state.get_data()
+    msg = data.get("msg")
     if message.text == "⏪ Назад":
         await state.clear()
+        await state.set_state(Base.none)
+        await try_delete_message(message)
+        await try_delete_message(msg)
         await try_edit_or_answer(
             message=message,
             text="IT заявки ТУ",
@@ -115,6 +126,8 @@ async def set_department_type(message: Message, state: FSMContext):
         )
         await asyncio.sleep(1)
         await ans.delete()
+        await try_delete_message(message)
+        await try_delete_message(msg)
         await state.set_state(Base.none)
         await state.update_data(department=message.text)
         await try_edit_or_answer(
@@ -215,15 +228,20 @@ async def get_bid_it_for_tm(
 async def get_mark_tm(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TMForm.mark)
     await try_delete_message(callback.message)
-    await callback.message.answer(
+    msg = await callback.message.answer(
         hbold("Поставьте оценку работе:"),
         reply_markup=create_reply_keyboard_raw(*[str(i) for i in range(1, 6)]),
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(TMForm.mark)
 async def set_mark_tm(message: Message, state: FSMContext):
     await state.update_data(mark=int(message.text))
+    data = await state.get_data()
+    msg = data.get("msg")
+    await try_delete_message(message)
+    await try_delete_message(msg)
     await clear_state_with_success_it_tm(message, state)
 
 
@@ -234,12 +252,17 @@ async def set_mark_tm(message: Message, state: FSMContext):
 async def get_work_comment_tm(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TMForm.work_comment)
     await try_delete_message(callback.message)
-    await callback.message.answer(hbold("Введите комментарий:"))
+    msg = await callback.message.answer(hbold("Введите комментарий:"))
+    await state.update_data(msg=msg)
 
 
 @router.message(TMForm.work_comment)
 async def set_work_comment_tm(message: Message, state: FSMContext):
-    await state.update_data(work_comment=message.html_text)
+    await state.update_data(work_comment=message.text)
+    data = await state.get_data()
+    msg = data.get("msg")
+    await try_delete_message(message)
+    await try_delete_message(msg)
     await clear_state_with_success_it_tm(message, state)
 
 

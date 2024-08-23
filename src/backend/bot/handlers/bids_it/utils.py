@@ -23,7 +23,7 @@ from bot.handlers.utils import (
 )
 from db.service import get_bid_it_by_id
 from db.models import ApprovalStatus
-from bot.kb import (
+from bot.handlers.bids_it.kb import (
     get_create_tm_bid_it_menu,
     get_create_repairman_it_menu,
 )
@@ -129,12 +129,12 @@ async def clear_state_with_success_it_tm(
     if edit:
         await try_edit_message(
             message=message,
-            text=f"Выполненная заявка:\n{problem_text}",
+            text=problem_text,
             reply_markup=await get_create_tm_bid_it_menu(state),
         )
     else:
         await message.answer(
-            text=f"Выполненная заявка:\n{problem_text}",
+            text=problem_text,
             reply_markup=await get_create_tm_bid_it_menu(state),
         )
 

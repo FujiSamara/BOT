@@ -23,14 +23,3 @@ class BidITCallbackData(CallbackData, prefix="bid_it"):
 class WorkerBidITCallbackData(CallbackData, prefix="worker_bid_it"):
     id: int
     endpoint_name: str
-
-
-class ActionType(str, Enum):
-    approving = 1
-    declining = 2
-
-
-class BidActionData(CallbackData, prefix="bid_it_action"):
-    bid_id: int
-    action: ActionType
-    endpoint_name: str
