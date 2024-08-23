@@ -1,6 +1,7 @@
 from alembic import op
 import sqlalchemy as sa
 
+
 def update_enum(
     old: tuple[str],
     new: tuple[str],
@@ -37,6 +38,7 @@ def update_enum(
 
     # Deletes temp type
     tmp_type.drop(op.get_bind(), checkfirst=False)
+
 
 def delete_enum(name: str):
     """Deletes enum."""
