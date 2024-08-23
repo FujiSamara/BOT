@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional
 from db.database import Base, engine, session
 from db.models import (
@@ -872,6 +873,7 @@ def update_technical_request_from_territorial_manager(record: TechnicalRequestSc
         cur_request.score = record.score
         cur_request.confirmation_description = record.confirmation_description
         cur_request.close_description = record.close_description
+        cur_request.acceptor_post = record.acceptor_post
 
     return True
 
@@ -967,6 +969,7 @@ def get_technical_requests_by_columns(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         raw_models = query.order_by(TechnicalRequest.id).all()
@@ -991,6 +994,7 @@ def get_all_technical_requests_in_department(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         else:
@@ -998,6 +1002,7 @@ def get_all_technical_requests_in_department(
                 and_(
                     TechnicalRequest.state != ApprovalStatus.approved,
                     TechnicalRequest.state != ApprovalStatus.skipped,
+                    TechnicalRequest.state != ApprovalStatus.not_relevant,
                 )
             )
 
@@ -1023,6 +1028,7 @@ def get_rework_tech_request(
                 TechnicalRequest.confirmation_date != null(),
                 TechnicalRequest.state != ApprovalStatus.approved,
                 TechnicalRequest.state != ApprovalStatus.skipped,
+                TechnicalRequest.state != ApprovalStatus.not_relevant,
             )
             .order_by(TechnicalRequest.id)
             .all()
@@ -1046,6 +1052,7 @@ def get_technical_requests_for_repairman_history(
                         TechnicalRequest.state == ApprovalStatus.pending_approval,
                         TechnicalRequest.state == ApprovalStatus.approved,
                         TechnicalRequest.state == ApprovalStatus.skipped,
+                        TechnicalRequest.state == ApprovalStatus.not_relevant,
                     ),
                     TechnicalRequest.department_id == department_id,
                 )
@@ -1101,6 +1108,29 @@ def get_departments() -> list[DepartmentSchema]:
     with session.begin() as s:
         raw_models = s.query(Department).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def close_request(
+    request_id: int,
+    description: str,
+    close_date: datetime,
+    acceptor_post_id: int,
+) -> int:
+    """
+    Close request by Chief Technician or Department Director
+    Return creator TG id
+    """
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        cur_request.state = ApprovalStatus.not_relevant
+        cur_request.close_description = description
+        cur_request.close_date = close_date
+        cur_request.acceptor_post = (
+            s.query(Post).filter(Post.id == acceptor_post_id).first()
+        )
+        return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
 # endregion

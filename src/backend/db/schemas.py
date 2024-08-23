@@ -247,6 +247,7 @@ class TechnicalRequestSchema(BaseSchema):
     worker: WorkerSchema
     repairman: WorkerSchema
     territorial_manager: WorkerSchema
+    acceptor_post: Optional[PostSchema] = None
     department: DepartmentSchema
 
 

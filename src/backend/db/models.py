@@ -111,6 +111,11 @@ class Post(Base):
 
     scopes: Mapped[List["PostScope"]] = relationship("PostScope", back_populates="post")
 
+    acceptor_technical_request: Mapped[List["TechnicalRequest"]] = relationship(
+        "TechnicalRequest",
+        back_populates="acceptor_post",
+    )
+
 
 class Company(Base):
     """Компания Фуджи или Сакура"""
@@ -732,11 +737,18 @@ class TechnicalRequest(Base):
         foreign_keys=[territorial_manager_id],
     )
 
+    acceptor_post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)
+    acceptor_post: Mapped["Post"] = relationship(
+        "Post",
+        back_populates="acceptor_technical_request",
+        foreign_keys=[acceptor_post_id],
+    )
+
     department_id: Mapped[int] = mapped_column(
         ForeignKey("departments.id"), nullable=False
     )
     department: Mapped["Department"] = relationship(
-        "Department", back_populates="technical_requests"
+        "Department", back_populates="technical_requests", foreign_keys=[department_id]
     )
 
 

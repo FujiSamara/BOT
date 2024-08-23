@@ -220,6 +220,56 @@ async def ct_admin_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+async def ct_close_request_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    description = (await state.get_data()).get("description")
+    form_complete = True
+    if not description:
+        description = ""
+        form_complete = False
+    else:
+        if len(description) > 16:
+            description = description[:16] + "..."
+        description += " ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Комментарий",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="CT_TR_close_request_description",
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Отмена",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="show_CT_TR_admin_form",
+                ).pack(),
+            ),
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Утвердить",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=callback_data.request_id,
+                        end_point="CT_TR_save_close_request",
+                    ).pack(),
+                ),
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 # end region
 
 # region Worker (WR)
@@ -728,6 +778,56 @@ async def dd_update_problem_kb(
             ]
         )
 
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def dd_close_request_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    description = (await state.get_data()).get("description")
+    form_complete = True
+    if not description:
+        description = ""
+        form_complete = False
+    else:
+        if len(description) > 16:
+            description = description[:16] + "..."
+        description += " ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Комментарий",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_close_request_description",
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Отмена",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_show_form_active",
+                ).pack(),
+            ),
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Утвердить",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=callback_data.request_id,
+                        end_point="DD_TR_save_close_request",
+                    ).pack(),
+                ),
+            ]
+        )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

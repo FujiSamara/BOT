@@ -63,6 +63,7 @@ class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     group = State()
     photo_waiting = State()
     photo_rework = State()
+    description = State()
 
 
 class TerritorialManagerRequestForm(StatesGroup):
@@ -76,3 +77,4 @@ class DepartmentDirectorRequestForm(StatesGroup):
     executor = State()
     group = State()
     problem = State()
+    description = State()

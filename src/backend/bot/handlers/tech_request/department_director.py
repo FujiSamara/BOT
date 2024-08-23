@@ -25,6 +25,7 @@ from bot.handlers.utils import (
 
 
 from db.service import (
+    close_request,
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
     get_all_worker_in_group,
@@ -151,6 +152,7 @@ async def show_active_menu(callback: CallbackQuery, state: FSMContext):
 async def show_active_request_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
+    await state.update_data(request_id=callback_data.request_id)
     buttons = [
         [
             InlineKeyboardButton(
@@ -167,6 +169,15 @@ async def show_active_request_form(
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
                     end_point="DD_TR_update_request_problem",
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Закрыть заявку",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_close_request",
                 ).pack(),
             )
         ],
@@ -229,7 +240,6 @@ async def get_group(
         ),
     )
     await state.update_data(msg=msg)
-    await state.update_data(request_id=callback_data.request_id)
 
 
 @router.message(DepartmentDirectorRequestForm.group)
@@ -419,4 +429,110 @@ async def save_change_problem(
     update_technical_request_problem(request_id=request_id, problem_id=problem_id)
     await show_active_request_form(
         callback=callback, callback_data=callback_data, state=state
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request")
+)
+async def close_request_change(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    yes_button = InlineKeyboardButton(
+        text="Да",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="DD_TR_close_request_yes",
+        ).pack(),
+    )
+    no_button = InlineKeyboardButton(
+        text="Нет",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="DD_TR_show_form_active",
+        ).pack(),
+    )
+
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Вы уверены, что хотите закрыть заявку?"),
+        reply_markup=kb.create_inline_keyboard(yes_button, no_button),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_yes")
+)
+async def close_request_form_format_cb(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.dd_close_request_kb(
+            state=state,
+            callback_data=callback_data,
+        ),
+    )
+
+
+async def close_request_form_format_ms(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_edit_or_answer(
+        message=message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.dd_close_request_kb(
+            state=state,
+            callback_data=ShowRequestCallbackData(
+                request_id=data.get("request_id"),
+                end_point="DD_TR_close_request_yes",
+            ),
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_description")
+)
+async def get_description(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await state.set_state(DepartmentDirectorRequestForm.description)
+    await try_delete_message(callback.message)
+    msg = await callback.message.answer(text=hbold("Укажите причину закрытия заявки:"))
+    await state.update_data(msg=msg)
+
+
+@router.message(DepartmentDirectorRequestForm.description)
+async def set_description(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await state.update_data(description=message.text)
+    await try_delete_message(message)
+    await close_request_form_format_ms(message, state)
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_save_close_request")
+)
+async def save_close_request(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    data = await state.get_data()
+    creator_tg_id = close_request(
+        request_id=data.get("request_id"),
+        description=data.get("description"),
+        telegram_id=callback.message.chat.id,
+    )
+    if creator_tg_id:
+        await notify_worker_by_telegram_id(
+            id=creator_tg_id,
+            message=text.notification_worker,
+        )
+    await show_active_menu(
+        callback=callback,
+        state=state,
     )
