@@ -42,7 +42,7 @@ new_options = sorted(
     )
 )
 
-table_columns = {"post_scopes":["scope"]}
+table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "b909e8fc708f"

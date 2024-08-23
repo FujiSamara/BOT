@@ -5,7 +5,7 @@ def update_enum(
     old: tuple[str],
     new: tuple[str],
     name: str,
-    table_columns: dict[str, tuple],
+    table_columns: dict[str, list],
 ):
     """Updates enum."""
     old_type = sa.Enum(*old, name=name)
@@ -16,7 +16,7 @@ def update_enum(
     tmp_type.create(op.get_bind(), checkfirst=False)
 
     # Temprorary changes old type to temp type
-    for table in table_columns.keys():
+    for table in table_columns:
         for column in table_columns[table]:
             op.execute(
                 f"ALTER TABLE {table} ALTER COLUMN {column} TYPE _{name}"
@@ -28,7 +28,7 @@ def update_enum(
     new_type.create(op.get_bind(), checkfirst=False)
 
     # Changes temp type to new type
-    for table in table_columns.keys():
+    for table in table_columns:
         for column in table_columns[table]:
             op.execute(
                 f"ALTER TABLE {table} ALTER COLUMN {column} TYPE {name}"

@@ -1,4 +1,6 @@
 from pathlib import Path
+
+from sqlalchemy import null
 from settings import get_settings
 import db.orm as orm
 from db.models import (
@@ -1070,6 +1072,7 @@ def update_technical_request_from_territorial_manager(
     if mark >= 3:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
+        request.acceptor_post = request.territorial_manager.post
         if request.reopen_date:
             request.reopen_confirmation_date = cur_date
         else:
@@ -1148,7 +1151,8 @@ def get_all_waiting_technical_requests_for_worker(
         )
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
+            [TechnicalRequest.worker_id, TechnicalRequest.close_date],
+            [worker.id, null()],
         )[:-16:-1]
 
     return requests
@@ -1184,7 +1188,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.department_id,
                     TechnicalRequest.confirmation_date,
                 ],
-                [repairman.id, ApprovalStatus.pending, department_id, None],
+                [repairman.id, ApprovalStatus.pending, department_id, null()],
             )[:-16:-1]
 
             return requests
@@ -1479,6 +1483,35 @@ def get_all_worker_in_group(
             f"Workers with group id: {group.id} wasn't founds"
         )
     return workers
+
+
+def close_request(
+    request_id: int,
+    description: str,
+    telegram_id: int,
+) -> int:
+    """
+    Close request by acceptor_post
+    Return creator TG id
+    """
+    cur_date = datetime.now()
+    logging.getLogger("uvicorn.error").error(12)
+    acceptor_post_id = (
+        orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    ).post.id
+    tg_id = orm.close_request(
+        request_id=request_id,
+        description=description,
+        close_date=cur_date,
+        acceptor_post_id=acceptor_post_id,
+    )
+
+    if not tg_id:
+        logging.getLogger("uvicorn.error").error(
+            f"Request with id: {request_id} wasn't close"
+        )
+
+    return tg_id
 
 
 # endregion

@@ -1,8 +1,8 @@
-"""bids_it_tables
+"""add_bids_it_tables
 
-Revision ID: b626db22af57
-Revises: 1e063506382c
-Create Date: 2024-08-22 19:49:21.328525
+Revision ID: 6a9833617174
+Revises: bec1c8870168
+Create Date: 2024-08-23 11:36:41.352446
 
 """
 
@@ -14,10 +14,9 @@ import fastapi_storages
 
 from settings import get_settings
 
-
 # revision identifiers, used by Alembic.
-revision: str = "b626db22af57"
-down_revision: Union[str, None] = "1e063506382c"
+revision: str = "6a9833617174"
+down_revision: Union[str, None] = "bec1c8870168"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -56,6 +55,7 @@ def upgrade() -> None:
                 "denied",
                 "pending_approval",
                 "skipped",
+                "not_relevant",
                 name="approvalstatus",
             ),
             nullable=False,
