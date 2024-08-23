@@ -454,6 +454,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.problem: "Проблема",
         TechnicalRequest.territorial_manager: "Территориальный менеджер",
         TechnicalRequest.worker: "Создатель",
+        TechnicalRequest.acceptor_post: "Должность закрывшего",
     }
 
     column_list = [
@@ -472,6 +473,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.repairman_id,
         TechnicalRequest.department_id,
         TechnicalRequest.territorial_manager_id,
+        TechnicalRequest.acceptor_post_id,
     ]
 
     column_sortable_list = [
