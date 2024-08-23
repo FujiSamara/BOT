@@ -24,6 +24,7 @@ services:
     volumes:
       - cert-dir:/var/www/certs:ro
       - files-dir:/tmp
+      - ./backend:/app
 
     network_mode: "host"
 
