@@ -1,7 +1,7 @@
 services:
   app-frontend:
     build:
-      context: src/frontend
+      context: frontend
       network: host
       args:
         VITE_PORT:
@@ -18,7 +18,7 @@ services:
 
   app-backend:
     build:
-      context: src/backend
+      context: backend
       network: host
 
     volumes:
@@ -32,13 +32,13 @@ services:
 
   app-server:
     build:
-      context: src/server
+      context: server
       network: host
 
     volumes:
       - cert-dir:/var/www/certs:ro
       - nginx-html:/usr/share/nginx/html
-      - ./src/server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
+      - ./server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
 
     network_mode: "host"
 

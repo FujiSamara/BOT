@@ -3,7 +3,7 @@ import subprocess as sub
 import pathlib
 from typing import Callable
 
-from src.server import tunnel
+from server import tunnel
 
 
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.resolve()
@@ -35,7 +35,7 @@ def run():
     backend_cmd = [
         f"{EXECUTEABLE_PATH}",
         "-Xfrozen_modules=off",
-        f"{CURRENT_DIRECTORY}/src/backend/manage.py",
+        f"{CURRENT_DIRECTORY}/backend/manage.py",
     ]
     if "FRONTEND" not in sys.argv:
         processes.append(AppProcess("Backend", backend_cmd))
@@ -44,7 +44,7 @@ def run():
     frontend_cmd = [
         "npm",
         "--prefix",
-        f"{CURRENT_DIRECTORY}/src/frontend",
+        f"{CURRENT_DIRECTORY}/frontend",
         "run",
         "dev",
     ]
