@@ -60,7 +60,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_chief_technician: ct_button,
         FujiScope.bot_technical_request_territorial_manager: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
-        FujiScope.bot_bid_it_create: create_bid_it_menu_button,
+        FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
         FujiScope.bot_bid_it_tm: get_it_tm_menu,
     }

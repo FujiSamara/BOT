@@ -1570,29 +1570,6 @@ def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
     return result
 
 
-def get_bids_it_with_status(
-    telegram_id: str, department_name: str, status: ApprovalStatus
-) -> list[str]:
-    """
-    Returns bids IT by worker telegram id, department name and telegram id with status.
-    """
-
-    department_list: list[DepartmentSchema] = orm.find_departments_by_column(
-        Department.name, department_name
-    )
-
-    if len(department_list) == 0:
-        return None
-
-    department: DepartmentSchema = department_list[0]
-    worker = get_worker_by_telegram_id(telegram_id)
-    if worker is None:
-        return None
-    bids_raw = orm.get_bids_it_with_status(worker, department, status)
-
-    return bids_raw
-
-
 def update_bid_it_tm(bid_id: int, mark: int, work_comment: str | None):
     """
     Updates an bid IT wrapped in `BidITShema` and adds it to database.

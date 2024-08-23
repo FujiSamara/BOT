@@ -431,7 +431,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-# Bid IT
+# Worker IT
 
 create_bid_it_menu_button = InlineKeyboardButton(
     text="Заявка в IT отдел", callback_data="get_create_bid_it_menu"
@@ -513,11 +513,11 @@ get_it_repairman_menu = InlineKeyboardButton(
     text="IT заявки", callback_data="get_it_repairman_menu"
 )
 get_it_repairman_menu_bts = InlineKeyboardButton(
-    text="Выбрать предприятие", callback_data="get_it_repairman_menu"
+    text="Выбрать производство", callback_data="get_it_repairman_menu"
 )
 
 get_department_it_repairman = InlineKeyboardButton(
-    text="Выбрать предприятие", callback_data="get_department_it_repairman"
+    text="Выбрать производство", callback_data="get_department_it_repairman"
 )
 
 bids_pending_for_repairman = InlineKeyboardButton(
@@ -600,7 +600,7 @@ get_it_tm_menu = InlineKeyboardButton(
     text="IT заявки ТУ", callback_data="get_it_tm_menu"
 )
 get_it_tm_menu_bts = InlineKeyboardButton(
-    text="Выбрать предприятие", callback_data="get_it_tm_menu"
+    text="Выбрать производство", callback_data="get_it_tm_menu"
 )
 
 bids_pending_for_tm = InlineKeyboardButton(
@@ -612,7 +612,7 @@ bid_it_tm_create_history_button = InlineKeyboardButton(
 )
 
 get_department_it_tm = InlineKeyboardButton(
-    text="Выбрать предприятие", callback_data="get_department_it_tm"
+    text="Выбрать производство", callback_data="get_department_it_tm"
 )
 
 back_tm_button = InlineKeyboardButton(text="Назад", callback_data="get_back_tm")
@@ -678,7 +678,7 @@ async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="Закрыть заявку", callback_data="send_bid_it_tm"
+                    text="Утвердить заявку", callback_data="send_bid_it_tm"
                 )
             ]
         )

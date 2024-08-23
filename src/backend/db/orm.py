@@ -1190,8 +1190,10 @@ def get_history_bids_it_for_worker(worker: WorkerSchema) -> list[BidITSchema]:
             .filter(
                 and_(
                     BidIT.worker_id == worker.id,
-                    BidIT.status != ApprovalStatus.pending,
-                    BidIT.status != ApprovalStatus.pending_approval,
+                    or_(
+                        BidIT.status == ApprovalStatus.approved,
+                        BidIT.status == ApprovalStatus.skipped,
+                    ),
                 )
             )
             .all()
@@ -1253,31 +1255,7 @@ def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
                     or_(
                         BidIT.status == ApprovalStatus.pending_approval,
                         BidIT.status == ApprovalStatus.pending,
-                    ),
-                )
-            )
-            .all()
-        )
-        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
-
-
-def get_bids_it_with_status(
-    worker: WorkerSchema, department: DepartmentSchema, status: ApprovalStatus
-) -> list[BidITSchema]:
-    """
-    Returns all bids IT in database by worker.
-    """
-    with session.begin() as s:
-        raw_bids = (
-            s.query(BidIT)
-            .filter(
-                and_(
-                    BidIT.department_id == department.id,
-                    BidIT.status == status,
-                    or_(
-                        BidIT.repairman_id == worker.id,
-                        BidIT.territorial_manager_id == worker.id,
-                        # BidIT.worker_id == worker.id,
+                        BidIT.status == ApprovalStatus.denied,
                     ),
                 )
             )
