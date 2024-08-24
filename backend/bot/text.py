@@ -38,3 +38,8 @@ notification_repairman_reopen = "У Вас новая техническая з�
 notification_territorial_manager = "У Вас новая техническая заявка для оценки!"
 
 notification_worker = "Статус технической заявки обновлён!"
+
+notification_it_worker = "Статус IT заявки обновлён!"
+notification_it_territorial_manager = "У Вас новая IT заявка для оценки!"
+notification_it_repairman = "У Вас новая IT заявка!"
+notification_it_repairman_reopen = "У Вас новая IT заявка на доработку!"

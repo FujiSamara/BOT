@@ -204,6 +204,40 @@ class BudgetRecordSchema(BaseModel):
     department: Optional[DepartmentSchema] = None
 
 
+class ProblemITSchema(BaseSchema):
+    name: str
+    category: str
+    sla: float
+    repairman: WorkerSchema
+
+
+class BidITSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    problem: ProblemITSchema
+    problem_comment: str
+    problem_photos: list[DocumentSchema]
+    worker: WorkerSchema
+    department: DepartmentSchema
+    opening_date: datetime.datetime
+    done_date: Optional[datetime.datetime] = None
+    reopening_date: Optional[datetime.datetime] = None
+    reopen_done_date: Optional[datetime.datetime] = None
+    approve_date: Optional[datetime.datetime] = None
+    reopen_approve_date: Optional[datetime.datetime] = None
+    close_date: Optional[datetime.datetime] = None
+    status: ApprovalStatus
+    repairman: Optional[WorkerSchema] = None
+    territorial_manager: Optional[WorkerSchema] = None
+    mark: Optional[int] = None
+    work_photos: list[DocumentSchema] = None
+    work_comment: Optional[str] = None
+    reopen_work_comment: Optional[str] = None
+
+
 # Technical request
 class TechnicalProblemSchema(BaseSchema):
     id: Optional[int] = -1

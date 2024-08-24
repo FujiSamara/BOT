@@ -19,6 +19,7 @@ import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
     create_bid_menu_button,
+    create_bid_it_menu_button,
     teller_card_menu_button,
     teller_cash_menu_button,
     accountant_card_menu_button,
@@ -28,6 +29,8 @@ from bot.kb import (
     rating_menu_button,
     worker_bid_menu_button,
     create_reply_keyboard,
+    get_it_repairman_menu,
+    get_it_tm_menu,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -57,6 +60,9 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_chief_technician: ct_button,
         FujiScope.bot_technical_request_territorial_manager: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
+        FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
+        FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
+        FujiScope.bot_bid_it_tm: get_it_tm_menu,
     }
 
 

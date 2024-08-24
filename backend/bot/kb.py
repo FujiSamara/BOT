@@ -61,6 +61,17 @@ def create_reply_keyboard(*texts: list[str]) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text=text)] for text in texts])
 
 
+def create_reply_keyboard_resize(*texts: list[str]) -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=text)] for text in texts], resize_keyboard=True
+    )
+
+
+def create_reply_keyboard_raw(*texts: list[str]) -> ReplyKeyboardMarkup:
+    keyboard = [KeyboardButton(text=text) for text in texts]
+    return ReplyKeyboardMarkup(keyboard=[keyboard], resize_keyboard=True)
+
+
 # Bid
 bid_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -418,3 +429,18 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+# Bids IT
+
+create_bid_it_menu_button = InlineKeyboardButton(
+    text="Заявка в IT отдел", callback_data="get_create_bid_it_menu"
+)
+
+get_it_repairman_menu = InlineKeyboardButton(
+    text="IT заявки", callback_data="get_it_repairman_menu"
+)
+
+get_it_tm_menu = InlineKeyboardButton(
+    text="IT заявки ТУ", callback_data="get_it_tm_menu"
+)

@@ -32,7 +32,7 @@ old_options = (
     "bot_technical_request_department_director",
 )
 
-
+table_columns = {"post_scopes": ["scope"]}
 new_options = sorted(
     old_options + ("crm_fac_bid", "crm_cc_bid", "crm_cc_supervisor_bid")
 )
