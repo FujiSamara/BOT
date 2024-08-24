@@ -52,7 +52,6 @@ from bot.handlers.bids_it.utils import (
 )
 from bot.handlers.bids_it.schemas import (
     BidITViewMode,
-    BidITViewType,
     BidITCallbackData,
     WorkerBidITCallbackData,
 )
@@ -142,8 +141,7 @@ async def set_department_type(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.mode == BidITViewMode.state_only),
+    BidITCallbackData.filter(F.mode == BidITViewMode.pending),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info_rm"),
 )
 async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackData):
@@ -168,7 +166,6 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
                 callback_data=BidITCallbackData(
                     id=bid_id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_documents_problem_rm",
                 ).pack(),
             ),
@@ -202,8 +199,7 @@ async def get_pending_bids_for_repairman(callback: CallbackQuery, state: FSMCont
                 text=get_bid_it_list_info(bid),
                 callback_data=BidITCallbackData(
                     id=bid.id,
-                    mode=BidITViewMode.state_only,
-                    type=BidITViewType.creation,
+                    mode=BidITViewMode.pending,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )
@@ -303,8 +299,7 @@ async def get_denied_bids_for_repairman(callback: CallbackQuery, state: FSMConte
                 text=get_bid_it_list_info(bid),
                 callback_data=BidITCallbackData(
                     id=bid.id,
-                    mode=BidITViewMode.full_with_deny,
-                    type=BidITViewType.creation,
+                    mode=BidITViewMode.deny,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )
@@ -319,8 +314,7 @@ async def get_denied_bids_for_repairman(callback: CallbackQuery, state: FSMConte
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.mode == BidITViewMode.full_with_deny),
+    BidITCallbackData.filter(F.mode == BidITViewMode.deny),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info_rm"),
 )
 async def get_denied_bid_repairman(
@@ -373,8 +367,7 @@ async def get_history_bids_for_repairman(callback: CallbackQuery, state: FSMCont
                 text=get_bid_it_list_info(bid),
                 callback_data=BidITCallbackData(
                     id=bid.id,
-                    mode=BidITViewMode.full,
-                    type=BidITViewType.creation,
+                    mode=BidITViewMode.history,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )
@@ -389,8 +382,7 @@ async def get_history_bids_for_repairman(callback: CallbackQuery, state: FSMCont
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.mode == BidITViewMode.full),
+    BidITCallbackData.filter(F.mode == BidITViewMode.history),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info_rm"),
 )
 async def get_bid_repairman(
@@ -420,7 +412,6 @@ async def get_bid_repairman(
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_problem_rm"),
 )
 async def get_documents_problem_rm(
@@ -449,7 +440,6 @@ async def get_documents_problem_rm(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )
@@ -458,7 +448,6 @@ async def get_documents_problem_rm(
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_done_rm"),
 )
 async def get_documents_done_rm(
@@ -490,7 +479,6 @@ async def get_documents_done_rm(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )
@@ -499,7 +487,6 @@ async def get_documents_done_rm(
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_done_reopen_rm"),
 )
 async def get_documents_done_reopen_rm(
@@ -531,7 +518,6 @@ async def get_documents_done_reopen_rm(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info_rm",
                 ).pack(),
             )

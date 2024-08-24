@@ -4,6 +4,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
+from bot.handlers.bids_it.schemas import BidITCallbackData
 from bot.kb import (
     main_menu_button,
 )
@@ -206,7 +207,7 @@ tm_bids_it_menu = InlineKeyboardMarkup(
 )
 
 
-async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
+async def get_create_tm_bid_it_menu(callback_data: BidITCallbackData, state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     mark: int | None = data.get("mark")
     mark_text = "Отсутствует"
@@ -254,6 +255,12 @@ async def get_create_tm_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
                 )
             ]
         )
-    keyboard.append([back_tm_button])
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                    text="Назад", callback_data=callback_data.pack()
+                )
+        ]
+    )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

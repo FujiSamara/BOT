@@ -54,7 +54,6 @@ from bot.handlers.utils import (
 
 from bot.handlers.bids_it.schemas import (
     BidITViewMode,
-    BidITViewType,
     BidITCallbackData,
 )
 
@@ -229,8 +228,7 @@ async def get_bids_it_history(callback: CallbackQuery):
                 text=get_bid_it_list_info(bid),
                 callback_data=BidITCallbackData(
                     id=bid.id,
-                    mode=BidITViewMode.full,
-                    type=BidITViewType.creation,
+                    mode=BidITViewMode.history,
                     endpoint_name="create_bid_it_info",
                 ).pack(),
             )
@@ -243,8 +241,7 @@ async def get_bids_it_history(callback: CallbackQuery):
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.mode == BidITViewMode.full),
+    BidITCallbackData.filter(F.mode == BidITViewMode.history),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info"),
 )
 async def get_bid(
@@ -272,8 +269,7 @@ async def get_bid(
 
 # Show pending bids
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
-    BidITCallbackData.filter(F.mode == BidITViewMode.state_only),
+    BidITCallbackData.filter(F.mode == BidITViewMode.pending),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info"),
 )
 async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackData):
@@ -299,8 +295,7 @@ async def get_bids_it_pending(callback: CallbackQuery):
                 text=get_bid_it_list_info(bid),
                 callback_data=BidITCallbackData(
                     id=bid.id,
-                    mode=BidITViewMode.state_only,
-                    type=BidITViewType.creation,
+                    mode=BidITViewMode.pending,
                     endpoint_name="create_bid_it_info",
                 ).pack(),
             )
@@ -313,7 +308,6 @@ async def get_bids_it_pending(callback: CallbackQuery):
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_problem"),
 )
 async def get_documents_problem(
@@ -342,7 +336,6 @@ async def get_documents_problem(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info",
                 ).pack(),
             )
@@ -351,7 +344,6 @@ async def get_documents_problem(
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_done"),
 )
 async def get_documents_done(
@@ -383,7 +375,6 @@ async def get_documents_done(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info",
                 ).pack(),
             )
@@ -392,7 +383,6 @@ async def get_documents_done(
 
 
 @router.callback_query(
-    BidITCallbackData.filter(F.type == BidITViewType.creation),
     BidITCallbackData.filter(F.endpoint_name == "create_documents_done_reopen"),
 )
 async def get_documents_done_reopen(
@@ -424,7 +414,6 @@ async def get_documents_done_reopen(
                 callback_data=BidITCallbackData(
                     id=bid.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_bid_it_info",
                 ).pack(),
             )

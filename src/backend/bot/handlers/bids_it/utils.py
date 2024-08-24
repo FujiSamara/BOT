@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from bot.handlers.bids_it.schemas import (
     BidITCallbackData,
-    BidITViewType,
+    BidITViewMode,
 )
 from db.schemas import (
     ProblemITSchema,
@@ -124,18 +124,24 @@ async def clear_state_with_success_it_tm(
     await asyncio.sleep(sleep_time)
     await ans.delete()
     await state.set_state(Base.none)
-    bid = get_bid_it_by_id((await state.get_data()).get("bid_id"))
+    data = await state.get_data()
+    bid = get_bid_it_by_id(data.get("bid_id"))
     problem_text = get_bid_it_info(bid)
+    callback_data = BidITCallbackData(
+        id=data.get("bid_id"),
+        mode=BidITViewMode.pending,
+        endpoint_name="create_bid_it_info_tm",
+    )
     if edit:
         await try_edit_message(
             message=message,
             text=problem_text,
-            reply_markup=await get_create_tm_bid_it_menu(state),
+            reply_markup=await get_create_tm_bid_it_menu(callback_data, state),
         )
     else:
         await message.answer(
             text=problem_text,
-            reply_markup=await get_create_tm_bid_it_menu(state),
+            reply_markup=await get_create_tm_bid_it_menu(callback_data, state),
         )
 
 
@@ -189,7 +195,6 @@ def create_buttons_for_repairman(
                 callback_data=BidITCallbackData(
                     id=bid_it.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_documents_problem_rm",
                 ).pack(),
             )
@@ -203,7 +208,6 @@ def create_buttons_for_repairman(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done_rm",
                     ).pack(),
                 )
@@ -217,7 +221,6 @@ def create_buttons_for_repairman(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done_reopen_rm",
                     ).pack(),
                 )
@@ -235,7 +238,6 @@ def create_buttons_for_worker(
                 callback_data=BidITCallbackData(
                     id=bid_it.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_documents_problem",
                 ).pack(),
             )
@@ -249,7 +251,6 @@ def create_buttons_for_worker(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done",
                     ).pack(),
                 )
@@ -263,7 +264,6 @@ def create_buttons_for_worker(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done_reopen",
                     ).pack(),
                 )
@@ -281,7 +281,6 @@ def create_buttons_for_territorial_manager(
                 callback_data=BidITCallbackData(
                     id=bid_it.id,
                     mode=callback_data.mode,
-                    type=BidITViewType.creation,
                     endpoint_name="create_documents_problem_tm",
                 ).pack(),
             )
@@ -295,7 +294,6 @@ def create_buttons_for_territorial_manager(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done_tm",
                     ).pack(),
                 )
@@ -309,7 +307,6 @@ def create_buttons_for_territorial_manager(
                     callback_data=BidITCallbackData(
                         id=bid_it.id,
                         mode=callback_data.mode,
-                        type=BidITViewType.creation,
                         endpoint_name="create_documents_done_reopen_tm",
                     ).pack(),
                 )
