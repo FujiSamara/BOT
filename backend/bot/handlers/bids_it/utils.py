@@ -17,7 +17,6 @@ from db.schemas import (
     BidITSchema,
 )
 from bot.states import Base
-from bot.text import bid_create_greet
 from bot.handlers.utils import (
     try_edit_message,
 )
@@ -145,27 +144,65 @@ async def clear_state_with_success_it_tm(
         )
 
 
-async def clear_state_with_success_rm(
+async def clear_state_with_success_rm_work(
     message: Message, state: FSMContext, sleep_time=1, edit=False
 ):
     ans = await message.answer(hbold("Успешно!"), reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(sleep_time)
     await ans.delete()
     await state.set_state(Base.none)
-    bid_id = (await state.get_data()).get("bid_id")
+    data = await state.get_data()
+    bid_id = data.get("bid_id")
     bid = get_bid_it_by_id(bid_id)
     text = get_bid_it_info(bid)
+
+    callback_data = BidITCallbackData(
+        id=data.get("bid_id"),
+        mode=BidITViewMode.pending,
+        endpoint_name="create_bid_it_info_rm",
+    )
 
     if edit:
         await try_edit_message(
             message=message,
-            text=hbold(bid_create_greet) + "\n" + text,
-            reply_markup=await get_create_repairman_it_menu(state),
+            text=text,
+            reply_markup=await get_create_repairman_it_menu(callback_data, state),
         )
     else:
         await message.answer(
-            text=hbold(bid_create_greet) + "\n" + text,
-            reply_markup=await get_create_repairman_it_menu(state),
+            text=text,
+            reply_markup=await get_create_repairman_it_menu(callback_data, state),
+        )
+
+
+async def clear_state_with_success_rm_rework(
+    message: Message, state: FSMContext, sleep_time=1, edit=False
+):
+    ans = await message.answer(hbold("Успешно!"), reply_markup=ReplyKeyboardRemove())
+    await asyncio.sleep(sleep_time)
+    await ans.delete()
+    await state.set_state(Base.none)
+    data = await state.get_data()
+    bid_id = data.get("bid_id")
+    bid = get_bid_it_by_id(bid_id)
+    text = get_bid_it_info(bid)
+
+    callback_data = BidITCallbackData(
+        id=data.get("bid_id"),
+        mode=BidITViewMode.deny,
+        endpoint_name="create_bid_it_info_rm",
+    )
+
+    if edit:
+        await try_edit_message(
+            message=message,
+            text=text,
+            reply_markup=await get_create_repairman_it_menu(callback_data, state),
+        )
+    else:
+        await message.answer(
+            text=text,
+            reply_markup=await get_create_repairman_it_menu(callback_data, state),
         )
 
 

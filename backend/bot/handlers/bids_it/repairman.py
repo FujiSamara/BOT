@@ -43,9 +43,10 @@ from bot.handlers.utils import (
     notify_worker_by_telegram_id,
 )
 from bot.handlers.bids_it.utils import (
+    clear_state_with_success_rm_rework,
+    clear_state_with_success_rm_work,
     create_buttons_for_repairman,
     get_bid_it_list_info,
-    clear_state_with_success_rm,
     get_bid_it_info,
     filter_media_by_reopen,
     filter_media_by_done,
@@ -53,7 +54,6 @@ from bot.handlers.bids_it.utils import (
 from bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITCallbackData,
-    WorkerBidITCallbackData,
 )
 
 
@@ -144,10 +144,16 @@ async def set_department_type(message: Message, state: FSMContext):
     BidITCallbackData.filter(F.mode == BidITViewMode.pending),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info_rm"),
 )
-async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackData):
+async def get_bid_state(
+    callback: CallbackQuery, state: FSMContext, callback_data: BidITCallbackData
+):
     bid_id = callback_data.id
     bid = get_bid_it_by_id(bid_id)
     await try_delete_message(callback.message)
+
+    data = await state.get_data()
+    await state.clear()
+    await state.update_data(department=data.get("department"))
 
     text = get_bid_it_info(bid)
 
@@ -156,8 +162,9 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackDat
         reply_markup=create_inline_keyboard(
             InlineKeyboardButton(
                 text="Выполнить заявку",
-                callback_data=WorkerBidITCallbackData(
+                callback_data=BidITCallbackData(
                     id=callback_data.id,
+                    mode=callback_data.mode,
                     endpoint_name="take_bid_it_for_repairman",
                 ).pack(),
             ),
@@ -215,45 +222,69 @@ async def get_pending_bids_for_repairman(callback: CallbackQuery, state: FSMCont
 
 
 @router.callback_query(
-    WorkerBidITCallbackData.filter(F.endpoint_name == "take_bid_it_for_repairman")
+    BidITCallbackData.filter(F.endpoint_name == "take_bid_it_for_repairman")
 )
 async def get_bid_it_for_repairman(
     callback: CallbackQuery,
     state: FSMContext,
-    callback_data: WorkerBidITCallbackData,
+    callback_data: BidITCallbackData,
 ):
     await state.update_data(bid_id=callback_data.id)
     await try_delete_message(callback.message)
-    await clear_state_with_success_rm(callback.message, state)
+    if callback_data.mode == BidITViewMode.pending:
+        await clear_state_with_success_rm_work(callback.message, state)
+    elif callback_data.mode == BidITViewMode.deny:
+        await clear_state_with_success_rm_rework(callback.message, state)
 
 
 # Set photo
 
 
-@router.callback_query(F.data == "get_photo_rm")
-async def get_photo_rm(callback: CallbackQuery, state: FSMContext):
-    await handle_documents_form(callback.message, state, RepairmanBidForm.photo)
+@router.callback_query(F.data == "get_photo_work_rm")
+async def get_photo_work_rm(callback: CallbackQuery, state: FSMContext):
+    await handle_documents_form(callback.message, state, RepairmanBidForm.photo_work)
 
 
-@router.message(RepairmanBidForm.photo)
-async def set_photo_rm(message: Message, state: FSMContext):
+@router.message(RepairmanBidForm.photo_work)
+async def set_photo_work_rm(message: Message, state: FSMContext):
     await handle_documents(
         message,
         state,
-        "photo",
-        clear_state_with_success_rm,
+        "photo_work",
+        clear_state_with_success_rm_work,
+    )
+
+
+@router.callback_query(F.data == "get_photo_rework_rm")
+async def get_photo_rework_rm(callback: CallbackQuery, state: FSMContext):
+    await handle_documents_form(callback.message, state, RepairmanBidForm.photo_rework)
+
+
+@router.message(RepairmanBidForm.photo_rework)
+async def set_photo_rework_rm(message: Message, state: FSMContext):
+    await handle_documents(
+        message,
+        state,
+        "photo_rework",
+        clear_state_with_success_rm_rework,
     )
 
 
 # Send bid
 
 
-@router.callback_query(F.data == "send_bid_it_rm")
-async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
+@router.callback_query(BidITCallbackData.filter(F.endpoint_name == "send_bid_it_rm"))
+async def send_bid_it_rm(
+    callback: CallbackQuery, state: FSMContext, callback_data: BidITCallbackData
+):
     data = await state.get_data()
     await state.set_state(Base.none)
     department_name = data.get("department")
-    photos = data.get("photo")
+    photos = ""
+    if callback_data == BidITViewMode.pending:
+        photos = data.get("photo_work")
+    elif callback_data == BidITViewMode.deny:
+        photos = data.get("photo_rework")
     bid_id = data.get("bid_id")
 
     document_files: list[UploadFile] = []
@@ -328,6 +359,10 @@ async def get_denied_bid_repairman(
             await try_delete_message(msg)
         await state.update_data(msgs_for_delete=[])
 
+    data = await state.get_data()
+    await state.clear()
+    await state.update_data(department=data.get("department"))
+
     caption = get_bid_it_info(bid_it)
 
     buttons = []
@@ -335,8 +370,9 @@ async def get_denied_bid_repairman(
         [
             InlineKeyboardButton(
                 text="Выполнить заявку",
-                callback_data=WorkerBidITCallbackData(
+                callback_data=BidITCallbackData(
                     id=callback_data.id,
+                    mode=callback_data.mode,
                     endpoint_name="take_bid_it_for_repairman",
                 ).pack(),
             )

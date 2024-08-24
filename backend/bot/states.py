@@ -54,7 +54,8 @@ class BidITCreating(StatesGroup):
 # Repairman
 class RepairmanBidForm(StatesGroup):
     department = State()
-    photo = State()
+    photo_work = State()
+    photo_rework = State()
     bid_id = State()
 
 

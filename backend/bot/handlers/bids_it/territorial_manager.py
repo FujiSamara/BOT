@@ -171,10 +171,16 @@ async def show_pending_bids_it_tm(callback: CallbackQuery, state: FSMContext):
     BidITCallbackData.filter(F.mode == BidITViewMode.pending),
     BidITCallbackData.filter(F.endpoint_name == "create_bid_it_info_tm"),
 )
-async def get_bid_state(callback: CallbackQuery, callback_data: BidITCallbackData):
+async def get_bid_state(
+    callback: CallbackQuery, state: FSMContext, callback_data: BidITCallbackData
+):
     bid_id = callback_data.id
     bid = get_bid_it_by_id(bid_id)
     await try_delete_message(callback.message)
+
+    data = await state.get_data()
+    await state.clear()
+    await state.update_data(department=data.get("department"))
 
     text = get_bid_it_info(bid)
     buttons = []

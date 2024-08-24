@@ -4,7 +4,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from bot.handlers.bids_it.schemas import BidITCallbackData
+from bot.handlers.bids_it.schemas import BidITCallbackData, BidITViewMode
 from bot.kb import (
     main_menu_button,
 )
@@ -127,9 +127,18 @@ repairman_bids_it_menu = InlineKeyboardMarkup(
 )
 
 
-async def get_create_repairman_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
+async def get_create_repairman_it_menu(
+    callback_data: BidITCallbackData, state: FSMContext
+) -> InlineKeyboardMarkup:
     data = await state.get_data()
-    photo = data.get("photo")
+    photo = ""
+    photo_callback_data = ""
+    if callback_data.mode == BidITViewMode.pending:
+        photo = data.get("photo_work")
+        photo_callback_data = "get_photo_work_rm"
+    elif callback_data.mode == BidITViewMode.deny:
+        photo = data.get("photo_rework")
+        photo_callback_data = "get_photo_rework_rm"
     photo_text = "Отсутствует"
     all_field_exist = True
 
@@ -141,7 +150,7 @@ async def get_create_repairman_it_menu(state: FSMContext) -> InlineKeyboardMarku
 
     keyboard = [
         [
-            InlineKeyboardButton(text="Фото", callback_data="get_photo_rm"),
+            InlineKeyboardButton(text="Фото", callback_data=photo_callback_data),
             InlineKeyboardButton(text=photo_text, callback_data="dummy"),
         ],
     ]
@@ -149,11 +158,18 @@ async def get_create_repairman_it_menu(state: FSMContext) -> InlineKeyboardMarku
         keyboard.append(
             [
                 InlineKeyboardButton(
-                    text="Выполнить заявку", callback_data="send_bid_it_rm"
+                    text="Выполнить заявку",
+                    callback_data=BidITCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name="send_bid_it_rm",
+                    ).pack(),
                 )
             ]
         )
-    keyboard.append([back_repairman_button])
+    keyboard.append(
+        [InlineKeyboardButton(text="Назад", callback_data=callback_data.pack())]
+    )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
