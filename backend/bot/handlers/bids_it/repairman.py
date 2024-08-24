@@ -126,8 +126,8 @@ async def set_department_type(message: Message, state: FSMContext):
         await ans.delete()
         await state.set_state(Base.none)
         await state.update_data(department=message.text)
-        await try_delete_message(message) #########
-        await try_delete_message(msg) ##########
+        await try_delete_message(message)  #########
+        await try_delete_message(msg)  ##########
         await try_edit_or_answer(
             message=message,
             text=hbold(f'Заявки на производстве "{message.text}"'),
@@ -282,7 +282,7 @@ async def send_bid_it_rm(callback: CallbackQuery, state: FSMContext):
         bid.territorial_manager.telegram_id, notification_it_territorial_manager
     )
     await notify_worker_by_telegram_id(bid.worker.telegram_id, notification_it_worker)
-    
+
 
 # Denied bids IT
 

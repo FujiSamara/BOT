@@ -22,7 +22,9 @@ bid_it_create_pending_button = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_create_pending_bid_it"
 )
 
-back_worker_button = InlineKeyboardButton(text="Назад", callback_data="get_create_bid_it_menu")
+back_worker_button = InlineKeyboardButton(
+    text="Назад", callback_data="get_create_bid_it_menu"
+)
 
 bid_it_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -62,9 +64,7 @@ async def get_create_bid_it_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
     keyboard = [
         [
-            InlineKeyboardButton(
-                text="Проблема", callback_data="get_problem_it"
-            ),
+            InlineKeyboardButton(text="Проблема", callback_data="get_problem_it"),
             InlineKeyboardButton(text=problem, callback_data="dummy"),
         ],
         [
@@ -207,7 +207,9 @@ tm_bids_it_menu = InlineKeyboardMarkup(
 )
 
 
-async def get_create_tm_bid_it_menu(callback_data: BidITCallbackData, state: FSMContext) -> InlineKeyboardMarkup:
+async def get_create_tm_bid_it_menu(
+    callback_data: BidITCallbackData, state: FSMContext
+) -> InlineKeyboardMarkup:
     data = await state.get_data()
     mark: int | None = data.get("mark")
     mark_text = "Отсутствует"
@@ -256,11 +258,7 @@ async def get_create_tm_bid_it_menu(callback_data: BidITCallbackData, state: FSM
             ]
         )
     keyboard.append(
-        [
-            InlineKeyboardButton(
-                    text="Назад", callback_data=callback_data.pack()
-                )
-        ]
+        [InlineKeyboardButton(text="Назад", callback_data=callback_data.pack())]
     )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

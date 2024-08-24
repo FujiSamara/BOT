@@ -430,6 +430,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
+
 # Bids IT
 
 create_bid_it_menu_button = InlineKeyboardButton(
