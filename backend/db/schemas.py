@@ -208,7 +208,6 @@ class ProblemITSchema(BaseSchema):
     name: str
     category: str
     sla: float
-    repairman: WorkerSchema
 
 
 class BidITSchema(BaseModel):
