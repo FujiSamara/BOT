@@ -1098,7 +1098,6 @@ def get_departments_names_for_repairman(
     with session.begin() as s:
         raw_models = s.query(Department).filter(
             or_(
-                Department.chief_technician_id == worker_id,
                 Department.technician_id == worker_id,
                 Department.electrician_id == worker_id,
             )
