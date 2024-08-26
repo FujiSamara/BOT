@@ -13,10 +13,12 @@ router = APIRouter()
 
 @router.get("/page/info")
 async def get_pages_info(
+    order_by: Optional[str] = None,
+    desc: bool = False,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> TalbeInfoSchema:
-    record_count = service.get_expenditure_count()
+    record_count = service.get_expenditure_count(order_by, desc)
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(

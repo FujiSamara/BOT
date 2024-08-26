@@ -1156,12 +1156,12 @@ def order_by_worker(query: Query, column: any, is_desc: bool = False) -> Query:
 
 def order_by(
     query: Query,
-    schema_type: Type[BaseModel],
     model_type: Type[Base],
+    schema_type: Type[BaseModel],
     column_name: str,
     desc: bool = False,
 ) -> None:
-    """Wraps `query` by adding order_by instruction."""
+    """Returns new `Query` with applied order_by instruction to `query`."""
     # Type inference
     column_model_hint = typing.get_type_hints(schema_type)[column_name]
     column_model_type = None
@@ -1171,17 +1171,44 @@ def order_by(
         column_model_type = column_model_hint
 
     if column_model_type == WorkerSchema:
-        order_by_worker(query, getattr(model_type, column_name), desc)
+        return order_by_worker(query, getattr(model_type, column_name), desc)
+
+    return query
 
 
 # endregion
 
 
 # region Model general
-def get_model_count(model_type: Type[Base]) -> int:
+def apply_model_query(
+    query: Query,
+    model_type: Type[Base],
+    schema_type: Type[BaseModel],
+    order_by_column: Optional[str],
+    desc: bool = False,
+):
+    """Returns new `Query` with applied all instructions to `query`."""
+    result = query
+
+    if order_by_column:
+        result = order_by(query, model_type, schema_type, order_by_column, desc)
+
+    return result
+
+
+def get_model_count(
+    model_type: Type[Base],
+    schema_type: Type[BaseModel],
+    order_by_column: Optional[str],
+    desc: bool = False,
+) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        return s.query(model_type).count()
+        query = s.query(model_type)
+
+        query = apply_model_query(query, model_type, schema_type, order_by_column, desc)
+
+        return query.count()
 
 
 def get_models_by_page(
@@ -1201,8 +1228,7 @@ def get_models_by_page(
     with session.begin() as s:
         query = s.query(model_type)
 
-        if order_by_column:
-            order_by(query, schema_type, model_type, order_by_column, desc)
+        query = apply_model_query(query, model_type, schema_type, order_by_column, desc)
 
         raw_models = query.offset((page - 1) * records_per_page).limit(records_per_page)
 

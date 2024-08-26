@@ -1471,9 +1471,9 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
-def get_expenditure_count() -> int:
+def get_expenditure_count(order_by_column: Optional[str], desc: bool = False) -> int:
     """Return expenditure count in bd."""
-    return orm.get_model_count(Expenditure)
+    return orm.get_model_count(Expenditure, ExpenditureSchema, order_by_column, desc)
 
 
 def get_expenditures_at_page(
@@ -1536,6 +1536,9 @@ def get_last_expenditure() -> ExpenditureSchema:
 
 
 # endregion
+
+
+# region IT problem
 def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str]:
     """
     Returns departments names for repairman by id.
@@ -1741,3 +1744,6 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
     if repairman is None:
         return None
     return repairman.telegram_id
+
+
+# endregion

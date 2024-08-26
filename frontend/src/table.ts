@@ -69,37 +69,23 @@ export class Table<T extends BaseSchema> {
 	constructor(endpoint: string) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
 
-		watch([this._rowsQuery, this._refreshKey, this.rowCount], async () => {
-			this.emulateLoading(true);
-			const resp = await this._network.withAuthChecking(
-				axios.get(this._rowsQuery.value),
-			);
-			this.emulateLoading(false);
-
-			this._loadedRows.value = resp.data;
-			this._checked.value = Array<boolean>(this._rowsPerPage).fill(
-				false,
-				0,
-				this._rowsPerPage,
-			);
-			this._highlighted.value = Array<boolean>(this._rowsPerPage).fill(
-				false,
-				0,
-				this._rowsPerPage,
-			);
-		});
-
-		this.startInfoUpdatingLoop();
-		this.currentPage.value = 1;
+		this.startUpdatingLoop();
 	}
 
 	//#region Rows
-	private async startInfoUpdatingLoop() {
-		await this.refreshInfo();
-		setTimeout(
-			async () => await this.startInfoUpdatingLoop(),
-			this.updateTimeout * 1000,
+	//#region Refreshing
+	private async startUpdatingLoop() {
+		watch(
+			[this._rowsQuery, this._refreshKey, this.rowCount],
+			async () => await this.refreshRows(),
 		);
+
+		const loop = async () => {
+			await this.refreshInfo();
+			setTimeout(async () => await loop(), this.updateTimeout * 1000);
+		};
+
+		await loop();
 	}
 	/** Updates info about table:
 	 * 1) Page count
@@ -121,10 +107,36 @@ export class Table<T extends BaseSchema> {
 		this.pageCount.value = resp.data.page_count;
 		this.rowCount.value = resp.data.record_count;
 	}
+	/** Updates rows. */
+	private async refreshRows() {
+		this.emulateLoading(true);
+		const resp = await this._network.withAuthChecking(
+			axios.get(this._rowsQuery.value),
+		);
+
+		this._loadedRows.value = resp.data;
+
+		this._highlighted.value = Array<boolean>(this._rowsPerPage).fill(
+			false,
+			0,
+			this._rowsPerPage,
+		);
+		this._checked.value = Array<boolean>(this._rowsPerPage).fill(
+			false,
+			0,
+			this._rowsPerPage,
+		);
+
+		this.emulateLoading(false);
+	}
+	/** Forces updating rows. */
 	protected refreshQuery() {
 		const limit = 3;
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
+	//#endregion
+
+	//#region Generating query
 	private _query = computed(() => {
 		return `records_per_page=${this._rowsPerPage}`;
 	});
@@ -141,11 +153,7 @@ export class Table<T extends BaseSchema> {
 			query += `&order_by=${this._orderBy.value}`;
 		}
 
-		if (this.desc) {
-			query += "&desc=true";
-		}
-
-		console.log(query);
+		query += `&desc=${this.desc.value}`;
 
 		return query;
 	});
@@ -155,6 +163,8 @@ export class Table<T extends BaseSchema> {
 	private _infoQuery = computed(() => {
 		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._orderedQuery.value}`;
 	});
+	//#endregion
+
 	private getHeaders() {
 		const result: Array<string> = [];
 		if (this._nonIgnoredRows.value.length === 0) return result;
@@ -172,6 +182,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	}
+
+	//#region Generating rows
 	private _nonIgnoredRows = computed(() => {
 		const result: Array<T> = [];
 
@@ -226,6 +238,7 @@ export class Table<T extends BaseSchema> {
 		}
 		return this._formattedOrderedRows.value;
 	});
+	//#endregion
 
 	public allChecked = computed({
 		get: () => {
@@ -295,7 +308,7 @@ export class Table<T extends BaseSchema> {
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page */
-	public currentPage: Ref<number> = ref(0);
+	public currentPage: Ref<number> = ref(1);
 	/** Indicates page count */
 	public pageCount: Ref<number> = ref(0);
 	/** Indicates row count */

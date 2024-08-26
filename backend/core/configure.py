@@ -22,7 +22,7 @@ def configure(app: FastAPI):
 async def global_lifespan(app: FastAPI):
     lifespans = []
 
-    lifespans.append(bot.lifespan(app))
+    # lifespans.append(bot.lifespan(app))
 
     for lifespan in lifespans:
         await anext(lifespan)
