@@ -1424,20 +1424,19 @@ def _get_departments_names_for_employee(
 def get_departments_names_for_repairman(
     telegram_id: int,
 ) -> list[str]:
-    departments = _get_departments_names_for_employee(
+    departments_chief = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
-    if len(departments) > 0:
-        return departments
 
-    departments = _get_departments_names_for_employee(
+    departments_technician = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
-    if len(departments) > 0:
-        return departments
-
-    return _get_departments_names_for_employee(
+    departments_chief_electrician = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
+    )
+
+    return list(
+        set(departments_chief + departments_technician + departments_chief_electrician)
     )
 
 
