@@ -31,8 +31,9 @@ old_options = (
     "bot_technical_request_territorial_manager",
 )
 
-
 new_options = sorted(old_options + ("bot_technical_request_department_director",))
+
+table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "e7b7c1e84e10"
@@ -42,8 +43,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    c_enum.update_enum(old_options, new_options, "fujiscope", "post_scopes", "scope")
+    c_enum.update_enum(
+        old_options,
+        new_options,
+        "fujiscope",
+        table_columns,
+    )
 
 
 def downgrade() -> None:
-    c_enum.update_enum(new_options, old_options, "fujiscope", "post_scopes", "scope")
+    c_enum.update_enum(
+        new_options,
+        old_options,
+        "fujiscope",
+        table_columns,
+    )

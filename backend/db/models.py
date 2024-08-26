@@ -4,7 +4,7 @@ from db.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 import datetime
 from settings import get_settings
 import enum
@@ -18,6 +18,7 @@ class ApprovalStatus(enum.Enum):
     denied = (3,)
     pending_approval = (4,)
     skipped = (5,)
+    not_relevant = (6,)
 
 
 class Gender(enum.Enum):
@@ -49,6 +50,9 @@ class FujiScope(enum.Enum):
     bot_technical_request_chief_technician = 16
     bot_technical_request_territorial_manager = 17
     bot_technical_request_department_director = 21
+    bot_bid_it_worker = 22
+    bot_bid_it_repairman = 23
+    bot_bid_it_tm = 24
 
 
 class DepartmentType(enum.Enum):
@@ -109,6 +113,11 @@ class Post(Base):
     )
 
     scopes: Mapped[List["PostScope"]] = relationship("PostScope", back_populates="post")
+
+    acceptor_technical_request: Mapped[List["TechnicalRequest"]] = relationship(
+        "TechnicalRequest",
+        back_populates="acceptor_post",
+    )
 
 
 class Company(Base):
@@ -176,6 +185,8 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
+    bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
+
     # айдишник из биосмарта для определения конкретного подразделения
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
     biosmart_strid: Mapped[str] = mapped_column(nullable=True)
@@ -239,6 +250,13 @@ class Department(Base):
         "BudgetRecord", back_populates="department"
     )
 
+    it_repairman_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    it_repairman: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[it_repairman_id]
+    )
+
     # Мобилка
     dm_id: Mapped[UUID] = mapped_column(nullable=True)
     person_max_orders: Mapped[int] = mapped_column(nullable=True)
@@ -247,6 +265,26 @@ class Department(Base):
 
     technical_requests: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest", back_populates="department"
+    )
+
+
+class Group(Base):
+    """Технические заявки"""
+
+    def __str__(self) -> str:
+        return self.name
+
+    id: Mapped[intpk]
+
+    __tablename__ = "groups"
+
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
+
+    workers: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="group",
+        foreign_keys="Worker.group_id",
+        cascade="all,delete",
     )
 
 
@@ -272,10 +310,26 @@ class Worker(Base):
         "Department", back_populates="workers", foreign_keys=[department_id]
     )
 
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
+    group: Mapped["Group"] = relationship(
+        "Group", back_populates="workers", foreign_keys=[group_id]
+    )
+
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
     company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
+    bids_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
+    )
+    repairman_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="repairman", foreign_keys="[BidIT.repairman_id]"
+    )
+    territorial_manager_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT",
+        back_populates="territorial_manager",
+        foreign_keys="[BidIT.territorial_manager_id]",
+    )
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
     )
@@ -583,12 +637,122 @@ class BudgetRecord(Base):
     last_update: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
+class ProblemIT(Base):
+    """Проблемы c компьютерами"""
+
+    __tablename__ = "problems_it"
+
+    def __str__(self) -> str:
+        return self.name
+
+    id: Mapped[intpk]
+    name: Mapped[str] = mapped_column(nullable=False)
+    category: Mapped[str] = mapped_column(nullable=False)
+    sla: Mapped[float] = mapped_column(nullable=False)
+
+    bids_it: Mapped[list["BidIT"]] = relationship("BidIT", back_populates="problem")
+
+
+class BidITDocument(Base):
+    """Общий класс для документов заявок в IT отдел"""
+
+    __abstract__ = True
+
+    id: Mapped[intpk]
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    bid_id: Mapped[int] = mapped_column(ForeignKey("bids_it.id"))
+
+
+class BidITWorkerDocument(BidITDocument):
+    """Документы заявок заявителей в IT отдел"""
+
+    __tablename__ = "bids_it_documents_worker"
+
+    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="problem_photos")
+
+
+class BidITRepairmanDocument(BidITDocument):
+    """Документы специалистов IT отдела о выполненной работе"""
+
+    __tablename__ = "bids_it_documents_repairman"
+
+    bid_it: Mapped["BidIT"] = relationship("BidIT", back_populates="work_photos")
+
+
+class BidIT(Base):
+    """Заявки в IT отдел"""
+
+    __tablename__ = "bids_it"
+
+    id: Mapped[intpk]
+
+    problem_comment: Mapped[str] = mapped_column(nullable=False)
+    work_comment: Mapped[str] = mapped_column(nullable=True)
+    reopen_work_comment: Mapped[str] = mapped_column(nullable=True)
+
+    problem_photos: Mapped[List["BidITWorkerDocument"]] = relationship(
+        "BidITWorkerDocument", cascade="all,delete", back_populates="bid_it"
+    )
+    work_photos: Mapped[List["BidITRepairmanDocument"]] = relationship(
+        "BidITRepairmanDocument", cascade="all,delete", back_populates="bid_it"
+    )
+
+    problem_id: Mapped[int] = mapped_column(
+        ForeignKey("problems_it.id"), nullable=False
+    )
+    problem: Mapped["ProblemIT"] = relationship(
+        "ProblemIT", back_populates="bids_it", foreign_keys=[problem_id]
+    )
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    worker: Mapped["Worker"] = relationship(
+        "Worker", back_populates="bids_it", foreign_keys=[worker_id]
+    )
+
+    repairman_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    repairman: Mapped["Worker"] = relationship(
+        "Worker", back_populates="repairman_it", foreign_keys=[repairman_id]
+    )
+
+    territorial_manager_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    territorial_manager: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="territorial_manager_it",
+        foreign_keys=[territorial_manager_id],
+    )
+
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id"), nullable=False
+    )
+    department: Mapped["Department"] = relationship(
+        "Department", back_populates="bids_it", foreign_keys=[department_id]
+    )
+
+    status: Mapped[approvalstatus]
+    mark: Mapped[int] = mapped_column(nullable=True)
+
+    opening_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    done_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopening_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_done_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_approve_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+
 # region Technical Request
 class Problem(Base):
     __abstract__ = True
 
     id: Mapped[intpk]
     problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
+
+    def __str__(self):
+        return self.problem_name
 
 
 class TechnicalProblem(Problem):
@@ -603,7 +767,7 @@ class TechnicalProblem(Problem):
     )
 
 
-class TechicalRequestDocument(Base):
+class TechnicalRequestDocument(Base):
     """Общий класс для документов у заявок на тех. ремонт"""
 
     __abstract__ = True
@@ -615,7 +779,7 @@ class TechicalRequestDocument(Base):
     )
 
 
-class TechnicalRequestProblemPhoto(TechicalRequestDocument):
+class TechnicalRequestProblemPhoto(TechnicalRequestDocument):
     """Фото поломок для тех заявок"""
 
     __tablename__ = "technical_requests_problem_photos"
@@ -625,7 +789,7 @@ class TechnicalRequestProblemPhoto(TechicalRequestDocument):
     )
 
 
-class TechnicalRequestRepairPhoto(TechicalRequestDocument):
+class TechnicalRequestRepairPhoto(TechnicalRequestDocument):
     """Фото ремонта для тех заявок"""
 
     __tablename__ = "technical_requests_repair_photos"
@@ -703,11 +867,18 @@ class TechnicalRequest(Base):
         foreign_keys=[territorial_manager_id],
     )
 
+    acceptor_post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)
+    acceptor_post: Mapped["Post"] = relationship(
+        "Post",
+        back_populates="acceptor_technical_request",
+        foreign_keys=[acceptor_post_id],
+    )
+
     department_id: Mapped[int] = mapped_column(
         ForeignKey("departments.id"), nullable=False
     )
     department: Mapped["Department"] = relationship(
-        "Department", back_populates="technical_requests"
+        "Department", back_populates="technical_requests", foreign_keys=[department_id]
     )
 
 

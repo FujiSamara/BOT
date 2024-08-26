@@ -42,6 +42,30 @@ class RateForm(StatesGroup):
     fine = State()
 
 
+# Bid IT
+class BidITCreating(StatesGroup):
+    department = State()
+    problem = State()
+    photo = State()
+    comment = State()
+    telegram_id = State()
+
+
+# Repairman
+class RepairmanBidForm(StatesGroup):
+    department = State()
+    photo_work = State()
+    photo_rework = State()
+    bid_id = State()
+
+
+# Territorial manager IT
+class TMForm(StatesGroup):
+    department = State()
+    mark = State()
+    work_comment = State()
+
+
 # Technical Request
 
 
@@ -53,13 +77,17 @@ class WorkerTechnicalRequestForm(StatesGroup):
 
 class RepairmanTechnicalRequestForm(StatesGroup):
     department = State()
-    photo = State()
+    photo_waiting = State()
+    photo_rework = State()
 
 
 class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     department = State()
     executor = State()
-    photo = State()
+    group = State()
+    photo_waiting = State()
+    photo_rework = State()
+    description = State()
 
 
 class TerritorialManagerRequestForm(StatesGroup):
@@ -71,4 +99,6 @@ class TerritorialManagerRequestForm(StatesGroup):
 class DepartmentDirectorRequestForm(StatesGroup):
     department = State()
     executor = State()
+    group = State()
     problem = State()
+    description = State()

@@ -1,5 +1,5 @@
-from typing import Any, Optional, Type
-import typing
+from datetime import datetime
+from typing import Any, Optional
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -8,6 +8,7 @@ from db.models import (
     Executor,
     Expenditure,
     FujiScope,
+    Group,
     Post,
     PostScope,
     TechnicalProblem,
@@ -22,6 +23,10 @@ from db.models import (
     WorkerBidWorksheet,
     WorkerBidPassport,
     WorkerBidWorkPermission,
+    ProblemIT,
+    BidIT,
+    BidITWorkerDocument,
+    BidITRepairmanDocument,
 )
 from db.schemas import (
     BaseSchema,
@@ -29,12 +34,15 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
+    GroupSchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
     PostSchema,
+    ProblemITSchema,
+    BidITSchema,
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
@@ -743,6 +751,27 @@ def get_bids() -> list[BidSchema]:
         return [BidSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
+def get_groups() -> list[GroupSchema]:
+    """Returns all groups in database."""
+    with session.begin() as s:
+        raw_models = s.query(Group).all()
+        return [GroupSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_group_by_name(name: str) -> GroupSchema:
+    """Returns GroupSchema by name"""
+    with session.begin() as s:
+        raw_model = s.query(Group).filter(Group.name == name).first()
+        return GroupSchema.model_validate(raw_model)
+
+
+def get_all_worker_in_group(group_id: int) -> list[WorkerSchema]:
+    """Return all workers in group"""
+    with session.begin() as s:
+        raw_models = s.query(Worker).filter(Worker.group_id == group_id)
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
 # region Technical problem
 
 
@@ -853,6 +882,7 @@ def update_technical_request_from_territorial_manager(record: TechnicalRequestSc
         cur_request.score = record.score
         cur_request.confirmation_description = record.confirmation_description
         cur_request.close_description = record.close_description
+        cur_request.acceptor_post = record.acceptor_post
 
     return True
 
@@ -948,6 +978,7 @@ def get_technical_requests_by_columns(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         raw_models = query.order_by(TechnicalRequest.id).all()
@@ -972,6 +1003,7 @@ def get_all_technical_requests_in_department(
                 or_(
                     TechnicalRequest.state == ApprovalStatus.approved,
                     TechnicalRequest.state == ApprovalStatus.skipped,
+                    TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
         else:
@@ -979,6 +1011,7 @@ def get_all_technical_requests_in_department(
                 and_(
                     TechnicalRequest.state != ApprovalStatus.approved,
                     TechnicalRequest.state != ApprovalStatus.skipped,
+                    TechnicalRequest.state != ApprovalStatus.not_relevant,
                 )
             )
 
@@ -1004,6 +1037,7 @@ def get_rework_tech_request(
                 TechnicalRequest.confirmation_date != null(),
                 TechnicalRequest.state != ApprovalStatus.approved,
                 TechnicalRequest.state != ApprovalStatus.skipped,
+                TechnicalRequest.state != ApprovalStatus.not_relevant,
             )
             .order_by(TechnicalRequest.id)
             .all()
@@ -1027,6 +1061,7 @@ def get_technical_requests_for_repairman_history(
                         TechnicalRequest.state == ApprovalStatus.pending_approval,
                         TechnicalRequest.state == ApprovalStatus.approved,
                         TechnicalRequest.state == ApprovalStatus.skipped,
+                        TechnicalRequest.state == ApprovalStatus.not_relevant,
                     ),
                     TechnicalRequest.department_id == department_id,
                 )
@@ -1048,6 +1083,18 @@ def get_departments_by_worker_id_and_worker_column(
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
+def get_departments_names_by_worker_id_and_worker_column(
+    worker_column: Any,
+    worker_id: int,
+) -> list[DepartmentSchema]:
+    with session.begin() as s:
+        raw_models = s.query(Department).filter(worker_column == worker_id).all()
+        return [
+            (DepartmentSchema.model_validate(raw_model)).name
+            for raw_model in raw_models
+        ]
+
+
 def get_all_active_requests_in_department(
     department_id: int,
 ) -> list[TechnicalRequestSchema]:
@@ -1066,28 +1113,33 @@ def get_all_active_requests_in_department(
         ]
 
 
-def get_all_repairmans_in_department(
-    department_name: str,
-) -> list[WorkerSchema]:
+def get_departments() -> list[DepartmentSchema]:
     with session.begin() as s:
-        raw_model = (
-            s.query(Department).filter(Department.name == department_name).first()
-        )
-
-        return [
-            WorkerSchema.model_validate(executor)
-            for executor in [
-                raw_model.chief_technician,
-                raw_model.technician,
-                raw_model.electrician,
-            ]
-        ]
-
-
-def get_all_department() -> list[DepartmentSchema]:
-    with session.begin() as s:
-        raw_models = s.query(Department)
+        raw_models = s.query(Department).all()
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def close_request(
+    request_id: int,
+    description: str,
+    close_date: datetime,
+    acceptor_post_id: int,
+) -> int:
+    """
+    Close request by Chief Technician or Department Director
+    Return creator TG id
+    """
+    with session.begin() as s:
+        cur_request = (
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+        )
+        cur_request.state = ApprovalStatus.not_relevant
+        cur_request.close_description = description
+        cur_request.close_date = close_date
+        cur_request.acceptor_post = (
+            s.query(Post).filter(Post.id == acceptor_post_id).first()
+        )
+        return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
 # endregion
@@ -1157,3 +1209,275 @@ def get_models_by_page(
 
 
 # endregion
+def get_problems_it_columns() -> list[ProblemITSchema]:
+    """
+    Returns all existed IT problems in database.
+    """
+    with session.begin() as s:
+        raw_models = s.query(ProblemIT).all()
+        return [ProblemITSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_last_bid_it_id() -> int:
+    """
+    Returns last bid IT id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(BidIT.id)).first()[0]
+
+
+def find_problem_it_by_id(column: any, value: any) -> ProblemITSchema:
+    """
+    Returns problem IT in database by `column` with `value`.
+    If problem IT not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_worker = s.query(ProblemIT).filter(column == value).first()
+        if not raw_worker:
+            return None
+        return ProblemITSchema.model_validate(raw_worker)
+
+
+def get_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = s.query(BidIT).filter(BidIT.worker_id == worker.id).all()
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_history_bids_it_for_worker(worker: WorkerSchema) -> list[BidITSchema]:
+    """
+    Returns history bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.worker_id == worker.id,
+                    or_(
+                        BidIT.status == ApprovalStatus.approved,
+                        BidIT.status == ApprovalStatus.skipped,
+                    ),
+                )
+            )
+            .all()
+        )
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def find_bid_it_by_column(column: any, value: any) -> BidITSchema:
+    """
+    Returns bid IT in database by `column` with `value`.
+    If bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bid = s.query(BidIT).filter(column == value).first()
+        if not raw_bid:
+            return None
+        return BidITSchema.model_validate(raw_bid)
+
+
+def add_bid_it(bid_it: BidITSchema):
+    """
+    Adds `bid IT` to database.
+    """
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.id == bid_it.worker.id).first()
+        department = (
+            s.query(Department).filter(Department.id == bid_it.department.id).first()
+        )
+        problem = s.query(ProblemIT).filter(ProblemIT.id == bid_it.problem.id).first()
+
+        bid_model = BidIT(
+            problem_comment=bid_it.problem_comment,
+            problem_photos=[],
+            problem=problem,
+            department=department,
+            worker=worker,
+            status=bid_it.status,
+            opening_date=bid_it.opening_date,
+            repairman=problem.repairman,
+            territorial_manager=department.territorial_manager,
+        )
+
+        s.add(bid_model)
+
+        for document in bid_it.problem_photos:
+            s.add(BidITWorkerDocument(bid_it=bid_model, document=document.document))
+
+
+def get_pending_bids_it_by_worker(worker: WorkerSchema) -> list[BidITSchema]:
+    """
+    Returns all bids IT in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.worker_id == worker.id,
+                    or_(
+                        BidIT.status == ApprovalStatus.pending_approval,
+                        BidIT.status == ApprovalStatus.pending,
+                        BidIT.status == ApprovalStatus.denied,
+                    ),
+                )
+            )
+            .all()
+        )
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def find_departments_by_column(column: any, value: any) -> list[DepartmentSchema]:
+    """
+    Returns departments in database by `column` with `value`.
+    If department not exist return `[]`.
+    """
+    with session.begin() as s:
+        raw_deparments = s.query(Department).filter(column == value).all()
+        if not raw_deparments:
+            return []
+        return [
+            DepartmentSchema.model_validate(raw_deparment)
+            for raw_deparment in raw_deparments
+        ]
+
+
+def update_bid_it_rm(bid: BidITSchema):
+    """Updates bid IT by repairman."""
+    with session.begin() as s:
+        cur_bid = s.query(BidIT).filter(BidIT.id == bid.id).first()
+        if not cur_bid:
+            return None
+
+        cur_bid.status = bid.status
+        cur_bid.done_date = bid.done_date
+        cur_bid.reopen_done_date = bid.reopen_done_date
+
+        for document in bid.work_photos:
+            s.add(BidITRepairmanDocument(bid_it=cur_bid, document=document.document))
+
+
+def get_bid_it_by_id(id: int) -> BidITSchema:
+    """Gets bid IT by its id."""
+    with session.begin() as s:
+        raw_bid = s.query(BidIT).filter(BidIT.id == id).first()
+        if not raw_bid:
+            return None
+        return BidITSchema.model_validate(raw_bid)
+
+
+def update_bid_it_tm(bid: BidITSchema):
+    """Updates bid IT by repairman."""
+    with session.begin() as s:
+        cur_bid = s.query(BidIT).filter(BidIT.id == bid.id).first()
+        if not cur_bid:
+            return None
+
+        cur_bid.status = bid.status
+        cur_bid.mark = bid.mark
+        cur_bid.reopening_date = bid.reopening_date
+        cur_bid.approve_date = bid.approve_date
+        cur_bid.close_date = bid.close_date
+        cur_bid.work_comment = bid.work_comment
+        cur_bid.reopen_approve_date = bid.reopen_approve_date
+        cur_bid.reopen_done_date = bid.reopen_done_date
+        cur_bid.reopen_work_comment = bid.reopen_work_comment
+
+
+def get_bids_it_by_repairman_with_status(
+    repairman: WorkerSchema, department: DepartmentSchema, status: ApprovalStatus
+) -> list[BidITSchema]:
+    """
+    Returns bids IT in database by repairman and department with status.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.repairman_id == repairman.id,
+                    BidIT.department_id == department.id,
+                    BidIT.status == status,
+                )
+            )
+            .all()
+        )
+
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_history_bids_it_for_repairman(
+    repairman: WorkerSchema, department: DepartmentSchema
+) -> list[BidITSchema]:
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.repairman_id == repairman.id,
+                    BidIT.department_id == department.id,
+                    or_(
+                        BidIT.status == ApprovalStatus.approved,
+                        BidIT.status == ApprovalStatus.skipped,
+                    ),
+                )
+            )
+            .all()
+        )
+
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_pending_bids_it_for_territorial_manager(
+    territorial_manager: WorkerSchema, department: DepartmentSchema
+) -> list[BidITSchema]:
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.territorial_manager_id == territorial_manager.id,
+                    BidIT.department_id == department.id,
+                    BidIT.status == ApprovalStatus.pending_approval,
+                )
+            )
+            .all()
+        )
+
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_history_bids_it_for_territorial_manager(
+    territorial_manager: WorkerSchema, department: DepartmentSchema
+) -> list[BidITSchema]:
+    with session.begin() as s:
+        raw_bids = (
+            s.query(BidIT)
+            .filter(
+                and_(
+                    BidIT.territorial_manager_id == territorial_manager.id,
+                    BidIT.department_id == department.id,
+                    or_(
+                        BidIT.status == ApprovalStatus.approved,
+                        BidIT.status == ApprovalStatus.skipped,
+                    ),
+                )
+            )
+            .all()
+        )
+
+        return [BidITSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
+    with session.begin() as s:
+        raw_department = (
+            s.query(Department).filter(Department.name == department_name).first()
+        )
+        if not raw_department:
+            return None
+        return WorkerSchema.model_validate(raw_department.it_repairman)

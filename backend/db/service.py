@@ -1,4 +1,6 @@
 from pathlib import Path
+
+from sqlalchemy import null
 from settings import get_settings
 import db.orm as orm
 from db.models import (
@@ -13,6 +15,8 @@ from db.models import (
     Worker,
     WorkTime,
     WorkerBid,
+    ProblemIT,
+    BidIT,
 )
 from db.schemas import (
     BidRecordSchema,
@@ -27,6 +31,8 @@ from db.schemas import (
     WorkerBidSchema,
     DocumentSchema,
     FileSchema,
+    ProblemITSchema,
+    BidITSchema,
 )
 import logging
 from datetime import datetime, timedelta
@@ -714,10 +720,122 @@ def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSche
     return result
 
 
+def get_problems_it_types() -> list[str]:
+    """
+    Returns all existed IT problems types.
+    """
+    problems: list[ProblemITSchema] = orm.get_problems_it_columns()
+    return [problem.name for problem in problems]
+
+
+def get_problems_it_schema() -> list[ProblemITSchema]:
+    """
+    Returns all existed IT problems types with ids.
+    """
+    return orm.get_problems_it_columns()
+
+
+def get_history_bids_it_by_worker_telegram_id(id: str) -> list[BidITSchema]:
+    """
+    Returns history bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_history_bids_it_for_worker(worker)
+
+
+def get_bid_it_by_id(id: int) -> BidITSchema:
+    """
+    Returns bid IT in database by it id.
+    """
+    return orm.find_bid_it_by_column(BidIT.id, id)
+
+
+def create_bid_it(
+    problem_id: str,
+    comment: str,
+    files: list[UploadFile],
+    telegram_id: int,
+):
+    """
+    Creates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    cur_date = datetime.now()
+    problem_inst = orm.find_problem_it_by_id(ProblemIT.id, problem_id)
+    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id '{telegram_id}' not found"
+        )
+        return
+
+    department = get_worker_department_by_telegram_id(telegram_id)
+    department_inst = orm.find_department_by_column(Department.name, department.name)
+
+    if not department_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department}' not found"
+        )
+        return
+
+    last_bid_it_id = orm.get_last_bid_it_id()
+    if not last_bid_it_id:
+        last_bid_it_id = 0
+
+    documents = []
+
+    for index, file in enumerate(files):
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_IT_worker{last_bid_it_id}_{index + 1}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    bid_it = BidITSchema(
+        problem=problem_inst,
+        problem_comment=comment,
+        problem_photos=documents,
+        worker=worker_inst,
+        department=department_inst,
+        opening_date=cur_date,
+        status=ApprovalStatus.pending,
+    )
+
+    orm.add_bid_it(bid_it)
+
+
+def get_pending_bids_it_by_worker_telegram_id(id: int) -> list[BidITSchema]:
+    """
+    Returns pending bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_pending_bids_it_by_worker(worker)
+
+
 def get_chapters() -> list[str]:
     """Returns list of all chapters in db"""
     expenditures = orm.get_expenditures()
     return [expenditure.chapter for expenditure in expenditures]
+
+
+def get_expenditures_names() -> list[str]:
+    """Returns list of all expenditure names in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.name for expenditure in expenditures]
+
+
+def get_groups_names() -> list[str]:
+    """Returns list of all groups names in db"""
+    groups = orm.get_groups()
+    return [group.name for group in groups]
 
 
 # region Technical request
@@ -907,6 +1025,7 @@ def update_technical_request_from_territorial_manager(
     if mark >= 3:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
+        request.acceptor_post = request.territorial_manager.post
         if request.reopen_date:
             request.reopen_confirmation_date = cur_date
         else:
@@ -985,7 +1104,8 @@ def get_all_waiting_technical_requests_for_worker(
         )
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.close_date], [worker.id, None]
+            [TechnicalRequest.worker_id, TechnicalRequest.close_date],
+            [worker.id, null()],
         )[:-16:-1]
 
     return requests
@@ -1021,7 +1141,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.department_id,
                     TechnicalRequest.confirmation_date,
                 ],
-                [repairman.id, ApprovalStatus.pending, department_id, None],
+                [repairman.id, ApprovalStatus.pending, department_id, null()],
             )[:-16:-1]
 
             return requests
@@ -1235,9 +1355,9 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         )
 
 
-def _get_departments_for_employee(
+def _get_departments_names_for_employee(
     telegram_id: int, worker_column: Any
-) -> list[DepartmentSchema]:
+) -> list[str]:
     """
     Return departments by worker telegram id and worker column id
     """
@@ -1248,45 +1368,38 @@ def _get_departments_for_employee(
             f"Worker with telegram id: {telegram_id} wasn't found"
         )
     else:
-        departments = orm.get_departments_by_worker_id_and_worker_column(
+        departments_names = orm.get_departments_names_by_worker_id_and_worker_column(
             worker_column=worker_column, worker_id=worker.id
         )
-        return departments
+        return departments_names
 
 
-def get_departments_for_repairman(
+def get_departments_names_for_repairman(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    departments = _get_departments_for_employee(
+) -> list[str]:
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.chief_technician_id
     )
     if len(departments) > 0:
         return departments
 
-    departments = _get_departments_for_employee(
+    departments = _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.technician_id
     )
     if len(departments) > 0:
         return departments
 
-    return _get_departments_for_employee(
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.electrician_id
     )
 
 
-def get_departments_for_territorial_manager(
+def get_departments_names_for_territorial_manager(
     telegram_id: int,
-) -> list[DepartmentSchema]:
-    return _get_departments_for_employee(
+) -> list[str]:
+    return _get_departments_names_for_employee(
         telegram_id=telegram_id, worker_column=Department.territorial_manager_id
     )
-
-
-def get_all_departments(
-    telegram_id: int,
-) -> list[DepartmentSchema]:
-    departments = orm.get_all_department()
-    return departments
 
 
 def get_all_active_requests_in_department_for_chief_technician(
@@ -1306,18 +1419,52 @@ def get_all_active_requests_in_department_for_chief_technician(
         return requests
 
 
-def get_all_repairmans_in_department(
-    department_name: str,
+def get_all_worker_in_group(
+    group_name: str,
 ) -> list[WorkerSchema]:
     """
-    Return all request in department
+    Return all workers in group
     """
-    repairmans = orm.get_all_repairmans_in_department(department_name)
-    if len(repairmans) == 0:
+    group = orm.get_group_by_name(group_name)
+    if not group:
         logging.getLogger("uvicorn.error").error(
-            f"Repairmans in department with name: {department_name} wasn't founds"
+            f"Group with name: {group_name} wasn't found"
         )
-    return repairmans
+    workers = orm.get_all_worker_in_group(group.id)
+    if len(workers) == 0:
+        logging.getLogger("uvicorn.error").error(
+            f"Workers with group id: {group.id} wasn't founds"
+        )
+    return workers
+
+
+def close_request(
+    request_id: int,
+    description: str,
+    telegram_id: int,
+) -> int:
+    """
+    Close request by acceptor_post
+    Return creator TG id
+    """
+    cur_date = datetime.now()
+    logging.getLogger("uvicorn.error").error(12)
+    acceptor_post_id = (
+        orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    ).post.id
+    tg_id = orm.close_request(
+        request_id=request_id,
+        description=description,
+        close_date=cur_date,
+        acceptor_post_id=acceptor_post_id,
+    )
+
+    if not tg_id:
+        logging.getLogger("uvicorn.error").error(
+            f"Request with id: {request_id} wasn't close"
+        )
+
+    return tg_id
 
 
 # endregion
@@ -1395,3 +1542,208 @@ def get_last_expenditure() -> ExpenditureSchema:
 
 
 # endregion
+def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str]:
+    """
+    Returns departments names for repairman by id.
+    """
+    repairman = get_worker_by_telegram_id(telegram_id)
+    departments_raw = orm.find_departments_by_column(
+        Department.it_repairman_id, repairman.id
+    )
+    result = [department.name for department in departments_raw]
+    return result
+
+
+def update_bid_it_rm(bid_id: int, files: UploadFile):
+    """
+    Updates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    bid = orm.get_bid_it_by_id(bid_id)
+
+    cur_date = datetime.now()
+
+    part = ""
+    if bid.reopening_date:
+        bid.reopen_done_date = cur_date
+        part = "_reopen_"
+    else:
+        bid.done_date = cur_date
+
+    documents = []
+    for index, file in enumerate(files):
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_IT_repairman{part}{bid_id}_{index + 1}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    bid.work_photos = documents
+    bid.status = ApprovalStatus.pending_approval
+
+    orm.update_bid_it_rm(bid)
+
+
+def get_departments_names_by_tm_telegram_id(telegram_id: int) -> list[str]:
+    """
+    Returns departments names for TM by telegram id.
+    """
+    tm = get_worker_by_telegram_id(telegram_id)
+    departments_raw = orm.find_departments_by_column(
+        Department.territorial_manager_id, tm.id
+    )
+    result = [department.name for department in departments_raw]
+    return result
+
+
+def update_bid_it_tm(bid_id: int, mark: int, work_comment: str | None):
+    """
+    Updates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    bid = orm.get_bid_it_by_id(bid_id)
+
+    cur_date = datetime.now()
+    bid.mark = mark
+    bid.approve_date = cur_date
+
+    if bid.reopening_date:
+        if mark in range(1, 3):
+            bid.status = ApprovalStatus.skipped
+            bid.reopen_work_comment = work_comment
+            bid.reopen_approve_date = cur_date
+            bid.close_date = cur_date
+        else:
+            bid.status = ApprovalStatus.approved
+            bid.reopen_approve_date = cur_date
+            bid.close_date = cur_date
+    else:
+        if mark in range(1, 3):
+            bid.reopening_date = cur_date
+            bid.work_comment = work_comment
+            bid.status = ApprovalStatus.denied
+        else:
+            bid.status = ApprovalStatus.approved
+            bid.close_date = cur_date
+
+    orm.update_bid_it_tm(bid)
+
+
+def get_pending_bids_it_by_repairman(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all pending bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_bids_it_by_repairman_with_status(
+        worker, department, ApprovalStatus.pending
+    )
+
+    return bids
+
+
+def get_denied_bids_it_by_repairman(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all denied bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_bids_it_by_repairman_with_status(
+        worker, department, ApprovalStatus.denied
+    )
+
+    return bids
+
+
+def get_history_bids_it_by_repairman(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all history bids IT own to repairman with specified telegram id.
+    """
+    repairman = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not repairman:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_history_bids_it_for_repairman(repairman, department)
+
+    return bids
+
+
+def get_pending_bids_it_for_territorial_manager(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all pending bids IT own to territorial manager with specified telegram id.
+    """
+    tm = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not tm:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_pending_bids_it_for_territorial_manager(tm, department)
+
+    return bids
+
+
+def get_history_bids_it_for_territorial_manager(
+    telegram_id: str, department_name: str
+) -> list[BidITSchema]:
+    """
+    Returns all history bids IT own to territorial manager with specified telegram id.
+    """
+    tm = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not tm:
+        return []
+
+    department_list = find_department_by_name(department_name)
+    if len(department_list) == 0:
+        return None
+
+    department = department_list[0]
+
+    bids = orm.get_history_bids_it_for_territorial_manager(tm, department)
+
+    return bids
+
+
+def get_repairman_telegram_id_by_department(department_name: str) -> int:
+    repairman = orm.find_repairman_it_by_department(department_name)
+    if repairman is None:
+        return None
+    return repairman.telegram_id

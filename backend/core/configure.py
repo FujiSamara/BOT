@@ -20,7 +20,12 @@ def configure(app: FastAPI):
 
 @asynccontextmanager
 async def global_lifespan(app: FastAPI):
-    bot_l = bot.lifespan(app)
-    await anext(bot_l)
+    lifespans = []
+
+    lifespans.append(bot.lifespan(app))
+
+    for lifespan in lifespans:
+        await anext(lifespan)
     yield
-    await anext(bot_l)
+    for lifespan in lifespans:
+        await anext(lifespan)

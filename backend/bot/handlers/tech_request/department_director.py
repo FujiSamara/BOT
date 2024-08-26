@@ -25,10 +25,12 @@ from bot.handlers.utils import (
 
 
 from db.service import (
+    close_request,
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
-    get_all_departments,
-    get_all_repairmans_in_department,
+    get_all_worker_in_group,
+    get_departments_names,
+    get_groups_names,
     get_technical_problem_by_name,
     get_technical_problem_names,
     update_tech_request_executor,
@@ -58,16 +60,13 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
-    departments = get_all_departments(callback.message.chat.id)
-    department_names = [department.name for department in departments]
+    department_names = get_departments_names()
     department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
-        reply_markup=kb.create_reply_keyboard(
-            text.back, *[department_name for department_name in department_names]
-        ),
+        reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
@@ -77,7 +76,7 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments=get_all_departments(message.chat.id),
+        departments_names=get_departments_names(),
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
@@ -153,6 +152,7 @@ async def show_active_menu(callback: CallbackQuery, state: FSMContext):
 async def show_active_request_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
+    await state.update_data(request_id=callback_data.request_id)
     buttons = [
         [
             InlineKeyboardButton(
@@ -169,6 +169,15 @@ async def show_active_request_form(
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
                     end_point="DD_TR_update_request_problem",
+                ).pack(),
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Закрыть заявку",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="DD_TR_close_request",
                 ).pack(),
             )
         ],
@@ -214,27 +223,67 @@ async def update_executor_format_ms(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_executor")
+    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_executor_group")
 )
-async def get_executor(
+async def get_group(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
-    await state.set_state(DepartmentDirectorRequestForm.executor)
-    department_name = (await state.get_data()).get("department_name")
-    repairmans = get_all_repairmans_in_department(department_name)
+    groups_names = get_groups_names()
+
+    await state.set_state(DepartmentDirectorRequestForm.group)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите исполнителя:"),
+        text=hbold("Выберите отдел:"),
+        reply_markup=kb.create_reply_keyboard(
+            text.back,
+            *groups_names,
+        ),
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(DepartmentDirectorRequestForm.group)
+async def set_group(message: Message, state: FSMContext):
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await try_delete_message(message)
+
+    if message.text == text.back:
+        await update_executor_format_ms(message=message, state=state)
+    else:
+        groups_names = get_groups_names()
+        if message.text not in groups_names:
+            groups_names.sort()
+            msg = await message.answer(
+                text=text.format_err,
+                reply_markup=kb.create_reply_keyboard(
+                    *[group_name for group_name in groups_names]
+                ),
+            )
+            await state.update_data(msg=msg)
+
+        await state.update_data(group_name=message.text)
+        await get_executor(message=message, state=state)
+
+
+async def get_executor(message: Message, state: FSMContext):
+    await state.set_state(DepartmentDirectorRequestForm.executor)
+    group_name = (await state.get_data()).get("group_name")
+    workers = get_all_worker_in_group(group_name)
+    await try_delete_message(message)
+    msg = await message.answer(
+        text=hbold(f"Выберите исполнителя в отделе '{group_name}':"),
         reply_markup=kb.create_reply_keyboard(
             text.back,
             *[
-                " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-                for repairman in repairmans
+                " ".join([worker.l_name, worker.f_name, worker.o_name])
+                for worker in workers
             ],
         ),
     )
     await state.update_data(msg=msg)
-    await state.update_data(request_id=callback_data.request_id)
 
 
 @router.message(DepartmentDirectorRequestForm.executor)
@@ -246,20 +295,18 @@ async def set_executor(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await update_executor_format_ms(message)
+        await update_executor_format_ms(message=message, state=state)
     else:
-        LFO_repairmans = [
-            " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
-            for repairman in get_all_repairmans_in_department(
-                data.get("department_name")
-            )
+        LFO_workers = [
+            " ".join([worker.l_name, worker.f_name, worker.o_name])
+            for worker in get_all_worker_in_group(data.get("group_name"))
         ]
-        if message.text not in LFO_repairmans:
-            LFO_repairmans.sort()
+        if message.text not in LFO_workers:
+            LFO_workers.sort()
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=kb.create_reply_keyboard(
-                    *[LFO_repairman for LFO_repairman in LFO_repairmans]
+                    *[LFO_worker for LFO_worker in LFO_workers]
                 ),
             )
             await state.update_data(msg=msg)
@@ -382,4 +429,110 @@ async def save_change_problem(
     update_technical_request_problem(request_id=request_id, problem_id=problem_id)
     await show_active_request_form(
         callback=callback, callback_data=callback_data, state=state
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request")
+)
+async def close_request_change(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    yes_button = InlineKeyboardButton(
+        text="Да",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="DD_TR_close_request_yes",
+        ).pack(),
+    )
+    no_button = InlineKeyboardButton(
+        text="Нет",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point="DD_TR_show_form_active",
+        ).pack(),
+    )
+
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Вы уверены, что хотите закрыть заявку?"),
+        reply_markup=kb.create_inline_keyboard(yes_button, no_button),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_yes")
+)
+async def close_request_form_format_cb(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.dd_close_request_kb(
+            state=state,
+            callback_data=callback_data,
+        ),
+    )
+
+
+async def close_request_form_format_ms(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_edit_or_answer(
+        message=message,
+        text=hbold("Закрыть заявку"),
+        reply_markup=await tech_kb.dd_close_request_kb(
+            state=state,
+            callback_data=ShowRequestCallbackData(
+                request_id=data.get("request_id"),
+                end_point="DD_TR_close_request_yes",
+            ),
+        ),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_description")
+)
+async def get_description(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    await state.set_state(DepartmentDirectorRequestForm.description)
+    await try_delete_message(callback.message)
+    msg = await callback.message.answer(text=hbold("Укажите причину закрытия заявки:"))
+    await state.update_data(msg=msg)
+
+
+@router.message(DepartmentDirectorRequestForm.description)
+async def set_description(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await state.update_data(description=message.text)
+    await try_delete_message(message)
+    await close_request_form_format_ms(message, state)
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "DD_TR_save_close_request")
+)
+async def save_close_request(
+    callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
+):
+    data = await state.get_data()
+    creator_tg_id = close_request(
+        request_id=data.get("request_id"),
+        description=data.get("description"),
+        telegram_id=callback.message.chat.id,
+    )
+    if creator_tg_id:
+        await notify_worker_by_telegram_id(
+            id=creator_tg_id,
+            message=text.notification_worker,
+        )
+    await show_active_menu(
+        callback=callback,
+        state=state,
     )
