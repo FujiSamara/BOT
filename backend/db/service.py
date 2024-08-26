@@ -1424,20 +1424,14 @@ def _get_departments_names_for_employee(
 def get_departments_names_for_repairman(
     telegram_id: int,
 ) -> list[str]:
-    departments_chief = _get_departments_names_for_employee(
-        telegram_id=telegram_id, worker_column=Department.chief_technician_id
-    )
-
-    departments_technician = _get_departments_names_for_employee(
-        telegram_id=telegram_id, worker_column=Department.technician_id
-    )
-    departments_chief_electrician = _get_departments_names_for_employee(
-        telegram_id=telegram_id, worker_column=Department.electrician_id
-    )
-
-    return list(
-        set(departments_chief + departments_technician + departments_chief_electrician)
-    )
+    try:
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id: {telegram_id} wasn't found"
+        )
+    else:
+        return orm.get_departments_names_for_repairman(worker_id=worker.id)
 
 
 def get_departments_names_for_territorial_manager(
