@@ -826,12 +826,6 @@ def get_chapters() -> list[str]:
     return [expenditure.chapter for expenditure in expenditures]
 
 
-def get_expenditures_names() -> list[str]:
-    """Returns list of all expenditure names in db"""
-    expenditures = orm.get_expenditures()
-    return [expenditure.name for expenditure in expenditures]
-
-
 def get_groups_names() -> list[str]:
     """Returns list of all groups names in db"""
     groups = orm.get_groups()

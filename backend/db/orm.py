@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Type
+import typing
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -1209,6 +1210,9 @@ def get_models_by_page(
 
 
 # endregion
+
+
+# region IT problem
 def get_problems_it_columns() -> list[ProblemITSchema]:
     """
     Returns all existed IT problems in database.
@@ -1481,3 +1485,6 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
         if not raw_department:
             return None
         return WorkerSchema.model_validate(raw_department.it_repairman)
+
+
+# endregion
