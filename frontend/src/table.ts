@@ -349,7 +349,7 @@ export class Table<T extends BaseSchema> {
 		}
 	}
 	/** If sorts column by row[**index**]. */
-	protected _orderBy: Ref<string> = ref("creator");
+	protected _orderBy: Ref<string> = ref("id");
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
 	public desc: Ref<boolean> = ref(false);
 	/** Order of column in table */
