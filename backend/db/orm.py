@@ -1147,8 +1147,24 @@ def close_request(
 
 
 # region Query generator
+
+
 def order_by_worker(query: Query, column: any, is_desc: bool = False) -> Query:
     columns = [Worker.l_name, Worker.f_name, Worker.o_name]
+    if is_desc:
+        columns = [desc(w_column) for w_column in columns]
+    return query.join(column).order_by(*columns)
+
+
+def order_by_department(query: Query, column: any, is_desc: bool = False) -> Query:
+    columns = [Department.name]
+    if is_desc:
+        columns = [desc(w_column) for w_column in columns]
+    return query.join(column).order_by(*columns)
+
+
+def order_by_expenditure(query: Query, column: any, is_desc: bool = False) -> Query:
+    columns = [Expenditure.name, Expenditure.chapter]
     if is_desc:
         columns = [desc(w_column) for w_column in columns]
     return query.join(column).order_by(*columns)
@@ -1159,7 +1175,7 @@ def order_by(
     model_type: Type[Base],
     schema_type: Type[BaseModel],
     column_name: str,
-    desc: bool = False,
+    is_desc: bool = False,
 ) -> None:
     """Returns new `Query` with applied order_by instruction to `query`."""
     # Type inference
@@ -1170,8 +1186,18 @@ def order_by(
     else:
         column_model_type = column_model_hint
 
-    if column_model_type == WorkerSchema:
-        return order_by_worker(query, getattr(model_type, column_name), desc)
+    column = getattr(model_type, column_name)
+
+    if issubclass(column_model_type, WorkerSchema):
+        return order_by_worker(query, column, is_desc)
+    elif issubclass(column_model_type, DepartmentSchema):
+        return order_by_department(query, column, is_desc)
+    elif issubclass(column_model_type, ExpenditureSchema):
+        return order_by_expenditure(query, column, is_desc)
+    elif not issubclass(column_model_type, BaseModel):
+        if is_desc:
+            column = desc(column)
+        return query.order_by(column)
 
     return query
 
