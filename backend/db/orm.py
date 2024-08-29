@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Optional, Type
-import typing
+from db.query import QueryBuilder
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -36,6 +36,7 @@ from db.schemas import (
     DepartmentSchema,
     ExpenditureSchema,
     GroupSchema,
+    QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
@@ -48,7 +49,6 @@ from db.schemas import (
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy import null, or_, and_, desc
-from sqlalchemy.orm.query import Query
 
 
 def create_tables():
@@ -1146,117 +1146,38 @@ def close_request(
 # endregion
 
 
-# region Query generator
-
-
-def order_by_worker(query: Query, column: any, is_desc: bool = False) -> Query:
-    columns = [Worker.l_name, Worker.f_name, Worker.o_name]
-    if is_desc:
-        columns = [desc(w_column) for w_column in columns]
-    return query.join(column).order_by(*columns)
-
-
-def order_by_department(query: Query, column: any, is_desc: bool = False) -> Query:
-    columns = [Department.name]
-    if is_desc:
-        columns = [desc(w_column) for w_column in columns]
-    return query.join(column).order_by(*columns)
-
-
-def order_by_expenditure(query: Query, column: any, is_desc: bool = False) -> Query:
-    columns = [Expenditure.name, Expenditure.chapter]
-    if is_desc:
-        columns = [desc(w_column) for w_column in columns]
-    return query.join(column).order_by(*columns)
-
-
-def order_by(
-    query: Query,
-    model_type: Type[Base],
-    schema_type: Type[BaseModel],
-    column_name: str,
-    is_desc: bool = False,
-) -> None:
-    """Returns new `Query` with applied order_by instruction to `query`."""
-    # Type inference
-    column_model_hint = typing.get_type_hints(schema_type)[column_name]
-    column_model_type = None
-    if typing.get_origin(column_model_hint) == typing.Union:
-        column_model_type = typing.get_args(column_model_hint)[0]
-    else:
-        column_model_type = column_model_hint
-
-    column = getattr(model_type, column_name)
-
-    if issubclass(column_model_type, WorkerSchema):
-        return order_by_worker(query, column, is_desc)
-    elif issubclass(column_model_type, DepartmentSchema):
-        return order_by_department(query, column, is_desc)
-    elif issubclass(column_model_type, ExpenditureSchema):
-        return order_by_expenditure(query, column, is_desc)
-    elif not issubclass(column_model_type, BaseModel):
-        if is_desc:
-            column = desc(column)
-        return query.order_by(column)
-
-    return query
-
-
-# endregion
-
-
 # region Model general
-def apply_model_query(
-    query: Query,
-    model_type: Type[Base],
-    schema_type: Type[BaseModel],
-    order_by_column: Optional[str],
-    desc: bool = False,
-):
-    """Returns new `Query` with applied all instructions to `query`."""
-    result = query
-
-    if order_by_column:
-        result = order_by(query, model_type, schema_type, order_by_column, desc)
-
-    return result
-
-
 def get_model_count(
     model_type: Type[Base],
     schema_type: Type[BaseModel],
-    order_by_column: Optional[str],
-    desc: bool = False,
+    query_schema: QuerySchema,
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query = s.query(model_type)
+        query_builder = QueryBuilder(s.query(model_type), model_type, schema_type)
+        query_builder.apply(query_schema)
 
-        query = apply_model_query(query, model_type, schema_type, order_by_column, desc)
-
-        return query.count()
+        return query_builder.query.count()
 
 
-def get_models_by_page(
+def get_models(
     model_type: Type[Base],
     schema_type: Type[BaseModel],
     page: int,
     records_per_page: int,
-    order_by_column: Optional[str],
-    desc: bool = False,
+    query_schema: QuerySchema,
 ) -> list[BaseSchema]:
-    """Return `model_type` schemas
+    """Return `model_type` schemas with applied instructions.
 
-    :param model_type: model type extended `Base`.
-    :param schema_type: model type extended `BaseModel`.
-    :param order_by_column: name of column for ordering.
+    See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query = s.query(model_type)
+        query_builder = QueryBuilder(s.query(model_type), model_type, schema_type)
+        query_builder.apply(query_schema)
 
-        query = apply_model_query(query, model_type, schema_type, order_by_column, desc)
-
-        raw_models = query.offset((page - 1) * records_per_page).limit(records_per_page)
+        raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
+            records_per_page
+        )
 
         return [schema_type.model_validate(raw_model) for raw_model in raw_models]
 

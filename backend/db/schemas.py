@@ -336,4 +336,42 @@ class TalbeInfoSchema(BaseModel):
     records_per_page: int
 
 
+# region Query schema
+
+
+class OrderBySchema(BaseModel):
+    column: str
+    """Column name for order."""
+
+    desc: bool = False
+    """If **true** query will be ordered desc.
+    **False** by default.
+    """
+
+
+class SearchSchema(BaseModel):
+    column: str
+    """Column name for search."""
+
+    term: str
+    """Term for search."""
+
+    dependencies: list["SearchSchema"] = []
+    """
+    Dependencies are wrapping to one query
+    and handles with `and_` statement relative to `self`.
+    """
+
+
+class QuerySchema(BaseModel):
+    """Presents general query schema for working with crm tables."""
+
+    search_query: list[SearchSchema] = []
+    """List of search schemas handles with `or_` statement."""
+
+    order_by_query: Optional[OrderBySchema] = None
+
+
+# endregion
+
 # endregion

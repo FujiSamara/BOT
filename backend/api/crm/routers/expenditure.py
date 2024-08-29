@@ -1,9 +1,8 @@
-from typing import Optional
 from fastapi import Security
 from fastapi.routing import APIRouter
 
 from db import service
-from db.schemas import ExpenditureSchema, TalbeInfoSchema
+from db.schemas import ExpenditureSchema, TalbeInfoSchema, QuerySchema
 
 from api.auth import User, get_current_user
 
@@ -11,14 +10,13 @@ from api.auth import User, get_current_user
 router = APIRouter()
 
 
-@router.get("/page/info")
+@router.post("/page/info")
 async def get_pages_info(
-    order_by: Optional[str] = None,
-    desc: bool = False,
+    query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> TalbeInfoSchema:
-    record_count = service.get_expenditure_count(order_by, desc)
+    record_count = service.get_expenditure_count(query)
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
@@ -28,15 +26,14 @@ async def get_pages_info(
     )
 
 
-@router.get("/page/{page}")
+@router.post("/page/{page}")
 async def get_expenditures(
     page: int,
-    order_by: Optional[str] = None,
-    desc: bool = False,
+    query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> list[ExpenditureSchema]:
-    return service.get_expenditures_at_page(page, records_per_page, order_by, desc)
+    return service.get_expenditures_at_page(page, records_per_page, query)
 
 
 @router.get("/find")

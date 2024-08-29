@@ -23,6 +23,7 @@ from db.schemas import (
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
+    QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerSchema,
@@ -1471,20 +1472,24 @@ def get_expenditures_names() -> list[str]:
     return [expenditure.name for expenditure in expenditures]
 
 
-def get_expenditure_count(order_by_column: Optional[str], desc: bool = False) -> int:
+def get_expenditure_count(
+    query_schema: QuerySchema,
+) -> int:
     """Return expenditure count in bd."""
-    return orm.get_model_count(Expenditure, ExpenditureSchema, order_by_column, desc)
+    return orm.get_model_count(Expenditure, ExpenditureSchema, query_schema)
 
 
 def get_expenditures_at_page(
-    page: int, records_per_page: int, order_by_column: Optional[str], desc: bool = False
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
 ) -> list[ExpenditureSchema]:
-    """Return `records_per_page` expenditures at `page`
+    """Return expenditures with applied instructions.
 
-    :param order_by_column: name of column for ordering.
+    See `QueryBuilder.apply` for more info applied instructions.
     """
-    return orm.get_models_by_page(
-        Expenditure, ExpenditureSchema, page, records_per_page, order_by_column, desc
+    return orm.get_models(
+        Expenditure, ExpenditureSchema, page, records_per_page, query_schema
     )
 
 
