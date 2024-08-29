@@ -56,12 +56,29 @@ interface TableData {
 	headers: Array<string>;
 }
 
+interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+}
+
+interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+}
+
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
 	private _loadedRows: Ref<Array<T>> = ref([]);
 	private _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
+	private _infoEarlyRefreshed: boolean = false;
 
 	/**
 	 * @param endpoint Endpoint name for api.
@@ -76,9 +93,24 @@ export class Table<T extends BaseSchema> {
 	//#region Refreshing
 	private async startUpdatingLoop() {
 		watch(
-			[this._rowsQuery, this._refreshKey, this.rowCount],
-			async () => await this.refreshRows(),
+			[this._rowsQuery, this._refreshKey, this._completedQuery],
+			async () => {
+				this.emulateLoading(true);
+				await this.refreshInfo();
+				this._infoEarlyRefreshed = true;
+				await this.refreshRows();
+				this.emulateLoading(false);
+			},
 		);
+
+		watch(this.rowCount, async () => {
+			if (
+				this._rowsPerPage !== this._loadedRows.value.length &&
+				!this.isLoading.value
+			) {
+				await this.refreshRows();
+			}
+		});
 
 		const loop = async () => {
 			await this.refreshInfo();
@@ -92,26 +124,22 @@ export class Table<T extends BaseSchema> {
 	 * 2) Row count
 	 */
 	private async refreshInfo() {
-		if (this.isLoading.value) {
+		if (this._infoEarlyRefreshed) {
+			this._infoEarlyRefreshed = false;
 			return;
 		}
 
 		const resp = await this._network.withAuthChecking(
-			axios.get(this._infoQuery.value),
+			axios.post(this._infoQuery.value, this._completedQuery.value),
 		);
-
-		if (this.isLoading.value) {
-			return;
-		}
 
 		this.pageCount.value = resp.data.page_count;
 		this.rowCount.value = resp.data.record_count;
 	}
 	/** Updates rows. */
 	private async refreshRows() {
-		this.emulateLoading(true);
 		const resp = await this._network.withAuthChecking(
-			axios.get(this._rowsQuery.value),
+			axios.post(this._rowsQuery.value, this._completedQuery.value),
 		);
 
 		this._loadedRows.value = resp.data;
@@ -126,11 +154,9 @@ export class Table<T extends BaseSchema> {
 			0,
 			this._rowsPerPage,
 		);
-
-		this.emulateLoading(false);
 	}
 	/** Forces updating rows. */
-	protected refreshQuery() {
+	protected refreshAll() {
 		const limit = 3;
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
@@ -140,28 +166,29 @@ export class Table<T extends BaseSchema> {
 	private _query = computed(() => {
 		return `records_per_page=${this._rowsPerPage}`;
 	});
-	private _searchedQuery = computed(() => {
-		return this._query.value;
+	private _searchedQuery = computed((): Array<SearchSchema> => {
+		return this.search_query.value;
 	});
-	private _datedQuery = computed(() => {
-		return this._searchedQuery.value;
+	// private _datedQuery = computed(() => {
+	// 	return this._query.value;
+	// });
+	private _orderedQuery = computed((): OrderBySchema => {
+		return {
+			column: this._orderBy.value,
+			desc: this.desc.value,
+		};
 	});
-	private _orderedQuery = computed(() => {
-		let query = this._datedQuery.value;
-
-		if (this._orderBy.value) {
-			query += `&order_by=${this._orderBy.value}`;
-		}
-
-		query += `&desc=${this.desc.value}`;
-
-		return query;
+	private _completedQuery = computed((): QuerySchema => {
+		return {
+			search_query: this._searchedQuery.value,
+			order_by_query: this._orderedQuery.value,
+		};
 	});
 	private _rowsQuery = computed(() => {
-		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._orderedQuery.value}`;
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
 	});
 	private _infoQuery = computed(() => {
-		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._orderedQuery.value}`;
+		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
 	});
 	//#endregion
 
@@ -352,6 +379,8 @@ export class Table<T extends BaseSchema> {
 	protected _orderBy: Ref<string> = ref("id");
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
 	public desc: Ref<boolean> = ref(false);
+	/** Search dict for rows. Format: **{ field_name: term } */
+	public search_query: Ref<Array<SearchSchema>> = ref([]);
 	/** Order of column in table */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names */

@@ -77,6 +77,25 @@ const fromDateString = ref("");
 const toDateString = ref("");
 const searchString = ref("");
 
+watch(searchString, () => {
+	if (searchString.value.length > 3) {
+		table.search_query.value = [
+			{
+				column: "fac",
+				term: searchString.value,
+			},
+			{
+				column: "chapter",
+				term: searchString.value,
+			},
+		];
+	} else {
+		if (table.search_query.value.length !== 0) {
+			table.search_query.value = [];
+		}
+	}
+});
+
 const onRowClicked = (rowKey: number) => {
 	editor.value = new ExpenditureEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
