@@ -8,7 +8,15 @@
 					v-model:to-date="toDateString"
 				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
+				<SeacrhTool
+					id="topDepartmentSearch"
+					placeholder="Производство"
+					@input="(val) => (departmentSearchString = val)"
+				></SeacrhTool>
+				<SeacrhTool
+					id="topSearch"
+					@input="(val) => (searchString = val)"
+				></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -75,11 +83,28 @@ const onSubmit = async () => {
 const table = new ExpenditureTable();
 const fromDateString = ref("");
 const toDateString = ref("");
+
+const departmentSearchString = ref("");
 const searchString = ref("");
 
-watch(searchString, () => {
+watch([departmentSearchString, searchString], () => {
+	const result = [];
+
+	if (departmentSearchString.value.length > 3) {
+		result.push({
+			column: "creator",
+			term: "",
+			dependencies: [
+				{
+					column: "department",
+					term: departmentSearchString.value,
+				},
+			],
+		});
+	}
+
 	if (searchString.value.length > 3) {
-		table.search_query.value = [
+		result.push(
 			{
 				column: "fac",
 				term: searchString.value,
@@ -88,12 +113,10 @@ watch(searchString, () => {
 				column: "chapter",
 				term: searchString.value,
 			},
-		];
-	} else {
-		if (table.search_query.value.length !== 0) {
-			table.search_query.value = [];
-		}
+		);
 	}
+
+	table.search_query.value = result;
 });
 
 const onRowClicked = (rowKey: number) => {
