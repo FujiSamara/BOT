@@ -78,7 +78,6 @@ export class Table<T extends BaseSchema> {
 	private _loadedRows: Ref<Array<T>> = ref([]);
 	private _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
-	private _infoEarlyRefreshed: boolean = false;
 
 	/**
 	 * @param endpoint Endpoint name for api.
@@ -92,29 +91,25 @@ export class Table<T extends BaseSchema> {
 	//#region Rows
 	//#region Refreshing
 	private async startUpdatingLoop() {
+		let skipLoop = false;
+
 		watch(
 			[this._rowsQuery, this._refreshKey, this._completedQuery],
 			async () => {
 				this.emulateLoading(true);
-				this._infoEarlyRefreshed = false;
+				skipLoop = true;
 				await this.refreshInfo();
-				this._infoEarlyRefreshed = true;
 				await this.refreshRows();
 				this.emulateLoading(false);
 			},
 		);
 
-		watch(this.rowCount, async () => {
-			if (
-				this._rowsPerPage !== this._loadedRows.value.length &&
-				!this.isLoading.value
-			) {
-				await this.refreshRows();
-			}
-		});
-
 		const loop = async () => {
-			await this.refreshInfo();
+			if (skipLoop) {
+				await this.refreshInfo(true);
+			}
+			skipLoop = false;
+
 			setTimeout(async () => await loop(), this.updateTimeout * 1000);
 		};
 
@@ -123,16 +118,22 @@ export class Table<T extends BaseSchema> {
 	/** Updates info about table:
 	 * 1) Page count
 	 * 2) Row count
+	 *
+	 * - If **fromLoop** is **true** and row count changed then force refreshes rows.
 	 */
-	private async refreshInfo() {
-		if (this._infoEarlyRefreshed) {
-			this._infoEarlyRefreshed = false;
-			return;
-		}
-
+	private async refreshInfo(fromLoop: boolean = false) {
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._infoQuery.value, this._completedQuery.value),
 		);
+
+		if (fromLoop && this.pageCount.value !== resp.data.page_count) {
+			if (this._loadedRows.value.length !== this._rowsPerPage) {
+				this.isLoading.value = true;
+			}
+
+			await this.refreshRows();
+			this.isLoading.value = false;
+		}
 
 		this.pageCount.value = resp.data.page_count;
 		this.rowCount.value = resp.data.record_count;
