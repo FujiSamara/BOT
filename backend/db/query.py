@@ -5,15 +5,8 @@ from sqlalchemy import BinaryExpression, Select, or_, desc, select
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import InstrumentedAttribute
 from pydantic import BaseModel
-from db.models import Department, Expenditure, Worker
-from db.schemas import (
-    DepartmentSchema,
-    ExpenditureSchema,
-    OrderBySchema,
-    QuerySchema,
-    SearchSchema,
-    WorkerSchema,
-)
+import db.schemas as schemas
+import db.models as models
 from db.database import Base
 
 
@@ -40,9 +33,11 @@ class QueryBuilder:
 
         # Schema to model dict
         self._schema_to_model: dict[Type[BaseModel], Type[Base]] = {
-            WorkerSchema: Worker,
-            DepartmentSchema: Department,
-            ExpenditureSchema: Expenditure,
+            schemas.WorkerSchema: models.Worker,
+            schemas.DepartmentSchema: models.Department,
+            schemas.ExpenditureSchema: models.Expenditure,
+            schemas.BidSchema: models.Bid,
+            schemas.PostSchema: models.Post,
         }
 
         # Model to schema dict
@@ -54,9 +49,9 @@ class QueryBuilder:
         self._order_by_builders: dict[
             BaseModel, Callable[[InstrumentedAttribute[any], bool], Query]
         ] = {
-            WorkerSchema: self._order_by_worker,
-            DepartmentSchema: self._order_by_department,
-            ExpenditureSchema: self._order_by_expenditure,
+            schemas.WorkerSchema: self._order_by_worker,
+            schemas.DepartmentSchema: self._order_by_department,
+            schemas.ExpenditureSchema: self._order_by_expenditure,
         }
 
         # Search builders.
@@ -64,11 +59,11 @@ class QueryBuilder:
             BaseModel,
             Callable[[str], Select],
         ] = {
-            WorkerSchema: self._search_by_worker,
-            DepartmentSchema: self._search_by_department,
+            schemas.WorkerSchema: self._search_by_worker,
+            schemas.DepartmentSchema: self._search_by_department,
         }
 
-    def apply(self, query_schema: QuerySchema):
+    def apply(self, query_schema: schemas.QuerySchema):
         """
         Applies `query_schema` to query.
 
@@ -95,7 +90,7 @@ class QueryBuilder:
         return column_model_type
 
     # region Order by.
-    def _apply_order_by(self, order_by_schema: OrderBySchema):
+    def _apply_order_by(self, order_by_schema: schemas.OrderBySchema):
         """
         Applies `order_by_schema`.
         """
@@ -125,7 +120,7 @@ class QueryBuilder:
     def _order_by_worker(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
     ) -> Query:
-        columns = [Worker.l_name, Worker.f_name, Worker.o_name]
+        columns = [models.Worker.l_name, models.Worker.f_name, models.Worker.o_name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
         return self.query.join(column).order_by(*columns)
@@ -133,7 +128,7 @@ class QueryBuilder:
     def _order_by_department(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
     ) -> Query:
-        columns = [Department.name]
+        columns = [models.Department.name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
         return self.query.join(column).order_by(*columns)
@@ -141,7 +136,7 @@ class QueryBuilder:
     def _order_by_expenditure(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
     ) -> Query:
-        columns = [Expenditure.name, Expenditure.chapter]
+        columns = [models.Expenditure.name, models.Expenditure.chapter]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
         return self.query.join(column).order_by(*columns)
@@ -151,7 +146,7 @@ class QueryBuilder:
     # region Search
     def _apply_search(
         self,
-        search_schemas: list[SearchSchema],
+        search_schemas: list[schemas.SearchSchema],
     ):
         """
         Applies `search_schemas`.
@@ -163,7 +158,7 @@ class QueryBuilder:
     def _get_search_clause(
         self,
         model_type: Type[Base],
-        search_schemas: list[SearchSchema],
+        search_schemas: list[schemas.SearchSchema],
     ) -> Optional[BinaryExpression[bool]]:
         """Generates recursive search clause."""
         search_clauses: list[BinaryExpression[bool]] = []
@@ -216,28 +211,32 @@ class QueryBuilder:
 
     def _search_by_worker(self, term: str) -> Select:
         if not term:
-            return select(Worker.id)
+            return select(models.Worker.id)
 
-        search_columns = [Worker.l_name, Worker.f_name, Worker.o_name]
+        search_columns = [
+            models.Worker.l_name,
+            models.Worker.f_name,
+            models.Worker.o_name,
+        ]
 
         search_clauses = []
 
         for search_column in search_columns:
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
-        return select(Worker.id).filter(or_(*search_clauses))
+        return select(models.Worker.id).filter(or_(*search_clauses))
 
     def _search_by_department(self, term: str) -> Select:
         if not term:
-            return select(Worker.id)
+            return select(models.Department.id)
 
-        search_columns = [Department.name]
+        search_columns = [models.Department.name]
 
         search_clauses = []
 
         for search_column in search_columns:
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
-        return select(Department.id).filter(or_(*search_clauses))
+        return select(models.Department.id).filter(or_(*search_clauses))
 
     # endregion
