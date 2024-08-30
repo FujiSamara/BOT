@@ -38,6 +38,7 @@ class QueryBuilder:
             schemas.ExpenditureSchema: models.Expenditure,
             schemas.BidSchema: models.Bid,
             schemas.PostSchema: models.Post,
+            schemas.BudgetRecordSchema: models.BudgetRecord,
         }
 
         # Model to schema dict
