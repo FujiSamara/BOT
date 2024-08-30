@@ -1476,7 +1476,7 @@ def get_expenditure_count(
     query_schema: QuerySchema,
 ) -> int:
     """Return expenditure count in bd."""
-    return orm.get_model_count(Expenditure, ExpenditureSchema, query_schema)
+    return orm.get_model_count(Expenditure, query_schema)
 
 
 def get_expenditures_at_page(

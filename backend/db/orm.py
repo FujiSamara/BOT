@@ -1149,12 +1149,11 @@ def close_request(
 # region Model general
 def get_model_count(
     model_type: Type[Base],
-    schema_type: Type[BaseModel],
     query_schema: QuerySchema,
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type), model_type, schema_type)
+        query_builder = QueryBuilder(s.query(model_type))
         query_builder.apply(query_schema)
 
         return query_builder.query.count()
@@ -1172,7 +1171,7 @@ def get_models(
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type), model_type, schema_type)
+        query_builder = QueryBuilder(s.query(model_type))
         query_builder.apply(query_schema)
 
         raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(

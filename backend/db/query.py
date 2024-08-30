@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Optional, Type
 import typing
-from sqlalchemy import BinaryExpression, or_, and_, desc, select
+from sqlalchemy import BinaryExpression, Select, or_, desc, select
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import InstrumentedAttribute
 from pydantic import BaseModel
@@ -20,19 +20,35 @@ from db.database import Base
 class QueryBuilder:
     """Helper for building composite query."""
 
+    name = "|QUERYBUILDER|"
+
     logger = logging.getLogger("uvicorn.error")
 
-    def __init__(
-        self, initial_query: Query, model_type: Type[Base], schema_type: Type[BaseModel]
-    ):
+    def __init__(self, initial_query: Query):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
-        :param model_type: Type of table required.
-        :param schema_type: Type of table schema required.
         """
+        entities = [item["entity"] for item in initial_query.column_descriptions]
+
+        if not len(entities) == 1:
+            self.logger.warning(
+                f"{self.name} Requested query building with not one entity"
+            )
+
         self.query = initial_query
-        self._model_type = model_type
-        self._schema_type = schema_type
+        self._model_type = entities[0]
+
+        # Schema to model dict
+        self._schema_to_model: dict[Type[BaseModel], Type[Base]] = {
+            WorkerSchema: Worker,
+            DepartmentSchema: Department,
+            ExpenditureSchema: Expenditure,
+        }
+
+        # Model to schema dict
+        self._model_to_schema: dict[Type[Base], Type[BaseModel]] = {
+            self._schema_to_model[schema]: schema for schema in self._schema_to_model
+        }
 
         # Order by builders.
         self._order_by_builders: dict[
@@ -46,8 +62,11 @@ class QueryBuilder:
         # Search builders.
         self._search_builders: dict[
             BaseModel,
-            Callable[[InstrumentedAttribute[any], str], BinaryExpression[bool]],
-        ] = {WorkerSchema: self._search_by_worker}
+            Callable[[str], Select],
+        ] = {
+            WorkerSchema: self._search_by_worker,
+            DepartmentSchema: self._search_by_department,
+        }
 
     def apply(self, query_schema: QuerySchema):
         """
@@ -62,8 +81,10 @@ class QueryBuilder:
         if query_schema.order_by_query:
             self._apply_order_by(query_schema.order_by_query)
 
-    def _get_column_type(self, column_name: str) -> Type:
-        column_model_hint = typing.get_type_hints(self._schema_type)[column_name]
+    def _get_schema_column_type(
+        self, schema_type: Type[BaseModel], column_name: str
+    ) -> Type:
+        column_model_hint = typing.get_type_hints(schema_type)[column_name]
 
         column_model_type = None
         if typing.get_origin(column_model_hint) == typing.Union:
@@ -81,20 +102,24 @@ class QueryBuilder:
         column_name = order_by_schema.column
         is_desc = order_by_schema.desc
         model_type = self._model_type
+        schema_type = self._model_to_schema[model_type]
 
-        column_model_type = self._get_column_type(column_name)
+        column_type = self._get_schema_column_type(schema_type, column_name)
         column = getattr(model_type, column_name)
 
-        if column_model_type in self._order_by_builders:
-            builder = self._order_by_builders[column_model_type]
+        # If column is pydantic schema.
+        if column_type in self._order_by_builders:
+            builder = self._order_by_builders[column_type]
             self.query = builder(column, is_desc)
-        elif not issubclass(column_model_type, BaseModel):
+        # If column is simple type.
+        elif not issubclass(column_type, BaseModel):
             if is_desc:
                 column = desc(column)
             self.query = self.query.order_by(column)
+        # If column is schema with non implemented order by.
         else:
             self.logger.warning(
-                f"Attempt to order by non implemented method, column type: {column_model_type}"
+                f"{self.name} Attempt to order by non implemented method, column type: {column_type}"
             )
 
     def _order_by_worker(
@@ -124,20 +149,25 @@ class QueryBuilder:
     # endregion
 
     # region Search
-    def _apply_search(self, search_schemas: list[SearchSchema]):
+    def _apply_search(
+        self,
+        search_schemas: list[SearchSchema],
+    ):
         """
         Applies `search_schemas`.
         """
-        search_clause = self._get_search_clause(search_schemas)
+        search_clause = self._get_search_clause(self._model_type, search_schemas)
         if search_clause is not None:
             self.query = self.query.filter(search_clause)
 
     def _get_search_clause(
-        self, search_schemas: list[SearchSchema]
+        self,
+        model_type: Type[Base],
+        search_schemas: list[SearchSchema],
     ) -> Optional[BinaryExpression[bool]]:
-        model_type = self._model_type
-
+        """Generates recursive search clause."""
         search_clauses: list[BinaryExpression[bool]] = []
+        schema_type = self._model_to_schema[model_type]
 
         for search_schema in search_schemas:
             column_name = search_schema.column
@@ -146,35 +176,48 @@ class QueryBuilder:
             search_clause: BinaryExpression[bool] = None
 
             # Type inference
-            column_model_type = self._get_column_type(column_name)
+            column_type = self._get_schema_column_type(schema_type, column_name)
 
-            if column_model_type in self._search_builders:
+            # If column is pydantic schema.
+            if column_type in self._search_builders:
                 column: InstrumentedAttribute[any] = getattr(
                     model_type, column_name + "_id"
                 )
-                builder = self._search_builders[column_model_type]
-                search_clause = builder(column, term)
-            elif not issubclass(column_model_type, BaseModel):
+                builder = self._search_builders[column_type]
+
+                # Builds select for schema table.
+                cur_level_select = builder(term)
+
+                if len(search_schema.dependencies) > 0:
+                    column_model_type = self._schema_to_model[column_type]
+                    dependency_clause = self._get_search_clause(
+                        column_model_type, search_schema.dependencies
+                    )
+                    if dependency_clause is not None:
+                        cur_level_select = cur_level_select.filter(dependency_clause)
+
+                # Filters by entry from column table.
+                search_clause = column.in_(cur_level_select)
+
+            # If column is simple type.
+            elif not issubclass(column_type, BaseModel):
                 column: InstrumentedAttribute[any] = getattr(model_type, column_name)
                 search_clause = column.ilike(f"%{term}%")
+            # If column is schema with non implemented search.
             else:
                 self.logger.warning(
-                    f"Attempt to search non implemented method, column type: {column_model_type}"
+                    f"{self.name} Attempt to search non implemented method, column type: {column_type}"
                 )
                 continue
-
-            if len(search_schema.dependencies) > 0:
-                dependency_clause = self._get_search_clause(search_schema.dependencies)
-                if dependency_clause:
-                    search_clause = and_(search_clause, dependency_clause)
 
             search_clauses.append(search_clause)
 
         return or_(*search_clauses) if len(search_clauses) > 0 else None
 
-    def _search_by_worker(
-        self, column: InstrumentedAttribute[any], term: str
-    ) -> BinaryExpression[bool]:
+    def _search_by_worker(self, term: str) -> Select:
+        if not term:
+            return select(Worker.id)
+
         search_columns = [Worker.l_name, Worker.f_name, Worker.o_name]
 
         search_clauses = []
@@ -182,6 +225,19 @@ class QueryBuilder:
         for search_column in search_columns:
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
-        return column.in_(select(Worker.id).filter(or_(*search_clauses)))
+        return select(Worker.id).filter(or_(*search_clauses))
+
+    def _search_by_department(self, term: str) -> Select:
+        if not term:
+            return select(Worker.id)
+
+        search_columns = [Department.name]
+
+        search_clauses = []
+
+        for search_column in search_columns:
+            search_clauses.append(search_column.ilike(f"%{term}%"))
+
+        return select(Department.id).filter(or_(*search_clauses))
 
     # endregion

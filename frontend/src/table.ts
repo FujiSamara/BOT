@@ -96,6 +96,7 @@ export class Table<T extends BaseSchema> {
 			[this._rowsQuery, this._refreshKey, this._completedQuery],
 			async () => {
 				this.emulateLoading(true);
+				this._infoEarlyRefreshed = false;
 				await this.refreshInfo();
 				this._infoEarlyRefreshed = true;
 				await this.refreshRows();
