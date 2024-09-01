@@ -333,7 +333,7 @@ class BidRecordSchema(BaseSchema):
 class TalbeInfoSchema(BaseModel):
     page_count: int
     record_count: int
-    records_per_page: int
+    all_record_count: int
 
 
 # region Query schema

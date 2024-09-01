@@ -17,12 +17,13 @@ async def get_pages_info(
     _: User = Security(get_current_user, scopes=["crm_expenditure"]),
 ) -> TalbeInfoSchema:
     record_count = service.get_expenditure_count(query)
+    all_record_count = service.get_expenditure_count(QuerySchema())
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
         record_count=record_count,
         page_count=page_count,
-        records_per_page=records_per_page,
+        all_record_count=all_record_count,
     )
 
 

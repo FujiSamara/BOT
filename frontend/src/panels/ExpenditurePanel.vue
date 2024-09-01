@@ -129,8 +129,8 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
-watch(table.highlightedCount, () => {
-	emit("notify", table.highlightedCount.value, props.id);
+watch(table.notifies, () => {
+	emit("notify", table.notifies.value, props.id);
 });
 </script>
 <style scoped>
