@@ -67,9 +67,16 @@ interface SearchSchema {
 	dependencies?: Array<SearchSchema>;
 }
 
+interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
 interface QuerySchema {
 	search_query?: Array<SearchSchema>;
 	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
 }
 
 export class Table<T extends BaseSchema> {
@@ -216,11 +223,11 @@ export class Table<T extends BaseSchema> {
 		return `records_per_page=${this._rowsPerPage}`;
 	});
 	private _searchedQuery = computed((): Array<SearchSchema> => {
-		return this.search_query.value;
+		return this.searchQuery.value;
 	});
-	// private _datedQuery = computed(() => {
-	// 	return this._query.value;
-	// });
+	private _datedQuery = computed(() => {
+		return this.byDate.value;
+	});
 	private _orderedQuery = computed((): OrderBySchema => {
 		return {
 			column: this._orderBy.value,
@@ -231,6 +238,7 @@ export class Table<T extends BaseSchema> {
 		return {
 			search_query: this._searchedQuery.value,
 			order_by_query: this._orderedQuery.value,
+			date_query: this._datedQuery.value,
 		};
 	});
 	private _rowsQuery = computed(() => {
@@ -450,7 +458,9 @@ export class Table<T extends BaseSchema> {
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
 	public desc: Ref<boolean> = ref(false);
 	/** Search query. */
-	public search_query: Ref<Array<SearchSchema>> = ref([]);
+	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
+	/** Date query. */
+	public byDate: Ref<DateSchema | undefined> = ref();
 	/** Order of column in table. */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names. */

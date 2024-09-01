@@ -363,6 +363,17 @@ class SearchSchema(BaseModel):
     """
 
 
+class DateSchema(BaseModel):
+    """Presents date filter, which returns rows between
+    `DateSchema.start` and `DateSchema.end`."""
+
+    start: datetime.datetime
+    end: datetime.datetime
+
+    column: str
+    """Column name for dating."""
+
+
 class QuerySchema(BaseModel):
     """Presents general query schema for working with crm tables."""
 
@@ -370,6 +381,8 @@ class QuerySchema(BaseModel):
     """List of search schemas handles with `or_` statement."""
 
     order_by_query: Optional[OrderBySchema] = None
+
+    date_query: Optional[DateSchema] = None
 
 
 # endregion

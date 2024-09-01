@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Optional, Type
 import typing
-from sqlalchemy import BinaryExpression, Select, or_, desc, select
+from sqlalchemy import BinaryExpression, Select, and_, or_, desc, select
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import InstrumentedAttribute
 from pydantic import BaseModel
@@ -71,7 +71,11 @@ class QueryBuilder:
         **Instructions**:
         1) Order by
         2) Search by
+        3) Date by
         """
+        if query_schema.date_query:
+            self._apply_date(query_schema.date_query)
+
         self._apply_search(query_schema.search_query)
 
         if query_schema.order_by_query:
@@ -90,7 +94,7 @@ class QueryBuilder:
 
         return column_model_type
 
-    # region Order by.
+    # region Order by
     def _apply_order_by(self, order_by_schema: schemas.OrderBySchema):
         """
         Applies `order_by_schema`.
@@ -239,5 +243,21 @@ class QueryBuilder:
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
         return select(models.Department.id).filter(or_(*search_clauses))
+
+    # endregion
+
+    # region Date
+    def _apply_date(self, date_query: schemas.DateSchema):
+        """
+        Applies `date_query`.
+        """
+        column_name = date_query.column
+        start = date_query.start
+        end = date_query.end
+        model_type = self._model_type
+
+        column = getattr(model_type, column_name)
+
+        self.query = self.query.filter(and_(column <= end, column >= start))
 
     # endregion

@@ -116,7 +116,18 @@ watch([departmentSearchString, searchString], () => {
 		);
 	}
 
-	table.search_query.value = result;
+	table.searchQuery.value = result;
+});
+
+watch([fromDateString, toDateString], () => {
+	const fromDate = new Date(fromDateString.value);
+	const toDate = new Date(toDateString.value);
+
+	table.byDate.value = {
+		column: "create_date",
+		start: fromDate,
+		end: toDate,
+	};
 });
 
 const onRowClicked = (rowKey: number) => {
