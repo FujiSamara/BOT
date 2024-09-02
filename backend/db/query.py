@@ -219,12 +219,14 @@ class QueryBuilder:
                         model_type, column_name + "_id"
                     )
                     builder = self._search_builders[column_type]
+                    column_model_type = self._schema_to_model[column_type]
 
                     # Builds select for schema table.
-                    cur_level_select = builder(term) if term else select(model_type.id)
+                    cur_level_select = (
+                        builder(term) if term else select(column_model_type.id)
+                    )
 
                     if len(search_schema.dependencies) > 0:
-                        column_model_type = self._schema_to_model[column_type]
                         dependency_clause = self._get_search_clause(
                             column_model_type, search_schema.dependencies
                         )
