@@ -74,10 +74,16 @@ interface DateSchema {
 	end: Date;
 }
 
+interface FilterSchema {
+	column: string;
+	value: string;
+}
+
 interface QuerySchema {
 	search_query?: Array<SearchSchema>;
 	order_by_query?: OrderBySchema;
 	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
 }
 
 export class Table<T extends BaseSchema> {
@@ -229,6 +235,9 @@ export class Table<T extends BaseSchema> {
 	private _datedQuery = computed(() => {
 		return this.byDate.value;
 	});
+	private _filteredQuery = computed(() => {
+		return [];
+	});
 	private _orderedQuery = computed((): OrderBySchema => {
 		return {
 			column: this._orderBy.value,
@@ -240,6 +249,7 @@ export class Table<T extends BaseSchema> {
 			search_query: this._searchedQuery.value,
 			order_by_query: this._orderedQuery.value,
 			date_query: this._datedQuery.value,
+			filter_query: this._filteredQuery.value,
 		};
 	});
 	private _rowsQuery = computed(() => {
@@ -726,6 +736,7 @@ export class FACBidTable extends BidTable {
 		super();
 
 		this._getEndpoint = "/fac";
+		this._infoEndpoint = "/fac";
 	}
 }
 
@@ -734,6 +745,7 @@ export class CCBidTable extends BidTable {
 		super();
 
 		this._getEndpoint = "/cc";
+		this._infoEndpoint = "/cc";
 	}
 }
 
@@ -742,6 +754,7 @@ export class CCSupervisorBidTable extends BidTable {
 		super();
 
 		this._getEndpoint = "/cc_supervisor";
+		this._infoEndpoint = "/cc_supervisor";
 	}
 }
 //#endregion

@@ -23,6 +23,7 @@ from db.schemas import (
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
+    FilterSchema,
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
@@ -1251,37 +1252,52 @@ def get_bid_records() -> list[BidRecordSchema]:
     return [bid_to_bid_record(bid) for bid in orm.get_bids()]
 
 
-def get_fac_bid_records_by_fac_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all fac bid records in database."""
-    result = []
+def get_coordinator_bid_records_at_page(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+    phone: int,
+    coordinator: str,
+) -> list[BidRecordSchema]:
+    """Returns all coordinator bid records in database."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column="expenditure",
+            value="",
+            dependencies=[
+                FilterSchema(
+                    column=coordinator,
+                    value="",
+                    dependencies=[FilterSchema(column="phone_number", value=phone)],
+                )
+            ],
+        )
+    )
 
-    for record in get_bid_records():
-        if record.expenditure.fac.phone_number == phone:
-            result.append(record)
-
-    return result
+    return get_bid_record_at_page(page, records_per_page, query_schema)
 
 
-def get_fac_bid_records_by_cc_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all cc bid records in database."""
-    result = []
+def get_coordinator_bid_count(
+    query_schema: QuerySchema,
+    phone: int,
+    coordinator: str,
+) -> int:
+    """Returns all coordinator bid records in database."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column="expenditure",
+            value="",
+            dependencies=[
+                FilterSchema(
+                    column=coordinator,
+                    value="",
+                    dependencies=[FilterSchema(column="phone_number", value=phone)],
+                )
+            ],
+        )
+    )
 
-    for record in get_bid_records():
-        if record.expenditure.cc.phone_number == phone:
-            result.append(record)
-
-    return result
-
-
-def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all cc supervisor bid records in database."""
-    result = []
-
-    for record in get_bid_records():
-        if record.expenditure.cc_supervisor.phone_number == phone:
-            result.append(record)
-
-    return result
+    return get_bid_count(query_schema)
 
 
 # endregion

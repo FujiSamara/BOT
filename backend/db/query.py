@@ -11,7 +11,21 @@ from db.database import Base
 
 
 class QueryBuilder:
-    """Helper for building composite query."""
+    """Helper for building composite query.
+
+    Important:
+    1) Searching can applying for field inherit `BaseModel` and simple field.
+    Filtering can only applying simple field (`str`, `int`, etc...),
+    but filtering can applying any deep query, for example `Dog.owner.name`
+    where `name` is `str` and `owner` is `BaseModel` child.
+    2) Searching supports groups, different groups handles by `or_` statement,
+    terms inside group handles by `_and` statement.
+    Filtering use `_and` everywhere.
+    3) Searching use `ilike('%term%')` syntax.
+    Filtering use `column == value` syntax.
+    4) Order by can work with up level field (not Dog.owner.name, only Dow.owner).
+    5) Order by can applying for field inherit `BaseModel` and simple field.
+    """
 
     name = "|QUERYBUILDER|"
 
@@ -70,12 +84,15 @@ class QueryBuilder:
         Applies `query_schema` to query.
 
         **Instructions**:
-        1) Order by
-        2) Search by
-        3) Date by
+        1) Date by
+        2) Filter by
+        3) Search by
+        4) Order by
         """
         if query_schema.date_query:
             self._apply_date(query_schema.date_query)
+
+        self._apply_filter(query_schema.filter_query)
 
         self._apply_search(query_schema.search_query)
 
@@ -152,12 +169,12 @@ class QueryBuilder:
     # region Search
     def _apply_search(
         self,
-        search_schemas: list[schemas.SearchSchema],
+        search_query: list[schemas.SearchSchema],
     ):
         """
-        Applies `search_schemas`.
+        Applies `search_query`.
         """
-        search_clause = self._get_search_clause(self._model_type, search_schemas)
+        search_clause = self._get_search_clause(self._model_type, search_query)
         if search_clause is not None:
             self.query = self.query.filter(search_clause)
 
@@ -201,7 +218,11 @@ class QueryBuilder:
                     column: InstrumentedAttribute[any] = getattr(
                         model_type, column_name + "_id"
                     )
-                    builder = self._search_builders[column_type]
+                    builder = (
+                        self._search_builders[column_type]
+                        if term
+                        else select(model_type.id)
+                    )
 
                     # Builds select for schema table.
                     cur_level_select = builder(term)
@@ -232,8 +253,7 @@ class QueryBuilder:
                     )
                     continue
 
-                if search_clause is not None:
-                    inside_group_clauses.append(search_clause)
+                inside_group_clauses.append(search_clause)
 
             if len(inside_group_clauses) > 0:
                 group_clause: BinaryExpression[bool]
@@ -248,9 +268,6 @@ class QueryBuilder:
         return or_(*group_clauses) if len(group_clauses) > 0 else None
 
     def _search_by_worker(self, term: str) -> Select:
-        if not term:
-            return select(models.Worker.id)
-
         search_columns = [
             models.Worker.l_name,
             models.Worker.f_name,
@@ -265,9 +282,6 @@ class QueryBuilder:
         return select(models.Worker.id).filter(or_(*search_clauses))
 
     def _search_by_department(self, term: str) -> Select:
-        if not term:
-            return select(models.Department.id)
-
         search_columns = [models.Department.name]
 
         search_clauses = []
@@ -278,9 +292,6 @@ class QueryBuilder:
         return select(models.Department.id).filter(or_(*search_clauses))
 
     def _search_by_expenditure(self, term: str) -> Select:
-        if not term:
-            return select(models.Expenditure.id)
-
         search_columns = [models.Expenditure.name, models.Expenditure.chapter]
 
         search_clauses = []
@@ -305,5 +316,70 @@ class QueryBuilder:
         column = getattr(model_type, column_name)
 
         self.query = self.query.filter(and_(column <= end, column >= start))
+
+    # endregion
+
+    # region Filter by
+    def _apply_filter(
+        self,
+        filter_query: list[schemas.FilterSchema],
+    ):
+        """
+        Applies `filter_query`.
+        """
+        filter_clause = self._get_filter_clause(self._model_type, filter_query)
+        if filter_clause is not None:
+            self.query = self.query.filter(filter_clause)
+
+    def _get_filter_clause(
+        self,
+        model_type: Type[Base],
+        filter_schemas: list[schemas.FilterSchema],
+    ):
+        schema_type = self._model_to_schema[model_type]
+        filter_clauses: list[BinaryExpression[bool]] = []
+
+        for filter_schema in filter_schemas:
+            column_name = filter_schema.column
+            value = filter_schema.value
+
+            filter_clause: BinaryExpression[bool] = None
+
+            # Type inference
+            column_type = self._get_schema_column_type(schema_type, column_name)
+
+            # If column is pydantic schema.
+            if issubclass(column_type, BaseModel):
+                column: InstrumentedAttribute[any] = getattr(
+                    model_type, column_name + "_id"
+                )
+
+                # Builds select for schema table.
+                cur_level_select = select(model_type.id)
+
+                if len(filter_schema.dependencies) > 0:
+                    column_model_type = self._schema_to_model[column_type]
+                    dependency_clause = self._get_filter_clause(
+                        column_model_type, filter_schema.dependencies
+                    )
+                    if dependency_clause is not None:
+                        cur_level_select = cur_level_select.filter(dependency_clause)
+                else:
+                    self.logger.warning(
+                        f"{self.name} Attempt to filter with non simple type, column type: {column_type}"
+                    )
+                    continue
+
+                # Filters by entry from column table.
+                filter_clause = column.in_(cur_level_select)
+
+            # If column is simple type.
+            else:
+                column: InstrumentedAttribute[any] = getattr(model_type, column_name)
+                filter_clause = column == value
+
+            filter_clauses.append(filter_clause)
+
+        return and_(*filter_clauses) if len(filter_clauses) > 0 else None
 
     # endregion

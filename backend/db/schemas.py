@@ -385,6 +385,16 @@ class DateSchema(BaseModel):
     """Column name for dating."""
 
 
+class FilterSchema(BaseModel):
+    column: str
+    """Column name for search."""
+
+    value: str
+    """Term for search."""
+
+    dependencies: list["FilterSchema"] = []
+
+
 class QuerySchema(BaseModel):
     """Presents general query schema for working with crm tables."""
 
@@ -394,6 +404,9 @@ class QuerySchema(BaseModel):
     order_by_query: Optional[OrderBySchema] = None
 
     date_query: Optional[DateSchema] = None
+
+    filter_query: list[FilterSchema] = []
+    """List of filter schemas handles with `and_` statement."""
 
 
 # endregion
