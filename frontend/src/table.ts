@@ -227,6 +227,10 @@ export class Table<T extends BaseSchema> {
 
 		const rowsLength = this._loadedRows.value.length;
 
+		if (rowsLength === 0) {
+			this.currentPage.value = 1;
+		}
+
 		this._highlighted.value = Array<boolean>(rowsLength).fill(
 			false,
 			0,
