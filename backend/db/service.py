@@ -114,27 +114,6 @@ def get_worker_by_phone_number(number: str) -> WorkerSchema:
     return orm.find_worker_by_column(Worker.phone_number, number)
 
 
-def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
-    """
-    Returns worker bid in database by it id.
-    """
-    return orm.find_worker_bid_by_column(WorkerBid.id, id)
-
-
-def get_work_time_records_by_day_and_department(
-    department_id: int, day: str
-) -> list[WorkTimeSchema]:
-    """
-    Returns all work times records in database by `department_id`
-    and `day`.
-    """
-
-    return orm.get_work_time_records_by_columns(
-        [WorkTime.department_id, WorkTime.day],
-        [department_id, day],
-    )
-
-
 def get_worker_by_id(id: int) -> WorkerSchema:
     """
     Returns worker in database with `id` at column.
@@ -142,26 +121,6 @@ def get_worker_by_id(id: int) -> WorkerSchema:
     If worker not exist return `None`.
     """
     return orm.find_worker_by_column(Worker.id, id)
-
-
-def get_work_time_record_by_id(id: int) -> WorkTimeSchema:
-    """
-    Return work time record in database by `id`.
-
-    If record not exist return `None`.
-    """
-
-    return orm.find_work_time_record_by_columns(
-        [WorkTime.id],
-        [id],
-    )
-
-
-def update_work_time_record(record: WorkTimeSchema) -> None:
-    """
-    Updates work time record if it exists.
-    """
-    orm.update_work_time(record)
 
 
 def get_chef_by_department_id(id: int) -> WorkerSchema:
@@ -182,88 +141,6 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
 def get_posts_names() -> list[str]:
     """Returns all posts names in db."""
     return [post.name for post in orm.get_posts()]
-
-
-def create_worker_bid(
-    f_name: str,
-    l_name: str,
-    o_name: str,
-    post_name: str,
-    department_name: str,
-    worksheet: list[UploadFile],
-    passport: list[UploadFile],
-    work_permission: list[UploadFile],
-    sender_telegram_id: str,
-):
-    """Creates worker bid"""
-    department = orm.find_department_by_column(Department.name, department_name)
-    if not department:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department_name}' not found"
-        )
-        return
-
-    post = orm.find_post_by_column(Post.name, post_name)
-    if not post:
-        logging.getLogger("uvicorn.error").error(
-            f"Post with name '{post_name}' not found"
-        )
-        return
-
-    sender = orm.find_worker_by_column(Worker.telegram_id, sender_telegram_id)
-    if not sender:
-        logging.getLogger("uvicorn.error").error(
-            f"Sender with telegram id '{sender_telegram_id}' not found"
-        )
-        return
-
-    last_bid_id = orm.get_last_worker_bid_id()
-    if not last_bid_id:
-        last_bid_id = 0
-
-    worksheet_insts: list[DocumentSchema] = []
-
-    for index, doc in enumerate(worksheet):
-        suffix = Path(doc.filename).suffix
-        filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
-        doc.filename = filename
-        worksheet_inst = DocumentSchema(document=doc)
-        worksheet_insts.append(worksheet_inst)
-
-    passport_insts: list[DocumentSchema] = []
-
-    for index, doc in enumerate(passport):
-        suffix = Path(doc.filename).suffix
-        filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
-        doc.filename = filename
-        passport_inst = DocumentSchema(document=doc)
-        passport_insts.append(passport_inst)
-
-    work_permission_insts: list[DocumentSchema] = []
-
-    for index, doc in enumerate(work_permission):
-        suffix = Path(doc.filename).suffix
-        filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
-        doc.filename = filename
-        work_permission_inst = DocumentSchema(document=doc)
-        work_permission_insts.append(work_permission_inst)
-
-    worker_bid = WorkerBidSchema(
-        f_name=f_name,
-        l_name=l_name,
-        o_name=o_name,
-        post=post,
-        department=department,
-        worksheet=worksheet_insts,
-        passport=passport_insts,
-        work_permission=work_permission_insts,
-        create_date=datetime.now(),
-        state=ApprovalStatus.pending_approval,
-        sender=sender,
-        comment=None,
-    )
-
-    orm.add_worker_bid(worker_bid)
 
 
 def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
@@ -290,38 +167,6 @@ def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
     )
 
 
-async def update_worker_bid_state(state: ApprovalStatus, bid_id):
-    """
-    Updates worker bid state to specified `state` by `bid_id` if bid exist.
-    """
-    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
-    if not worker_bid.comment:
-        return
-
-    if not worker_bid:
-        return
-
-    worker_bid.state = state
-    orm.update_worker_bid(worker_bid)
-
-    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
-
-    worker = get_worker_by_id(worker_bid.sender.id)
-    if not worker:
-        return
-    msg = None
-    if state == ApprovalStatus.approved:
-        msg = await notify_worker_by_telegram_id(
-            worker.telegram_id, f"Кандидат согласован!\nНомер заявки: {worker_bid.id}."
-        )
-    elif state == ApprovalStatus.denied:
-        msg = await notify_worker_by_telegram_id(
-            worker.telegram_id,
-            f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
-        )
-    await send_menu_by_scopes(msg)
-
-
 def find_workers(record: str) -> list[WorkerSchema]:
     """Finds workers by given `record`.
 
@@ -330,49 +175,12 @@ def find_workers(record: str) -> list[WorkerSchema]:
     return orm.find_workers_by_name(record)
 
 
-def get_budget_records() -> list[BudgetRecordSchema]:
-    """Returns all budget records in database."""
-    return orm.get_budget_records()
-
-
-def create_budget_record(record: BudgetRecordSchema) -> None:
-    """Creates budget record"""
-    if not orm.create_budget_record(record):
-        logging.getLogger("uvicorn.error").error("Budget record wasn't created.")
-
-
-def remove_budget_record(id: int) -> None:
-    orm.remove_budget_record(id)
-
-
-def update_budget_record(record: BudgetRecordSchema) -> None:
-    """Updates expenditure by `ExpenditureSchema.id`"""
-    if not orm.update_budget_record(record):
-        logging.getLogger("uvicorn.error").error("Budget record wasn't updated.")
-
-
-def get_budget_record_by_id(id: int) -> BudgetRecordSchema:
-    """Finds budget record by this `id`."""
-    return orm.find_budget_record_by_column(BudgetRecord.id, id)
-
-
-def get_last_budget_record() -> BudgetRecordSchema:
-    """Returns last budget record in db."""
-    return orm.get_last_budget_record()
-
-
 def find_department_by_name(record: str) -> list[DepartmentSchema]:
     """Finds departments by given `record`.
 
     Search is carried out by name.
     """
     return orm.find_departments_by_name(record)
-
-
-def get_chapters() -> list[str]:
-    """Returns list of all chapters in db"""
-    expenditures = orm.get_expenditures()
-    return [expenditure.chapter for expenditure in expenditures]
 
 
 def get_groups_names() -> list[str]:
@@ -1014,6 +822,14 @@ def close_request(
 
 
 # region Expenditure
+
+
+def get_chapters() -> list[str]:
+    """Returns list of all chapters in db"""
+    expenditures = orm.get_expenditures()
+    return [expenditure.chapter for expenditure in expenditures]
+
+
 def get_expenditures_names() -> list[str]:
     """Returns list of all expenditure names in db"""
     expenditures = orm.get_expenditures()
@@ -1444,6 +1260,210 @@ def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSche
             result.append(record)
 
     return result
+
+
+# endregion
+
+
+# region Budget
+
+
+def get_budget_records() -> list[BudgetRecordSchema]:
+    """Returns all budget records in database."""
+    return orm.get_budget_records()
+
+
+def create_budget_record(record: BudgetRecordSchema) -> None:
+    """Creates budget record"""
+    if not orm.create_budget_record(record):
+        logging.getLogger("uvicorn.error").error("Budget record wasn't created.")
+
+
+def remove_budget_record(id: int) -> None:
+    orm.remove_budget_record(id)
+
+
+def update_budget_record(record: BudgetRecordSchema) -> None:
+    """Updates expenditure by `ExpenditureSchema.id`"""
+    if not orm.update_budget_record(record):
+        logging.getLogger("uvicorn.error").error("Budget record wasn't updated.")
+
+
+def get_budget_record_by_id(id: int) -> BudgetRecordSchema:
+    """Finds budget record by this `id`."""
+    return orm.find_budget_record_by_column(BudgetRecord.id, id)
+
+
+def get_last_budget_record() -> BudgetRecordSchema:
+    """Returns last budget record in db."""
+    return orm.get_last_budget_record()
+
+
+# endregion
+
+
+# region Worker bid
+
+
+async def update_worker_bid_state(state: ApprovalStatus, bid_id):
+    """
+    Updates worker bid state to specified `state` by `bid_id` if bid exist.
+    """
+    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+    if not worker_bid.comment:
+        return
+
+    if not worker_bid:
+        return
+
+    worker_bid.state = state
+    orm.update_worker_bid(worker_bid)
+
+    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
+
+    worker = get_worker_by_id(worker_bid.sender.id)
+    if not worker:
+        return
+    msg = None
+    if state == ApprovalStatus.approved:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id, f"Кандидат согласован!\nНомер заявки: {worker_bid.id}."
+        )
+    elif state == ApprovalStatus.denied:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id,
+            f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
+        )
+    await send_menu_by_scopes(msg)
+
+
+def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
+    """
+    Returns worker bid in database by it id.
+    """
+    return orm.find_worker_bid_by_column(WorkerBid.id, id)
+
+
+def create_worker_bid(
+    f_name: str,
+    l_name: str,
+    o_name: str,
+    post_name: str,
+    department_name: str,
+    worksheet: list[UploadFile],
+    passport: list[UploadFile],
+    work_permission: list[UploadFile],
+    sender_telegram_id: str,
+):
+    """Creates worker bid"""
+    department = orm.find_department_by_column(Department.name, department_name)
+    if not department:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department_name}' not found"
+        )
+        return
+
+    post = orm.find_post_by_column(Post.name, post_name)
+    if not post:
+        logging.getLogger("uvicorn.error").error(
+            f"Post with name '{post_name}' not found"
+        )
+        return
+
+    sender = orm.find_worker_by_column(Worker.telegram_id, sender_telegram_id)
+    if not sender:
+        logging.getLogger("uvicorn.error").error(
+            f"Sender with telegram id '{sender_telegram_id}' not found"
+        )
+        return
+
+    last_bid_id = orm.get_last_worker_bid_id()
+    if not last_bid_id:
+        last_bid_id = 0
+
+    worksheet_insts: list[DocumentSchema] = []
+
+    for index, doc in enumerate(worksheet):
+        suffix = Path(doc.filename).suffix
+        filename = f"worksheet_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        worksheet_inst = DocumentSchema(document=doc)
+        worksheet_insts.append(worksheet_inst)
+
+    passport_insts: list[DocumentSchema] = []
+
+    for index, doc in enumerate(passport):
+        suffix = Path(doc.filename).suffix
+        filename = f"passport_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        passport_inst = DocumentSchema(document=doc)
+        passport_insts.append(passport_inst)
+
+    work_permission_insts: list[DocumentSchema] = []
+
+    for index, doc in enumerate(work_permission):
+        suffix = Path(doc.filename).suffix
+        filename = f"work_permission_worker_bid_{last_bid_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        work_permission_inst = DocumentSchema(document=doc)
+        work_permission_insts.append(work_permission_inst)
+
+    worker_bid = WorkerBidSchema(
+        f_name=f_name,
+        l_name=l_name,
+        o_name=o_name,
+        post=post,
+        department=department,
+        worksheet=worksheet_insts,
+        passport=passport_insts,
+        work_permission=work_permission_insts,
+        create_date=datetime.now(),
+        state=ApprovalStatus.pending_approval,
+        sender=sender,
+        comment=None,
+    )
+
+    orm.add_worker_bid(worker_bid)
+
+
+# endregion
+
+
+# region Work time
+
+
+def get_work_time_records_by_day_and_department(
+    department_id: int, day: str
+) -> list[WorkTimeSchema]:
+    """
+    Returns all work times records in database by `department_id`
+    and `day`.
+    """
+
+    return orm.get_work_time_records_by_columns(
+        [WorkTime.department_id, WorkTime.day],
+        [department_id, day],
+    )
+
+
+def get_work_time_record_by_id(id: int) -> WorkTimeSchema:
+    """
+    Return work time record in database by `id`.
+
+    If record not exist return `None`.
+    """
+
+    return orm.find_work_time_record_by_columns(
+        [WorkTime.id],
+        [id],
+    )
+
+
+def update_work_time_record(record: WorkTimeSchema) -> None:
+    """
+    Updates work time record if it exists.
+    """
+    orm.update_work_time(record)
 
 
 # endregion
