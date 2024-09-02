@@ -225,16 +225,14 @@ export class Table<T extends BaseSchema> {
 
 		this._loadedRows.value = resp.data;
 
-		this._highlighted.value = Array<boolean>(this._rowsPerPage).fill(
+		const rowsLength = this._loadedRows.value.length;
+
+		this._highlighted.value = Array<boolean>(rowsLength).fill(
 			false,
 			0,
-			this._rowsPerPage,
+			rowsLength,
 		);
-		this._checked.value = Array<boolean>(this._rowsPerPage).fill(
-			false,
-			0,
-			this._rowsPerPage,
-		);
+		this._checked.value = Array<boolean>(rowsLength).fill(false, 0, rowsLength);
 
 		for (let index = 0; index < this._loadedRows.value.length; index++) {
 			const row = this._loadedRows.value[index];
@@ -581,7 +579,7 @@ export class Table<T extends BaseSchema> {
 				await action(index);
 			}
 		}
-		await this.refreshInfo();
+		this.forceRefresh();
 		this.emulateLoading(false);
 	}
 	// Endpoints.
