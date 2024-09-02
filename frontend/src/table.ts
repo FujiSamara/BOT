@@ -497,7 +497,7 @@ export class Table<T extends BaseSchema> {
 	/** If sorts column by row[**index**]. */
 	protected _orderBy: Ref<string> = ref("id");
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
-	public desc: Ref<boolean> = ref(false);
+	public desc: Ref<boolean> = ref(true);
 	/** Search query. */
 	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
 	/** Date query. */
