@@ -354,11 +354,10 @@ class QueryBuilder:
                     model_type, column_name + "_id"
                 )
 
-                # Builds select for schema table.
-                cur_level_select = select(model_type.id)
-
                 if len(filter_schema.dependencies) > 0:
                     column_model_type = self._schema_to_model[column_type]
+                    cur_level_select = select(column_model_type.id)
+
                     dependency_clause = self._get_filter_clause(
                         column_model_type, filter_schema.dependencies
                     )
