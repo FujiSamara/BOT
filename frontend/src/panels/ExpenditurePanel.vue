@@ -94,6 +94,7 @@ watch([departmentSearchString, searchString], () => {
 		result.push({
 			column: "creator",
 			term: "",
+			groups: [0, 1],
 			dependencies: [
 				{
 					column: "department",
@@ -108,10 +109,12 @@ watch([departmentSearchString, searchString], () => {
 			{
 				column: "fac",
 				term: searchString.value,
+				groups: [0],
 			},
 			{
 				column: "chapter",
 				term: searchString.value,
+				groups: [1],
 			},
 		);
 	}

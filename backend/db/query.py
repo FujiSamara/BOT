@@ -166,53 +166,85 @@ class QueryBuilder:
         search_schemas: list[schemas.SearchSchema],
     ) -> Optional[BinaryExpression[bool]]:
         """Generates recursive search clause."""
-        search_clauses: list[BinaryExpression[bool]] = []
         schema_type = self._model_to_schema[model_type]
 
+        # Dict for all groups in current level.
+        groups: dict[int, list[schemas.SearchSchema]] = {-1: []}
         for search_schema in search_schemas:
-            column_name = search_schema.column
-            term = search_schema.term
+            for group in search_schema.groups:
+                if group in groups:
+                    groups[group].append(search_schema)
+                else:
+                    groups[group] = [search_schema]
 
-            search_clause: BinaryExpression[bool] = None
+            if len(search_schema.groups) == 0:
+                groups[-1].append(search_schema)
 
-            # Type inference
-            column_type = self._get_schema_column_type(schema_type, column_name)
+        # Calcs clause for every group
+        group_clauses = []
+        for group_id in groups:
+            group = groups[group_id]
+            inside_group_clauses: list[BinaryExpression[bool]] = []
 
-            # If column is pydantic schema.
-            if column_type in self._search_builders:
-                column: InstrumentedAttribute[any] = getattr(
-                    model_type, column_name + "_id"
-                )
-                builder = self._search_builders[column_type]
+            for search_schema in group:
+                column_name = search_schema.column
+                term = search_schema.term
 
-                # Builds select for schema table.
-                cur_level_select = builder(term)
+                search_clause: BinaryExpression[bool] = None
 
-                if len(search_schema.dependencies) > 0:
-                    column_model_type = self._schema_to_model[column_type]
-                    dependency_clause = self._get_search_clause(
-                        column_model_type, search_schema.dependencies
+                # Type inference
+                column_type = self._get_schema_column_type(schema_type, column_name)
+
+                # If column is pydantic schema.
+                if column_type in self._search_builders:
+                    column: InstrumentedAttribute[any] = getattr(
+                        model_type, column_name + "_id"
                     )
-                    if dependency_clause is not None:
-                        cur_level_select = cur_level_select.filter(dependency_clause)
+                    builder = self._search_builders[column_type]
 
-                # Filters by entry from column table.
-                search_clause = column.in_(cur_level_select)
+                    # Builds select for schema table.
+                    cur_level_select = builder(term)
 
-            # If column is simple type.
-            elif not issubclass(column_type, BaseModel):
-                column: InstrumentedAttribute[any] = getattr(model_type, column_name)
-                search_clause = column.ilike(f"%{term}%")
-            # If column is schema with non implemented search.
-            else:
-                self.logger.warning(
-                    f"{self.name} Attempt to search non implemented method, column type: {column_type}"
-                )
-                continue
+                    if len(search_schema.dependencies) > 0:
+                        column_model_type = self._schema_to_model[column_type]
+                        dependency_clause = self._get_search_clause(
+                            column_model_type, search_schema.dependencies
+                        )
+                        if dependency_clause is not None:
+                            cur_level_select = cur_level_select.filter(
+                                dependency_clause
+                            )
 
-            search_clauses.append(search_clause)
+                    # Filters by entry from column table.
+                    search_clause = column.in_(cur_level_select)
 
-        return or_(*search_clauses) if len(search_clauses) > 0 else None
+                # If column is simple type.
+                elif not issubclass(column_type, BaseModel):
+                    column: InstrumentedAttribute[any] = getattr(
+                        model_type, column_name
+                    )
+                    search_clause = column.ilike(f"%{term}%")
+                # If column is schema with non implemented search.
+                else:
+                    self.logger.warning(
+                        f"{self.name} Attempt to search non implemented method, column type: {column_type}"
+                    )
+                    continue
+
+                if search_clause is not None:
+                    inside_group_clauses.append(search_clause)
+
+            if len(inside_group_clauses) > 0:
+                group_clause: BinaryExpression[bool]
+                # Group -1 is default group.
+                if group_id != -1:
+                    group_clause = and_(*inside_group_clauses)
+                else:
+                    group_clause = or_(*inside_group_clauses)
+
+                group_clauses.append(group_clause)
+
+        return or_(*group_clauses) if len(group_clauses) > 0 else None
 
     def _search_by_worker(self, term: str) -> Select:
         if not term:

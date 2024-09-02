@@ -362,6 +362,17 @@ class SearchSchema(BaseModel):
     and handles with `and_` statement relative to `self`.
     """
 
+    groups: list[int] = []
+
+    """Specifies groups at same level.
+    
+    All elements in one group handles by `and_` statement.
+    
+    All groups handles by `or_` statement.
+
+    - Note: If group not specified then handles node by `or_` statement with another nodes.
+    """
+
 
 class DateSchema(BaseModel):
     """Presents date filter, which returns rows between

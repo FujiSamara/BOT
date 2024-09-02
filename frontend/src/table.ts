@@ -65,6 +65,7 @@ interface SearchSchema {
 	column: string;
 	term: string;
 	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
 }
 
 interface DateSchema {
@@ -102,7 +103,7 @@ export class Table<T extends BaseSchema> {
 		let skipLoop = false;
 
 		watch(
-			[this._rowsQuery, this._refreshKey, this._completedQuery],
+			[this._completedQuery, this._infoQuery, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
 				skipLoop = true;
@@ -121,7 +122,7 @@ export class Table<T extends BaseSchema> {
 			setTimeout(async () => await loop(), this.updateTimeout * 1000);
 		};
 
-		await loop();
+		setTimeout(async () => await loop(), this.updateTimeout * 1000);
 	}
 	/** Updates info about table:
 	 * 1) Page count
