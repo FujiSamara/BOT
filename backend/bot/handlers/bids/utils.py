@@ -5,6 +5,8 @@ from bot.kb import payment_type_dict
 
 
 def get_full_bid_info(bid: BidSchema) -> str:
+    bid_state = get_bid_state_info(bid)
+
     bid_info = f"""{hbold("Номер заявки")}: {bid.id}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
@@ -12,8 +14,11 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}
-{hbold("Текущий этап")}: {get_bid_state_info(bid)}
+{hbold("Текущий этап")}: {bid_state}
 """
+
+    if bid_state == "Отказано":
+        bid_info += f"\n{hbold('Причина отказа')}: {bid.denying_reason}"
 
     return bid_info
 
