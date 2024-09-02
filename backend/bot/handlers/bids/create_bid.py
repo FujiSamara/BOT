@@ -56,7 +56,7 @@ from db.service import (
     get_bid_by_id,
     get_pending_bids_by_worker_telegram_id,
     get_chapters,
-    get_expenditures_names,
+    get_expenditures_names_by_chapter,
 )
 from db.models import ApprovalStatus
 
@@ -237,7 +237,8 @@ async def get_expenditure_chapter_form(callback: CallbackQuery, state: FSMContex
 
 async def get_expenditure_form(message: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.expenditure)
-    exps = get_expenditures_names()  # TODO: for specified chapter
+    data = await state.get_data()
+    exps = get_expenditures_names_by_chapter(data["chapter"])
     await try_delete_message(message)
     await message.answer(
         hbold("Выберите статью:"),
@@ -247,7 +248,8 @@ async def get_expenditure_form(message: CallbackQuery, state: FSMContext):
 
 @router.message(BidCreating.expenditure)
 async def set_expenditure(message: Message, state: FSMContext):
-    exps = get_expenditures_names()
+    data = await state.get_data()
+    exps = get_expenditures_names_by_chapter(data["chapter"])
     if message.text == "⏪ Назад":
         await send_expenditre_chapter_form(message, state)
     elif message.text in exps:

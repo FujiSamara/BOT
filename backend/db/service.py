@@ -831,10 +831,17 @@ def get_chapters() -> list[str]:
     return list(set(expenditure.chapter for expenditure in expenditures))
 
 
-def get_expenditures_names() -> list[str]:
+def get_expenditures_names_by_chapter(chapter: str) -> list[str]:
     """Returns list of all expenditure names in db"""
     expenditures = orm.get_expenditures()
-    return [expenditure.name for expenditure in expenditures]
+
+    result = []
+
+    for expenditure in expenditures:
+        if expenditure.chapter == chapter:
+            result.append(expenditure.name)
+
+    return result
 
 
 def get_expenditure_count(
