@@ -97,8 +97,36 @@ export class Table<T extends BaseSchema> {
 	/**
 	 * @param endpoint Endpoint name for api.
 	 */
-	constructor(endpoint: string) {
+	constructor(
+		endpoint: string,
+		options?: {
+			getEndpoint?: string;
+			infoEndpoint?: string;
+			createEndpoint?: string;
+			updateEndpoint?: string;
+			deleteEndpoint?: string;
+			approveEndpoint?: string;
+			rejectEndpoint?: string;
+		},
+	) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+
+		//#region endpoints
+		this._getEndpoint =
+			options && options.getEndpoint ? options.getEndpoint : "";
+		this._infoEndpoint =
+			options && options.infoEndpoint ? options.infoEndpoint : "";
+		this._createEndpoint =
+			options && options.createEndpoint ? options.createEndpoint : "";
+		this._updateEndpoint =
+			options && options.updateEndpoint ? options.updateEndpoint : "";
+		this._deleteEndpoint =
+			options && options.deleteEndpoint ? options.deleteEndpoint : "";
+		this._approveEndpoint =
+			options && options.approveEndpoint ? options.approveEndpoint : "";
+		this._rejectEndpoint =
+			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		//#endregion
 
 		this.startUpdatingLoop();
 	}
@@ -252,11 +280,11 @@ export class Table<T extends BaseSchema> {
 			filter_query: this._filteredQuery.value,
 		};
 	});
-	private _rowsQuery = computed(() => {
-		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
-	});
 	private _infoQuery = computed(() => {
 		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
+	});
+	private _rowsQuery = computed(() => {
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
 	});
 	//#endregion
 
@@ -690,8 +718,16 @@ export class BudgetTable extends Table<BudgetSchema> {
 }
 
 export class BidTable extends Table<BidSchema> {
-	constructor() {
-		super("bid");
+	constructor(options?: {
+		getEndpoint?: string;
+		infoEndpoint?: string;
+		createEndpoint?: string;
+		updateEndpoint?: string;
+		deleteEndpoint?: string;
+		approveEndpoint?: string;
+		rejectEndpoint?: string;
+	}) {
+		super("bid", options);
 
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("worker", parser.formatWorker);
@@ -733,28 +769,28 @@ export class BidTable extends Table<BidSchema> {
 
 export class FACBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/fac";
-		this._infoEndpoint = "/fac";
+		super({
+			getEndpoint: "/fac",
+			infoEndpoint: "/fac",
+		});
 	}
 }
 
 export class CCBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/cc";
-		this._infoEndpoint = "/cc";
+		super({
+			getEndpoint: "/cc",
+			infoEndpoint: "/cc",
+		});
 	}
 }
 
 export class CCSupervisorBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/cc_supervisor";
-		this._infoEndpoint = "/cc_supervisor";
+		super({
+			getEndpoint: "/cc_supervisor",
+			infoEndpoint: "/cc_supervisor",
+		});
 	}
 }
 //#endregion
