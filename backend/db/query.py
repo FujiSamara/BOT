@@ -218,14 +218,10 @@ class QueryBuilder:
                     column: InstrumentedAttribute[any] = getattr(
                         model_type, column_name + "_id"
                     )
-                    builder = (
-                        self._search_builders[column_type]
-                        if term
-                        else select(model_type.id)
-                    )
+                    builder = self._search_builders[column_type]
 
                     # Builds select for schema table.
-                    cur_level_select = builder(term)
+                    cur_level_select = builder(term) if term else select(model_type.id)
 
                     if len(search_schema.dependencies) > 0:
                         column_model_type = self._schema_to_model[column_type]
