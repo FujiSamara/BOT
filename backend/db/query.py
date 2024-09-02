@@ -62,6 +62,7 @@ class QueryBuilder:
         ] = {
             schemas.WorkerSchema: self._search_by_worker,
             schemas.DepartmentSchema: self._search_by_department,
+            schemas.ExpenditureSchema: self._search_by_expenditure,
         }
 
     def apply(self, query_schema: schemas.QuerySchema):
@@ -275,6 +276,19 @@ class QueryBuilder:
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
         return select(models.Department.id).filter(or_(*search_clauses))
+
+    def _search_by_expenditure(self, term: str) -> Select:
+        if not term:
+            return select(models.Expenditure.id)
+
+        search_columns = [models.Expenditure.name, models.Expenditure.chapter]
+
+        search_clauses = []
+
+        for search_column in search_columns:
+            search_clauses.append(search_column.ilike(f"%{term}%"))
+
+        return select(models.Expenditure.id).filter(or_(*search_clauses))
 
     # endregion
 

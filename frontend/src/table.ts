@@ -103,7 +103,7 @@ export class Table<T extends BaseSchema> {
 		let skipLoop = false;
 
 		watch(
-			[this._completedQuery, this._infoQuery, this._refreshKey],
+			[this._completedQuery, this._rowsQuery, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
 				skipLoop = true;
@@ -213,7 +213,7 @@ export class Table<T extends BaseSchema> {
 		}
 	}
 	/** Forces updating rows. */
-	protected refreshAll() {
+	protected forceRefresh() {
 		const limit = 3;
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
@@ -588,7 +588,7 @@ export class Table<T extends BaseSchema> {
 		);
 
 		if (needRefresh) {
-			await this.refreshInfo();
+			this.forceRefresh();
 		}
 	}
 	public async deleteChecked(): Promise<void> {
@@ -607,7 +607,7 @@ export class Table<T extends BaseSchema> {
 		);
 
 		if (needRefresh) {
-			await this.refreshInfo();
+			this.forceRefresh();
 		}
 	}
 	public async approveChecked(): Promise<void> {
@@ -627,7 +627,7 @@ export class Table<T extends BaseSchema> {
 		);
 
 		if (needRefresh) {
-			await this.refreshInfo();
+			this.forceRefresh();
 		}
 	}
 	public async rejectChecked(reason: string): Promise<void> {

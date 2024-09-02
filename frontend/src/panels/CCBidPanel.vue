@@ -73,7 +73,6 @@ const emit = defineEmits<{
 
 const elementViewing = ref(false);
 
-// Edit page
 const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
 const viewingID: Ref<number> = ref(-1);
 

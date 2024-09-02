@@ -910,6 +910,28 @@ def get_last_expenditure() -> ExpenditureSchema:
 # region Bid
 
 
+def get_bid_count(
+    query_schema: QuerySchema,
+) -> int:
+    """Return bid count in bd."""
+    return orm.get_model_count(Bid, query_schema)
+
+
+def get_bid_record_at_page(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[BidRecordSchema]:
+    """Return bid records with applied instructions.
+
+    See `QueryBuilder.apply` for more info applied instructions.
+    """
+    return [
+        bid_to_bid_record(bid)
+        for bid in orm.get_models(Bid, BidSchema, page, records_per_page, query_schema)
+    ]
+
+
 async def create_bid(
     amount: int,
     payment_type: str,
