@@ -114,304 +114,11 @@ def get_worker_by_phone_number(number: str) -> WorkerSchema:
     return orm.find_worker_by_column(Worker.phone_number, number)
 
 
-async def create_bid(
-    amount: int,
-    payment_type: str,
-    department: str,
-    purpose: str,
-    telegram_id: int,
-    expenditure: str,
-    files: list[UploadFile],
-    fac_state: ApprovalStatus,
-    cc_state: ApprovalStatus,
-    cc_supervisor_state: ApprovalStatus,
-    kru_state: ApprovalStatus,
-    owner_state: ApprovalStatus,
-    accountant_cash_state: ApprovalStatus,
-    accountant_card_state: ApprovalStatus,
-    teller_cash_state: ApprovalStatus,
-    teller_card_state: ApprovalStatus,
-    comment: Optional[str] = None,
-):
-    """
-    Creates an bid wrapped in `BidSchema` and adds it to database.
-    """
-    department_inst = orm.find_department_by_column(Department.name, department)
-
-    if not department_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department}' not found"
-        )
-        return
-
-    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
-
-    if not worker_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id '{telegram_id}' not found"
-        )
-        return
-
-    expenditure_inst = orm.find_expenditure_by_column(Expenditure.name, expenditure)
-
-    if not expenditure_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Expenditure with name '{expenditure}' not found"
-        )
-        return
-
-    cur_date = datetime.now()
-    last_bid_id = orm.get_last_bid_id()
-    if not last_bid_id:
-        last_bid_id = 0
-
-    documents = []
-    for file in files:
-        suffix = Path(file.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}{suffix}"
-        file.filename = filename
-        documents.append(DocumentSchema(document=file))
-
-    bid = BidSchema(
-        amount=amount,
-        payment_type=payment_type,
-        department=department_inst,
-        expenditure=expenditure_inst,
-        worker=worker_inst,
-        purpose=purpose,
-        create_date=cur_date,
-        close_date=None,
-        comment=comment,
-        denying_reason=None,
-        documents=documents,
-        fac_state=fac_state,
-        cc_state=cc_state,
-        cc_supervisor_state=cc_supervisor_state,
-        kru_state=kru_state,
-        owner_state=owner_state,
-        accountant_card_state=accountant_card_state,
-        accountant_cash_state=accountant_cash_state,
-        teller_card_state=teller_card_state,
-        teller_cash_state=teller_cash_state,
-    )
-
-    orm.add_bid(bid)
-
-
-def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
-    """
-    Returns all bids own to worker with specified telegram id.
-    """
-    worker = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not worker:
-        return []
-
-    return orm.get_bids_by_worker(worker)
-
-
-def get_workers_bids_by_sender_telegram_id(id: str) -> list[BidSchema]:
-    """
-    Returns all workers bids own to sender with specified telegram id.
-    """
-    sender = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not sender:
-        return []
-
-    return orm.get_workers_bids_by_sender(sender)
-
-
-def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
-    """
-    Returns all bids own to worker with specified phone number.
-    """
-    worker = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not worker:
-        return []
-
-    return orm.get_pending_bids_by_worker(worker)
-
-
-def get_bid_by_id(id: int) -> BidSchema:
-    """
-    Returns bid in database by it id.
-    """
-    return orm.find_bid_by_column(Bid.id, id)
-
-
 def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
     """
     Returns worker bid in database by it id.
     """
     return orm.find_worker_bid_by_column(WorkerBid.id, id)
-
-
-def get_pending_bids_by_column(column: Any) -> list[BidSchema]:
-    """
-    Returns all bids in database with pending approval state at column.
-    """
-    return orm.get_specified_pengind_bids(column)
-
-
-def get_history_bids_by_column(column: Any) -> list[BidSchema]:
-    """
-    Returns all bids in database past through worker with `column`.
-    """
-    return orm.get_specified_history_bids(column)
-
-
-async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatus):
-    """
-    Updates bid state with `state_name` by specified `state`.
-    """
-    from bot.handlers.utils import (
-        notify_workers_by_scope,
-        notify_worker_by_telegram_id,
-    )
-
-    match state_name:
-        case "fac_state":
-            bid.fac_state = state
-            bid.cc_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.cc_state = ApprovalStatus.skipped
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.skipped
-                bid.owner_state = ApprovalStatus.skipped
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "cc_state":
-            bid.cc_state = state
-            bid.cc_supervisor_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.skipped
-                bid.owner_state = ApprovalStatus.skipped
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "cc_supervisor_state":
-            bid.cc_supervisor_state = state
-            bid.kru_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.kru_state = ApprovalStatus.skipped
-                bid.owner_state = ApprovalStatus.skipped
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "kru_state":
-            bid.kru_state = state
-            if bid.owner_state == ApprovalStatus.skipped:
-                if bid.accountant_cash_state == ApprovalStatus.skipped:
-                    bid.accountant_card_state = ApprovalStatus.pending_approval
-                else:
-                    bid.accountant_cash_state = ApprovalStatus.pending_approval
-            else:
-                bid.owner_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.owner_state = ApprovalStatus.skipped
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "owner_state":
-            bid.owner_state = state
-            if bid.accountant_cash_state == ApprovalStatus.skipped:
-                bid.accountant_card_state = ApprovalStatus.pending_approval
-            else:
-                bid.accountant_cash_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "accountant_card_state":
-            bid.accountant_card_state = state
-            bid.teller_card_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "accountant_cash_state":
-            bid.accountant_cash_state = state
-            bid.teller_cash_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "teller_card_state":
-            bid.teller_card_state = ApprovalStatus.approved
-        case "teller_cash_state":
-            bid.teller_cash_state = ApprovalStatus.approved
-
-    if bid.kru_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
-        )
-    elif bid.owner_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
-        )
-    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
-        )
-    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
-        )
-    elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
-        )
-    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
-        )
-    if state == ApprovalStatus.approved:
-        stage = ""
-        match state_name:
-            case "fac_state":
-                stage = "Ваша заявка согласована ЦФО!"
-            case "cc_state":
-                stage = "Ваша заявка согласована ЦЗ!"
-            case "cc_supervisor_state":
-                stage = "Ваша заявка согласована руководителем ЦЗ!"
-            case "kru_state":
-                stage = "Ваша заявка согласована КРУ!"
-            case "owner_state":
-                stage = "Ваша заявка согласована собственником!"
-            case "accountant_card_state":
-                stage = "Ваша заявка согласована бухгалтерией!"
-            case "accountant_cash_state":
-                stage = "Денежные средства по вашей заявке готовы к выдачи!"
-            case "teller_card_state":
-                stage = "Денежные средства выданы."
-            case "teller_cash_state":
-                stage = "Денежные средства выданы."
-            case _:
-                stage = "Ваша заявка принята!"
-        await notify_worker_by_telegram_id(
-            bid.worker.telegram_id, f"{stage}\nНомер заявки: {bid.id}."
-        )
-        bid.close_date = datetime.now()
-    elif state == ApprovalStatus.denied:
-        await notify_worker_by_telegram_id(
-            bid.worker.telegram_id,
-            "Ваша заявка отклонена!\nПричина: " + bid.denying_reason,
-        )
-        bid.close_date = datetime.now()
-
-    orm.update_bid(bid)
-
-
-def update_bid(bid: BidSchema):
-    """Updated bid in database by `bid`"""
-    orm.update_bid(bid)
 
 
 def get_work_time_records_by_day_and_department(
@@ -660,165 +367,6 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
     Search is carried out by name.
     """
     return orm.find_departments_by_name(record)
-
-
-def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
-    """Converts `BidSchema` to `BidRecordSchema`"""
-    from bot.handlers.bids.utils import get_bid_state_info
-
-    return BidRecordSchema(
-        id=bid.id,
-        amount=bid.amount,
-        payment_type=bid.payment_type,
-        department=bid.department,
-        worker=bid.worker,
-        close_date=bid.close_date,
-        comment=bid.comment,
-        create_date=bid.create_date,
-        documents=[doc.document for doc in bid.documents],
-        purpose=bid.purpose,
-        status=get_bid_state_info(bid),
-        denying_reason=bid.denying_reason,
-        expenditure=bid.expenditure,
-    )
-
-
-def get_bid_records() -> list[BidRecordSchema]:
-    """Returns all bid records in database."""
-    return [bid_to_bid_record(bid) for bid in orm.get_bids()]
-
-
-def get_fac_bid_records_by_fac_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all fac bid records in database."""
-    result = []
-
-    for record in get_bid_records():
-        if record.expenditure.fac.phone_number == phone:
-            result.append(record)
-
-    return result
-
-
-def get_fac_bid_records_by_cc_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all cc bid records in database."""
-    result = []
-
-    for record in get_bid_records():
-        if record.expenditure.cc.phone_number == phone:
-            result.append(record)
-
-    return result
-
-
-def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSchema]:
-    """Returns all cc supervisor bid records in database."""
-    result = []
-
-    for record in get_bid_records():
-        if record.expenditure.cc_supervisor.phone_number == phone:
-            result.append(record)
-
-    return result
-
-
-def get_problems_it_types() -> list[str]:
-    """
-    Returns all existed IT problems types.
-    """
-    problems: list[ProblemITSchema] = orm.get_problems_it_columns()
-    return [problem.name for problem in problems]
-
-
-def get_problems_it_schema() -> list[ProblemITSchema]:
-    """
-    Returns all existed IT problems types with ids.
-    """
-    return orm.get_problems_it_columns()
-
-
-def get_history_bids_it_by_worker_telegram_id(id: str) -> list[BidITSchema]:
-    """
-    Returns history bids IT own to worker with specified telegram id.
-    """
-    worker = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not worker:
-        return []
-
-    return orm.get_history_bids_it_for_worker(worker)
-
-
-def get_bid_it_by_id(id: int) -> BidITSchema:
-    """
-    Returns bid IT in database by it id.
-    """
-    return orm.find_bid_it_by_column(BidIT.id, id)
-
-
-def create_bid_it(
-    problem_id: str,
-    comment: str,
-    files: list[UploadFile],
-    telegram_id: int,
-):
-    """
-    Creates an bid IT wrapped in `BidITShema` and adds it to database.
-    """
-
-    cur_date = datetime.now()
-    problem_inst = orm.find_problem_it_by_id(ProblemIT.id, problem_id)
-    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
-
-    if not worker_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id '{telegram_id}' not found"
-        )
-        return
-
-    department = get_worker_department_by_telegram_id(telegram_id)
-    department_inst = orm.find_department_by_column(Department.name, department.name)
-
-    if not department_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department}' not found"
-        )
-        return
-
-    last_bid_it_id = orm.get_last_bid_it_id()
-    if not last_bid_it_id:
-        last_bid_it_id = 0
-
-    documents = []
-
-    for index, file in enumerate(files):
-        suffix = Path(file.filename).suffix
-        filename = f"document_bid_IT_worker{last_bid_it_id}_{index + 1}{suffix}"
-        file.filename = filename
-        documents.append(DocumentSchema(document=file))
-
-    bid_it = BidITSchema(
-        problem=problem_inst,
-        problem_comment=comment,
-        problem_photos=documents,
-        worker=worker_inst,
-        department=department_inst,
-        opening_date=cur_date,
-        status=ApprovalStatus.pending,
-    )
-
-    orm.add_bid_it(bid_it)
-
-
-def get_pending_bids_it_by_worker_telegram_id(id: int) -> list[BidITSchema]:
-    """
-    Returns pending bids IT own to worker with specified telegram id.
-    """
-    worker = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not worker:
-        return []
-
-    return orm.get_pending_bids_it_by_worker(worker)
 
 
 def get_chapters() -> list[str]:
@@ -1543,7 +1091,467 @@ def get_last_expenditure() -> ExpenditureSchema:
 # endregion
 
 
+# region Bid
+
+
+async def create_bid(
+    amount: int,
+    payment_type: str,
+    department: str,
+    purpose: str,
+    telegram_id: int,
+    expenditure: str,
+    files: list[UploadFile],
+    fac_state: ApprovalStatus,
+    cc_state: ApprovalStatus,
+    cc_supervisor_state: ApprovalStatus,
+    kru_state: ApprovalStatus,
+    owner_state: ApprovalStatus,
+    accountant_cash_state: ApprovalStatus,
+    accountant_card_state: ApprovalStatus,
+    teller_cash_state: ApprovalStatus,
+    teller_card_state: ApprovalStatus,
+    comment: Optional[str] = None,
+):
+    """
+    Creates an bid wrapped in `BidSchema` and adds it to database.
+    """
+    department_inst = orm.find_department_by_column(Department.name, department)
+
+    if not department_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department}' not found"
+        )
+        return
+
+    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id '{telegram_id}' not found"
+        )
+        return
+
+    expenditure_inst = orm.find_expenditure_by_column(Expenditure.name, expenditure)
+
+    if not expenditure_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Expenditure with name '{expenditure}' not found"
+        )
+        return
+
+    cur_date = datetime.now()
+    last_bid_id = orm.get_last_bid_id()
+    if not last_bid_id:
+        last_bid_id = 0
+
+    documents = []
+    for file in files:
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_{last_bid_id + 1}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    bid = BidSchema(
+        amount=amount,
+        payment_type=payment_type,
+        department=department_inst,
+        expenditure=expenditure_inst,
+        worker=worker_inst,
+        purpose=purpose,
+        create_date=cur_date,
+        close_date=None,
+        comment=comment,
+        denying_reason=None,
+        documents=documents,
+        fac_state=fac_state,
+        cc_state=cc_state,
+        cc_supervisor_state=cc_supervisor_state,
+        kru_state=kru_state,
+        owner_state=owner_state,
+        accountant_card_state=accountant_card_state,
+        accountant_cash_state=accountant_cash_state,
+        teller_card_state=teller_card_state,
+        teller_cash_state=teller_cash_state,
+    )
+
+    orm.add_bid(bid)
+
+
+def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
+    """
+    Returns all bids own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_bids_by_worker(worker)
+
+
+def get_workers_bids_by_sender_telegram_id(id: str) -> list[BidSchema]:
+    """
+    Returns all workers bids own to sender with specified telegram id.
+    """
+    sender = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not sender:
+        return []
+
+    return orm.get_workers_bids_by_sender(sender)
+
+
+def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
+    """
+    Returns all bids own to worker with specified phone number.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_pending_bids_by_worker(worker)
+
+
+def get_bid_by_id(id: int) -> BidSchema:
+    """
+    Returns bid in database by it id.
+    """
+    return orm.find_bid_by_column(Bid.id, id)
+
+
+def get_pending_bids_by_column(column: Any) -> list[BidSchema]:
+    """
+    Returns all bids in database with pending approval state at column.
+    """
+    return orm.get_specified_pengind_bids(column)
+
+
+def get_history_bids_by_column(column: Any) -> list[BidSchema]:
+    """
+    Returns all bids in database past through worker with `column`.
+    """
+    return orm.get_specified_history_bids(column)
+
+
+async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatus):
+    """
+    Updates bid state with `state_name` by specified `state`.
+    """
+    from bot.handlers.utils import (
+        notify_workers_by_scope,
+        notify_worker_by_telegram_id,
+    )
+
+    match state_name:
+        case "fac_state":
+            bid.fac_state = state
+            bid.cc_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_state = ApprovalStatus.skipped
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_state":
+            bid.cc_state = state
+            bid.cc_supervisor_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "cc_supervisor_state":
+            bid.cc_supervisor_state = state
+            bid.kru_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.kru_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "kru_state":
+            bid.kru_state = state
+            if bid.owner_state == ApprovalStatus.skipped:
+                if bid.accountant_cash_state == ApprovalStatus.skipped:
+                    bid.accountant_card_state = ApprovalStatus.pending_approval
+                else:
+                    bid.accountant_cash_state = ApprovalStatus.pending_approval
+            else:
+                bid.owner_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "owner_state":
+            bid.owner_state = state
+            if bid.accountant_cash_state == ApprovalStatus.skipped:
+                bid.accountant_card_state = ApprovalStatus.pending_approval
+            else:
+                bid.accountant_cash_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_card_state":
+            bid.accountant_card_state = state
+            bid.teller_card_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "accountant_cash_state":
+            bid.accountant_cash_state = state
+            bid.teller_cash_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "teller_card_state":
+            bid.teller_card_state = ApprovalStatus.approved
+        case "teller_cash_state":
+            bid.teller_cash_state = ApprovalStatus.approved
+
+    if bid.kru_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+        )
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
+        )
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
+        )
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
+        )
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
+        )
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
+        )
+    if state == ApprovalStatus.approved:
+        stage = ""
+        match state_name:
+            case "fac_state":
+                stage = "Ваша заявка согласована ЦФО!"
+            case "cc_state":
+                stage = "Ваша заявка согласована ЦЗ!"
+            case "cc_supervisor_state":
+                stage = "Ваша заявка согласована руководителем ЦЗ!"
+            case "kru_state":
+                stage = "Ваша заявка согласована КРУ!"
+            case "owner_state":
+                stage = "Ваша заявка согласована собственником!"
+            case "accountant_card_state":
+                stage = "Ваша заявка согласована бухгалтерией!"
+            case "accountant_cash_state":
+                stage = "Денежные средства по вашей заявке готовы к выдачи!"
+            case "teller_card_state":
+                stage = "Денежные средства выданы."
+            case "teller_cash_state":
+                stage = "Денежные средства выданы."
+            case _:
+                stage = "Ваша заявка принята!"
+        await notify_worker_by_telegram_id(
+            bid.worker.telegram_id, f"{stage}\nНомер заявки: {bid.id}."
+        )
+        bid.close_date = datetime.now()
+    elif state == ApprovalStatus.denied:
+        await notify_worker_by_telegram_id(
+            bid.worker.telegram_id,
+            "Ваша заявка отклонена!\nПричина: " + bid.denying_reason,
+        )
+        bid.close_date = datetime.now()
+
+    orm.update_bid(bid)
+
+
+def update_bid(bid: BidSchema):
+    """Updated bid in database by `bid`"""
+    orm.update_bid(bid)
+
+
+def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
+    """Converts `BidSchema` to `BidRecordSchema`"""
+    from bot.handlers.bids.utils import get_bid_state_info
+
+    return BidRecordSchema(
+        id=bid.id,
+        amount=bid.amount,
+        payment_type=bid.payment_type,
+        department=bid.department,
+        worker=bid.worker,
+        close_date=bid.close_date,
+        comment=bid.comment,
+        create_date=bid.create_date,
+        documents=[doc.document for doc in bid.documents],
+        purpose=bid.purpose,
+        status=get_bid_state_info(bid),
+        denying_reason=bid.denying_reason,
+        expenditure=bid.expenditure,
+    )
+
+
+def get_bid_records() -> list[BidRecordSchema]:
+    """Returns all bid records in database."""
+    return [bid_to_bid_record(bid) for bid in orm.get_bids()]
+
+
+def get_fac_bid_records_by_fac_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all fac bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.fac.phone_number == phone:
+            result.append(record)
+
+    return result
+
+
+def get_fac_bid_records_by_cc_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all cc bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.cc.phone_number == phone:
+            result.append(record)
+
+    return result
+
+
+def get_fac_bid_records_by_cc_supervisor_phone(phone: int) -> list[BidRecordSchema]:
+    """Returns all cc supervisor bid records in database."""
+    result = []
+
+    for record in get_bid_records():
+        if record.expenditure.cc_supervisor.phone_number == phone:
+            result.append(record)
+
+    return result
+
+
+# endregion
+
+
 # region IT problem
+
+
+def get_problems_it_types() -> list[str]:
+    """
+    Returns all existed IT problems types.
+    """
+    problems: list[ProblemITSchema] = orm.get_problems_it_columns()
+    return [problem.name for problem in problems]
+
+
+def get_problems_it_schema() -> list[ProblemITSchema]:
+    """
+    Returns all existed IT problems types with ids.
+    """
+    return orm.get_problems_it_columns()
+
+
+def get_history_bids_it_by_worker_telegram_id(id: str) -> list[BidITSchema]:
+    """
+    Returns history bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_history_bids_it_for_worker(worker)
+
+
+def get_bid_it_by_id(id: int) -> BidITSchema:
+    """
+    Returns bid IT in database by it id.
+    """
+    return orm.find_bid_it_by_column(BidIT.id, id)
+
+
+def create_bid_it(
+    problem_id: str,
+    comment: str,
+    files: list[UploadFile],
+    telegram_id: int,
+):
+    """
+    Creates an bid IT wrapped in `BidITShema` and adds it to database.
+    """
+
+    cur_date = datetime.now()
+    problem_inst = orm.find_problem_it_by_id(ProblemIT.id, problem_id)
+    worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
+
+    if not worker_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id '{telegram_id}' not found"
+        )
+        return
+
+    department = get_worker_department_by_telegram_id(telegram_id)
+    department_inst = orm.find_department_by_column(Department.name, department.name)
+
+    if not department_inst:
+        logging.getLogger("uvicorn.error").error(
+            f"Department with name '{department}' not found"
+        )
+        return
+
+    last_bid_it_id = orm.get_last_bid_it_id()
+    if not last_bid_it_id:
+        last_bid_it_id = 0
+
+    documents = []
+
+    for index, file in enumerate(files):
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_IT_worker{last_bid_it_id}_{index + 1}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    bid_it = BidITSchema(
+        problem=problem_inst,
+        problem_comment=comment,
+        problem_photos=documents,
+        worker=worker_inst,
+        department=department_inst,
+        opening_date=cur_date,
+        status=ApprovalStatus.pending,
+    )
+
+    orm.add_bid_it(bid_it)
+
+
+def get_pending_bids_it_by_worker_telegram_id(id: int) -> list[BidITSchema]:
+    """
+    Returns pending bids IT own to worker with specified telegram id.
+    """
+    worker = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not worker:
+        return []
+
+    return orm.get_pending_bids_it_by_worker(worker)
+
+
 def get_departments_names_by_repairman_telegram_id(telegram_id: int) -> list[str]:
     """
     Returns departments names for repairman by id.
