@@ -826,9 +826,9 @@ def close_request(
 
 
 def get_chapters() -> list[str]:
-    """Returns list of all chapters in db"""
+    """Returns list of all unique chapters in db"""
     expenditures = orm.get_expenditures()
-    return [expenditure.chapter for expenditure in expenditures]
+    return list(set(expenditure.chapter for expenditure in expenditures))
 
 
 def get_expenditures_names() -> list[str]:

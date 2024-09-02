@@ -237,7 +237,7 @@ async def get_expenditure_chapter_form(callback: CallbackQuery, state: FSMContex
 
 async def get_expenditure_form(message: CallbackQuery, state: FSMContext):
     await state.set_state(BidCreating.expenditure)
-    exps = get_expenditures_names()
+    exps = get_expenditures_names()  # TODO: for specified chapter
     await try_delete_message(message)
     await message.answer(
         hbold("Выберите статью:"),
