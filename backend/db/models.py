@@ -9,8 +9,6 @@ import datetime
 from settings import get_settings
 import enum
 
-intpk = Annotated[int, mapped_column(primary_key=True)]
-
 
 class ApprovalStatus(enum.Enum):
     pending = (1,)
@@ -80,7 +78,6 @@ class PostScope(Base):
     def __str__(self) -> str:
         return self.scope.name
 
-    id: Mapped[intpk]
     scope: Mapped[FujiScope] = mapped_column(Enum(FujiScope), nullable=False)
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
@@ -95,7 +92,6 @@ class Post(Base):
     def __str__(self) -> str:
         return self.name
 
-    id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     salary: Mapped[float] = mapped_column(nullable=True)
     level: Mapped[int] = mapped_column(
@@ -128,7 +124,6 @@ class Company(Base):
     def __str__(self) -> str:
         return self.name
 
-    id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
 
     departments: Mapped[List["Department"]] = relationship(
@@ -161,7 +156,6 @@ class Department(Base):
     def __str__(self) -> str:
         return self.name
 
-    id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     address: Mapped[str] = mapped_column(nullable=True)
     city: Mapped[str] = mapped_column(nullable=True)
@@ -274,8 +268,6 @@ class Group(Base):
     def __str__(self) -> str:
         return self.name
 
-    id: Mapped[intpk]
-
     __tablename__ = "groups"
 
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
@@ -294,7 +286,6 @@ class Worker(Base):
     def __str__(self) -> str:
         return f"{self.l_name} {self.f_name} {self.o_name}"
 
-    id: Mapped[intpk]
     f_name: Mapped[str] = mapped_column(nullable=False)
     l_name: Mapped[str] = mapped_column(nullable=False)
     o_name: Mapped[str] = mapped_column(nullable=False)
@@ -407,7 +398,6 @@ class Bid(Base):
     def __str__(self) -> str:
         return f"Заявка от {self.create_date.strftime('%H:%M %d.%m.%y')}"
 
-    id: Mapped[intpk]
     amount: Mapped[int] = mapped_column(nullable=False)
     payment_type: Mapped[str] = mapped_column(nullable=False)
     purpose: Mapped[str] = mapped_column(nullable=False)
@@ -448,7 +438,6 @@ class BidDocument(Base):
 
     __tablename__ = "bids_documents"
 
-    id: Mapped[intpk]
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     bid_id: Mapped[int] = mapped_column(ForeignKey("bids.id"))
     bid: Mapped["Bid"] = relationship("Bid", back_populates="documents")
@@ -458,8 +447,6 @@ class WorkerBid(Base):
     """Заявки на найм"""
 
     __tablename__ = "worker_bids"
-
-    id: Mapped[intpk]
 
     f_name: Mapped[str] = mapped_column(nullable=False)
     l_name: Mapped[str] = mapped_column(nullable=False)
@@ -501,7 +488,6 @@ class WorkerBidDocument(Base):
 
     __abstract__ = True
 
-    id: Mapped[intpk]
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     worker_bid_id: Mapped[int] = mapped_column(ForeignKey("worker_bids.id"))
 
@@ -541,8 +527,6 @@ class WorkTime(Base):
 
     __tablename__ = "work_times"
 
-    id: Mapped[intpk]
-
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     worker: Mapped["Worker"] = relationship("Worker", back_populates="work_times")
     salary: Mapped[int] = mapped_column(nullable=True)
@@ -572,7 +556,6 @@ class Expenditure(Base):
 
     __tablename__ = "expenditures"
 
-    id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     chapter: Mapped[str] = mapped_column(nullable=False)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
@@ -618,8 +601,6 @@ class Expenditure(Base):
 class BudgetRecord(Base):
     """Записи в бюджете"""
 
-    id: Mapped[intpk]
-
     __tablename__ = "budget_records"
 
     expenditure_id: Mapped[int] = mapped_column(ForeignKey("expenditures.id"))
@@ -645,7 +626,6 @@ class ProblemIT(Base):
     def __str__(self) -> str:
         return self.name
 
-    id: Mapped[intpk]
     name: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(nullable=False)
     sla: Mapped[float] = mapped_column(nullable=False)
@@ -658,7 +638,6 @@ class BidITDocument(Base):
 
     __abstract__ = True
 
-    id: Mapped[intpk]
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     bid_id: Mapped[int] = mapped_column(ForeignKey("bids_it.id"))
 
@@ -683,8 +662,6 @@ class BidIT(Base):
     """Заявки в IT отдел"""
 
     __tablename__ = "bids_it"
-
-    id: Mapped[intpk]
 
     problem_comment: Mapped[str] = mapped_column(nullable=False)
     work_comment: Mapped[str] = mapped_column(nullable=True)
@@ -748,7 +725,6 @@ class BidIT(Base):
 class Problem(Base):
     __abstract__ = True
 
-    id: Mapped[intpk]
     problem_name: Mapped[str] = mapped_column(nullable=False, unique=True)
 
     def __str__(self):
@@ -772,7 +748,6 @@ class TechnicalRequestDocument(Base):
 
     __abstract__ = True
 
-    id: Mapped[intpk]
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     technical_request_id: Mapped[int] = mapped_column(
         ForeignKey("technical_requests.id")
@@ -801,8 +776,6 @@ class TechnicalRequestRepairPhoto(TechnicalRequestDocument):
 
 class TechnicalRequest(Base):
     """Технические заявки"""
-
-    id: Mapped[intpk]
 
     __tablename__ = "technical_requests"
 
