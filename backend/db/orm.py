@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Type
+from db.query import QueryBuilder
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -29,11 +30,13 @@ from db.models import (
     BidITRepairmanDocument,
 )
 from db.schemas import (
+    BaseSchema,
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
     ExpenditureSchema,
     GroupSchema,
+    QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
@@ -43,6 +46,7 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
 )
+from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy import null, or_, and_, desc
 
@@ -1158,6 +1162,45 @@ def close_request(
 # endregion
 
 
+# region Model general
+def get_model_count(
+    model_type: Type[Base],
+    query_schema: QuerySchema,
+) -> int:
+    """Return count of `model` in bd."""
+    with session.begin() as s:
+        query_builder = QueryBuilder(s.query(model_type))
+        query_builder.apply(query_schema)
+
+        return query_builder.query.count()
+
+
+def get_models(
+    model_type: Type[Base],
+    schema_type: Type[BaseModel],
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[BaseSchema]:
+    """Return `model_type` schemas with applied instructions.
+
+    See `QueryBuilder.apply` for more info applied instructions.
+    """
+    with session.begin() as s:
+        query_builder = QueryBuilder(s.query(model_type))
+        query_builder.apply(query_schema)
+
+        raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
+            records_per_page
+        )
+
+        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
+
+
+# endregion
+
+
+# region IT problem
 def get_problems_it_columns() -> list[ProblemITSchema]:
     """
     Returns all existed IT problems in database.
@@ -1430,3 +1473,6 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
         if not raw_department:
             return None
         return WorkerSchema.model_validate(raw_department.it_repairman)
+
+
+# endregion

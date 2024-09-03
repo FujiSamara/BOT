@@ -330,4 +330,85 @@ class BidRecordSchema(BaseSchema):
         return val
 
 
+class TalbeInfoSchema(BaseModel):
+    page_count: int
+    record_count: int
+    all_record_count: int
+
+
+# region Query schema
+
+
+class OrderBySchema(BaseModel):
+    column: str
+    """Column name for order."""
+
+    desc: bool = False
+    """If **true** query will be ordered desc.
+    **False** by default.
+    """
+
+
+class SearchSchema(BaseModel):
+    column: str
+    """Column name for search."""
+
+    term: str
+    """Term for search."""
+
+    dependencies: list["SearchSchema"] = []
+    """
+    Dependencies are wrapping to one query
+    and handles with `and_` statement relative to `self`.
+    """
+
+    groups: list[int] = []
+
+    """Specifies groups at same level.
+    
+    All elements in one group handles by `and_` statement.
+    
+    All groups handles by `or_` statement.
+
+    - Note: If group not specified then handles node by `or_` statement with another nodes.
+    """
+
+
+class DateSchema(BaseModel):
+    """Presents date filter, which returns rows between
+    `DateSchema.start` and `DateSchema.end`."""
+
+    start: datetime.datetime
+    end: datetime.datetime
+
+    column: str
+    """Column name for dating."""
+
+
+class FilterSchema(BaseModel):
+    column: str
+    """Column name for search."""
+
+    value: str
+    """Term for search."""
+
+    dependencies: list["FilterSchema"] = []
+
+
+class QuerySchema(BaseModel):
+    """Presents general query schema for working with crm tables."""
+
+    search_query: list[SearchSchema] = []
+    """List of search schemas handles with `or_` statement."""
+
+    order_by_query: Optional[OrderBySchema] = None
+
+    date_query: Optional[DateSchema] = None
+
+    filter_query: list[FilterSchema] = []
+    """List of filter schemas handles with `and_` statement."""
+
+
+# endregion
+
 # endregion

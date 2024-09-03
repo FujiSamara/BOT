@@ -8,7 +8,15 @@
 					v-model:to-date="toDateString"
 				></PeriodTool>
 				<ToolSeparator></ToolSeparator>
-				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
+				<SeacrhTool
+					id="topDepartmentSearch"
+					placeholder="Производство"
+					@input="(val) => (departmentSearchString = val)"
+				></SeacrhTool>
+				<SeacrhTool
+					id="topSearch"
+					@input="(val) => (searchString = val)"
+				></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -40,15 +48,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import {
-	computed,
-	onMounted,
-	Ref,
-	ref,
-	shallowRef,
-	ShallowRef,
-	watch,
-} from "vue";
+import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
@@ -83,33 +83,60 @@ const onSubmit = async () => {
 const table = new ExpenditureTable();
 const fromDateString = ref("");
 const toDateString = ref("");
+
+const departmentSearchString = ref("");
 const searchString = ref("");
 
-table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	const periodFilter = (instance: any): boolean => {
-		const rowDate = new Date(instance.create_date);
-		const fromDate = new Date(fromDateString.value);
-		const toDate = new Date(toDateString.value);
+watch([departmentSearchString, searchString], () => {
+	const result = [];
 
-		return rowDate <= toDate && rowDate >= fromDate;
+	if (departmentSearchString.value.length > 3) {
+		result.push({
+			column: "creator",
+			term: "",
+			groups: [0, 1, 2],
+			dependencies: [
+				{
+					column: "department",
+					term: departmentSearchString.value,
+				},
+			],
+		});
+	}
+
+	if (searchString.value.length > 3) {
+		result.push(
+			{
+				column: "fac",
+				term: searchString.value,
+				groups: [0],
+			},
+			{
+				column: "chapter",
+				term: searchString.value,
+				groups: [1],
+			},
+			{
+				column: "name",
+				term: searchString.value,
+				groups: [2],
+			},
+		);
+	}
+
+	table.searchQuery.value = result;
+});
+
+watch([fromDateString, toDateString], () => {
+	const fromDate = new Date(fromDateString.value);
+	const toDate = new Date(toDateString.value);
+
+	table.byDate.value = {
+		column: "create_date",
+		start: fromDate,
+		end: toDate,
 	};
-	return [periodFilter];
-}).value;
-table.searcher.value = computed((): ((instance: any) => boolean) => {
-	return (instance: any): boolean => {
-		const name: string = instance.name;
-		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
-			return true;
-		}
-		const chapter: string = instance.chapter;
-		if (
-			chapter.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
-		) {
-			return true;
-		}
-		return false;
-	};
-}).value;
+});
 
 const onRowClicked = (rowKey: number) => {
 	editor.value = new ExpenditureEditor(table.getModel(rowKey));
@@ -121,15 +148,8 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
-const loadTable = async (silent: boolean = false) => {
-	await table.loadAll(silent);
-	setTimeout(loadTable, 20000, true);
-};
-watch(table.highlightedCount, () => {
-	emit("notify", table.highlightedCount.value, props.id);
-});
-onMounted(async () => {
-	await loadTable();
+watch(table.notifies, () => {
+	emit("notify", table.notifies.value, props.id);
 });
 </script>
 <style scoped>

@@ -1,4 +1,4 @@
-import { computed, ref, Ref } from "vue";
+import { computed, ref, Ref, watch } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
@@ -56,29 +56,264 @@ interface TableData {
 	headers: Array<string>;
 }
 
+interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
+}
+
+interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
+interface FilterSchema {
+	column: string;
+	value: string;
+}
+
+interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
+}
+
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
-	/**  Key - ID, Value - index in internal arrays. */
-	protected _indexes: Map<number, number> = new Map();
-	protected _models: Ref<Array<T>> = ref([]);
-	private _endpoint: string = "";
+	private _loadedRows: Ref<Array<T>> = ref([]);
 	private _network = useNetworkStore();
+	private _refreshKey: Ref<number> = ref(0);
+	private _newIds: Ref<Array<number>> = ref([]);
 
 	/**
-	 * @param tableContent
-	 * @param _searchFields Indexes of columns for searching.
+	 * @param endpoint Endpoint name for api.
 	 */
-	constructor(endpoint: string) {
+	constructor(
+		endpoint: string,
+		options?: {
+			getEndpoint?: string;
+			infoEndpoint?: string;
+			createEndpoint?: string;
+			updateEndpoint?: string;
+			deleteEndpoint?: string;
+			approveEndpoint?: string;
+			rejectEndpoint?: string;
+		},
+	) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+
+		//#region endpoints
+		this._getEndpoint =
+			options && options.getEndpoint ? options.getEndpoint : "";
+		this._infoEndpoint =
+			options && options.infoEndpoint ? options.infoEndpoint : "";
+		this._createEndpoint =
+			options && options.createEndpoint ? options.createEndpoint : "";
+		this._updateEndpoint =
+			options && options.updateEndpoint ? options.updateEndpoint : "";
+		this._deleteEndpoint =
+			options && options.deleteEndpoint ? options.deleteEndpoint : "";
+		this._approveEndpoint =
+			options && options.approveEndpoint ? options.approveEndpoint : "";
+		this._rejectEndpoint =
+			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		//#endregion
+
+		this.startUpdatingLoop();
 	}
 
-	//#region Rows handlers
+	//#region Rows
+	//#region Refreshing
+	private async startUpdatingLoop() {
+		let skipLoop = false;
+
+		watch(
+			[this._completedQuery, this._rowsQuery, this._refreshKey],
+			async () => {
+				this.emulateLoading(true);
+				skipLoop = true;
+				await this.refreshInfo();
+				await this.refreshRows();
+				this.emulateLoading(false);
+			},
+		);
+
+		this.forceRefresh();
+
+		const loop = async () => {
+			if (!skipLoop) {
+				await this.refreshInfo(true);
+			}
+			skipLoop = false;
+
+			setTimeout(async () => await loop(), this.updateTimeout * 1000);
+		};
+
+		setTimeout(async () => await loop(), this.updateTimeout * 1000);
+	}
+	/** Updates info about table:
+	 * 1) Page count
+	 * 2) Row count
+	 *
+	 * - If **fromLoop** is **true** and row count changed then force refreshes rows.
+	 */
+	private async refreshInfo(fromLoop: boolean = false) {
+		// Info about filtered table.
+		const resp = await this._network.withAuthChecking(
+			axios.post(this._infoQuery.value, this._completedQuery.value),
+		);
+
+		if (
+			this.rowCount.value !== resp.data.all_record_count &&
+			this.rowCount.value !== 0
+		) {
+			await this.handleNewRows(this.rowCount.value, resp.data.all_record_count);
+		}
+
+		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
+			if (this._loadedRows.value.length !== this._rowsPerPage) {
+				this.isLoading.value = true;
+			}
+
+			await this.refreshRows();
+			this.isLoading.value = false;
+		}
+
+		this.pageCount.value = resp.data.page_count;
+		this.rowCountWithFilters.value = resp.data.record_count;
+		this.rowCount.value = resp.data.all_record_count;
+	}
+	/** Stores new row id's. */
+	private async handleNewRows(oldCount: number, newCount: number) {
+		const difference = newCount - oldCount;
+		if (difference < 0) {
+			return;
+		}
+		let rowsPerPage;
+		let page;
+
+		if (newCount - difference >= difference) {
+			rowsPerPage = newCount - difference;
+			page = 2;
+		} else {
+			rowsPerPage = newCount;
+			page = 1;
+		}
+
+		const link = `${this._endpoint}${this._getEndpoint}/page/${page}?records_per_page=${rowsPerPage}`;
+
+		const resp = await this._network.withAuthChecking(axios.post(link, {}));
+
+		const rawRows: Array<T> = resp.data;
+		const newRows = rawRows.slice(-newCount, rawRows.length);
+		for (const row of newRows) {
+			this._newIds.value.push(row.id);
+		}
+	}
+	/** Updates rows. */
+	private async refreshRows() {
+		const resp = await this._network.withAuthChecking(
+			axios.post(this._rowsQuery.value, this._completedQuery.value),
+		);
+
+		this._loadedRows.value = resp.data;
+
+		const rowsLength = this._loadedRows.value.length;
+
+		if (rowsLength === 0) {
+			this.currentPage.value = 1;
+		}
+		this._highlighted.value = Array<boolean>(rowsLength).fill(
+			false,
+			0,
+			rowsLength,
+		);
+		this._checked.value = Array<boolean>(rowsLength).fill(false, 0, rowsLength);
+
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const row = this._loadedRows.value[index];
+			if (
+				this._newIds.value.find((id: number) => id === row.id) !== undefined
+			) {
+				this._elementHighlighted(index, true);
+			}
+		}
+	}
+	/** Forces updating rows. */
+	protected forceRefresh() {
+		const limit = 3;
+		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
+	}
+	//#endregion
+
+	//#region Generating query
+	private _query = computed(() => {
+		return `records_per_page=${this._rowsPerPage}`;
+	});
+	private _searchedQuery = computed((): Array<SearchSchema> => {
+		return this.searchQuery.value;
+	});
+	private _datedQuery = computed(() => {
+		return this.byDate.value;
+	});
+	private _filteredQuery = computed(() => {
+		return [];
+	});
+	private _orderedQuery = computed((): OrderBySchema => {
+		return {
+			column: this._orderBy.value,
+			desc: this.desc.value,
+		};
+	});
+	private _completedQuery = computed((): QuerySchema => {
+		return {
+			search_query: this._searchedQuery.value,
+			order_by_query: this._orderedQuery.value,
+			date_query: this._datedQuery.value,
+			filter_query: this._filteredQuery.value,
+		};
+	});
+	private _infoQuery = computed(() => {
+		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
+	});
+	private _rowsQuery = computed(() => {
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
+	});
+	//#endregion
+
+	private getHeaders() {
+		const result: Array<string> = [];
+		if (this._nonIgnoredRows.value.length === 0) return result;
+
+		for (const fieldName in this._nonIgnoredRows.value[0]) {
+			const alias = this.getAlias(fieldName);
+
+			const index = this._columsOrder.get(fieldName);
+
+			if (index && result.length > index) {
+				result.splice(index, 0, alias);
+			} else {
+				result.push(alias);
+			}
+		}
+		return result;
+	}
+
+	//#region Generating rows
 	private _nonIgnoredRows = computed(() => {
 		const result: Array<T> = [];
 
-		for (let index = 0; index < this._models.value.length; index++) {
-			const model: T = this._models.value[index];
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const model: T = this._loadedRows.value[index];
 
 			let newModel: any = {};
 
@@ -92,36 +327,14 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
-	private _searchedRows = computed(() => {
-		const searchResult: Array<T> = [];
-		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
-			const model = this._nonIgnoredRows.value[index];
-			if (this.searcher.value(model)) {
-				searchResult.push(model);
-			}
-		}
-		return searchResult;
-	});
-	private _filteredRows = computed(() => {
-		const filterResult: Array<T> = this._searchedRows.value.filter(
-			(model: T) => {
-				for (const filter of this.filters.value) {
-					if (!filter(model)) return false;
-				}
-				return true;
-			},
-		);
-
-		return filterResult;
-	});
 	private _formattedOrderedRows = computed(() => {
 		const result: TableData = {
 			headers: this.getHeaders(),
 			rows: [],
 		};
 
-		for (let index = 0; index < this._filteredRows.value.length; index++) {
-			const model = this._filteredRows.value[index];
+		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
+			const model = this._nonIgnoredRows.value[index];
 			const columns: Array<Cell> = [];
 
 			for (const fieldName in model) {
@@ -144,50 +357,14 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	private _sortedRows = computed(() => {
-		const result: TableData = {
-			headers: this._formattedOrderedRows.value.headers,
-			rows: [...this._formattedOrderedRows.value.rows],
-		};
-
-		if (this.sortBy.value !== -1) {
-			result.rows.sort(
-				(
-					a: { id: number; columns: Array<Cell> },
-					b: { id: number; columns: Array<Cell> },
-				) =>
-					a.columns[this.sortBy.value]
-						.toString()
-						.localeCompare(b.columns[this.sortBy.value].toString()),
-			);
-		}
-
-		return result;
-	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
-			return { headers: [], rows: [] };
+			return { headers: this._formattedOrderedRows.value.headers, rows: [] };
 		}
-
-		return this._sortedRows.value;
+		return this._formattedOrderedRows.value;
 	});
-	private getHeaders() {
-		const result: Array<string> = [];
-		if (this._nonIgnoredRows.value.length === 0) return result;
+	//#endregion
 
-		for (const fieldName in this._nonIgnoredRows.value[0]) {
-			const alias = this.getAlias(fieldName);
-
-			const index = this._columsOrder.get(fieldName);
-
-			if (index && result.length > index) {
-				result.splice(index, 0, alias);
-			} else {
-				result.push(alias);
-			}
-		}
-		return result;
-	}
 	public allChecked = computed({
 		get: () => {
 			if (this._checked.value.length === 0) {
@@ -214,24 +391,17 @@ export class Table<T extends BaseSchema> {
 		}
 		return false;
 	});
-	private _elementChecked(id: number, newValue: boolean) {
-		const index = this._indexes.get(id)!;
-
+	private _elementChecked(index: number, newValue: boolean) {
 		this._checked.value[index] = newValue;
 	}
 	public checked = computed(() => {
-		const result: Map<number, TableElementObserver<boolean>> = new Map<
-			number,
-			TableElementObserver<boolean>
-		>();
-		for (let index = 0; index < this._models.value.length; index++) {
-			const modelID = this._models.value[index].id;
+		const result: Array<TableElementObserver<boolean>> = [];
 
-			result.set(
-				modelID,
+		for (let index = 0; index < this.rows.value.rows.length; index++) {
+			result.push(
 				new TableElementObserver(
-					this._checked.value[this._indexes.get(modelID)!],
-					modelID,
+					this._checked.value[index],
+					index,
 					this._elementChecked.bind(this),
 				),
 			);
@@ -239,25 +409,29 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	private _elementHighlighted(id: number, newValue: boolean) {
-		const index = this._indexes.get(id)!;
-
+	private _elementHighlighted(index: number, newValue: boolean) {
 		this._highlighted.value[index] = newValue;
+
+		if (!newValue) {
+			const idForDelete = this._loadedRows.value[index].id;
+
+			const deleteIndex = this._newIds.value.findIndex(
+				(id: number) => id === idForDelete,
+			);
+
+			if (deleteIndex !== -1) {
+				this._newIds.value.splice(deleteIndex);
+			}
+		}
 	}
 	public highlighted = computed(() => {
-		const result: Map<number, TableElementObserver<boolean>> = new Map<
-			number,
-			TableElementObserver<boolean>
-		>();
+		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this._models.value.length; index++) {
-			const modelID = this._models.value[index].id;
-
-			result.set(
-				modelID,
+		for (let index = 0; index < this.rows.value.rows.length; index++) {
+			result.push(
 				new TableElementObserver(
-					this._highlighted.value[this._indexes.get(modelID)!],
-					modelID,
+					this._highlighted.value[index],
+					index,
 					this._elementHighlighted.bind(this),
 				),
 			);
@@ -265,22 +439,91 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
+	public notifies = computed(() => {
+		let result = 0;
+
+		result += this._newIds.value.length;
+
+		return result;
+	});
 	//#endregion
 
-	//#region Auxiliary fields
-	/** Default forrmatter for column value */
+	//#region Auxiliary
+	/** Table update timeout in second. */
+	public updateTimeout: number = 20;
+	/** Indicates current page. */
+	public currentPage: Ref<number> = ref(1);
+	/** Indicates page count. */
+	public pageCount: Ref<number> = ref(0);
+	/** Indicates row count with query filters. */
+	public rowCountWithFilters: Ref<number> = ref(0);
+	/** Indicates row count for all rows in table. */
+	public rowCount: Ref<number> = ref(0);
+	/** Rows per page. */
+	protected _rowsPerPage: number = 15;
+	/** True when table is execute large loading operations. */
+	public isLoading: Ref<boolean> = ref(false);
+	/** Hides all row if true. */
+	public isHidden: Ref<boolean> = ref(false);
+	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true**. */
+	public emulateLoading(value: boolean) {
+		this.isLoading.value = value;
+		this.isHidden.value = value;
+	}
+	/** Return **true** if rows sorted by this column with **header**. */
+	public ordered(header: string): boolean {
+		return this.getAlias(this._orderBy.value) === header;
+	}
+	/** Return **true** if sorted by this column with **header** is disabled. */
+	public orderDisabled(_: string): boolean {
+		return false;
+	}
+	/** Sorts columns by specify **header**. */
+	public order(header: string) {
+		if (header === this.getAlias(this._orderBy.value)) {
+			this.desc.value = !this.desc.value;
+			return;
+		}
+
+		if (this._loadedRows.value.length === 0) {
+			return;
+		}
+
+		const column = this.aliasToColumnName(header);
+
+		if (column !== undefined) {
+			this._orderBy.value = column;
+			this.desc.value = false;
+		}
+	}
+	/** If sorts column by row[**index**]. */
+	protected _orderBy: Ref<string> = ref("id");
+	/** If equal **true** sorted corresponding column in **DESC** mode. */
+	public desc: Ref<boolean> = ref(true);
+	/** Search query. */
+	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
+	/** Date query. */
+	public byDate: Ref<DateSchema | undefined> = ref();
+	/** Order of column in table. */
+	protected _columsOrder: Map<string, number> = new Map<string, number>();
+	/** Aliases for column names. */
+	protected _aliases: Map<string, string> = new Map<string, string>();
+	/** Specify ingored column. */
+	protected _ignored: Array<string> = [];
+	/** Default forrmatter for column value. */
 	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
-		if (value === null) {
+		if (value === null || value === undefined) {
 			return new Cell();
 		} else {
 			return new Cell(new CellLine(`${value}`));
 		}
 	};
-	/** Formatters for column values */
+	/** Formatters for column values. */
 	protected _formatters: Map<string, (value: any) => Cell> = new Map<
 		string,
 		(value: any) => Cell
 	>();
+	/** Returns actual formatter for specified **fieldName**. */
 	private getFormatter(fieldName: string): (value: any) => Cell {
 		const formatter = this._formatters.get(fieldName);
 
@@ -290,6 +533,7 @@ export class Table<T extends BaseSchema> {
 			return this._defaultFormatter;
 		}
 	}
+	/** Returns actual alias for specified **fieldName**. */
 	private getAlias(fieldName: string): string {
 		let alias = this._aliases.get(fieldName);
 		if (alias === undefined) {
@@ -297,51 +541,15 @@ export class Table<T extends BaseSchema> {
 		}
 		return alias;
 	}
-	/** Return **true** if rows sorted by this column with **header**. */
-	public sorted(header: string): boolean {
-		const index = this.rows.value.headers.findIndex(
-			(val: string) => val === this.getAlias(header),
+	/** Returns original column name by **alias** */
+	protected aliasToColumnName(alias: string): string | undefined {
+		const column = Object.keys(this._loadedRows.value[0]).find(
+			(fieldName) => this.getAlias(fieldName) === alias,
 		);
 
-		return index === -1 ? false : index === this.sortBy.value;
+		return column;
 	}
-	/** Sorts columns by specify **header** */
-	public sort(header: string) {
-		const index = this.rows.value.headers.findIndex(
-			(val: string) => val === this.getAlias(header),
-		);
-
-		if (index === -1) {
-			return;
-		}
-
-		if (this.sortBy.value === index) {
-			this.sortBy.value = -1;
-		} else {
-			this.sortBy.value = index;
-		}
-	}
-	/** If not equal **-1** sorts column by row[**index**]. */
-	protected sortBy: Ref<number> = ref(-1);
-	/** Order of column in table */
-	protected _columsOrder: Map<string, number> = new Map<string, number>();
-	/** Aliases for column names */
-	protected _aliases: Map<string, string> = new Map<string, string>();
-	/** Specify ingored column */
-	protected _ignored: Array<string> = [];
-	/** Filters for rows. Must returns **true** if row need be shown. */
-	public filters: Ref<Array<(model: any) => boolean>> = ref([]);
-	/** Searcher for rows. Must returns **true** if row need be shown. */
-	public searcher: Ref<(model: any) => boolean> = ref((_) => true);
-	/** True when table is execute large loading operations. */
-	public isLoading: Ref<boolean> = ref(false);
-	/** Hides all row if true */
-	public isHidden: Ref<boolean> = ref(false);
-	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true** */
-	public emulateLoading(value: boolean) {
-		this.isLoading.value = value;
-		this.isHidden.value = value;
-	}
+	/** Returns count of highlighted rows. */
 	public highlightedCount = computed(() => {
 		let result = 0;
 		for (const elemHighlighted of this._highlighted.value) {
@@ -351,19 +559,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
-	/** Erases row after approving or rejecting if true. */
+	/** If equal **true** rows will be erase after approving or rejecting happens. */
 	protected _deleteAfterStatusChanged: boolean = false;
-	// Additional endpoints.
-	protected _getEndpoint: string = "";
-	protected _getLastEndpoint: string = "";
-	protected _updateEndpoint: string = "";
-	protected _deleteEndpoint: string = "";
-	protected _createEndpoint: string = "";
-	protected _approveEndpoint: string = "";
-	protected _rejectEndpoint: string = "";
-	//#endregion
-
-	//#region CRUD
 	/** Updates **source** model by **target** model if have difference.
 	 * - Returns **true** if **source** model updated, **false** otherwise.
 	 */
@@ -384,167 +581,109 @@ export class Table<T extends BaseSchema> {
 
 		return modelChanged;
 	}
-	public push(model: T, highlighted: boolean = false): void {
-		this._indexes.set(model.id, this._models.value.length);
-		this._models.value.push(model);
-		this._checked.value.push(false);
-		this._highlighted.value.push(highlighted);
+	/** Return model by index. */
+	public getModel(index: number): any {
+		return this._loadedRows.value[index];
 	}
-	public async loadAll(silent: boolean = false): Promise<number> {
-		this.isLoading.value = true && !silent;
-		let changesCount = 0;
-		const resp = await this._network.withAuthChecking(
-			axios.get(this._endpoint + this._getEndpoint + "/"),
-		);
-		this.isLoading.value = false;
-		const models = resp.data;
-		for (let i = 0; i < models.length; i++) {
-			const model: T = models[i];
-
-			let modelFounded = false;
-			for (let j = 0; j < this._models.value.length; j++) {
-				const oldModel = this._models.value[j];
-
-				if (oldModel.id !== model.id) {
-					continue;
-				}
-
-				modelFounded = true;
-
-				// Changes fields in model which was changed in new model.
-				if (this.updateModel(oldModel, model)) {
-					this._highlighted.value[j] = true;
-					changesCount++;
-				}
-				break;
-			}
-
-			if (!modelFounded) {
-				changesCount++;
-				this.push(model, silent);
+	/** Executes **action** for checked rows. */
+	private async manageChecked(action: (index: number) => Promise<void>) {
+		this.emulateLoading(true);
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			if (this._checked.value[index]) {
+				await action(index);
 			}
 		}
-
-		return changesCount;
+		this.forceRefresh();
+		this.emulateLoading(false);
 	}
+	// Endpoints.
+	private _endpoint: string = "";
+	protected _getEndpoint: string = "";
+	protected _infoEndpoint: string = "";
+	protected _createEndpoint: string = "";
+	protected _updateEndpoint: string = "";
+	protected _deleteEndpoint: string = "";
+	protected _approveEndpoint: string = "";
+	protected _rejectEndpoint: string = "";
+	//#endregion
+
+	//#region CRUD
 	public async create(model: T): Promise<void> {
 		await this._network.withAuthChecking(
 			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
 		);
 
-		const resp = await this._network.withAuthChecking(
-			axios.get(`${this._endpoint}${this._getLastEndpoint}/last`),
-		);
-		this.push(resp.data, false);
+		await this.refreshInfo();
 	}
-	public async update(model: T, id: number): Promise<void> {
-		const index = this._indexes.get(id);
-		if (index === undefined) throw new Error(`ID ${id} not exist`);
-		let elementChanged = this.updateModel(this._models.value[index], model);
+	public async update(model: T, index: number): Promise<void> {
+		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
 			await this._network.withAuthChecking(
 				axios.patch(
 					`${this._endpoint}${this._updateEndpoint}/`,
-					this._models.value[index],
+					this._loadedRows.value[index],
 				),
 			);
 		}
 	}
-	public async delete(id: number): Promise<void> {
-		const deleteIndex = this._indexes.get(id)!;
-		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
+	public async delete(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
 		await this._network.withAuthChecking(
 			axios.delete(
-				`${this._endpoint}${this._deleteEndpoint}/${this._models.value[deleteIndex].id}`,
+				`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
 			),
 		);
-		await this.erase(id);
-	}
-	public async erase(id: number): Promise<void> {
-		const deleteIndex = this._indexes.get(id);
-		if (deleteIndex === undefined) throw new Error(`ID ${id} not exist`);
-		this._indexes.delete(id);
 
-		this._checked.value.splice(deleteIndex, 1);
-		this._highlighted.value.splice(deleteIndex, 1);
-		this._models.value.splice(deleteIndex, 1);
-		for (let index = deleteIndex; index < this._models.value.length; index++) {
-			const model = this._models.value[index];
-			this._indexes.set(model.id, this._indexes.get(model.id)! - 1);
+		if (needRefresh) {
+			this.forceRefresh();
 		}
 	}
 	public async deleteChecked(): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.delete(id);
-				index--;
-			}
-		}
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.delete(index),
+		);
 	}
-	public getModel(id: number): any {
-		const index = this._indexes.get(id);
-		if (index === undefined) throw new Error(`ID ${id} not exist`);
-
-		return this._models.value[index];
-	}
-	public async approve(id: number): Promise<void> {
-		const approveIndex = this._indexes.get(id)!;
-
-		const resp = await this._network.withAuthChecking(
+	public async approve(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
+		await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}${this._approveEndpoint}/approve/${this._models.value[approveIndex].id}`,
+				`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
 			),
 		);
 
-		this.updateModel(this._models.value[approveIndex], resp.data);
-
-		if (this._deleteAfterStatusChanged) {
-			this.erase(id);
+		if (needRefresh) {
+			this.forceRefresh();
 		}
 	}
 	public async approveChecked(): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.approve(id);
-			}
-		}
-		this.allChecked.value = false;
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.approve(index),
+		);
 	}
-	public async reject(id: number, reason: string): Promise<void> {
-		const approveIndex = this._indexes.get(id)!;
-
-		const resp = await this._network.withAuthChecking(
+	public async reject(
+		index: number,
+		needRefresh: boolean = false,
+		reason: string,
+	): Promise<void> {
+		await this._network.withAuthChecking(
 			axios.patch(
-				`${this._endpoint}${this._rejectEndpoint}/reject/${this._models.value[approveIndex].id}?reason=${reason}`,
+				`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
 			),
 		);
 
-		this.updateModel(this._models.value[approveIndex], resp.data);
-
-		if (this._deleteAfterStatusChanged) {
-			this.erase(id);
+		if (needRefresh) {
+			this.forceRefresh();
 		}
 	}
 	public async rejectChecked(reason: string): Promise<void> {
-		this.emulateLoading(true);
-		for (let index = 0; index < this._models.value.length; index++) {
-			const id = this._models.value[index].id;
-
-			if (this._checked.value[index]) {
-				await this.reject(id, reason);
-			}
-		}
-		this.allChecked.value = false;
-		this.emulateLoading(false);
+		await this.manageChecked(
+			async (index: number) => await this.reject(index, false, reason),
+		);
 	}
 	//#endregion
 }
@@ -573,7 +712,6 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 export class BudgetTable extends Table<BudgetSchema> {
 	constructor() {
 		super("budget");
-
 		this._formatters.set("expenditure", parser.formatExpenditure);
 		this._formatters.set("department", parser.formatDepartment);
 
@@ -588,11 +726,23 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._columsOrder.set("chapter", 1);
 		this._columsOrder.set("expenditure", 2);
 	}
+
+	public orderDisabled(header: string): boolean {
+		return this.aliasToColumnName(header) === "chapter";
+	}
 }
 
 export class BidTable extends Table<BidSchema> {
-	constructor() {
-		super("bid");
+	constructor(options?: {
+		getEndpoint?: string;
+		infoEndpoint?: string;
+		createEndpoint?: string;
+		updateEndpoint?: string;
+		deleteEndpoint?: string;
+		approveEndpoint?: string;
+		rejectEndpoint?: string;
+	}) {
+		super("bid", options);
 
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("worker", parser.formatWorker);
@@ -634,25 +784,28 @@ export class BidTable extends Table<BidSchema> {
 
 export class FACBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/fac";
+		super({
+			getEndpoint: "/fac",
+			infoEndpoint: "/fac",
+		});
 	}
 }
 
 export class CCBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/cc";
+		super({
+			getEndpoint: "/cc",
+			infoEndpoint: "/cc",
+		});
 	}
 }
 
 export class CCSupervisorBidTable extends BidTable {
 	constructor() {
-		super();
-
-		this._getEndpoint = "/cc_supervisor";
+		super({
+			getEndpoint: "/cc_supervisor",
+			infoEndpoint: "/cc_supervisor",
+		});
 	}
 }
 //#endregion

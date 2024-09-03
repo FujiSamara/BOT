@@ -2,9 +2,14 @@
 	<div class="period-tool-wrapper">
 		<p>Период:</p>
 		<span>с</span>
-		<input type="date" class="from-input" v-model="fromValue" />
+		<input
+			type="date"
+			class="from-input"
+			@change="fromChange"
+			:value="fromValue"
+		/>
 		<span>по</span>
-		<input type="date" class="to-input" v-model="toValue" />
+		<input type="date" class="to-input" @change="toChange" :value="toValue" />
 	</div>
 </template>
 <script setup lang="ts">
@@ -13,6 +18,36 @@ import { onMounted } from "vue";
 const fromValue = defineModel("fromDate", { type: String, required: true });
 
 const toValue = defineModel("toDate", { type: String, required: true });
+
+const validateDate = (date: string): boolean => {
+	if (isNaN(Date.parse(date))) {
+		return false;
+	}
+
+	const converted = new Date(date);
+
+	if (converted.getFullYear() > 9999) {
+		return false;
+	}
+
+	return true;
+};
+
+const fromChange = (e: Event) => {
+	const value = (e.target as HTMLInputElement).value;
+
+	if (validateDate(value)) {
+		fromValue.value = value;
+	}
+};
+
+const toChange = (e: Event) => {
+	const value = (e.target as HTMLInputElement).value;
+
+	if (validateDate(value)) {
+		toValue.value = value;
+	}
+};
 
 onMounted(() => {
 	fromValue.value = "0001-01-01";

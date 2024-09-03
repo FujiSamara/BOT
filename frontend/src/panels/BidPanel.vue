@@ -1,30 +1,33 @@
 <template>
 	<div class="bid-content">
-		<div class="header-content">
+		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
-					v-if="!elementViewing"
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
 				></PeriodTool>
-				<ToolSeparator v-if="!elementViewing"></ToolSeparator>
+				<ToolSeparator></ToolSeparator>
 				<SeacrhTool
-					v-if="!elementViewing"
-					id="topSearch"
-					v-model:value="searchString"
+					id="topDepartmentSearch"
+					placeholder="Производство"
+					@input="(val) => (departmentSearchString = val)"
 				></SeacrhTool>
-				<ToolSeparator v-if="!elementViewing"></ToolSeparator>
+				<SeacrhTool
+					id="topSearch"
+					@input="(val) => (searchString = val)"
+				></SeacrhTool>
+				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
 			v-if="!elementViewing"
-			@click="onRowClicked"
 			:table="table"
 			:can-delete="true"
 			:can-approve="true"
 			:can-reject="true"
+			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
 			v-if="elementViewing"
@@ -32,6 +35,8 @@
 			@approve="onApprove"
 			@reject="onReject"
 			@delete="onDelete"
+			:canApprove="true"
+			:canReject="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -46,15 +51,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import {
-	computed,
-	onMounted,
-	Ref,
-	ref,
-	shallowRef,
-	ShallowRef,
-	watch,
-} from "vue";
+import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { BidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
@@ -69,59 +66,80 @@ const emit = defineEmits<{
 	(e: "notify", count: number, id: number): void;
 }>();
 
-const elementViewing = ref(false);
-
-// Edit page
-const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
-const viewingID: Ref<number> = ref(-1);
+const editingElement = ref(false);
 
 const table = new BidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
+
+const elementViewing = ref(false);
+
+const viewer: ShallowRef<BidViewer | undefined> = shallowRef();
+const viewingIndex: Ref<number> = ref(-1);
+
+const departmentSearchString = ref("");
 const searchString = ref("");
 
-table.filters.value = computed((): Array<(instance: any) => boolean> => {
-	const periodFilter = (instance: any): boolean => {
-		const rowDate = new Date(instance.create_date);
-		const fromDate = new Date(fromDateString.value);
-		const toDate = new Date(toDateString.value);
+watch([departmentSearchString, searchString], () => {
+	const result = [];
 
-		return rowDate <= toDate && rowDate >= fromDate;
+	if (departmentSearchString.value.length > 3) {
+		result.push({
+			column: "department",
+			term: departmentSearchString.value,
+			groups: [0, 1],
+		});
+	}
+
+	if (searchString.value.length > 3) {
+		result.push(
+			{
+				column: "worker",
+				term: searchString.value,
+				groups: [0],
+			},
+			{
+				column: "expenditure",
+				term: searchString.value,
+				groups: [1],
+			},
+		);
+	}
+
+	table.searchQuery.value = result;
+});
+
+watch([fromDateString, toDateString], () => {
+	const fromDate = new Date(fromDateString.value);
+	const toDate = new Date(toDateString.value);
+
+	table.byDate.value = {
+		column: "create_date",
+		start: fromDate,
+		end: toDate,
 	};
-	return [periodFilter];
-}).value;
-table.searcher.value = computed((): ((instance: any) => boolean) => {
-	return (_: any): boolean => {
-		return true;
-	};
-}).value;
+});
+
+watch(table.notifies, () => {
+	emit("notify", table.notifies.value, props.id);
+});
 
 const onDelete = async () => {
-	await table.delete(viewingID.value);
+	await table.delete(viewingIndex.value);
 };
 const onApprove = async () => {
-	await table.approve(viewingID.value);
+	await table.approve(viewingIndex.value, true);
 	elementViewing.value = false;
 };
 const onReject = async (reason: string) => {
-	await table.reject(viewingID.value, reason);
+	await table.reject(viewingIndex.value, true, reason);
 	elementViewing.value = false;
 };
 const onRowClicked = (rowKey: number) => {
 	viewer.value = new BidViewer(table.getModel(rowKey));
 	elementViewing.value = true;
-	viewingID.value = rowKey;
+	viewingIndex.value = rowKey;
 };
-const loadTable = async (silent: boolean = false) => {
-	await table.loadAll(silent);
-	setTimeout(loadTable, 20000, true);
-};
-watch(table.highlightedCount, () => {
-	emit("notify", table.highlightedCount.value, props.id);
-});
-onMounted(async () => {
-	await loadTable();
-});
 </script>
 <style scoped>
 .bid-content {
@@ -148,8 +166,11 @@ onMounted(async () => {
 .top-tools {
 	margin-left: auto;
 }
-.view-panel-element-wrapper {
+.edit-panel-element-wrapper {
+	height: 100%;
 	display: flex;
 	flex-direction: column;
+	padding-top: 56px;
+	padding-bottom: 56px;
 }
 </style>

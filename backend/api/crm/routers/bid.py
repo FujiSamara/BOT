@@ -3,7 +3,7 @@ from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
 from db import service
-from db.schemas import BidRecordSchema
+from db.schemas import BidRecordSchema, QuerySchema, TalbeInfoSchema
 from bot.handlers.bids.utils import get_current_coordinator
 
 from api.auth import User, get_current_user
@@ -12,30 +12,49 @@ from api.auth import User, get_current_user
 router = APIRouter()
 
 
-@router.get("/")
+@router.post("/page/info")
+async def get_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    _: User = Security(get_current_user, scopes=["crm_bid"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_bid_count(query)
+    all_record_count = service.get_bid_count(QuerySchema())
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/page/{page}")
 async def get_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_bid"]),
 ) -> list[BidRecordSchema]:
-    return service.get_bid_records()
+    return service.get_bid_record_at_page(page, records_per_page, query)
 
 
 @router.patch("/approve/{id}")
 async def approve_bid(
     id: int, _: User = Security(get_current_user, scopes=["crm_bid"])
-) -> BidRecordSchema:
+):
     """Approves bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
         await service.update_bid_state(
             bid, get_current_coordinator(bid), ApprovalStatus.approved
         )
-    return service.bid_to_bid_record(bid)
 
 
 @router.patch("/reject/{id}")
 async def reject_bid(
     id: int, reason: str, _: User = Security(get_current_user, scopes=["crm_bid"])
-) -> BidRecordSchema:
+):
     """Rejects bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
@@ -43,25 +62,98 @@ async def reject_bid(
         await service.update_bid_state(
             bid, get_current_coordinator(bid), ApprovalStatus.denied
         )
-    return service.bid_to_bid_record(bid)
 
 
-@router.get("/fac/")
+@router.post("/fac/page/info")
+async def get_fac_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_coordinator_bid_count(query, user.username, "fac")
+    all_record_count = service.get_coordinator_bid_count(
+        QuerySchema(), user.username, "fac"
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/fac/page/{page}")
 async def get_fac_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
 ) -> list[BidRecordSchema]:
-    return service.get_fac_bid_records_by_fac_phone(user.username)
+    return service.get_coordinator_bid_records_at_page(
+        page, records_per_page, query, user.username, "fac"
+    )
 
 
-@router.get("/cc/")
+@router.post("/cc/page/info")
+async def get_cc_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_coordinator_bid_count(query, user.username, "cc")
+    all_record_count = service.get_coordinator_bid_count(
+        QuerySchema(), user.username, "cc"
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/cc/page/{page}")
 async def get_cc_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
 ) -> list[BidRecordSchema]:
-    return service.get_fac_bid_records_by_cc_phone(user.username)
+    return service.get_coordinator_bid_records_at_page(
+        page, records_per_page, query, user.username, "cc"
+    )
 
 
-@router.get("/cc_supervisor/")
+@router.post("/cc_supervisor/page/info")
+async def get_cc_supervisor_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_coordinator_bid_count(
+        query, user.username, "cc_supervisor"
+    )
+    all_record_count = service.get_coordinator_bid_count(
+        QuerySchema(), user.username, "cc_supervisor"
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/cc_supervisor/page/{page}")
 async def get_cc_supervisor_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> list[BidRecordSchema]:
-    return service.get_fac_bid_records_by_cc_supervisor_phone(user.username)
+    return service.get_coordinator_bid_records_at_page(
+        page, records_per_page, query, user.username, "cc_supervisor"
+    )

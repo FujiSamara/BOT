@@ -1,106 +1,125 @@
 <template>
-	<div class="table-wrapper">
-		<table>
-			<thead>
-				<tr>
-					<th>
-						<div class="table-tools">
-							<table-checkbox
-								v-model:checked="props.table.allChecked.value"
-								class="checkbox"
-								id="main"
-							></table-checkbox>
-							<div class="table-actions">
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canDelete"
-									class="icons"
-									img-src="/img/trash.svg"
-									@click="onDelete"
-								></clickable-icon>
-								<clickable-icon
-									v-show="!props.table.anyChecked.value"
-									v-if="canCreate"
-									class="icons"
-									img-src="/img/add-plus.svg"
-									@click="emit('create')"
-									style="filter: none !important"
-								></clickable-icon>
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canApprove"
-									class="icons"
-									img-src="/img/check.svg"
-									:with-filter="false"
-									@click="onApprove"
-								>
-								</clickable-icon>
-								<clickable-icon
-									v-show="props.table.anyChecked.value"
-									v-if="canReject"
-									class="icons"
-									img-src="/img/reject.svg"
-									:with-filter="false"
-									@click="onReject"
-								></clickable-icon>
+	<div class="table-content-wrapper">
+		<div class="table-wrapper">
+			<table>
+				<thead>
+					<tr>
+						<th>
+							<div class="table-tools">
+								<table-checkbox
+									v-model:checked="props.table.allChecked.value"
+									class="checkbox"
+									id="main"
+								></table-checkbox>
+								<div class="table-actions">
+									<clickable-icon
+										v-show="props.table.anyChecked.value"
+										v-if="canDelete"
+										class="icons"
+										img-src="/img/trash.svg"
+										@click="onDelete"
+									></clickable-icon>
+									<clickable-icon
+										v-show="!props.table.anyChecked.value"
+										v-if="canCreate"
+										class="icons"
+										img-src="/img/add-plus.svg"
+										@click="emit('create')"
+										style="filter: none !important"
+									></clickable-icon>
+									<clickable-icon
+										v-show="props.table.anyChecked.value"
+										v-if="canApprove"
+										class="icons"
+										img-src="/img/check.svg"
+										:with-filter="false"
+										@click="onApprove"
+									>
+									</clickable-icon>
+									<clickable-icon
+										v-show="props.table.anyChecked.value"
+										v-if="canReject"
+										class="icons"
+										img-src="/img/reject.svg"
+										:with-filter="false"
+										@click="onReject"
+									></clickable-icon>
+								</div>
 							</div>
-						</div>
-					</th>
-					<th
-						v-for="columnValue in props.table.rows.value.headers"
-						:key="columnValue"
-					>
-						<div class="table-header">
-							<p @click="props.table.sort(columnValue)" style="margin: 0">
-								{{ columnValue }}
-							</p>
-							<img v-if="props.table.sorted(columnValue)" src="/img/sort_icon.svg"></img>
-						</div>
-					</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr
-					v-for="row in table.rows.value.rows"
-					:key="row.id"
-					@click.prevent="$emit('click', row.id)"
-					@mouseleave="table.highlighted.value.get(row.id)!.value = false"
-					:class="{
-						highlighted:
-							table.checked.value.get(row.id)!.value ||
-							table.highlighted.value.get(row.id)!.value,
-					}"
-				>
-					<th>
-						<div class="table-tools">
-							<table-checkbox
-								:id="row.id.toString()"
-								v-model:checked="table.checked.value.get(row.id)!.value"
-								class="checkbox"
-							></table-checkbox>
-						</div>
-					</th>
-					<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
-						<ul class="table-cell">
-							<li class="table-cell-line" v-for="cellLine in cell.cellLines">
-								<a
-									v-if="cellLine.href.length > 0"
-									@click.stop="
-										async () =>
-											await onHrefClicked(cellLine.href, cellLine.value)
-									"
-									>{{ cellLine.value }}</a
+						</th>
+						<th
+							v-for="columnName in props.table.rows.value.headers"
+							:key="columnName"
+						>
+							<div class="table-header">
+								<p
+									v-if="!props.table.orderDisabled(columnName)"
+									@click="props.table.order(columnName)"
+									style="margin: 0"
 								>
-								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
-							</li>
-						</ul>
-					</th>
-				</tr>
-				<tr>
-					<th style="border: none"></th>
-				</tr>
-			</tbody>
-		</table>
+									{{ columnName }}
+								</p>
+								<p
+									v-if="props.table.orderDisabled(columnName)"
+									style="margin: 0; color: gray"
+								>
+									{{ columnName }}
+								</p>
+								<img
+									v-if="props.table.ordered(columnName)"
+									:class="{ rotated: props.table.desc.value }"
+									src="/img/sort_icon.svg"
+								/>
+							</div>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr
+						v-for="(row, index) in table.rows.value.rows"
+						:key="row.id"
+						@click.prevent="$emit('click', index)"
+						@mouseleave="table.highlighted.value[index].value = false"
+						:class="{
+							highlighted:
+								table.checked.value[index].value ||
+								table.highlighted.value[index].value,
+						}"
+					>
+						<th>
+							<div class="table-tools">
+								<table-checkbox
+									:id="row.id.toString()"
+									v-model:checked="table.checked.value[index].value"
+									class="checkbox"
+								></table-checkbox>
+							</div>
+						</th>
+						<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
+							<ul class="table-cell">
+								<li class="table-cell-line" v-for="cellLine in cell.cellLines">
+									<a
+										v-if="cellLine.href.length > 0"
+										@click.stop="
+											async () =>
+												await onHrefClicked(cellLine.href, cellLine.value)
+										"
+										>{{ cellLine.value }}</a
+									>
+									<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+								</li>
+							</ul>
+						</th>
+					</tr>
+					<tr>
+						<th style="border: none"></th>
+					</tr>
+				</tbody>
+			</table>
+			<div v-if="table.isLoading.value" class="loader-space">
+				<circle-loader></circle-loader>
+			</div>
+		</div>
 		<Transition name="modal">
 			<ModalWindow
 				class="reject-modal"
@@ -120,14 +139,17 @@
 				</div>
 			</ModalWindow>
 		</Transition>
-		<div v-if="table.isLoading.value" class="loader-space">
-			<circle-loader></circle-loader>
-		</div>
+		<TablePagination
+			v-model:currentPage="props.table.currentPage.value"
+			:pageCount="props.table.pageCount.value"
+		>
+		</TablePagination>
 	</div>
 </template>
 <script setup lang="ts">
 import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 import ModalWindow from "@/components/ModalWindow.vue";
+import TablePagination from "@/components/TablePagination.vue";
 import type { Table } from "@/table";
 import { ref, type PropType } from "vue";
 import { BaseSchema } from "@/types";
@@ -185,6 +207,17 @@ const onHrefClicked = async (href: string, filename: string) => {
 };
 </script>
 <style scoped>
+.table-content-wrapper {
+	gap: 10px;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	height: fit-content;
+	flex-grow: 1;
+	align-items: center;
+	justify-content: space-between;
+}
+
 .table-wrapper {
 	background-color: #ffffff;
 	overflow-y: auto;
@@ -400,4 +433,8 @@ th {
 	user-select: none;
 }
 /*#endregion */
+
+.rotated {
+	transform: rotate(180deg);
+}
 </style>
