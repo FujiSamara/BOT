@@ -1313,6 +1313,27 @@ def get_coordinator_bid_count(
 # region Budget
 
 
+def get_budget_records_count(
+    query_schema: QuerySchema,
+) -> int:
+    """Return budget records count in bd."""
+    return orm.get_model_count(BudgetRecord, query_schema)
+
+
+def get_budget_records_at_page(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[ExpenditureSchema]:
+    """Return budget records with applied instructions.
+
+    See `QueryBuilder.apply` for more info applied instructions.
+    """
+    return orm.get_models(
+        BudgetRecord, BudgetRecordSchema, page, records_per_page, query_schema
+    )
+
+
 def get_budget_records() -> list[BudgetRecordSchema]:
     """Returns all budget records in database."""
     return orm.get_budget_records()

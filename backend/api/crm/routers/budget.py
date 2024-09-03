@@ -3,7 +3,12 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from db import service
-from db.schemas import BudgetRecordSchema, BudgetRecordWithChapter
+from db.schemas import (
+    BudgetRecordSchema,
+    BudgetRecordWithChapter,
+    QuerySchema,
+    TalbeInfoSchema,
+)
 
 from api.auth import User, get_current_user
 
@@ -11,8 +16,28 @@ from api.auth import User, get_current_user
 router = APIRouter()
 
 
-@router.get("/")
-async def get_budget_records(
+@router.post("/page/info")
+async def get_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    _: User = Security(get_current_user, scopes=["crm_budget"]),
+) -> TalbeInfoSchema:
+    record_count = service.get_budget_records_count(query)
+    all_record_count = service.get_budget_records_count(QuerySchema())
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/page/{page}")
+async def get_bid_records(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_budget"]),
 ) -> list[BudgetRecordWithChapter]:
     return [
@@ -24,7 +49,7 @@ async def get_budget_records(
             department=record.department,
             chapter=record.expenditure.chapter,
         )
-        for record in service.get_budget_records()
+        for record in service.get_budget_records_at_page(page, records_per_page, query)
     ]
 
 
