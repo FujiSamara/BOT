@@ -169,6 +169,14 @@ export class Table<T extends BaseSchema> {
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._infoQuery.value, this._completedQuery.value),
 		);
+
+		if (
+			this.rowCount.value !== resp.data.all_record_count &&
+			this.rowCount.value !== 0
+		) {
+			await this.handleNewRows(this.rowCount.value, resp.data.all_record_count);
+		}
+
 		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
 			if (this._loadedRows.value.length !== this._rowsPerPage) {
 				this.isLoading.value = true;
@@ -176,13 +184,6 @@ export class Table<T extends BaseSchema> {
 
 			await this.refreshRows();
 			this.isLoading.value = false;
-		}
-
-		if (
-			this.rowCount.value !== resp.data.all_record_count &&
-			this.rowCount.value !== 0
-		) {
-			await this.handleNewRows(this.rowCount.value, resp.data.all_record_count);
 		}
 
 		this.pageCount.value = resp.data.page_count;
@@ -212,7 +213,6 @@ export class Table<T extends BaseSchema> {
 
 		const rawRows: Array<T> = resp.data;
 		const newRows = rawRows.slice(-newCount, rawRows.length);
-
 		for (const row of newRows) {
 			this._newIds.value.push(row.id);
 		}
@@ -230,7 +230,6 @@ export class Table<T extends BaseSchema> {
 		if (rowsLength === 0) {
 			this.currentPage.value = 1;
 		}
-
 		this._highlighted.value = Array<boolean>(rowsLength).fill(
 			false,
 			0,
@@ -240,7 +239,6 @@ export class Table<T extends BaseSchema> {
 
 		for (let index = 0; index < this._loadedRows.value.length; index++) {
 			const row = this._loadedRows.value[index];
-
 			if (
 				this._newIds.value.find((id: number) => id === row.id) !== undefined
 			) {
