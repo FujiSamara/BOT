@@ -1,5 +1,5 @@
 <template>
-	<div class="expenditure-content">
+	<div class="bid-content">
 		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки РЗЦ</h1>
 			<PanelTools class="top-tools">
@@ -142,7 +142,7 @@ const onRowClicked = (rowKey: number) => {
 };
 </script>
 <style scoped>
-.expenditure-content {
+.bid-content {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
