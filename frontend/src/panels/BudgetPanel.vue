@@ -3,7 +3,15 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
-				<SeacrhTool id="topSearch" v-model:value="searchString"></SeacrhTool>
+				<SeacrhTool
+					id="topDepartmentSearch"
+					placeholder="Производство"
+					@input="(val) => (departmentSearchString = val)"
+				></SeacrhTool>
+				<SeacrhTool
+					id="topSearch"
+					@input="(val) => (searchString = val)"
+				></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
 				<ExportTool></ExportTool>
 			</PanelTools>
@@ -13,15 +21,15 @@
 			:table="table"
 			@click="onRowClicked"
 			@create="onCreateClicked"
-			:canCreate="false"
+			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
 		<div v-if="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelRow
 				class="edit-page"
 				:editor="editor"
-				@close="editingElement = false"
 				@submit="onSubmit"
+				@close="editingElement = false"
 			></EditPanelRow>
 		</div>
 	</div>
@@ -34,15 +42,7 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import {
-	computed,
-	onMounted,
-	Ref,
-	ref,
-	shallowRef,
-	ShallowRef,
-	watch,
-} from "vue";
+import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { BudgetTable } from "@/table";
 import { BudgetEditor } from "@/editor";
 
@@ -73,25 +73,49 @@ const onSubmit = async () => {
 };
 
 const table = new BudgetTable();
+
+const departmentSearchString = ref("");
 const searchString = ref("");
 
-table.searcher.value = computed((): ((instance: any) => boolean) => {
-	return (instance: any): boolean => {
-		const name: string = instance.expenditure.name;
-		if (name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1) {
-			return true;
-		}
-		if (instance.department) {
-			const dep_name: string = instance.department.name;
-			if (
-				dep_name.toLowerCase().indexOf(searchString.value.toLowerCase()) !== -1
-			) {
-				return true;
-			}
-		}
-		return false;
-	};
-}).value;
+watch([departmentSearchString, searchString], () => {
+	const result = [];
+
+	if (departmentSearchString.value.length > 3) {
+		result.push({
+			column: "creator",
+			term: "",
+			groups: [0, 1, 2],
+			dependencies: [
+				{
+					column: "department",
+					term: departmentSearchString.value,
+				},
+			],
+		});
+	}
+
+	if (searchString.value.length > 3) {
+		result.push(
+			{
+				column: "fac",
+				term: searchString.value,
+				groups: [0],
+			},
+			{
+				column: "chapter",
+				term: searchString.value,
+				groups: [1],
+			},
+			{
+				column: "name",
+				term: searchString.value,
+				groups: [2],
+			},
+		);
+	}
+
+	table.searchQuery.value = result;
+});
 
 const onRowClicked = (rowKey: number) => {
 	editor.value = new BudgetEditor(table.getModel(rowKey));
@@ -103,15 +127,8 @@ const onCreateClicked = () => {
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
-const loadTable = async (silent: boolean = false) => {
-	await table.loadAll(silent);
-	setTimeout(loadTable, 20000, true);
-};
-watch(table.highlightedCount, () => {
-	emit("notify", table.highlightedCount.value, props.id);
-});
-onMounted(async () => {
-	await loadTable();
+watch(table.notifies, () => {
+	emit("notify", table.notifies.value, props.id);
 });
 </script>
 <style scoped>
