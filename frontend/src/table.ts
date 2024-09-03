@@ -510,7 +510,7 @@ export class Table<T extends BaseSchema> {
 	protected _ignored: Array<string> = [];
 	/** Default forrmatter for column value. */
 	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
-		if (value === null) {
+		if (value === null || value === undefined) {
 			return new Cell();
 		} else {
 			return new Cell(new CellLine(`${value}`));
