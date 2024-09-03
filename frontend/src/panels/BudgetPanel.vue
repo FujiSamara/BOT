@@ -82,36 +82,16 @@ watch([departmentSearchString, searchString], () => {
 
 	if (departmentSearchString.value.length > 3) {
 		result.push({
-			column: "creator",
-			term: "",
-			groups: [0, 1, 2],
-			dependencies: [
-				{
-					column: "department",
-					term: departmentSearchString.value,
-				},
-			],
+			column: "department",
+			term: departmentSearchString.value,
 		});
 	}
 
 	if (searchString.value.length > 3) {
-		result.push(
-			{
-				column: "fac",
-				term: searchString.value,
-				groups: [0],
-			},
-			{
-				column: "chapter",
-				term: searchString.value,
-				groups: [1],
-			},
-			{
-				column: "name",
-				term: searchString.value,
-				groups: [2],
-			},
-		);
+		result.push({
+			column: "expenditure",
+			term: searchString.value,
+		});
 	}
 
 	table.searchQuery.value = result;
