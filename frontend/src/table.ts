@@ -474,6 +474,10 @@ export class Table<T extends BaseSchema> {
 	public ordered(header: string): boolean {
 		return this.getAlias(this._orderBy.value) === header;
 	}
+	/** Return **true** if sorted by this column with **header** is disabled. */
+	public orderDisabled(_: string): boolean {
+		return false;
+	}
 	/** Sorts columns by specify **header**. */
 	public order(header: string) {
 		if (header === this.getAlias(this._orderBy.value)) {
@@ -485,9 +489,7 @@ export class Table<T extends BaseSchema> {
 			return;
 		}
 
-		const column = Object.keys(this._loadedRows.value[0]).find(
-			(fieldName) => this.getAlias(fieldName) === header,
-		);
+		const column = this.aliasToColumnName(header);
 
 		if (column !== undefined) {
 			this._orderBy.value = column;
@@ -538,6 +540,14 @@ export class Table<T extends BaseSchema> {
 			alias = fieldName;
 		}
 		return alias;
+	}
+	/** Returns original column name by **alias** */
+	protected aliasToColumnName(alias: string): string | undefined {
+		const column = Object.keys(this._loadedRows.value[0]).find(
+			(fieldName) => this.getAlias(fieldName) === alias,
+		);
+
+		return column;
 	}
 	/** Returns count of highlighted rows. */
 	public highlightedCount = computed(() => {
@@ -715,6 +725,10 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("chapter", 1);
 		this._columsOrder.set("expenditure", 2);
+	}
+
+	public orderDisabled(header: string): boolean {
+		return this.aliasToColumnName(header) === "chapter";
 	}
 }
 

@@ -52,7 +52,17 @@
 							:key="columnName"
 						>
 							<div class="table-header">
-								<p @click="props.table.order(columnName)" style="margin: 0">
+								<p
+									v-if="!props.table.orderDisabled(columnName)"
+									@click="props.table.order(columnName)"
+									style="margin: 0"
+								>
+									{{ columnName }}
+								</p>
+								<p
+									v-if="props.table.orderDisabled(columnName)"
+									style="margin: 0; color: gray"
+								>
 									{{ columnName }}
 								</p>
 								<img
