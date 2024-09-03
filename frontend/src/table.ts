@@ -147,6 +147,8 @@ export class Table<T extends BaseSchema> {
 			},
 		);
 
+		this.forceRefresh();
+
 		const loop = async () => {
 			if (!skipLoop) {
 				await this.refreshInfo(true);
@@ -700,7 +702,6 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 export class BudgetTable extends Table<BudgetSchema> {
 	constructor() {
 		super("budget");
-
 		this._formatters.set("expenditure", parser.formatExpenditure);
 		this._formatters.set("department", parser.formatDepartment);
 
