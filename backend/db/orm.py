@@ -239,6 +239,9 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
                 and_(
                     Bid.worker_id == worker.id,
                     or_(
+                        Bid.fac_state == ApprovalStatus.pending_approval,
+                        Bid.cc_state == ApprovalStatus.pending_approval,
+                        Bid.cc_supervisor_state == ApprovalStatus.pending_approval,
                         Bid.accountant_card_state == ApprovalStatus.pending_approval,
                         Bid.accountant_cash_state == ApprovalStatus.pending_approval,
                         Bid.teller_card_state == ApprovalStatus.pending_approval,
