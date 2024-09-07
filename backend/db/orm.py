@@ -203,6 +203,7 @@ def add_bid(bid: BidSchema):
             cc_state=bid.cc_state,
             cc_supervisor_state=bid.cc_supervisor_state,
             expenditure=expenditure,
+            need_edm=bid.need_edm,
         )
         s.add(bid_model)
 
@@ -333,6 +334,7 @@ def update_bid(bid: BidSchema):
         cur_bid.fac_state = bid.fac_state
         cur_bid.cc_state = bid.cc_state
         cur_bid.cc_supervisor_state = bid.cc_supervisor_state
+        cur_bid.need_edm = bid.need_edm
 
 
 def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchema]:

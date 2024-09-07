@@ -121,6 +121,7 @@ class BidSchema(BaseModel):
     denying_reason: Optional[str]
 
     expenditure: "ExpenditureSchema"
+    need_edm: Optional[bool]
 
     # States
     fac_state: ApprovalStatus
@@ -312,6 +313,7 @@ class BidRecordSchema(BaseSchema):
     comment: Optional[str]
     denying_reason: Optional[str]
     expenditure: ExpenditureSchema
+    need_edm: Optional[bool]
 
     @field_validator("documents", mode="before")
     @classmethod
