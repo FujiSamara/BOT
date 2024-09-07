@@ -54,3 +54,7 @@ export function formatPaymentType(payment_type: string) {
 
 	return new Cell(new CellLine(result));
 }
+
+export function formatCheck(check: boolean) {
+	return new Cell(new CellLine(check ? "Да" : "Нет"));
+}

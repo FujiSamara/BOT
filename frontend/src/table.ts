@@ -751,6 +751,7 @@ export class BidTable extends Table<BidSchema> {
 		this._formatters.set("documents", parser.formatDocuments);
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);
+		this._formatters.set("need_edm", parser.formatCheck);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
@@ -765,6 +766,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("denying_reason", "Причина отказа");
 		this._aliases.set("documents", "Документы");
 		this._aliases.set("expenditure", "Статья");
+		this._aliases.set("need_edm", "Счет в ЭДО");
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("create_date", 1);
@@ -779,6 +781,7 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("denying_reason", 10);
 		this._columsOrder.set("comment", 11);
 		this._columsOrder.set("expenditure", 12);
+		this._columsOrder.set("need_edm", 13);
 	}
 }
 
