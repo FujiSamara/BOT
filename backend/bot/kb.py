@@ -90,6 +90,7 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     department = data.get("department")
     document = data.get("document")
     expenditure = data.get("expenditure")
+    need_edm = data.get("need_edm")
 
     all_field_exist = True
 
@@ -152,11 +153,16 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=document, callback_data="dummy"),
         ],
         [
+            InlineKeyboardButton(text="Счет в ЭДО?", callback_data="get_edm_form"),
+            InlineKeyboardButton(
+                text="Да" if need_edm else "Нет", callback_data="dummy"
+            ),
+        ],
+        [
             InlineKeyboardButton(
                 text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form"
             )
         ],
-        [InlineKeyboardButton(text="Комментарий", callback_data="get_comment_form")],
         [create_bid_menu_button],
     ]
     if all_field_exist:

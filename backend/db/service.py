@@ -951,6 +951,7 @@ async def create_bid(
     teller_cash_state: ApprovalStatus,
     teller_card_state: ApprovalStatus,
     comment: Optional[str] = None,
+    need_edm: Optional[bool] = None,
 ):
     """
     Creates an bid wrapped in `BidSchema` and adds it to database.
@@ -1012,6 +1013,7 @@ async def create_bid(
         accountant_cash_state=accountant_cash_state,
         teller_card_state=teller_card_state,
         teller_cash_state=teller_cash_state,
+        need_edm=need_edm,
     )
 
     orm.add_bid(bid)
@@ -1237,6 +1239,7 @@ def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
         department=bid.department,
         worker=bid.worker,
         close_date=bid.close_date,
+        need_edm=bid.need_edm,
         comment=bid.comment,
         create_date=bid.create_date,
         documents=[doc.document for doc in bid.documents],

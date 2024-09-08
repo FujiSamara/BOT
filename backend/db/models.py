@@ -179,8 +179,6 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
-    bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
-
     # айдишник из биосмарта для определения конкретного подразделения
     # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
     biosmart_strid: Mapped[str] = mapped_column(nullable=True)
@@ -260,6 +258,7 @@ class Department(Base):
     technical_requests: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest", back_populates="department"
     )
+    bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
 
 
 class Group(Base):
@@ -310,17 +309,7 @@ class Worker(Base):
     company: Mapped["Company"] = relationship("Company", back_populates="workers")
 
     bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="worker")
-    bids_it: Mapped[List["BidIT"]] = relationship(
-        "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
-    )
-    repairman_it: Mapped[List["BidIT"]] = relationship(
-        "BidIT", back_populates="repairman", foreign_keys="[BidIT.repairman_id]"
-    )
-    territorial_manager_it: Mapped[List["BidIT"]] = relationship(
-        "BidIT",
-        back_populates="territorial_manager",
-        foreign_keys="[BidIT.territorial_manager_id]",
-    )
+
     worker_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="sender"
     )
@@ -389,6 +378,18 @@ class Worker(Base):
         )
     )
 
+    bids_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="worker", foreign_keys="[BidIT.worker_id]"
+    )
+    repairman_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT", back_populates="repairman", foreign_keys="[BidIT.repairman_id]"
+    )
+    territorial_manager_it: Mapped[List["BidIT"]] = relationship(
+        "BidIT",
+        back_populates="territorial_manager",
+        foreign_keys="[BidIT.territorial_manager_id]",
+    )
+
 
 class Bid(Base):
     """Заявки"""
@@ -405,6 +406,8 @@ class Bid(Base):
     denying_reason: Mapped[str] = mapped_column(nullable=True, default="")
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    # Electronic document management
+    need_edm: Mapped[bool] = mapped_column(nullable=True)
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship("Department", back_populates="bids")

@@ -19,6 +19,7 @@ class BidCreating(StatesGroup):
     payment_purpose = State()
     comment = State()
     documents = State()
+    edm = State()
 
 
 class BidCoordination(StatesGroup):

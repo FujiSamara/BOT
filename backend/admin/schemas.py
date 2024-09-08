@@ -98,6 +98,8 @@ class DepartmentView(ModelView, model=Department):
         Department.technician_id,
         Department.electrician_id,
         Department.chief_technician_id,
+        Department.bids_it,
+        Department.it_repairman_id,
     ]
     form_excluded_columns = [
         Department.workers,
@@ -134,6 +136,7 @@ class DepartmentView(ModelView, model=Department):
         Department.chief_technician: "Главный техник",
         Department.technician: "Техник",
         Department.electrician: "Электрик",
+        Department.it_repairman: "IT ремотник",
     }
 
     form_ajax_refs = {
@@ -201,30 +204,28 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number,
     ]
     column_list = [
-        Worker.f_name,
         Worker.l_name,
+        Worker.f_name,
         Worker.o_name,
         Worker.phone_number,
     ]
-    column_details_exclude_list = [
-        Worker.department_id,
-        Worker.group_id,
-        Worker.post_id,
-        Worker.bids,
-        Worker.work_times,
-        Worker.company_id,
-        Worker.biosmart_strid,
-        Worker.bs_import,
-        Worker.bs_import_error_text,
-        Worker.worker_bids,
-        Worker.facs,
-        Worker.ccs,
-        Worker.cc_supervisors,
-        Worker.password,
-        Worker.repairman_technical_requests,
-        Worker.worker_technical_requests,
-        Worker.territorial_manager_technical_requests,
-        Worker.expenditures,
+    column_details_list = [
+        Worker.l_name,
+        Worker.f_name,
+        Worker.o_name,
+        Worker.post,
+        Worker.phone_number,
+        Worker.department,
+        Worker.company,
+        Worker.group,
+        Worker.b_date,
+        Worker.telegram_id,
+        Worker.gender,
+        Worker.employment_date,
+        Worker.dismissal_date,
+        Worker.medical_records_availability,
+        Worker.citizenship,
+        Worker.can_use_crm,
     ]
     can_export = False
 
@@ -295,8 +296,8 @@ class WorkerView(ModelView, model=Worker):
         else:
             return "Женщина"
 
-    async def on_model_change(self, data, model, is_created, request):
-        if "password" in data:
+    async def on_model_change(self, data: dict, model: Worker, is_created, request):
+        if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
     column_formatters = {Worker.gender: gender_format}

@@ -15,6 +15,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {bid_state}
+{hbold("Счет в ЭДО?")}: {"Да" if bid.need_edm else "Нет"}
 """
 
     if bid_state == "Отказано":

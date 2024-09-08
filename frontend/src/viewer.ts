@@ -70,6 +70,7 @@ export class BidViewer extends Viewer<BidSchema> {
 		this._formatters.set("documents", parser.formatDocuments);
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);
+		this._formatters.set("need_edm", parser.formatCheck);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
@@ -84,6 +85,7 @@ export class BidViewer extends Viewer<BidSchema> {
 		this._aliases.set("denying_reason", "Причина отказа");
 		this._aliases.set("documents", "Документы");
 		this._aliases.set("expenditure", "Статья");
+		this._aliases.set("need_edm", "Счет в ЭДО");
 
 		this.initFields(model);
 	}

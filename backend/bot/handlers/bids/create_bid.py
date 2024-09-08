@@ -100,6 +100,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     comment = data.get("comment")
     documents = data.get("document")
     expenditure = data.get("expenditure")
+    need_edm = data.get("need_edm")
 
     document_files: list[UploadFile] = []
 
@@ -143,6 +144,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         accountant_cash_state=accountant_cash_state,
         teller_card_state=teller_card_state,
         teller_cash_state=teller_cash_state,
+        need_edm=need_edm,
     )
 
     await try_edit_message(message=callback.message, text="Успешно!")
@@ -319,6 +321,27 @@ async def set_documents(message: Message, state: FSMContext):
         "document",
         clear_state_with_success_caller,
     )
+
+
+# Need edm
+@router.callback_query(F.data == "get_edm_form")
+async def get_edm_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.edm)
+    await callback.message.delete()
+    await callback.message.answer(
+        hbold("Счет в ЭДО?"), reply_markup=create_reply_keyboard("Да", "Нет")
+    )
+
+
+@router.message(BidCreating.edm)
+async def set_edm(message: Message, state: FSMContext):
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in ["Да", "Нет"]:
+        await state.update_data(need_edm=message.text == "Да")
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(format_err)
 
 
 # History section
