@@ -16,6 +16,7 @@ from db.models import (
     Gender,
     TechnicalRequest,
     Group,
+    WorkTime,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -525,3 +526,45 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     }
 
     column_formatters_detail = column_formatters
+
+
+class WorkTimeAdminView(ModelView, model=WorkTime):
+    name = "Явка"
+    name_plural = "Явки"
+
+    can_create = False
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        WorkTime.id,
+        WorkTime.worker,
+        WorkTime.post,
+        WorkTime.department,
+        WorkTime.company,
+        WorkTime.work_begin,
+        WorkTime.work_end,
+        WorkTime.work_duration,
+        WorkTime.day,
+        WorkTime.rating,
+        WorkTime.fine,
+        WorkTime.salary,
+    ]
+
+    column_sortable_list = [
+        WorkTime.id,
+    ]
+
+    column_labels = {
+        WorkTime.worker: "Работник",
+        WorkTime.post: "Должность",
+        WorkTime.department: "Департамент",
+        WorkTime.company: "Компания",
+        WorkTime.work_begin: "Начало работы",
+        WorkTime.work_end: "Конец работы",
+        WorkTime.work_duration: "Продолжительность (мин)",
+        WorkTime.day: "День",
+        WorkTime.rating: "Рейтинг",
+        WorkTime.fine: "Штраф",
+        WorkTime.salary: "Зарплата",
+    }

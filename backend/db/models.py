@@ -532,7 +532,6 @@ class WorkTime(Base):
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     worker: Mapped["Worker"] = relationship("Worker", back_populates="work_times")
-    salary: Mapped[int] = mapped_column(nullable=True)
 
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"), nullable=True)
     company: Mapped["Company"] = relationship("Company", back_populates="work_times")
@@ -552,6 +551,7 @@ class WorkTime(Base):
 
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
+    salary: Mapped[int] = mapped_column(nullable=True)
 
 
 class Expenditure(Base):
