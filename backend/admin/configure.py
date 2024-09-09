@@ -7,6 +7,7 @@ from admin.schemas import (
     WorkerView,
     WorkerBidView,
     TechnicalRequestView,
+    WorkTimeAdminView,
 )
 
 
@@ -24,3 +25,4 @@ def configure(admin: FujiAdmin):
     admin.add_view(WorkerView)
     admin.add_view(WorkerBidView)
     admin.add_view(TechnicalRequestView)
+    admin.add_view(WorkTimeAdminView)
