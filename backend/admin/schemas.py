@@ -16,13 +16,12 @@ from db.models import (
     Gender,
     TechnicalRequest,
     Group,
-    WorkTime
+    WorkTime,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
 from db import service
 from api.auth import encrypt_password
-
 
 
 class PostScopeView(ModelView, model=PostScope):

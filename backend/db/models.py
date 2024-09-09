@@ -527,6 +527,7 @@ class WorkerBidWorkPermission(WorkerBidDocument):
 
 class WorkTime(Base):
     """Табель работы"""
+
     __tablename__ = "work_times"
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
