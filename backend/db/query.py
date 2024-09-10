@@ -1,6 +1,8 @@
+from io import BytesIO
 import logging
 from typing import Callable, Optional, Type
 import typing
+from abc import ABC
 from sqlalchemy import BinaryExpression, Select, and_, or_, desc, select
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm import InstrumentedAttribute
@@ -8,26 +10,17 @@ from pydantic import BaseModel
 import db.schemas as schemas
 import db.models as models
 from db.database import Base
+from xlsxwriter import Workbook
 
 
-class QueryBuilder:
-    """Helper for building composite query.
+class Builder(ABC):
+    """Base class for sqlalchemy based builder.
 
-    Important:
-    1) Searching can applying for field inherit `BaseModel` and simple field.
-    Filtering can only applying simple field (`str`, `int`, etc...),
-    but filtering can applying any deep query, for example `Dog.owner.name`
-    where `name` is `str` and `owner` is `BaseModel` child.
-    2) Searching supports groups, different groups handles by `or_` statement,
-    terms inside group handles by `_and` statement.
-    Filtering use `_and` everywhere.
-    3) Searching use `ilike('%term%')` syntax.
-    Filtering use `column == value` syntax.
-    4) Order by can work with up level field (not Dog.owner.name, only Dow.owner).
-    5) Order by can applying for field inherit `BaseModel` and simple field.
+    - Note:
+    Builder works inside session only.
     """
 
-    name = "|QUERYBUILDER|"
+    name = "|BUILDER|"
 
     logger = logging.getLogger("uvicorn.error")
 
@@ -38,9 +31,7 @@ class QueryBuilder:
         entities = [item["entity"] for item in initial_query.column_descriptions]
 
         if not len(entities) == 1:
-            self.logger.warning(
-                f"{self.name} Requested query building with not one entity"
-            )
+            self._warning(" Requested query building with not one entity")
 
         self.query = initial_query
         self._model_type = entities[0]
@@ -59,6 +50,41 @@ class QueryBuilder:
         self._model_to_schema: dict[Type[Base], Type[BaseModel]] = {
             self._schema_to_model[schema]: schema for schema in self._schema_to_model
         }
+
+    def all(self) -> BaseModel:
+        """Returns all entries in db with `self.query`."""
+        schema_type = self._model_to_schema[self._model_type]
+        return [schema_type.model_validate(model) for model in self.query.all()]
+
+    def _warning(self, msg: str):
+        """Logs `msg`."""
+        self.logger.warning(f"{self.name} {msg}")
+
+
+class QueryBuilder(Builder):
+    """Helper for building composite query.
+
+    Important:
+    1) Searching can applying for field inherit `BaseModel` and simple field.
+    Filtering can only applying simple field (`str`, `int`, etc...),
+    but filtering can applying any deep query, for example `Dog.owner.name`
+    where `name` is `str` and `owner` is `BaseModel` child.
+    2) Searching supports groups, different groups handles by `or_` statement,
+    terms inside group handles by `_and` statement.
+    Filtering use `_and` everywhere.
+    3) Searching use `ilike('%term%')` syntax.
+    Filtering use `column == value` syntax.
+    4) Order by can work with up level field (not Dog.owner.name, only Dow.owner).
+    5) Order by can applying for field inherit `BaseModel` and simple field.
+    """
+
+    name = "|QUERYBUILDER|"
+
+    def __init__(self, initial_query: Query):
+        """
+        :param initial_query: Initially generated query for table `model_type` by `Session`.
+        """
+        super().__init__(initial_query)
 
         # Order by builders.
         self._order_by_builders: dict[
@@ -136,8 +162,8 @@ class QueryBuilder:
             self.query = self.query.order_by(column)
         # If column is schema with non implemented order by.
         else:
-            self.logger.warning(
-                f"{self.name} Attempt to order by non implemented method, column type: {column_type}"
+            self._warning(
+                f"Attempt to order by non implemented method, column type: {column_type}"
             )
 
     def _order_by_worker(
@@ -246,8 +272,8 @@ class QueryBuilder:
                     search_clause = column.ilike(f"%{term}%")
                 # If column is schema with non implemented search.
                 else:
-                    self.logger.warning(
-                        f"{self.name} Attempt to search non implemented method, column type: {column_type}"
+                    self._warning(
+                        f"Attempt to search non implemented method, column type: {column_type}"
                     )
                     continue
 
@@ -362,8 +388,8 @@ class QueryBuilder:
                     if dependency_clause is not None:
                         cur_level_select = cur_level_select.filter(dependency_clause)
                 else:
-                    self.logger.warning(
-                        f"{self.name} Attempt to filter with non simple type, column type: {column_type}"
+                    self._warning(
+                        f"Attempt to filter with non simple type, column type: {column_type}"
                     )
                     continue
 
@@ -380,3 +406,76 @@ class QueryBuilder:
         return and_(*filter_clauses) if len(filter_clauses) > 0 else None
 
     # endregion
+
+
+class XLSXExporter(Builder):
+    """Helper for building xlsx sheets.
+
+    - Note: Worksheet columns based on Schema fields of viewing model
+    (**CatSchema** for **Cat**).
+    """
+
+    name = "|XLSXEXPORTER|"
+
+    def __init__(self, initial_query: Query, cell_length: int = 18):
+        """
+        :param initial_query: Initially generated query for table `model_type` by `Session`.
+        :param cell_length: Table cell length.
+        """
+        super().__init__(initial_query)
+
+        self._formatters: dict[Type, Callable[[any], str]] = {
+            models.Worker: self._format_worker,
+            models.Department: self._format_department,
+        }
+        self._cell_length = cell_length
+
+    def export(self, *exclude_columns: str) -> BytesIO:
+        """Generates xlsx file with data getting by `self.query`.
+
+        :param exclude_columns: Column names for exclude from worksheet.
+
+        Returns:
+        Generated xlsx file in `BytesIO` representation.
+        """
+        result = BytesIO()
+        workbook = Workbook(result)
+        worksheet = workbook.add_worksheet()
+
+        schema_type = self._model_to_schema[self._model_type]
+        headers = []
+        data = self.all()
+
+        for field_name in schema_type.model_fields:
+            if field_name not in exclude_columns:
+                headers.append(field_name)
+
+        worksheet.set_column(0, len(headers), self._cell_length)  # Sets columns width
+        worksheet.write_row(0, 0, headers)  # Writes headers
+
+        for index, elem in enumerate(data):
+            vals = []
+            for name in headers:
+                val = getattr(elem, name)
+                vals.append(self._format(val))
+
+            worksheet.write_row(index + 1, 0, vals)  # Index + 1 (header row)
+
+        workbook.close()
+        result.seek(0)
+
+        return result
+
+    def _format(self, value: any) -> str:
+        """Formats `value`, used exist formatter for each type."""
+        if type(value) in self._formatters:
+            formatter = self._formatters[type(value)]
+            return formatter(value)
+
+        return str(value)
+
+    def _format_worker(self, value: models.Worker) -> str:
+        return f"{value.l_name} {value.f_name} {value.o_name}"
+
+    def _format_department(self, value: models.Department) -> str:
+        return f"{value.name}"
