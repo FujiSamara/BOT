@@ -596,6 +596,22 @@ export class Table<T extends BaseSchema> {
 		this.forceRefresh();
 		this.emulateLoading(false);
 	}
+	/** Exports table with current query. */
+	public async export() {
+		const url = `${this._endpoint}${this._exportEndpoint}/export`;
+		const resp = await this._network.withAuthChecking(
+			axios.post(url, this._completedQuery.value, {
+				responseType: "blob",
+				withCredentials: true,
+			}),
+		);
+
+		const filename = (resp.headers["content-disposition"] as string).split(
+			"=",
+		)[1];
+
+		this._network.saveFile(filename, resp.data);
+	}
 	// Endpoints.
 	private _endpoint: string = "";
 	protected _getEndpoint: string = "";
@@ -605,6 +621,7 @@ export class Table<T extends BaseSchema> {
 	protected _deleteEndpoint: string = "";
 	protected _approveEndpoint: string = "";
 	protected _rejectEndpoint: string = "";
+	protected _exportEndpoint: string = "";
 	//#endregion
 
 	//#region CRUD

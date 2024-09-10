@@ -107,9 +107,12 @@ export const useNetworkStore = defineStore("network", {
 				}),
 			);
 
-			const file = resp.data as Uint8Array;
-
-			const fileBlob = new Blob([file], { type: "application/octet-stream" });
+			this.saveFile(filename, resp.data);
+		},
+		saveFile(filename: string, file: Uint8Array) {
+			const fileBlob = new Blob([file], {
+				type: "application/octet-stream",
+			});
 
 			FileSaver.saveAs(fileBlob, filename);
 		},
