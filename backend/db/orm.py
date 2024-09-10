@@ -1,6 +1,6 @@
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Optional, Type
+from typing import Any, Callable, Optional, Type
 from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
@@ -1206,14 +1206,16 @@ def get_models(
 def export_models(
     model_type: Type[Base],
     query_schema: QuerySchema,
+    *exclude_columns: str,
+    **formatters: Callable[[any], str],
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
         query_builder = QueryBuilder(s.query(model_type))
         query_builder.apply(query_schema)
-        exporter = XLSXExporter(query_builder.query)
+        exporter = XLSXExporter(query_builder.query, **formatters)
 
-        return exporter.export()
+        return exporter.export(*exclude_columns)
 
 
 # endregion
