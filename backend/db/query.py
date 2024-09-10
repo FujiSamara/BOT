@@ -1,4 +1,5 @@
 from io import BytesIO
+from datetime import datetime
 import logging
 from typing import Callable, Optional, Type
 import typing
@@ -11,6 +12,8 @@ import db.schemas as schemas
 import db.models as models
 from db.database import Base
 from xlsxwriter import Workbook
+from settings import get_settings
+from bot.kb import approval_status_dict
 
 
 class Builder(ABC):
@@ -417,16 +420,22 @@ class XLSXExporter(Builder):
 
     name = "|XLSXEXPORTER|"
 
-    def __init__(self, initial_query: Query):
+    def __init__(self, initial_query: Query, **field_formatters: Callable[[any], str]):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         :param cell_length: Table cell length.
+        :param field_formatters: Special formatters for fields
+        (**column_name**=**formatter**). Overrides default type formatters.
         """
         super().__init__(initial_query)
 
-        self._formatters: dict[Type, Callable[[any], str]] = {
+        self._field_formatters: dict[str, Callable[[any], str]] = field_formatters
+        self._type_formatters: dict[Type, Callable[[any], str]] = {
             schemas.WorkerSchema: self._format_worker,
             schemas.DepartmentSchema: self._format_department,
+            schemas.ExpenditureSchema: self._format_expenditure,
+            datetime: self._format_datetime,
+            models.ApprovalStatus: self._format_approval_status,
         }
 
     def export(self, *exclude_columns: str) -> BytesIO:
@@ -457,7 +466,7 @@ class XLSXExporter(Builder):
             vals = []
             for name_index, name in enumerate(headers):
                 val = getattr(elem, name)
-                formatted = self._format(val)
+                formatted = self._format(val, name)
                 vals.append(formatted)
                 if len(formatted) > rows_width[name_index]:
                     rows_width[name_index] = len(formatted)
@@ -473,16 +482,29 @@ class XLSXExporter(Builder):
 
         return result
 
-    def _format(self, value: any) -> str:
+    def _format(self, value: any, column_name: str) -> str:
         """Formats `value`, used exist formatter for each type."""
-        if type(value) in self._formatters:
-            formatter = self._formatters[type(value)]
-            return formatter(value)
+        formatter = None
 
-        return str(value)
+        if type(value) in self._type_formatters:
+            formatter = self._type_formatters[type(value)]
 
-    def _format_worker(self, value: models.Worker) -> str:
+        if column_name in self._field_formatters:
+            formatter = self._field_formatters[column_name]
+
+        return formatter(value) if formatter else str(value)
+
+    def _format_worker(self, value: schemas.WorkerSchema) -> str:
         return f"{value.l_name} {value.f_name} {value.o_name}"
 
-    def _format_department(self, value: models.Department) -> str:
+    def _format_department(self, value: schemas.DepartmentSchema) -> str:
         return f"{value.name}"
+
+    def _format_expenditure(self, value: schemas.ExpenditureSchema) -> str:
+        return f"{value.name}"
+
+    def _format_datetime(self, value: datetime) -> str:
+        return value.strftime(get_settings().date_format)
+
+    def _format_approval_status(self, value: models.ApprovalStatus) -> str:
+        return approval_status_dict[value]
