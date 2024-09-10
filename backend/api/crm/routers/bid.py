@@ -184,7 +184,7 @@ async def export_fac_bids(
     return StreamingResponse(
         content=file,
         headers={
-            "Content-Disposition": "filename=bids.xlsx",
+            "Content-Disposition": "filename=fac_bids.xlsx",
         },
         media_type="application/octet-stream",
     )
@@ -199,7 +199,7 @@ async def export_cc_bids(
     return StreamingResponse(
         content=file,
         headers={
-            "Content-Disposition": "filename=bids.xlsx",
+            "Content-Disposition": "filename=cc_bids.xlsx",
         },
         media_type="application/octet-stream",
     )
@@ -217,7 +217,7 @@ async def export_cc_supervisor_bids(
     return StreamingResponse(
         content=file,
         headers={
-            "Content-Disposition": "filename=bids.xlsx",
+            "Content-Disposition": "filename=cc_supervisor_bids.xlsx",
         },
         media_type="application/octet-stream",
     )
