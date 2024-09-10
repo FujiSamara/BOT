@@ -417,7 +417,7 @@ class XLSXExporter(Builder):
 
     name = "|XLSXEXPORTER|"
 
-    def __init__(self, initial_query: Query, cell_length: int = 18):
+    def __init__(self, initial_query: Query):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         :param cell_length: Table cell length.
@@ -425,10 +425,9 @@ class XLSXExporter(Builder):
         super().__init__(initial_query)
 
         self._formatters: dict[Type, Callable[[any], str]] = {
-            models.Worker: self._format_worker,
-            models.Department: self._format_department,
+            schemas.WorkerSchema: self._format_worker,
+            schemas.DepartmentSchema: self._format_department,
         }
-        self._cell_length = cell_length
 
     def export(self, *exclude_columns: str) -> BytesIO:
         """Generates xlsx file with data getting by `self.query`.
@@ -443,23 +442,31 @@ class XLSXExporter(Builder):
         worksheet = workbook.add_worksheet()
 
         schema_type = self._model_to_schema[self._model_type]
-        headers = []
+        headers: list[str] = []
+        rows_width: list[int] = []
         data = self.all()
 
         for field_name in schema_type.model_fields:
             if field_name not in exclude_columns:
+                rows_width.append(len(field_name))
                 headers.append(field_name)
 
-        worksheet.set_column(0, len(headers), self._cell_length)  # Sets columns width
         worksheet.write_row(0, 0, headers)  # Writes headers
 
         for index, elem in enumerate(data):
             vals = []
-            for name in headers:
+            for name_index, name in enumerate(headers):
                 val = getattr(elem, name)
-                vals.append(self._format(val))
+                formatted = self._format(val)
+                vals.append(formatted)
+                if len(formatted) > rows_width[name_index]:
+                    rows_width[name_index] = len(formatted)
 
             worksheet.write_row(index + 1, 0, vals)  # Index + 1 (header row)
+
+        # Sets columns width
+        for index, row_width in enumerate(rows_width):
+            worksheet.set_column(index, index, row_width)
 
         workbook.close()
         result.seek(0)
