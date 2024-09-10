@@ -1305,7 +1305,7 @@ def get_coordinator_bid_count(
     return get_bid_count(query_schema)
 
 
-def export_bids(
+def export_bid_records(
     query_schema: QuerySchema,
 ) -> BytesIO:
     """Returns xlsx file with bids records filtered by `query_schema`."""
@@ -1333,6 +1333,29 @@ def export_bids(
         ],
         aliases[BidSchema],
     )
+
+
+def export_coordintator_bid_records(
+    query_schema: QuerySchema,
+    phone: int,
+    coordinator: str,
+) -> BytesIO:
+    """Returns xlsx file with bids records filtered by `query_schema`
+    for specified `coordinator`."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column="expenditure",
+            value="",
+            dependencies=[
+                FilterSchema(
+                    column=coordinator,
+                    value="",
+                    dependencies=[FilterSchema(column="phone_number", value=phone)],
+                )
+            ],
+        )
+    )
+    return export_bid_records(query_schema)
 
 
 # endregion

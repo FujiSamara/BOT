@@ -69,7 +69,7 @@ async def reject_bid(
 async def export_bids(
     query: QuerySchema, _: User = Security(get_current_user, scopes=["crm_bid"])
 ) -> Response:
-    file = service.export_bids(query)
+    file = service.export_bid_records(query)
 
     return StreamingResponse(
         content=file,
@@ -172,4 +172,52 @@ async def get_cc_supervisor_bids(
 ) -> list[BidRecordSchema]:
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "cc_supervisor"
+    )
+
+
+@router.post("/fac/export")
+async def export_fac_bids(
+    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_fac_bid"])
+) -> Response:
+    file = service.export_coordintator_bid_records(query, user.username, "fac")
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.post("/cc/export")
+async def export_cc_bids(
+    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_cc_bid"])
+) -> Response:
+    file = service.export_coordintator_bid_records(query, user.username, "cc")
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.post("/cc_supervisor/export")
+async def export_cc_supervisor_bids(
+    query: QuerySchema,
+    user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
+) -> Response:
+    file = service.export_coordintator_bid_records(
+        query, user.username, "cc_supervisor"
+    )
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=bids.xlsx",
+        },
+        media_type="application/octet-stream",
     )
