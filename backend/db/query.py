@@ -420,16 +420,26 @@ class XLSXExporter(Builder):
 
     name = "|XLSXEXPORTER|"
 
-    def __init__(self, initial_query: Query, **field_formatters: Callable[[any], str]):
+    def __init__(
+        self,
+        initial_query: Query,
+        field_formatters: dict[str, Callable[[any], str]] = {},
+        exclude_columns: list[str] = [],
+        aliases: dict[str, str] = {},
+    ):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         :param cell_length: Table cell length.
         :param field_formatters: Special formatters for fields
         (**column_name**=**formatter**). Overrides default type formatters.
+        :param exclude_columns: Column names for exclude from worksheet.
+        :param aliases: Aliases for column headers (**column_name**=**alias**).
         """
         super().__init__(initial_query)
 
         self._field_formatters: dict[str, Callable[[any], str]] = field_formatters
+        self._aliases: dict[str, str] = aliases
+        self._exclude_columns: list[str] = exclude_columns
         self._type_formatters: dict[Type, Callable[[any], str]] = {
             schemas.WorkerSchema: self._format_worker,
             schemas.DepartmentSchema: self._format_department,
@@ -438,10 +448,10 @@ class XLSXExporter(Builder):
             models.ApprovalStatus: self._format_approval_status,
         }
 
-    def export(self, *exclude_columns: str) -> BytesIO:
+    def export(self) -> BytesIO:
         """Generates xlsx file with data getting by `self.query`.
 
-        :param exclude_columns: Column names for exclude from worksheet.
+
 
         Returns:
         Generated xlsx file in `BytesIO` representation.
@@ -456,11 +466,21 @@ class XLSXExporter(Builder):
         data = self.all()
 
         for field_name in schema_type.model_fields:
-            if field_name not in exclude_columns:
-                rows_width.append(len(field_name))
+            if field_name not in self._exclude_columns:
+                width = len(field_name)
+                if field_name in self._aliases:
+                    width = max(width, len(self._aliases[field_name]))
+                rows_width.append(width)
                 headers.append(field_name)
 
-        worksheet.write_row(0, 0, headers)  # Writes headers
+        worksheet.write_row(
+            0,
+            0,
+            [
+                self._aliases[header] if header in self._aliases else header
+                for header in headers
+            ],
+        )  # Writes headers
 
         for index, elem in enumerate(data):
             vals = []

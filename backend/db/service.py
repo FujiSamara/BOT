@@ -36,6 +36,7 @@ from db.schemas import (
     FileSchema,
     ProblemITSchema,
     BidITSchema,
+    aliases,
 )
 import logging
 from datetime import datetime, timedelta
@@ -1308,7 +1309,30 @@ def export_bids(
     query_schema: QuerySchema,
 ) -> BytesIO:
     """Returns xlsx file with bids records filtered by `query_schema`."""
-    return orm.export_models(Bid, query_schema)
+    # Formatters
+    from bot.kb import payment_type_dict
+
+    return orm.export_models(
+        Bid,
+        query_schema,
+        dict(
+            payment_type=lambda type: payment_type_dict[type],
+            need_edm=lambda need: "Да" if need else "Нет",
+        ),
+        [
+            "documents",
+            "fac_state",
+            "cc_state",
+            "cc_supervisor_state",
+            "kru_state",
+            "owner_state",
+            "accountant_card_state",
+            "accountant_cash_state",
+            "teller_card_state",
+            "teller_cash_state",
+        ],
+        aliases[BidSchema],
+    )
 
 
 # endregion

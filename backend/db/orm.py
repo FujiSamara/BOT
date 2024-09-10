@@ -1206,16 +1206,19 @@ def get_models(
 def export_models(
     model_type: Type[Base],
     query_schema: QuerySchema,
-    *exclude_columns: str,
-    **formatters: Callable[[any], str],
+    formatters: dict[str, Callable[[any], str]] = {},
+    exclude_columns: list[str] = [],
+    aliases: dict[str, str] = {},
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
         query_builder = QueryBuilder(s.query(model_type))
         query_builder.apply(query_schema)
-        exporter = XLSXExporter(query_builder.query, **formatters)
+        exporter = XLSXExporter(
+            query_builder.query, formatters, exclude_columns, aliases
+        )
 
-        return exporter.export(*exclude_columns)
+        return exporter.export()
 
 
 # endregion
