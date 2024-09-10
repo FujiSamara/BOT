@@ -262,7 +262,7 @@ class Department(Base):
 
 
 class Group(Base):
-    """Технические заявки"""
+    """Отделы"""
 
     def __str__(self) -> str:
         return self.name

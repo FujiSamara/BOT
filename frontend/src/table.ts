@@ -107,6 +107,7 @@ export class Table<T extends BaseSchema> {
 			deleteEndpoint?: string;
 			approveEndpoint?: string;
 			rejectEndpoint?: string;
+			exportEndpoint?: string;
 		},
 	) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
@@ -126,6 +127,8 @@ export class Table<T extends BaseSchema> {
 			options && options.approveEndpoint ? options.approveEndpoint : "";
 		this._rejectEndpoint =
 			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		this._exportEndpoint =
+			options && options.exportEndpoint ? options.exportEndpoint : "";
 		//#endregion
 
 		this.startUpdatingLoop();
@@ -596,6 +599,22 @@ export class Table<T extends BaseSchema> {
 		this.forceRefresh();
 		this.emulateLoading(false);
 	}
+	/** Exports table with current query. */
+	public async export() {
+		const url = `${this._endpoint}${this._exportEndpoint}/export`;
+		const resp = await this._network.withAuthChecking(
+			axios.post(url, this._completedQuery.value, {
+				responseType: "blob",
+				withCredentials: true,
+			}),
+		);
+
+		const filename = (resp.headers["content-disposition"] as string).split(
+			"=",
+		)[1];
+
+		this._network.saveFile(filename, resp.data);
+	}
 	// Endpoints.
 	private _endpoint: string = "";
 	protected _getEndpoint: string = "";
@@ -605,6 +624,7 @@ export class Table<T extends BaseSchema> {
 	protected _deleteEndpoint: string = "";
 	protected _approveEndpoint: string = "";
 	protected _rejectEndpoint: string = "";
+	protected _exportEndpoint: string = "";
 	//#endregion
 
 	//#region CRUD
@@ -741,6 +761,7 @@ export class BidTable extends Table<BidSchema> {
 		deleteEndpoint?: string;
 		approveEndpoint?: string;
 		rejectEndpoint?: string;
+		exportEndpoint?: string;
 	}) {
 		super("bid", options);
 
@@ -790,6 +811,7 @@ export class FACBidTable extends BidTable {
 		super({
 			getEndpoint: "/fac",
 			infoEndpoint: "/fac",
+			exportEndpoint: "/fac",
 		});
 	}
 }
@@ -799,6 +821,7 @@ export class CCBidTable extends BidTable {
 		super({
 			getEndpoint: "/cc",
 			infoEndpoint: "/cc",
+			exportEndpoint: "/cc",
 		});
 	}
 }
@@ -808,6 +831,7 @@ export class CCSupervisorBidTable extends BidTable {
 		super({
 			getEndpoint: "/cc_supervisor",
 			infoEndpoint: "/cc_supervisor",
+			exportEndpoint: "/cc_supervisor",
 		});
 	}
 }

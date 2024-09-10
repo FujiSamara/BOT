@@ -37,6 +37,7 @@ class Settings(BaseSettings):
         "Access-Control-Allow-Origin",
         "Authorization",
     ]
+    expose_headers: list[str] = ["Content-Disposition"]
 
     secret_key: str = Field(validation_alias="SECRET_KEY", default=str(uuid.uuid4()))
     access_token_expire_minutes: int = Field(

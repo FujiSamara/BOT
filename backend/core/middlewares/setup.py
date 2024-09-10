@@ -10,4 +10,5 @@ def setup_core_middlewares(app: FastAPI):
         allow_credentials=True,
         allow_methods=get_settings().cors_allow_methods,
         allow_headers=get_settings().cors_allow_headers,
+        expose_headers=get_settings().expose_headers,
     )

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Type
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
@@ -414,3 +414,32 @@ class QuerySchema(BaseModel):
 # endregion
 
 # endregion
+
+
+# Aliases for  schemas.
+aliases: dict[Type[BaseModel], dict[str, str]] = {
+    BidSchema: {
+        "id": "ID",
+        "amount": "Сумма",
+        "payment_type": "Тип оплаты",
+        "department": "Произовдство",
+        "worker": "Работник",
+        "purpose": "Цель",
+        "create_date": "Дата создания",
+        "close_date": "Дата закрытия",
+        "comment": "Комментарий",
+        "denying_reason": "Причина отказа",
+        "expenditure": "Статья",
+        "need_edm": "Счет в ЭДО",
+    },
+    ExpenditureSchema: {
+        "id": "ID",
+        "name": "Статья",
+        "chapter": "Раздел",
+        "create_date": "Дата создания",
+        "fac": "ЦФО",
+        "cc": "ЦЗ",
+        "cc_supervisor": "Руководитель ЦЗ",
+        "creator": "Создал",
+    },
+}

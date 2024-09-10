@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 
 from sqlalchemy import null
@@ -35,6 +36,7 @@ from db.schemas import (
     FileSchema,
     ProblemITSchema,
     BidITSchema,
+    aliases,
 )
 import logging
 from datetime import datetime, timedelta
@@ -1301,6 +1303,59 @@ def get_coordinator_bid_count(
     )
 
     return get_bid_count(query_schema)
+
+
+def export_bid_records(
+    query_schema: QuerySchema,
+) -> BytesIO:
+    """Returns xlsx file with bids records filtered by `query_schema`."""
+    # Formatters
+    from bot.kb import payment_type_dict
+
+    return orm.export_models(
+        Bid,
+        query_schema,
+        dict(
+            payment_type=lambda type: payment_type_dict[type],
+            need_edm=lambda need: "Да" if need else "Нет",
+        ),
+        [
+            "documents",
+            "fac_state",
+            "cc_state",
+            "cc_supervisor_state",
+            "kru_state",
+            "owner_state",
+            "accountant_card_state",
+            "accountant_cash_state",
+            "teller_card_state",
+            "teller_cash_state",
+        ],
+        aliases[BidSchema],
+    )
+
+
+def export_coordintator_bid_records(
+    query_schema: QuerySchema,
+    phone: int,
+    coordinator: str,
+) -> BytesIO:
+    """Returns xlsx file with bids records filtered by `query_schema`
+    for specified `coordinator`."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column="expenditure",
+            value="",
+            dependencies=[
+                FilterSchema(
+                    column=coordinator,
+                    value="",
+                    dependencies=[FilterSchema(column="phone_number", value=phone)],
+                )
+            ],
+        )
+    )
+    return export_bid_records(query_schema)
 
 
 # endregion
