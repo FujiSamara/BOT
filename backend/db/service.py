@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 
 from sqlalchemy import null
@@ -1301,6 +1302,13 @@ def get_coordinator_bid_count(
     )
 
     return get_bid_count(query_schema)
+
+
+def export_bids(
+    query_schema: QuerySchema,
+) -> BytesIO:
+    """Returns xlsx file with bids records filtered by `query_schema`."""
+    return orm.export_models(Bid, query_schema)
 
 
 # endregion

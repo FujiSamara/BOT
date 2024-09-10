@@ -1,6 +1,7 @@
 from datetime import datetime
+from io import BytesIO
 from typing import Any, Optional, Type
-from db.query import QueryBuilder
+from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
     Bid,
@@ -1187,7 +1188,7 @@ def get_models(
     records_per_page: int,
     query_schema: QuerySchema,
 ) -> list[BaseSchema]:
-    """Return `model_type` schemas with applied instructions.
+    """Returns `model_type` schemas with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
@@ -1200,6 +1201,19 @@ def get_models(
         )
 
         return [schema_type.model_validate(raw_model) for raw_model in raw_models]
+
+
+def export_models(
+    model_type: Type[Base],
+    query_schema: QuerySchema,
+) -> BytesIO:
+    """Returns xlsx file with `model_type` records filtered by `query_schema`."""
+    with session.begin() as s:
+        query_builder = QueryBuilder(s.query(model_type))
+        query_builder.apply(query_schema)
+        exporter = XLSXExporter(query_builder.query)
+
+        return exporter.export()
 
 
 # endregion

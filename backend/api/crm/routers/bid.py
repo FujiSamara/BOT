@@ -1,4 +1,5 @@
-from fastapi import Security
+from fastapi import Response, Security
+from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
@@ -62,6 +63,21 @@ async def reject_bid(
         await service.update_bid_state(
             bid, get_current_coordinator(bid), ApprovalStatus.denied
         )
+
+
+@router.post("/export")
+async def export_bids(
+    query: QuerySchema, _: User = Security(get_current_user, scopes=["crm_bid"])
+) -> Response:
+    file = service.export_bids(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
 
 
 @router.post("/fac/page/info")
