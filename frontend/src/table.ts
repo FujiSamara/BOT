@@ -107,6 +107,7 @@ export class Table<T extends BaseSchema> {
 			deleteEndpoint?: string;
 			approveEndpoint?: string;
 			rejectEndpoint?: string;
+			exportEndpoint?: string;
 		},
 	) {
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
@@ -126,6 +127,8 @@ export class Table<T extends BaseSchema> {
 			options && options.approveEndpoint ? options.approveEndpoint : "";
 		this._rejectEndpoint =
 			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		this._exportEndpoint =
+			options && options.exportEndpoint ? options.exportEndpoint : "";
 		//#endregion
 
 		this.startUpdatingLoop();
@@ -758,6 +761,7 @@ export class BidTable extends Table<BidSchema> {
 		deleteEndpoint?: string;
 		approveEndpoint?: string;
 		rejectEndpoint?: string;
+		exportEndpoint?: string;
 	}) {
 		super("bid", options);
 
@@ -807,6 +811,7 @@ export class FACBidTable extends BidTable {
 		super({
 			getEndpoint: "/fac",
 			infoEndpoint: "/fac",
+			exportEndpoint: "/fac",
 		});
 	}
 }
@@ -816,6 +821,7 @@ export class CCBidTable extends BidTable {
 		super({
 			getEndpoint: "/cc",
 			infoEndpoint: "/cc",
+			exportEndpoint: "/cc",
 		});
 	}
 }
@@ -825,6 +831,7 @@ export class CCSupervisorBidTable extends BidTable {
 		super({
 			getEndpoint: "/cc_supervisor",
 			infoEndpoint: "/cc_supervisor",
+			exportEndpoint: "/cc_supervisor",
 		});
 	}
 }
