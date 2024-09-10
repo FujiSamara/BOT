@@ -17,8 +17,6 @@
 					id="topSearch"
 					@input="(val) => (searchString = val)"
 				></SeacrhTool>
-				<ToolSeparator></ToolSeparator>
-				<ExportTool></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
@@ -44,7 +42,6 @@ import PanelTable from "@/components/PanelTable.vue";
 import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
-import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
