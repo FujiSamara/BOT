@@ -1,11 +1,17 @@
 <template>
-	<purple-button class="button-wrapper">
+	<purple-button class="button-wrapper" @click="props.callback">
 		<p style="margin: 0">Выгрузить в Excel</p>
 		<img src="/img/export.svg" />
 	</purple-button>
 </template>
-<script setup lang="ts"></script>
-<!-- TODO: Make export callback -->
+<script setup lang="ts">
+const props = defineProps({
+	callback: {
+		type: Function,
+		required: true,
+	},
+});
+</script>
 <style scoped>
 .button-wrapper {
 	width: 250px;

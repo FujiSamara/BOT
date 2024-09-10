@@ -18,7 +18,7 @@
 					@input="(val) => (searchString = val)"
 				></SeacrhTool>
 				<ToolSeparator></ToolSeparator>
-				<ExportTool></ExportTool>
+				<ExportTool :callback="table.export.bind(table)"></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
