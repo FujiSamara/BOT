@@ -120,6 +120,7 @@
 				<circle-loader></circle-loader>
 			</div>
 		</div>
+
 		<Transition name="modal">
 			<ModalWindow
 				class="reject-modal"
@@ -139,6 +140,16 @@
 				</div>
 			</ModalWindow>
 		</Transition>
+
+		<Suspense>
+			<Transition name="modal">
+				<DocumentView
+					v-if="documentViewVisible"
+					:documents="documents"
+				></DocumentView>
+			</Transition>
+		</Suspense>
+
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
@@ -150,9 +161,10 @@
 import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 import ModalWindow from "@/components/ModalWindow.vue";
 import TablePagination from "@/components/TablePagination.vue";
+import DocumentView from "@/components/DocumentView.vue";
 import type { Table } from "@/table";
-import { ref, type PropType } from "vue";
-import { BaseSchema } from "@/types";
+import { Ref, ref, type PropType } from "vue";
+import { BaseSchema, DocumentSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
@@ -182,6 +194,9 @@ const networkStore = useNetworkStore();
 
 const modalVisible = ref(false);
 const rejectReason = ref("");
+
+const documentViewVisible = ref(false);
+const documents: Ref<Array<DocumentSchema>> = ref([]);
 
 const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
