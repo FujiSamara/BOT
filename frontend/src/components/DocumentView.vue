@@ -5,6 +5,20 @@ import Viewer from "viewerjs";
 import { onMounted, ref, Ref, useTemplateRef } from "vue";
 
 const network = useNetworkStore();
+
+const props = defineProps({
+	documents: {
+		type: Array<DocumentSchema>,
+		required: true,
+	},
+	index: {
+		type: Number,
+		required: true,
+	},
+});
+
+const emit = defineEmits(["close"]);
+
 const imageContainer = useTemplateRef("image-container");
 const viewer: Ref<Viewer | undefined> = ref();
 const viewerOptions: Viewer.Options = {
@@ -12,6 +26,7 @@ const viewerOptions: Viewer.Options = {
 	scalable: false,
 	tooltip: false,
 	title: true,
+	initialViewIndex: props.index,
 	toolbar: {
 		flipHorizontal: false,
 		flipVertical: false,
@@ -25,14 +40,9 @@ const viewerOptions: Viewer.Options = {
 		rotateLeft: true,
 		rotateRight: true,
 	},
+	hidden: () => emit("close"),
 };
 
-const props = defineProps({
-	documents: {
-		type: Array<DocumentSchema>,
-		required: true,
-	},
-});
 const documents: Array<string> = [];
 for (const document of props.documents) {
 	const documentData = await network.getFile(document.href);
