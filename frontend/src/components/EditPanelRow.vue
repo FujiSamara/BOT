@@ -33,7 +33,7 @@
 </template>
 <script setup lang="ts">
 import type { ExpenditureEditor } from "@/editor";
-import { ref, Transition, type PropType } from "vue";
+import { ref, type PropType } from "vue";
 
 const props = defineProps({
 	editor: {
