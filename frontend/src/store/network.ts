@@ -100,14 +100,17 @@ export const useNetworkStore = defineStore("network", {
 				}
 			});
 		},
-		async downloadFile(href: string, filename: string) {
+		async getFile(href: string): Promise<Uint8Array> {
 			const resp = await this.withAuthChecking(
 				axios.get(href, {
 					responseType: "blob",
 				}),
 			);
 
-			this.saveFile(filename, resp.data);
+			return resp.data as Uint8Array;
+		},
+		async downloadFile(href: string, filename: string) {
+			this.saveFile(filename, await this.getFile(href));
 		},
 		saveFile(filename: string, file: Uint8Array) {
 			const fileBlob = new Blob([file], {

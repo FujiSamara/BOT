@@ -97,15 +97,25 @@
 						</th>
 						<th v-for="(cell, columnIndex) in row.columns" :key="columnIndex">
 							<ul class="table-cell">
-								<li class="table-cell-line" v-for="cellLine in cell.cellLines">
-									<a
-										v-if="cellLine.href.length > 0"
-										@click.stop="
-											async () =>
-												await onHrefClicked(cellLine.href, cellLine.value)
-										"
-										>{{ cellLine.value }}</a
-									>
+								<li
+									class="table-cell-line"
+									v-for="(cellLine, cellLineIndex) in cell.cellLines"
+								>
+									<p v-if="cellLine.href.length > 0">
+										<a
+											@click.stop="
+												async () =>
+													await onHrefClicked(cellLine.href, cellLine.value)
+											"
+											class="link"
+											>{{ cellLine.value }}</a
+										>
+										<span
+											@click.stop="() => onExpandClicked(cell, cellLineIndex)"
+											v-if="cellLine.isImage"
+											class="expand"
+										></span>
+									</p>
 									<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
 								</li>
 							</ul>
@@ -120,6 +130,7 @@
 				<circle-loader></circle-loader>
 			</div>
 		</div>
+
 		<Transition name="modal">
 			<ModalWindow
 				class="reject-modal"
@@ -139,6 +150,18 @@
 				</div>
 			</ModalWindow>
 		</Transition>
+
+		<Suspense>
+			<Transition name="modal">
+				<DocumentView
+					v-if="documentViewVisible"
+					:documents="documents"
+					:index="initialDocumentIndex"
+					@close="documentViewVisible = false"
+				></DocumentView>
+			</Transition>
+		</Suspense>
+
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
@@ -150,9 +173,10 @@
 import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 import ModalWindow from "@/components/ModalWindow.vue";
 import TablePagination from "@/components/TablePagination.vue";
-import type { Table } from "@/table";
-import { ref, type PropType } from "vue";
-import { BaseSchema } from "@/types";
+import DocumentView from "@/components/DocumentView.vue";
+import type { Cell, Table } from "@/table";
+import { Ref, ref, type PropType } from "vue";
+import { BaseSchema, DocumentSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
@@ -183,6 +207,10 @@ const networkStore = useNetworkStore();
 const modalVisible = ref(false);
 const rejectReason = ref("");
 
+const documentViewVisible = ref(false);
+const documents: Ref<Array<DocumentSchema>> = ref([]);
+const initialDocumentIndex: Ref<number> = ref(1);
+
 const emit = defineEmits(["click", "create", "delete", "approve", "reject"]);
 
 const onDelete = async () => {
@@ -204,6 +232,19 @@ const onRejectCommentSubmit = async () => {
 };
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
+};
+const onExpandClicked = (cell: Cell, index: number) => {
+	const docs = [];
+	for (const [i, cellLine] of cell.cellLines.entries()) {
+		if (cellLine.isImage) {
+			if (index === i) {
+				initialDocumentIndex.value = docs.length;
+			}
+			docs.push({ name: cellLine.value, href: cellLine.href });
+		}
+	}
+	documentViewVisible.value = true;
+	documents.value = docs;
 };
 </script>
 <style scoped>
@@ -386,11 +427,35 @@ th {
 .table-cell p {
 	margin: 0;
 	cursor: default;
+
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
-.table-cell a {
+.table-cell .link {
 	color: #993ca6;
+	transition: color 0.25s;
 	text-decoration: underline;
 	user-select: none;
+	cursor: pointer;
+}
+.table-cell .link:hover {
+	color: #7f7f7f;
+	transition: color 0.25s;
+}
+.table-cell .expand {
+	width: 20px;
+	height: 20px;
+
+	transition: color 0.25s;
+	mask: url("/img/eye.svg");
+	fill: currentColor;
+	background-color: currentColor;
+	cursor: pointer;
+}
+.table-cell .expand:hover {
+	color: #993ca6;
+	transition: color 0.25s;
 }
 /*#endregion */
 

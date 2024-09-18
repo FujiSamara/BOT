@@ -32,9 +32,17 @@ export function formatDocument(document: DocumentSchema): Cell {
 }
 
 export function formatDocuments(documents: Array<DocumentSchema>): Cell {
-	return new Cell(
-		...documents.map((document) => formatDocument(document).cellLines[0]),
-	);
+	const cellLines: Array<CellLine> = [];
+
+	if (documents.length) {
+		cellLines.push(
+			...documents.map((document) => formatDocument(document).cellLines[0]),
+		);
+	} else {
+		cellLines.push(new CellLine("Отсутствуют"));
+	}
+
+	return new Cell(...cellLines);
 }
 
 export function formatPaymentType(payment_type: string) {
