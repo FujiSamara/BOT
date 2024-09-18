@@ -45,15 +45,25 @@
 					<th>{{ field.header }}</th>
 					<th>
 						<ul class="table-cell">
-							<li class="table-cell-line" v-for="cellLine in field.cellLines">
-								<a
-									v-if="cellLine.href.length > 0"
-									@click.stop="
-										async () =>
-											await onHrefClicked(cellLine.href, cellLine.value)
-									"
-									>{{ cellLine.value }}</a
-								>
+							<li
+								class="table-cell-line"
+								v-for="(cellLine, cellLineIndex) in field.cellLines"
+							>
+								<p v-if="cellLine.href.length > 0">
+									<a
+										@click.stop="
+											async () =>
+												await onHrefClicked(cellLine.href, cellLine.value)
+										"
+										class="link"
+										>{{ cellLine.value }}</a
+									>
+									<span
+										@click.stop="() => onExpandClicked(field, cellLineIndex)"
+										v-if="cellLine.isImage"
+										class="expand"
+									></span>
+								</p>
 								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
 							</li>
 						</ul>
@@ -61,6 +71,7 @@
 				</tr>
 			</tbody>
 		</table>
+
 		<Transition name="modal">
 			<ModalWindow
 				class="reject-modal"
@@ -80,14 +91,27 @@
 				</div>
 			</ModalWindow>
 		</Transition>
+
+		<Suspense>
+			<Transition name="modal">
+				<DocumentView
+					v-if="documentViewVisible"
+					:documents="documents"
+					:index="initialDocumentIndex"
+					@close="documentViewVisible = false"
+				></DocumentView>
+			</Transition>
+		</Suspense>
 	</div>
 </template>
 <script setup lang="ts">
 import ModalWindow from "@/components/ModalWindow.vue";
+import DocumentView from "@/components/DocumentView.vue";
 import type { Viewer } from "@/viewer";
-import { ref, type PropType } from "vue";
-import { BaseSchema } from "@/types";
+import { Ref, ref, type PropType } from "vue";
+import { BaseSchema, DocumentSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
+import { Cell } from "@/table";
 
 const props = defineProps({
 	viewer: {
@@ -112,6 +136,10 @@ const modalVisible = ref(false);
 const rejectReason = ref("");
 const networkStore = useNetworkStore();
 
+const documentViewVisible = ref(false);
+const documents: Ref<Array<DocumentSchema>> = ref([]);
+const initialDocumentIndex: Ref<number> = ref(1);
+
 const emit = defineEmits(["delete", "approve", "reject", "close"]);
 
 const onRejectCommentSubmit = () => {
@@ -121,6 +149,19 @@ const onRejectCommentSubmit = () => {
 };
 const onHrefClicked = async (href: string, filename: string) => {
 	await networkStore.downloadFile(href, filename);
+};
+const onExpandClicked = (cell: Cell, index: number) => {
+	const docs = [];
+	for (const [i, cellLine] of cell.cellLines.entries()) {
+		if (cellLine.isImage) {
+			if (index === i) {
+				initialDocumentIndex.value = docs.length;
+			}
+			docs.push({ name: cellLine.value, href: cellLine.href });
+		}
+	}
+	documentViewVisible.value = true;
+	documents.value = docs;
 };
 </script>
 <style scoped>
@@ -288,11 +329,35 @@ th {
 .table-cell p {
 	margin: 0;
 	cursor: default;
+
+	display: flex;
+	align-items: center;
+	gap: 8px;
 }
-.table-cell a {
+.table-cell .link {
 	color: #993ca6;
+	transition: color 0.25s;
 	text-decoration: underline;
 	user-select: none;
+	cursor: pointer;
+}
+.table-cell .link:hover {
+	color: #7f7f7f;
+	transition: color 0.25s;
+}
+.table-cell .expand {
+	width: 20px;
+	height: 20px;
+
+	transition: color 0.25s;
+	mask: url("/img/eye.svg");
+	fill: currentColor;
+	background-color: currentColor;
+	cursor: pointer;
+}
+.table-cell .expand:hover {
+	color: #993ca6;
+	transition: color 0.25s;
 }
 /*#endregion */
 
