@@ -33,7 +33,9 @@ export default {
 .window {
 	background-color: white;
 	border-radius: 40px;
-	width: 560px;
+	min-width: 560px;
+	max-width: 100%;
+	max-height: 100%;
 	padding: 50px;
 	position: relative;
 }
