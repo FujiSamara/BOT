@@ -43,11 +43,21 @@ export class Cell {
 }
 
 export class CellLine {
+	public readonly isImage: boolean = false;
+	public readonly imageExtensions: Array<string> = ["png", "jpeg"];
+
 	constructor(
 		public value: string = "Не указано",
 		public href: string = "",
 		public color: string = "",
-	) {}
+	) {
+		if (
+			href.length !== 0 &&
+			this.imageExtensions.indexOf(value.split(".").pop()!) !== -1
+		) {
+			this.isImage = true;
+		}
+	}
 }
 
 /** Presents class for external usage. */
