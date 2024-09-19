@@ -768,7 +768,8 @@ def get_groups() -> list[GroupSchema]:
 def remove_bid(id: int) -> None:
     """Removes bid by `id` if it exist in db."""
     with session.begin() as s:
-        s.query(Bid).filter(Bid.id == id).delete()
+        if bid := s.query(Bid).filter(Bid.id == id).first():
+            s.delete(bid)
 
 
 def get_group_by_name(name: str) -> GroupSchema:
