@@ -24,7 +24,7 @@
 		<PanelTable
 			v-if="!elementViewing"
 			:table="table"
-			:can-delete="true"
+			:can-delete="false"
 			:can-approve="true"
 			:can-reject="true"
 			@click="onRowClicked"
@@ -34,9 +34,9 @@
 			@close="elementViewing = false"
 			@approve="onApprove"
 			@reject="onReject"
-			@delete="onDelete"
 			:canApprove="true"
 			:canReject="true"
+			:can-delete="false"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -124,9 +124,6 @@ watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
 
-const onDelete = async () => {
-	await table.delete(viewingIndex.value);
-};
 const onApprove = async () => {
 	await table.approve(viewingIndex.value, true);
 	elementViewing.value = false;
