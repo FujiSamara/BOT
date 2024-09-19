@@ -1021,6 +1021,11 @@ async def create_bid(
     orm.add_bid(bid)
 
 
+def remove_bid(id: int) -> None:
+    """Removes bid by `id` if it exist in db."""
+    orm.remove_bid(id)
+
+
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
     """
     Returns all bids own to worker with specified telegram id.
