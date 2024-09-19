@@ -5,7 +5,7 @@ from fastapi.routing import APIRouter
 from db.models import ApprovalStatus
 from db import service
 from db.schemas import BidRecordSchema, QuerySchema, TalbeInfoSchema
-from bot.handlers.bids.utils import get_current_coordinator
+from bot.handlers.bids.utils import get_current_coordinator_field
 
 from api.auth import User, get_current_user
 
@@ -13,6 +13,7 @@ from api.auth import User, get_current_user
 router = APIRouter()
 
 
+# region bids
 @router.post("/page/info")
 async def get_bid_pages_info(
     query: QuerySchema,
@@ -48,7 +49,7 @@ async def approve_bid(
     bid = service.get_bid_by_id(id)
     if bid:
         await service.update_bid_state(
-            bid, get_current_coordinator(bid), ApprovalStatus.approved
+            bid, get_current_coordinator_field(bid), ApprovalStatus.approved
         )
 
 
@@ -61,7 +62,7 @@ async def reject_bid(
     if bid:
         bid.denying_reason = reason
         await service.update_bid_state(
-            bid, get_current_coordinator(bid), ApprovalStatus.denied
+            bid, get_current_coordinator_field(bid), ApprovalStatus.denied
         )
 
 
@@ -80,6 +81,17 @@ async def export_bids(
     )
 
 
+@router.delete("/{id}")
+async def delete_bid(
+    id: int, _: User = Security(get_current_user, scopes=["crm_bid"])
+) -> None:
+    service.remove_bid(id)
+
+
+# endregion
+
+
+# region fac bids
 @router.post("/fac/page/info")
 async def get_fac_bid_pages_info(
     query: QuerySchema,
@@ -111,6 +123,43 @@ async def get_fac_bids(
     )
 
 
+@router.post("/fac/export")
+async def export_fac_bids(
+    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_fac_bid"])
+) -> Response:
+    file = service.export_coordintator_bid_records(query, user.username, "fac")
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=fac_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.patch("/fac/approve/{id}")
+async def approve_fac_bid(
+    id: int, _: User = Security(get_current_user, scopes=["crm_fac_bid"])
+):
+    """Approves bid by `id`"""
+    await approve_coordinator_bid(id, "fac_state")
+
+
+@router.patch("/fac/reject/{id}")
+async def reject_fac_bid(
+    id: int,
+    reason: str,
+    _: User = Security(get_current_user, scopes=["crm_fac_bid"]),
+):
+    """Rejects bid by `id`"""
+    await reject_coordinator_bid(id, reason, "fac_state")
+
+
+# endregion
+
+
+# region cc bids
 @router.post("/cc/page/info")
 async def get_cc_bid_pages_info(
     query: QuerySchema,
@@ -142,6 +191,43 @@ async def get_cc_bids(
     )
 
 
+@router.post("/cc/export")
+async def export_cc_bids(
+    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_cc_bid"])
+) -> Response:
+    file = service.export_coordintator_bid_records(query, user.username, "cc")
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=cc_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.patch("/cc/approve/{id}")
+async def approve_cc_bid(
+    id: int, _: User = Security(get_current_user, scopes=["crm_cc_bid"])
+):
+    """Approves bid by `id`"""
+    await approve_coordinator_bid(id, "cc_state")
+
+
+@router.patch("/cc/reject/{id}")
+async def reject_cc_bid(
+    id: int,
+    reason: str,
+    _: User = Security(get_current_user, scopes=["crm_cc_bid"]),
+):
+    """Rejects bid by `id`"""
+    await reject_coordinator_bid(id, reason, "cc_state")
+
+
+# endregion
+
+
+# region cc supervisor bids
 @router.post("/cc_supervisor/page/info")
 async def get_cc_supervisor_bid_pages_info(
     query: QuerySchema,
@@ -175,36 +261,6 @@ async def get_cc_supervisor_bids(
     )
 
 
-@router.post("/fac/export")
-async def export_fac_bids(
-    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_fac_bid"])
-) -> Response:
-    file = service.export_coordintator_bid_records(query, user.username, "fac")
-
-    return StreamingResponse(
-        content=file,
-        headers={
-            "Content-Disposition": "filename=fac_bids.xlsx",
-        },
-        media_type="application/octet-stream",
-    )
-
-
-@router.post("/cc/export")
-async def export_cc_bids(
-    query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_cc_bid"])
-) -> Response:
-    file = service.export_coordintator_bid_records(query, user.username, "cc")
-
-    return StreamingResponse(
-        content=file,
-        headers={
-            "Content-Disposition": "filename=cc_bids.xlsx",
-        },
-        media_type="application/octet-stream",
-    )
-
-
 @router.post("/cc_supervisor/export")
 async def export_cc_supervisor_bids(
     query: QuerySchema,
@@ -221,3 +277,49 @@ async def export_cc_supervisor_bids(
         },
         media_type="application/octet-stream",
     )
+
+
+@router.patch("/cc_supervisor/approve/{id}")
+async def approve_cc_supervisor_bid(
+    id: int, _: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"])
+):
+    """Approves bid by `id`"""
+    await approve_coordinator_bid(id, "cc_supervisor_state")
+
+
+@router.patch("/cc_supervisor/reject/{id}")
+async def reject_cc_supervisor_bid(
+    id: int,
+    reason: str,
+    _: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
+):
+    """Rejects bid by `id`"""
+    await reject_coordinator_bid(id, reason, "cc_supervisor")
+
+
+# endregion cc supervisor bids
+
+
+async def approve_coordinator_bid(id: int, coordinator_field: str):
+    """Approves bid by `id` if coordinator is current coordinator."""
+    bid = service.get_bid_by_id(id)
+
+    current_coordinator_field = get_current_coordinator_field(bid)
+
+    if bid and coordinator_field == current_coordinator_field:
+        await service.update_bid_state(
+            bid, current_coordinator_field, ApprovalStatus.approved
+        )
+
+
+async def reject_coordinator_bid(id: int, reason: str, coordinator_field: str):
+    """Rejects bid by `id` if coordinator is current coordinator."""
+    bid = service.get_bid_by_id(id)
+
+    current_coordinator_field = get_current_coordinator_field(bid)
+
+    if bid and coordinator_field == current_coordinator_field:
+        bid.denying_reason = reason
+        await service.update_bid_state(
+            bid, current_coordinator_field, ApprovalStatus.denied
+        )

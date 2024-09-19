@@ -102,7 +102,7 @@ def get_worker_bid_list_info(bid: WorkerBidSchema) -> str:
     return f"{bid.id}: {bid.l_name} " + f"{bid.create_date.strftime('%d.%m.%Y')}"
 
 
-def get_current_coordinator(bid: BidSchema) -> str:
+def get_current_coordinator_field(bid: BidSchema) -> str:
     if bid.fac_state == ApprovalStatus.pending_approval:
         return "fac_state"
     elif bid.cc_state == ApprovalStatus.pending_approval:

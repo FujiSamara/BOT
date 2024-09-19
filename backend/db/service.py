@@ -1018,7 +1018,16 @@ async def create_bid(
         need_edm=need_edm,
     )
 
+    skip_repeating_bid_state(bid, "worker_state")
+
     orm.add_bid(bid)
+
+    await notify_next_coordinator(bid)
+
+
+def remove_bid(id: int) -> None:
+    """Removes bid by `id` if it exist in db."""
+    orm.remove_bid(id)
 
 
 def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
@@ -1083,7 +1092,6 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
     Updates bid state with `state_name` by specified `state`.
     """
     from bot.handlers.utils import (
-        notify_workers_by_scope,
         notify_worker_by_telegram_id,
     )
 
@@ -1164,30 +1172,11 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         case "teller_cash_state":
             bid.teller_cash_state = ApprovalStatus.approved
 
-    if bid.kru_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
-        )
-    elif bid.owner_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
-        )
-    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
-        )
-    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
-        )
-    elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
-        )
-    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
-        )
+    if state == ApprovalStatus.approved:
+        skip_repeating_bid_state(bid, state_name)
+
+    await notify_next_coordinator(bid)
+
     if state == ApprovalStatus.approved:
         stage = ""
         match state_name:
@@ -1223,6 +1212,65 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.close_date = datetime.now()
 
     orm.update_bid(bid)
+
+
+async def notify_next_coordinator(bid: BidSchema):
+    """Notifies next coordinator with `ApprovalStatus.pending_approval`."""
+    from bot.handlers.utils import (
+        notify_workers_by_scope,
+    )
+
+    if bid.kru_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+        )
+    elif bid.owner_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
+        )
+    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
+        )
+    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
+        )
+    elif bid.teller_card_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
+        )
+    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
+        )
+
+
+def skip_repeating_bid_state(bid: BidSchema, state_name: str):
+    """Skips next stages in `bid.expenditure` with current coordinator"""
+    expenditure = bid.expenditure
+    match state_name:
+        case "worker_state":
+            if expenditure.fac.id == bid.worker.id:
+                bid.fac_state = ApprovalStatus.skipped
+                bid.cc_state = ApprovalStatus.pending_approval
+            if expenditure.cc.id == bid.worker.id:
+                bid.cc_state = ApprovalStatus.skipped
+                bid.cc_supervisor_state = ApprovalStatus.pending_approval
+            if expenditure.cc_supervisor.id == bid.worker.id:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.pending_approval
+        case "fac_state":
+            if expenditure.cc.id == expenditure.fac.id:
+                bid.cc_state = ApprovalStatus.skipped
+                bid.cc_supervisor_state = ApprovalStatus.pending_approval
+            if expenditure.cc_supervisor.id == expenditure.fac.id:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.pending_approval
+        case "cc_state":
+            if expenditure.cc_supervisor.id == expenditure.cc.id:
+                bid.cc_supervisor_state = ApprovalStatus.skipped
+                bid.kru_state = ApprovalStatus.pending_approval
 
 
 def update_bid(bid: BidSchema):

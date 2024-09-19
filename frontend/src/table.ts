@@ -828,6 +828,8 @@ export class FACBidTable extends BidTable {
 			getEndpoint: "/fac",
 			infoEndpoint: "/fac",
 			exportEndpoint: "/fac",
+			approveEndpoint: "/fac",
+			rejectEndpoint: "/fac",
 		});
 	}
 }
@@ -838,6 +840,8 @@ export class CCBidTable extends BidTable {
 			getEndpoint: "/cc",
 			infoEndpoint: "/cc",
 			exportEndpoint: "/cc",
+			approveEndpoint: "/cc",
+			rejectEndpoint: "/cc",
 		});
 	}
 }
@@ -848,6 +852,8 @@ export class CCSupervisorBidTable extends BidTable {
 			getEndpoint: "/cc_supervisor",
 			infoEndpoint: "/cc_supervisor",
 			exportEndpoint: "/cc_supervisor",
+			approveEndpoint: "/cc_supervisor",
+			rejectEndpoint: "/cc_supervisor",
 		});
 	}
 }
