@@ -126,7 +126,8 @@ watch(table.notifies, () => {
 });
 
 const onDelete = async () => {
-	await table.delete(viewingIndex.value);
+	await table.delete(viewingIndex.value, true);
+	elementViewing.value = false;
 };
 const onApprove = async () => {
 	await table.approve(viewingIndex.value, true);
