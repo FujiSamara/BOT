@@ -37,6 +37,7 @@
 			@delete="onDelete"
 			:canApprove="true"
 			:canReject="true"
+			:can-delete="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
