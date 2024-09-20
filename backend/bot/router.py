@@ -1,11 +1,12 @@
 from aiogram import Router
+from backend.bot.handlers import personal_cab_handler
 from bot.handlers import (
     auth_handler,
     main_handler,
     bid_handler,
     rate_handler,
     bid_it_handler,
-    tech_req_handler,
+    tech_req_handler
 )
 
 
@@ -19,4 +20,5 @@ router.include_routers(
     rate_handler.router,
     bid_it_handler.router,
     tech_req_handler.router,
+    personal_cab_handler.router,
 )

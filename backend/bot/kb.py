@@ -450,3 +450,10 @@ get_it_repairman_menu = InlineKeyboardButton(
 get_it_tm_menu = InlineKeyboardButton(
     text="IT заявки ТУ", callback_data="get_it_tm_menu"
 )
+
+
+# Personal account
+
+open_personal_account = InlineKeyboardButton(
+    text="Личный кабинет", callback_data="get_pers_acc"
+)
