@@ -3,11 +3,6 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Явки</h1>
 			<PanelTools class="top-tools">
-				<PeriodTool
-					v-model:from-date="fromDateString"
-					v-model:to-date="toDateString"
-				></PeriodTool>
-				<ToolSeparator></ToolSeparator>
 				<SeacrhTool
 					id="topDepartmentSearch"
 					placeholder="Производство"
@@ -42,12 +37,10 @@ import PanelTable from "@/components/PanelTable.vue";
 import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
-import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
-import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { WorkTimeTable } from "@/table";
-import { ExpenditureEditor } from "@/editor";
+import { WorkTimeEditor } from "@/editor";
 
 const props = defineProps({
 	id: {
@@ -63,9 +56,7 @@ const emit = defineEmits<{
 const editingElement = ref(false);
 
 // Edit page
-const editor: ShallowRef<ExpenditureEditor> = shallowRef(
-	new ExpenditureEditor(),
-);
+const editor: ShallowRef<WorkTimeEditor> = shallowRef(new WorkTimeEditor());
 const editingElementKey: Ref<number> = ref(-1);
 
 const onSubmit = async () => {
@@ -121,20 +112,20 @@ watch([fromDateString, toDateString], () => {
 	const fromDate = new Date(fromDateString.value);
 	const toDate = new Date(toDateString.value);
 
-	// table.byDate.value = {
-	// 	column: "create_date",
-	// 	start: fromDate,
-	// 	end: toDate,
-	// };
+	table.byDate.value = {
+		column: "day",
+		start: fromDate,
+		end: toDate,
+	};
 });
 
 const onRowClicked = (rowKey: number) => {
-	editor.value = new ExpenditureEditor(table.getModel(rowKey));
+	editor.value = new WorkTimeEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
-	editor.value = new ExpenditureEditor();
+	editor.value = new WorkTimeEditor();
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };

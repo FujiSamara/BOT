@@ -129,6 +129,34 @@ export class BudgetEditor extends Editor {
 		];
 	}
 }
+
+export class WorkTimeEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+
+		this.fields = [
+			new WorkerSmartField("Работник", "worker", _instance?.worker, false),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				_instance?.department,
+				false,
+			),
+			new PostSmartField("Должность", "post", _instance?.post),
+			new SmartField("Начало смены", "work_begin", _instance?.work_begin),
+			new SmartField("Конец смены", "work_end", _instance?.work_end),
+			new SmartField("День", "day", _instance?.day),
+			new SmartField(
+				"Длительность работы",
+				"work_duration",
+				_instance?.work_duration,
+				false,
+			),
+			new SmartField("Оценка", "rating", _instance?.rating),
+			new SmartField("Штраф", "fine", _instance?.fine),
+		];
+	}
+}
 //#endregion
 
 //#region Panels smart Fields
@@ -237,6 +265,16 @@ class DepartmentSmartField extends SmartField {
 		);
 
 		this._tipList.value = resp.data;
+	}
+}
+
+class PostSmartField extends SmartField {
+	constructor(name: string, fieldName: string, defaultValue?: any) {
+		super(name, fieldName, defaultValue, false);
+	}
+
+	protected formatter(value: any): string {
+		return `${value.name}`;
 	}
 }
 //#endregion
