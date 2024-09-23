@@ -864,6 +864,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		super("worktime");
 		this._formatters.set("worker", parser.formatWorker);
 		this._formatters.set("department", parser.formatDepartment);
+		this._formatters.set("post", parser.formatPost);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
