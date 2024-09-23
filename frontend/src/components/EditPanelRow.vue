@@ -110,6 +110,9 @@ const emit = defineEmits(["submit", "close"]);
 	color: #292929;
 	z-index: 1;
 }
+.input[disabled] {
+	background-color: #e9e9e9;
+}
 .input-header {
 	color: #292929;
 	font-family: Stolzl;
