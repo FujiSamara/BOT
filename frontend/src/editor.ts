@@ -135,12 +135,11 @@ export class WorkTimeEditor extends Editor {
 		super();
 
 		this.fields = [
-			new WorkerSmartField("Работник", "worker", _instance?.worker, false),
+			new WorkerSmartField("Работник", "worker", _instance?.worker),
 			new DepartmentSmartField(
 				"Производство",
 				"department",
 				_instance?.department,
-				false,
 			),
 			new PostSmartField("Должность", "post", _instance?.post),
 			new SmartField("Начало смены", "work_begin", _instance?.work_begin),
@@ -269,8 +268,13 @@ class DepartmentSmartField extends SmartField {
 }
 
 class PostSmartField extends SmartField {
-	constructor(name: string, fieldName: string, defaultValue?: any) {
-		super(name, fieldName, defaultValue, false);
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
 	}
 
 	protected formatter(value: any): string {

@@ -82,27 +82,16 @@ watch([departmentSearchString, searchString], () => {
 		result.push({
 			column: "department",
 			term: departmentSearchString.value,
+			groups: [0],
 		});
 	}
 
 	if (searchString.value.length > 3) {
-		// result.push(
-		// 	{
-		// 		column: "fac",
-		// 		term: searchString.value,
-		// 		groups: [0],
-		// 	},
-		// 	{
-		// 		column: "chapter",
-		// 		term: searchString.value,
-		// 		groups: [1],
-		// 	},
-		// 	{
-		// 		column: "name",
-		// 		term: searchString.value,
-		// 		groups: [2],
-		// 	},
-		// );
+		result.push({
+			column: "worker",
+			term: searchString.value,
+			groups: [0],
+		});
 	}
 
 	table.searchQuery.value = result;
