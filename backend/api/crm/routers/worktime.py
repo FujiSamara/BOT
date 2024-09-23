@@ -1,4 +1,5 @@
-from fastapi import Security
+from fastapi import Response, Security
+from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 from db import service
@@ -54,3 +55,18 @@ async def update_budget_record(
     _: User = Security(get_current_user, scopes=["crm_worktime"]),
 ) -> None:
     service.update_worktime(schema)
+
+
+@router.post("/export")
+async def export_bids(
+    query: QuerySchema, _: User = Security(get_current_user, scopes=["crm_worktime"])
+) -> Response:
+    file = service.export_worktimes(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=worktimes.xlsx",
+        },
+        media_type="application/octet-stream",
+    )

@@ -442,4 +442,16 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "cc_supervisor": "Руководитель ЦЗ",
         "creator": "Создал",
     },
+    WorkTimeSchema: {
+        "id": "ID",
+        "worker": "Работник",
+        "department": "Производство",
+        "post": "Должность",
+        "work_begin": "Начало смены",
+        "work_end": "Конец смены",
+        "day": "День",
+        "work_duration": "Длительность",
+        "rating": "Оценка",
+        "fine": "Штраф",
+    },
 }

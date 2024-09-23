@@ -12,6 +12,8 @@
 					id="topSearch"
 					@input="(val) => (searchString = val)"
 				></SeacrhTool>
+				<ToolSeparator></ToolSeparator>
+				<ExportTool :callback="table.export.bind(table)"></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
@@ -37,6 +39,8 @@ import PanelTable from "@/components/PanelTable.vue";
 import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
+import ExportTool from "@/components/PanelTools/ExportTool.vue";
+import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { WorkTimeTable } from "@/table";

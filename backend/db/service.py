@@ -1986,4 +1986,16 @@ def create_worktime(record: WorkTimeSchema) -> None:
     # TODO:
 
 
+def export_worktimes(
+    query_schema: QuerySchema,
+) -> BytesIO:
+    """Returns xlsx file with worktimes filtered by `query_schema`."""
+    # Formatters
+    return orm.export_models(
+        WorkTime,
+        query_schema,
+        aliases=aliases[WorkTimeSchema],
+    )
+
+
 # endregion
