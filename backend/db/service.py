@@ -1423,7 +1423,7 @@ def get_budget_records_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[ExpenditureSchema]:
+) -> list[BudgetRecordSchema]:
     """Return budget records with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
@@ -1942,6 +1942,48 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
     if repairman is None:
         return None
     return repairman.telegram_id
+
+
+# endregion
+
+
+# region Worktime
+def get_wortkime_count(
+    query_schema: QuerySchema,
+) -> int:
+    """Returns worktime count in bd."""
+    return orm.get_model_count(WorkTime, query_schema)
+
+
+def get_worktimes_at_page(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[WorkTimeSchema]:
+    """Return budget records with applied instructions.
+
+    See `QueryBuilder.apply` for more info applied instructions.
+    """
+    return orm.get_models(
+        WorkTime, WorkTimeSchema, page, records_per_page, query_schema
+    )
+
+
+def remove_worktime(id: int) -> None:
+    pass
+    # TODO:
+
+
+def update_worktime(record: WorkTimeSchema) -> None:
+    """Updates worktime by `WorkTimeSchema.id`"""
+    pass
+    # TODO:
+
+
+def create_worktime(record: WorkTimeSchema) -> None:
+    """Creates worktime"""
+    pass
+    # TODO:
 
 
 # endregion

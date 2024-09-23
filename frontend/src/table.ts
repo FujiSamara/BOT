@@ -7,6 +7,7 @@ import {
 	BidSchema,
 	BudgetSchema,
 	ExpenditureSchema,
+	WorkTimeSchema,
 } from "./types";
 import { useNetworkStore } from "./store/network";
 
@@ -855,6 +856,25 @@ export class CCSupervisorBidTable extends BidTable {
 			approveEndpoint: "/cc_supervisor",
 			rejectEndpoint: "/cc_supervisor",
 		});
+	}
+}
+
+export class WorkTimeTable extends Table<WorkTimeSchema> {
+	constructor() {
+		super("worktime");
+		this._formatters.set("worker", parser.formatWorker);
+		this._formatters.set("department", parser.formatDepartment);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("worker", "Работник");
+		this._aliases.set("department", "Производство");
+		this._aliases.set("post", "Должность");
+		this._aliases.set("work_begin", "Начало смены");
+		this._aliases.set("work_end", "Конец смены");
+		this._aliases.set("day", "День");
+		this._aliases.set("work_duration", "Длительность");
+		this._aliases.set("rating", "Оценка");
+		this._aliases.set("fine", "Штраф");
 	}
 }
 //#endregion

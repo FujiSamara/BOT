@@ -47,6 +47,7 @@ class Builder(ABC):
             schemas.BidSchema: models.Bid,
             schemas.PostSchema: models.Post,
             schemas.BudgetRecordSchema: models.BudgetRecord,
+            schemas.WorkTimeSchema: models.WorkTime,
         }
 
         # Model to schema dict

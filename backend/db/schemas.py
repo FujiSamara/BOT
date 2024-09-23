@@ -143,7 +143,7 @@ class WorkTimeSchema(BaseSchema):
     work_begin: Optional[str]
     work_end: Optional[str]
     day: str
-    work_duration: float
+    work_duration: Optional[float]
 
     rating: Optional[int]
     fine: Optional[int]
