@@ -59,7 +59,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 7,
-		imageSrc: "",
+		imageSrc: "/img/worktime.svg",
 		label: "Явки",
 		isActive: false,
 		panel: shallowRef(WorkTimePanel),
