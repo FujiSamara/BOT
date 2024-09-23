@@ -31,6 +31,7 @@ from bot.kb import (
     create_reply_keyboard,
     get_it_repairman_menu,
     get_it_tm_menu,
+    create_dismissal_menu_button,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -63,6 +64,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
         FujiScope.bot_bid_it_tm: get_it_tm_menu,
+        FujiScope.bot_dismissal: create_dismissal_menu_button,
     }
 
 

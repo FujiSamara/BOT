@@ -51,6 +51,7 @@ class FujiScope(enum.Enum):
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
+    bot_dismissal = 25
 
 
 class DepartmentType(enum.Enum):
