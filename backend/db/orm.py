@@ -29,6 +29,7 @@ from db.models import (
     BidIT,
     BidITWorkerDocument,
     BidITRepairmanDocument,
+    AccountLogins,
 )
 from db.schemas import (
     BaseSchema,
@@ -46,6 +47,7 @@ from db.schemas import (
     PostSchema,
     ProblemITSchema,
     BidITSchema,
+    AccountLoginsSchema,
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
@@ -1500,3 +1502,11 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
 
 
 # endregion
+
+
+def get_logins(worker_id: int) -> AccountLoginsSchema:
+    with session.begin() as s:
+        q = s.query(AccountLogins).filter(AccountLogins.worker_id == worker_id).first()
+        if q is None:
+            return None
+        return AccountLoginsSchema.model_validate(q)

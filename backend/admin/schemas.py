@@ -17,6 +17,8 @@ from db.models import (
     TechnicalRequest,
     Group,
     WorkTime,
+    AccountLogins,
+    KnowledgeBase,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -567,4 +569,56 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
         WorkTime.rating: "Рейтинг",
         WorkTime.fine: "Штраф",
         WorkTime.salary: "Зарплата",
+    }
+
+
+class AccountLoginsView(ModelView, model=AccountLogins):
+    name = "Логины"
+    name_plural = "Логины"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        AccountLogins.id,
+    ]
+
+    column_sortable_list = [
+        AccountLogins.id,
+    ]
+
+    column_labels = {
+        AccountLogins.id: "id",
+        AccountLogins.worker_id: "worker_id",
+        AccountLogins.cop_mail_login: "cop_mail_login",
+        AccountLogins.liko_login: "liko_login",
+        AccountLogins.bitrix_login: "bitrix_login",
+        AccountLogins.pyrus_login: "pyrus_login",
+        AccountLogins.check_office_login: "check_office_login",
+        AccountLogins.pbi_login: "pbi_login",
+    }
+
+
+class KnowledgeBaseView(ModelView, model=KnowledgeBase):
+    name = "База знаний"
+    name_plural = "База знаний"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        KnowledgeBase.id,
+    ]
+
+    column_sortable_list = [
+        KnowledgeBase.id,
+    ]
+
+    column_labels = {
+        KnowledgeBase.id: "id",
+        KnowledgeBase.document: "document",
+        KnowledgeBase.post: "post",
+        KnowledgeBase.post_id: "post_id",
     }

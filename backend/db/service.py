@@ -37,6 +37,7 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
     aliases,
+    AccountLoginsSchema,
 )
 import logging
 from datetime import datetime, timedelta
@@ -1897,3 +1898,11 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
 
 
 # endregion
+
+
+def get_logins(tg_id) -> AccountLoginsSchema:
+    worker_id = get_worker_by_telegram_id(tg_id).id
+    logins = orm.get_logins(worker_id=worker_id)
+    if not logins:
+        return None
+    return logins

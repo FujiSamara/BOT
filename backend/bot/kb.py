@@ -452,8 +452,41 @@ get_it_tm_menu = InlineKeyboardButton(
 )
 
 
-# Personal account
+# Personal cabinet
 
-open_personal_account = InlineKeyboardButton(
-    text="Личный кабинет", callback_data="get_pers_acc"
+get_personal_cabinet = InlineKeyboardButton(
+    text="Личный кабинет",
+    callback_data="get_per_cab",
+)
+
+get_per_cab_knowledge_base = InlineKeyboardButton(
+    text="База знаний",
+    callback_data="get_per_cab_knowledge_base",
+)
+
+get_per_cab_logins = InlineKeyboardButton(
+    text="Логины",
+    callback_data="get_per_cab_logins",
+)
+
+get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
+    text="Заявление на увольнение",
+    callback_data="get_per_cab_dismissal",
+)
+
+personal_cabinet_menu_with_logins = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_per_cab_knowledge_base],
+        [get_per_cab_logins],
+        [get_per_cab_dismissal],
+        [main_menu_button],
+    ]
+)
+
+personal_cabinet_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_per_cab_knowledge_base],
+        [get_per_cab_dismissal],
+        [main_menu_button],
+    ]
 )

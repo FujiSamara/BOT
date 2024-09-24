@@ -285,6 +285,40 @@ class TechnicalRequestSchema(BaseSchema):
     department: DepartmentSchema
 
 
+class AccountLoginsSchema(BaseSchema):
+    id: Optional[int] = -1
+
+    worker: WorkerSchema
+
+    cop_mail_login: Optional[str] = None
+
+    liko_login: Optional[str] = None
+
+    bitrix_login: Optional[str] = None
+
+    pyrus_login: Optional[str] = None
+
+    check_office_login: Optional[str] = None
+
+    pbi_login: Optional[str] = None
+
+
+class KnowledgeBaseSchema(BaseSchema):
+    id: Optional[int] = -1
+    post: PostSchema
+    document: DocumentSchema
+
+
+class MaterialValuesSchema(BaseSchema):
+    id: Optional[int] = -1
+    worke: WorkerSchema
+    item: str
+    quanity: int
+    price: int
+    inventory_number: str
+    issue_date: datetime.datetime
+
+
 # endregion
 
 

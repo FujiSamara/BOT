@@ -51,6 +51,7 @@ class FujiScope(enum.Enum):
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
+    bot_personal_cabinet = 25
 
 
 class DepartmentType(enum.Enum):
@@ -113,6 +114,10 @@ class Post(Base):
     acceptor_technical_request: Mapped[List["TechnicalRequest"]] = relationship(
         "TechnicalRequest",
         back_populates="acceptor_post",
+    )
+
+    knowledge_base_data: Mapped[List["KnowledgeBase"]] = relationship(
+        "KnowledgeBase", back_populates="post"
     )
 
 
@@ -388,6 +393,18 @@ class Worker(Base):
         "BidIT",
         back_populates="territorial_manager",
         foreign_keys="[BidIT.territorial_manager_id]",
+    )
+
+    worker_account_logins: Mapped[list["AccountLogins"]] = relationship(
+        "AccountLogins",
+        back_populates="worker",
+        foreign_keys="[AccountLogins.worker_id]",
+    )
+
+    material_values: Mapped[list["MaterialValues"]] = relationship(
+        "MaterialValues",
+        back_populates="worker",
+        foreign_keys="[MaterialValues.worker_id]",
     )
 
 
@@ -856,6 +873,56 @@ class TechnicalRequest(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="technical_requests", foreign_keys=[department_id]
     )
+
+
+# endregion
+
+# region Personal Cabinet
+
+
+class AccountLogins(Base):
+    """Логины от аккаунтов"""
+
+    __tablename__ = "account_logins"
+
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=False, unique=True
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker", back_populates="worker_account_logins", foreign_keys=[worker_id]
+    )
+    cop_mail_login: Mapped[str] = mapped_column(nullable=True)
+
+    liko_login: Mapped[str] = mapped_column(nullable=True)
+
+    bitrix_login: Mapped[str] = mapped_column(nullable=True)
+
+    pyrus_login: Mapped[str] = mapped_column(nullable=True)
+
+    check_office_login: Mapped[str] = mapped_column(nullable=True)
+
+    pbi_login: Mapped[str] = mapped_column(nullable=True)
+
+
+class KnowledgeBase(Base):
+    __tablename__ = "knowledge_base"
+
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
+    post: Mapped["Post"] = relationship("Post", back_populates="knowledge_base_data")
+
+
+class MaterialValues(Base):
+    __tablename__ = "material_values"
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    worker: Mapped["Worker"] = relationship("Worker", back_populates="material_values")
+
+    item: Mapped[str] = mapped_column(nullable=False)
+    quanity: Mapped[int] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column(nullable=False)
+    inventory_number: Mapped[str] = mapped_column(nullable=False)
+    issue_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
 
 # endregion
