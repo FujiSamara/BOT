@@ -303,12 +303,6 @@ class AccountLoginsSchema(BaseSchema):
     pbi_login: Optional[str] = None
 
 
-class KnowledgeBaseSchema(BaseSchema):
-    id: Optional[int] = -1
-    post: PostSchema
-    document: DocumentSchema
-
-
 class MaterialValuesSchema(BaseSchema):
     id: Optional[int] = -1
     worke: WorkerSchema
