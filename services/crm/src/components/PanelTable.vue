@@ -85,6 +85,7 @@
 								table.checked.value[index].value ||
 								table.highlighted.value[index].value,
 						}"
+						:style="{ backgroundColor: table.colors.value[index] }"
 					>
 						<th>
 							<div class="table-tools">
@@ -325,7 +326,7 @@ tbody tr:last-child th {
 
 /** Row selection */
 tr:not(:last-child):hover {
-	background-color: #fdf7fd;
+	background-color: #fdf7fd !important;
 }
 
 /** Table head settings  */

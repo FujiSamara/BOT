@@ -459,6 +459,19 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
+	public colors = computed(() => {
+		const result: Array<string> = [];
+
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const model = this._loadedRows.value[index];
+
+			const color = this._highlighted.value[index]
+				? "fdf7fd"
+				: this.color(model);
+			result.push(color);
+		}
+		return result;
+	});
 	public notifies = computed(() => {
 		let result = 0;
 
@@ -552,6 +565,10 @@ export class Table<T extends BaseSchema> {
 		} else {
 			return this._defaultFormatter;
 		}
+	}
+	/** Returns hex color of row by instance of `T`. */
+	protected color(_: T): string {
+		return "#ffffff";
 	}
 	/** Returns actual alias for specified **fieldName**. */
 	private getAlias(fieldName: string): string {
@@ -820,6 +837,18 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("comment", 11);
 		this._columsOrder.set("expenditure", 12);
 		this._columsOrder.set("need_edm", 13);
+	}
+
+	protected color(model: BidSchema): string {
+		switch (model.status) {
+			case "Выплачено":
+				return "#c8fac9";
+			case "Отказано":
+				return "#fac8ca";
+
+			default:
+				return "#ffffff";
+		}
 	}
 }
 
