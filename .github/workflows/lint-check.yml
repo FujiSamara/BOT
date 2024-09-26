@@ -11,10 +11,10 @@ jobs:
         with:
           node-version: "22.2.x"
       - name: npm install
-        working-directory: sevices/crm
+        working-directory: services/crm
         run: npm install
       - name: build frontend
-        working-directory: sevices/crm
+        working-directory: services/crm
         run: npm run build
   build-backend:
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
           pip install --no-cache-dir -r requirements.txt
           pip install --no-cache-dir ruff
       - name: Run Ruff
-        working-directory: sevices/backend
+        working-directory: services/backend
         run: |
           ruff check .
           ruff format --check .
