@@ -19,6 +19,8 @@ from db.models import (
     WorkTime,
     AccountLogins,
     KnowledgeBase,
+    Subordination,
+    MaterialValues,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -238,6 +240,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
+        Worker.subordination_chief: "Руководитель",
         Worker.department: "Производство",
         Worker.group: "Отдел",
         Worker.post: "Должность",
@@ -261,6 +264,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.l_name,
         Worker.o_name,
         Worker.phone_number,
+        Worker.subordination_chief,
         Worker.department,
         Worker.group,
         Worker.telegram_id,
@@ -600,25 +604,83 @@ class AccountLoginsView(ModelView, model=AccountLogins):
     }
 
 
-class KnowledgeBaseView(ModelView, model=KnowledgeBase):
-    name = "База знаний"
-    name_plural = "База знаний"
+class SubordinationView(ModelView, model=Subordination):
+    name = "Субординация"
+    name_plural = "Субординация"
+
+    can_create = True
+    can_edit = False
+    can_export = False
+
+    column_list = [Subordination.id, Subordination.chief, Subordination.employee]
+
+    column_sortable_list = [
+        Subordination.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(Subordination).filter(
+            or_(
+                Subordination.chief_id.in_(workers_id),
+                Subordination.employee_id.in_(workers_id),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+    column_labels = {
+        Subordination.id: "id",
+        Subordination.chief: "Руководитель",
+        Subordination.employee: "Сотрудник",
+    }
+
+
+class MaterialValuesView(ModelView, model=MaterialValues):
+    name = "Материальные ценности"
+    name_plural = "Материальная ценность"
 
     can_create = True
     can_edit = True
     can_export = False
 
     column_list = [
-        KnowledgeBase.id,
+        MaterialValues.worker,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
     ]
 
     column_sortable_list = [
-        KnowledgeBase.id,
+        MaterialValues.worker,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
+    ]
+
+    column_searchable_list = [
+        MaterialValues.worker,
+        MaterialValues.item,
+        MaterialValues.inventory_number,
     ]
 
     column_labels = {
-        KnowledgeBase.id: "id",
-        KnowledgeBase.document: "document",
-        KnowledgeBase.post: "post",
-        KnowledgeBase.post_id: "post_id",
+        MaterialValues.worker: "Работник",
+        MaterialValues.item: "Предмет",
+        MaterialValues.quanity: "Кол-во",
+        MaterialValues.price: "Цена",
+        MaterialValues.inventory_number: "Инвентаризационный номер",
+        MaterialValues.issue_date: "Дата выдачи",
     }

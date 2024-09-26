@@ -319,6 +319,12 @@ class MaterialValuesSchema(BaseSchema):
     issue_date: datetime.datetime
 
 
+class SubordinationSchema(BaseSchema):
+    id: Optional[int] = -1
+    chief: WorkerSchema
+    employee: WorkerSchema
+
+
 # endregion
 
 

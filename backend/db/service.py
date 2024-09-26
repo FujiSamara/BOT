@@ -1900,9 +1900,16 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
 # endregion
 
 
-def get_logins(tg_id) -> AccountLoginsSchema:
-    worker_id = get_worker_by_telegram_id(tg_id).id
+def get_logins(worker_id) -> Optional[AccountLoginsSchema]:
     logins = orm.get_logins(worker_id=worker_id)
     if not logins:
         return None
     return logins
+
+
+def get_worker_chief(telegram_id: int) -> Optional[WorkerSchema]:
+    worker_id = get_worker_by_telegram_id(telegram_id).id
+    chief = orm.get_subordination_chief(worker_id=worker_id)
+    if chief is None:
+        return None
+    return chief

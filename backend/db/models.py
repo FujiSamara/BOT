@@ -407,6 +407,17 @@ class Worker(Base):
         foreign_keys="[MaterialValues.worker_id]",
     )
 
+    subordination_chief: Mapped["Subordination"] = relationship(
+        "Subordination",
+        back_populates="employee",
+        foreign_keys="[Subordination.employee_id]",
+    )
+    subordination_employee: Mapped["Subordination"] = relationship(
+        "Subordination",
+        back_populates="chief",
+        foreign_keys="[Subordination.chief_id]",
+    )
+
 
 class Bid(Base):
     """Заявки"""
@@ -877,8 +888,6 @@ class TechnicalRequest(Base):
 
 # endregion
 
-# region Personal Cabinet
-
 
 class AccountLogins(Base):
     """Логины от аккаунтов"""
@@ -925,4 +934,19 @@ class MaterialValues(Base):
     issue_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
 
-# endregion
+class Subordination(Base):
+    __tablename__ = "subordinations"
+
+    def __str__(self):
+        return str(self.chief)
+
+    chief_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    chief: Mapped["Worker"] = relationship(
+        "Worker", back_populates="subordination_employee", foreign_keys=[chief_id]
+    )
+    employee_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=False, unique=True
+    )
+    employee: Mapped["Worker"] = relationship(
+        "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
+    )

@@ -15,7 +15,7 @@ from bot.text import personal_cabinet_logins_dict
 from bot.handlers.utils import try_edit_or_answer
 from db.service import (
     get_worker_by_telegram_id,
-    get_chef_by_department_id,
+    get_worker_chief,
     get_logins,
 )
 from db.schemas import WorkerSchema
@@ -33,8 +33,8 @@ router = Router(name="personal_account")
 @router.callback_query(F.data == get_personal_cabinet.callback_data)
 async def get_personal_data(callback: CallbackQuery):
     worker: Optional[WorkerSchema] = get_worker_by_telegram_id(callback.message.chat.id)
-    department_chef: Optional[WorkerSchema] = get_chef_by_department_id(
-        worker.department.id
+    department_chef: Optional[WorkerSchema] = get_worker_chief(
+        telegram_id=callback.message.chat.id
     )
     text = ""
 
@@ -80,7 +80,7 @@ async def get_personal_data(callback: CallbackQuery):
 async def get_logins_pers_cab(callback: CallbackQuery):
     logins = [
         data
-        for data in get_logins(callback.message.chat.id)
+        for data in get_logins(get_worker_by_telegram_id(callback.message.chat.id).id)
         if data[0] not in ["id", "worker"]
     ]
     buttons: list[InlineKeyboardButton] = []
@@ -114,7 +114,7 @@ async def show_login(callback: CallbackQuery, callback_data: ShowLoginCallbackDa
         + f"\n{callback_data.login}",
         message=callback.message,
     )
-    await asyncio.sleep(delay=30)
+    await asyncio.sleep(delay=10)
     await get_logins_pers_cab(callback)
 
 

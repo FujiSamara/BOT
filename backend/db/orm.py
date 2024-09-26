@@ -30,6 +30,7 @@ from db.models import (
     BidITWorkerDocument,
     BidITRepairmanDocument,
     AccountLogins,
+    Subordination,
 )
 from db.schemas import (
     BaseSchema,
@@ -1504,9 +1505,24 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
 # endregion
 
 
-def get_logins(worker_id: int) -> AccountLoginsSchema:
+def get_logins(worker_id: int) -> Optional[AccountLoginsSchema]:
     with session.begin() as s:
         q = s.query(AccountLogins).filter(AccountLogins.worker_id == worker_id).first()
         if q is None:
             return None
         return AccountLoginsSchema.model_validate(q)
+
+
+def get_subordination_chief(worker_id: int) -> Optional[WorkerSchema]:
+    with session.begin() as s:
+        chief_id = (
+            s.query(Subordination)
+            .filter(Subordination.employee_id == worker_id)
+            .first()
+            .chief_id
+        )
+        try:
+            raw_chief = get_workers_with_post_by_column(Worker.id, chief_id)[0]
+        except IndexError:
+            return None
+        return WorkerSchema.model_validate(raw_chief)
