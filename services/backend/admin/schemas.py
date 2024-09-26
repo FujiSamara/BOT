@@ -585,7 +585,16 @@ class AccountLoginsView(ModelView, model=AccountLogins):
 
     column_list = [
         AccountLogins.id,
+        AccountLogins.worker,
+        AccountLogins.cop_mail_login,
+        AccountLogins.liko_login,
+        AccountLogins.bitrix_login,
+        AccountLogins.pyrus_login,
+        AccountLogins.check_office_login,
+        AccountLogins.pbi_login,
     ]
+
+    column_details_exclude_list = [AccountLogins.worker_id]
 
     column_sortable_list = [
         AccountLogins.id,
@@ -602,21 +611,6 @@ class AccountLoginsView(ModelView, model=AccountLogins):
         AccountLogins.pbi_login: "PBI",
     }
 
-
-class SubordinationView(ModelView, model=Subordination):
-    name = "Субординация"
-    name_plural = "Субординация"
-
-    can_create = True
-    can_edit = False
-    can_export = False
-
-    column_list = [Subordination.id, Subordination.chief, Subordination.employee]
-
-    column_sortable_list = [
-        Subordination.id,
-    ]
-
     @staticmethod
     def search_query(stmt: Select, term):
         workers_id = select(Worker.id).filter(
@@ -627,11 +621,8 @@ class SubordinationView(ModelView, model=Subordination):
             )
         )
 
-        return select(Subordination).filter(
-            or_(
-                Subordination.chief_id.in_(workers_id),
-                Subordination.employee_id.in_(workers_id),
-            )
+        return select(AccountLogins).filter(
+            AccountLogins.worker_id.in_(workers_id),
         )
 
     column_searchable_list = [
@@ -639,12 +630,6 @@ class SubordinationView(ModelView, model=Subordination):
         "Имя",
         "Отчество",
     ]
-
-    column_labels = {
-        Subordination.id: "id",
-        Subordination.chief: "Руководитель",
-        Subordination.employee: "Сотрудник",
-    }
 
 
 class MaterialValuesView(ModelView, model=MaterialValues):
@@ -656,14 +641,17 @@ class MaterialValuesView(ModelView, model=MaterialValues):
     can_export = False
 
     column_list = [
+        MaterialValues.id,
         MaterialValues.worker,
         MaterialValues.item,
         MaterialValues.price,
         MaterialValues.inventory_number,
     ]
 
+    column_details_exclude_list = [MaterialValues.worker_id]
+
     column_sortable_list = [
-        MaterialValues.worker,
+        MaterialValues.id,
         MaterialValues.item,
         MaterialValues.price,
         MaterialValues.inventory_number,
@@ -698,8 +686,60 @@ class MaterialValuesView(ModelView, model=MaterialValues):
     column_labels = {
         MaterialValues.worker: "Работник",
         MaterialValues.item: "Предмет",
-        MaterialValues.quanity: "Кол-во",
+        MaterialValues.quanity: "Количество",
         MaterialValues.price: "Цена",
         MaterialValues.inventory_number: "Инвентаризационный номер",
         MaterialValues.issue_date: "Дата выдачи",
+    }
+
+
+class SubordinationView(ModelView, model=Subordination):
+    name = "Субординация"
+    name_plural = "Субординация"
+
+    can_create = True
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        Subordination.id,
+        Subordination.chief,
+        Subordination.employee,
+    ]
+    column_details_exclude_list = [
+        Subordination.employee_id,
+        Subordination.chief_id,
+    ]
+
+    column_sortable_list = [
+        Subordination.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(Subordination).filter(
+            or_(
+                Subordination.chief_id.in_(workers_id),
+                Subordination.employee_id.in_(workers_id),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+    column_labels = {
+        Subordination.chief: "Руководитель",
+        Subordination.employee: "Сотрудник",
+        Subordination.id: "id",
     }
