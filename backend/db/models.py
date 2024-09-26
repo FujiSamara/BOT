@@ -913,14 +913,6 @@ class AccountLogins(Base):
     pbi_login: Mapped[str] = mapped_column(nullable=True)
 
 
-class KnowledgeBase(Base):
-    __tablename__ = "knowledge_base"
-
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"))
-    post: Mapped["Post"] = relationship("Post", back_populates="knowledge_base_data")
-
-
 class MaterialValues(Base):
     __tablename__ = "material_values"
 
