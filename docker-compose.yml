@@ -1,12 +1,13 @@
 services:
-  app-frontend:
+  crm:
     build:
-      context: frontend
+      context: services/crm
       network: host
       args:
         VITE_PORT:
         VITE_DOMAIN:
         VITE_PROTOCOL:
+
 
     volumes:
       - nginx-html:/app/dist
@@ -16,30 +17,30 @@ services:
     env_file:
       - .env
 
-  app-backend:
+  backend:
     build:
-      context: backend
+      context: services/backend
       network: host
 
     volumes:
       - cert-dir:/var/www/certs:ro
       - files-dir:/tmp
-      - ./backend:/app
+      - ./services/backend:/app
 
     network_mode: "host"
 
     env_file:
       - .env
 
-  app-server:
+  server:
     build:
-      context: server
+      context: services/server
       network: host
 
     volumes:
       - cert-dir:/var/www/certs:ro
       - nginx-html:/usr/share/nginx/html
-      - ./server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
+      - ./services/server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
 
     network_mode: "host"
 

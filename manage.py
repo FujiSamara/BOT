@@ -3,7 +3,7 @@ import subprocess as sub
 import pathlib
 from typing import Callable
 
-from server import tunnel
+from services.server import tunnel
 
 
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.resolve()
@@ -35,21 +35,21 @@ def run():
     backend_cmd = [
         f"{EXECUTEABLE_PATH}",
         "-Xfrozen_modules=off",
-        f"{CURRENT_DIRECTORY}/backend/manage.py",
+        f"{CURRENT_DIRECTORY}/services/backend/manage.py",
     ]
     if "FRONTEND" not in sys.argv:
         processes.append(AppProcess("Backend", backend_cmd))
 
     # Frontend
-    frontend_cmd = [
+    crm_cmd = [
         "npm",
         "--prefix",
-        f"{CURRENT_DIRECTORY}/frontend",
+        f"{CURRENT_DIRECTORY}/services/crm",
         "run",
         "dev",
     ]
     if "BACKEND" not in sys.argv:
-        processes.append(AppProcess("Frontend", frontend_cmd))
+        processes.append(AppProcess("Frontend", crm_cmd))
 
     print(OKBLUE + "[Processes configuring completed]" + ENDC)
     # endregion
