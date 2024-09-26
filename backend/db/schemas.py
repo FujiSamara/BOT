@@ -305,7 +305,7 @@ class AccountLoginsSchema(BaseSchema):
 
 class MaterialValuesSchema(BaseSchema):
     id: Optional[int] = -1
-    worke: WorkerSchema
+    worker: WorkerSchema
     item: str
     quanity: int
     price: int

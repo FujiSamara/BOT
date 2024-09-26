@@ -7,9 +7,8 @@ import asyncio
 from bot.kb import (
     get_personal_cabinet,
     personal_cabinet_menu,
-    personal_cabinet_menu_with_logins,
     get_per_cab_logins,
-    get_per_cab_knowledge_base,
+    get_per_cab_mat_vals,
 )
 from bot.text import personal_cabinet_logins_dict
 from bot.handlers.utils import try_edit_or_answer
@@ -17,14 +16,17 @@ from db.service import (
     get_worker_by_telegram_id,
     get_worker_chief,
     get_logins,
+    get_material_values,
+    get_material_value_by_inventory_number,
 )
 from db.schemas import WorkerSchema
 
 
 class ShowLoginCallbackData(CallbackData, prefix="tech_req"):
     end_point: str
-    login: str
-    service: str
+    login: Optional[str] = None
+    service: Optional[str] = None
+    inventory_number: Optional[str] = None
 
 
 router = Router(name="personal_account")
@@ -57,23 +59,15 @@ async def get_personal_data(callback: CallbackQuery):
             text += department_chef.o_name + " "
     else:
         text += "Не найден"
-    text += f"\nДата приема на работу: {worker.employment_date}\n\
-    "  # TODO Материальные ценности
+    text += f"\nДата приема на работу: {worker.employment_date}\n"
 
     del worker
     del department_chef
-    if get_logins(callback.message.chat.id):
-        await try_edit_or_answer(
-            text=text,
-            reply_markup=personal_cabinet_menu_with_logins,
-            message=callback.message,
-        )
-    else:
-        await try_edit_or_answer(
-            text=text,
-            reply_markup=personal_cabinet_menu,
-            message=callback.message,
-        )
+    await try_edit_or_answer(
+        text=text,
+        reply_markup=personal_cabinet_menu,
+        message=callback.message,
+    )
 
 
 @router.callback_query(F.data == get_per_cab_logins.callback_data)
@@ -84,7 +78,7 @@ async def get_logins_pers_cab(callback: CallbackQuery):
         if data[0] not in ["id", "worker"]
     ]
     buttons: list[InlineKeyboardButton] = []
-    for i in range(6):
+    for i in range(len(logins)):
         if logins[i][1]:
             buttons.append(
                 [
@@ -98,10 +92,9 @@ async def get_logins_pers_cab(callback: CallbackQuery):
                     )
                 ]
             )
-        print(logins[i][0], logins[i][1])
     buttons.append([get_personal_cabinet])
     await try_edit_or_answer(
-        text=hbold("Логины"),
+        text=hbold("Доступы"),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
     )
@@ -118,6 +111,46 @@ async def show_login(callback: CallbackQuery, callback_data: ShowLoginCallbackDa
     await get_logins_pers_cab(callback)
 
 
-@router.callback_query(F.data == get_per_cab_knowledge_base.callback_data)
-async def get_knowledge_base(callback: CallbackQuery):
-    pass
+@router.callback_query(F.data == get_per_cab_mat_vals.callback_data)
+async def get_mat_vals(callback: CallbackQuery):
+    material_values = get_material_values(telegram_id=callback.message.chat.id)
+    buttons: list[InlineKeyboardButton] = []
+    for material_value in material_values:
+        buttons.append(
+            InlineKeyboardButton(
+                text=material_value.item,
+                callback_data=ShowLoginCallbackData(
+                    end_point="get_per_cab_mat_val",
+                    inventory_number=material_value.inventory_number,
+                ).pack(),
+            )
+        )
+    del material_values
+
+    await try_edit_or_answer(
+        text=hbold(get_per_cab_mat_vals.text),
+        message=callback.message,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[buttons, [get_personal_cabinet]]
+        ),
+    )
+
+
+@router.callback_query(
+    ShowLoginCallbackData.filter(F.end_point == "get_per_cab_mat_val")
+)
+async def get_mat_val(callback: CallbackQuery, callback_data: ShowLoginCallbackData):
+    material_value = get_material_value_by_inventory_number(
+        inventory_number=callback_data.inventory_number
+    )
+
+    text = f"Предмет: {material_value.item}\
+\nКоличество: {material_value.quanity}\
+\nСтоимость: {material_value.price}\
+\nДата выдачи: {material_value.issue_date}\
+\nИнвентаризационный номер: {material_value.inventory_number}"
+    await try_edit_or_answer(
+        text=text,
+        message=callback.message,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[get_per_cab_mat_vals]]),
+    )

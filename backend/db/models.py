@@ -116,10 +116,6 @@ class Post(Base):
         back_populates="acceptor_post",
     )
 
-    knowledge_base_data: Mapped[List["KnowledgeBase"]] = relationship(
-        "KnowledgeBase", back_populates="post"
-    )
-
 
 class Company(Base):
     """Компания Фуджи или Сакура"""
@@ -276,7 +272,7 @@ class Group(Base):
 
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
 
-    workers: Mapped["Worker"] = relationship(
+    workers: Mapped[List["Worker"]] = relationship(
         "Worker",
         back_populates="group",
         foreign_keys="Worker.group_id",

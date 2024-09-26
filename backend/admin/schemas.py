@@ -576,7 +576,7 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
 
 
 class AccountLoginsView(ModelView, model=AccountLogins):
-    name = "Логины"
+    name = "Логин"
     name_plural = "Логины"
 
     can_create = True
@@ -593,13 +593,13 @@ class AccountLoginsView(ModelView, model=AccountLogins):
 
     column_labels = {
         AccountLogins.id: "id",
-        AccountLogins.worker_id: "worker_id",
-        AccountLogins.cop_mail_login: "cop_mail_login",
-        AccountLogins.liko_login: "liko_login",
-        AccountLogins.bitrix_login: "bitrix_login",
-        AccountLogins.pyrus_login: "pyrus_login",
-        AccountLogins.check_office_login: "check_office_login",
-        AccountLogins.pbi_login: "pbi_login",
+        AccountLogins.worker: "Работник",
+        AccountLogins.cop_mail_login: "Корпоративная почта",
+        AccountLogins.liko_login: "Iiko",
+        AccountLogins.bitrix_login: "Bitrix",
+        AccountLogins.pyrus_login: "Pyrus",
+        AccountLogins.check_office_login: "CheckOffice",
+        AccountLogins.pbi_login: "PBI",
     }
 
 
@@ -648,8 +648,8 @@ class SubordinationView(ModelView, model=Subordination):
 
 
 class MaterialValuesView(ModelView, model=MaterialValues):
-    name = "Материальные ценности"
-    name_plural = "Материальная ценность"
+    name = "Материальная ценность"
+    name_plural = "Материальные ценности"
 
     can_create = True
     can_edit = True
@@ -669,8 +669,28 @@ class MaterialValuesView(ModelView, model=MaterialValues):
         MaterialValues.inventory_number,
     ]
 
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(MaterialValues).filter(
+            or_(
+                MaterialValues.worker_id.in_(workers_id),
+                MaterialValues.item.ilike(f"%{term}%"),
+                MaterialValues.inventory_number.ilike(f"%{term}%"),
+            )
+        )
+
     column_searchable_list = [
-        MaterialValues.worker,
+        "Фамилия",
+        "Имя",
+        "Отчество",
         MaterialValues.item,
         MaterialValues.inventory_number,
     ]

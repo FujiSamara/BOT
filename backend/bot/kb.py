@@ -459,14 +459,14 @@ get_personal_cabinet = InlineKeyboardButton(
     callback_data="get_per_cab",
 )
 
-get_per_cab_knowledge_base = InlineKeyboardButton(
-    text="База знаний",
-    callback_data="get_per_cab_knowledge_base",
+get_per_cab_logins = InlineKeyboardButton(
+    text="Доступы",
+    callback_data="get_per_cab_logins",
 )
 
-get_per_cab_logins = InlineKeyboardButton(
-    text="Логины",
-    callback_data="get_per_cab_logins",
+get_per_cab_mat_vals = InlineKeyboardButton(
+    text="Материальные ценности",
+    callback_data="get_per_cab_mat_vals",
 )
 
 get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
@@ -474,18 +474,10 @@ get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
     callback_data="get_per_cab_dismissal",
 )
 
-personal_cabinet_menu_with_logins = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [get_per_cab_knowledge_base],
-        [get_per_cab_logins],
-        [get_per_cab_dismissal],
-        [main_menu_button],
-    ]
-)
-
 personal_cabinet_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [get_per_cab_knowledge_base],
+        [get_per_cab_logins],
+        [get_per_cab_mat_vals],
         [get_per_cab_dismissal],
         [main_menu_button],
     ]

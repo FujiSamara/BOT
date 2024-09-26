@@ -31,6 +31,7 @@ from db.models import (
     BidITRepairmanDocument,
     AccountLogins,
     Subordination,
+    MaterialValues,
 )
 from db.schemas import (
     BaseSchema,
@@ -49,6 +50,7 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
     AccountLoginsSchema,
+    MaterialValuesSchema,
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
@@ -1515,14 +1517,40 @@ def get_logins(worker_id: int) -> Optional[AccountLoginsSchema]:
 
 def get_subordination_chief(worker_id: int) -> Optional[WorkerSchema]:
     with session.begin() as s:
-        chief_id = (
+        subordination = (
             s.query(Subordination)
             .filter(Subordination.employee_id == worker_id)
             .first()
-            .chief_id
         )
+        if subordination is None:
+            return None
         try:
-            raw_chief = get_workers_with_post_by_column(Worker.id, chief_id)[0]
+            raw_chief = get_workers_with_post_by_column(
+                Worker.id, subordination.chief_id
+            )[0]
         except IndexError:
             return None
         return WorkerSchema.model_validate(raw_chief)
+
+
+def get_material_values(worker_id) -> list[MaterialValuesSchema]:
+    with session.begin() as s:
+        material_values = (
+            s.query(MaterialValues).filter(MaterialValues.worker_id == worker_id).all()
+        )
+        return [
+            MaterialValuesSchema.model_validate(material_value)
+            for material_value in material_values
+        ]
+
+
+def get_material_value_by_inventory_number(
+    inventory_number: int,
+) -> MaterialValuesSchema:
+    with session.begin() as s:
+        material_value = (
+            s.query(MaterialValues)
+            .filter(MaterialValues.inventory_number == inventory_number)
+            .first()
+        )
+        return MaterialValuesSchema.model_validate(material_value)
