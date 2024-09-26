@@ -42,19 +42,27 @@ async def get_worktimes(
     return service.get_worktimes_at_page(page, records_per_page, query)
 
 
+@router.post("/")
+async def create_worktime(
+    schema: WorkTimeSchema,
+    _: User = Security(get_current_user, scopes=["crm_worktime"]),
+) -> None:
+    await service.create_worktime(schema)
+
+
 @router.delete("/{id}")
 async def delete_worktime(
     id: int, _: User = Security(get_current_user, scopes=["crm_worktime"])
 ) -> None:
-    service.remove_worktime(id)
+    await service.remove_worktime(id)
 
 
-@router.patch("/")
-async def update_budget_record(
+@router.put("/")
+async def update_worktime(
     schema: WorkTimeSchema,
     _: User = Security(get_current_user, scopes=["crm_worktime"]),
 ) -> None:
-    service.update_worktime(schema)
+    await service.update_worktime(schema)
 
 
 @router.post("/export")

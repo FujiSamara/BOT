@@ -135,18 +135,23 @@ class BidSchema(BaseModel):
     teller_cash_state: ApprovalStatus
 
 
-class WorkTimeSchema(BaseSchema):
-    worker: Optional[WorkerSchema]
-    department: Optional[DepartmentSchema]
-    post: Optional[PostSchema]
+class WorkTimeSchema(BaseModel):
+    class Config:
+        from_attributes = True
 
-    work_begin: Optional[str]
-    work_end: Optional[str]
+    id: Optional[int] = -1
+
+    worker: Optional[WorkerSchema] = None
+    department: Optional[DepartmentSchema] = None
+    post: Optional[PostSchema] = None
+
+    work_begin: Optional[str] = None
+    work_end: Optional[str] = None
     day: str
-    work_duration: Optional[float]
+    work_duration: Optional[float] = None
 
-    rating: Optional[int]
-    fine: Optional[int]
+    rating: Optional[int] = None
+    fine: Optional[int] = None
 
 
 class WorkerBidSchema(BaseModel):

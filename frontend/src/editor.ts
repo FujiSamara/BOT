@@ -129,7 +129,6 @@ export class BudgetEditor extends Editor {
 		];
 	}
 }
-
 export class WorkTimeEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
@@ -268,6 +267,9 @@ class DepartmentSmartField extends SmartField {
 }
 
 class PostSmartField extends SmartField {
+	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
+
 	constructor(
 		name: string,
 		fieldName: string,
@@ -275,10 +277,26 @@ class PostSmartField extends SmartField {
 		canEdit: boolean = true,
 	) {
 		super(name, fieldName, defaultValue, canEdit);
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/post`;
 	}
 
 	protected formatter(value: any): string {
-		return `${value.name}`;
+		return value.name;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
+		);
+
+		this._tipList.value = resp.data;
 	}
 }
 //#endregion

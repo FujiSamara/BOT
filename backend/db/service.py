@@ -1,6 +1,7 @@
 from io import BytesIO
 from pathlib import Path
 
+import aiohttp
 from sqlalchemy import null
 from settings import get_settings
 import db.orm as orm
@@ -25,6 +26,7 @@ from db.schemas import (
     BudgetRecordSchema,
     ExpenditureSchema,
     FilterSchema,
+    PostSchema,
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
@@ -40,7 +42,7 @@ from db.schemas import (
 )
 import logging
 from datetime import datetime, timedelta
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 from typing import Any, Optional
 
 
@@ -176,6 +178,11 @@ def find_workers(record: str) -> list[WorkerSchema]:
     Search is carried out by f_name, l_name, o_name.
     """
     return orm.find_workers_by_name(record)
+
+
+def find_posts(record: str) -> list[PostSchema]:
+    """Finds posts by given `record`."""
+    return orm.find_posts_by_name(record)
 
 
 def find_department_by_name(record: str) -> list[DepartmentSchema]:
@@ -1969,21 +1976,67 @@ def get_worktimes_at_page(
     )
 
 
-def remove_worktime(id: int) -> None:
-    pass
-    # TODO:
+def dump_worktime(record: WorkTimeSchema) -> dict:
+    if (
+        not hasattr(record, "worker")
+        or not hasattr(record, "department")
+        or not hasattr(record, "post")
+        or not hasattr(record, "work_begin")
+    ):
+        raise HTTPException(status_code=400)
+
+    dump = {
+        "worker_id": record.worker.id,
+        "company_id": record.department.company.id,
+        "post_id": record.post.id,
+        "department_id": record.department.id,
+        "work_begin": record.work_begin,
+        "day": record.day,
+    }
+
+    if hasattr(record, "work_end"):
+        dump["work_end"] = record.work_end
+    if hasattr(record, "work_duration"):
+        dump["work_duration"] = record.work_duration
+    if hasattr(record, "salary"):
+        dump["salary"] = record.salary
+    if hasattr(record, "fine"):
+        dump["fine"] = record.fine
+    if hasattr(record, "rating"):
+        dump["rating"] = record.rating
+
+    return dump
 
 
-def update_worktime(record: WorkTimeSchema) -> None:
+async def remove_worktime(id: int) -> None:
+    async with aiohttp.ClientSession() as session:
+        async with session.delete(
+            f"{get_settings().external_api}/connector/biosmart/work_times/{id}",
+        ) as resp:
+            if resp.status >= 400:
+                raise HTTPException(status_code=resp.status)
+
+
+async def update_worktime(record: WorkTimeSchema) -> None:
     """Updates worktime by `WorkTimeSchema.id`"""
-    pass
-    # TODO:
+    async with aiohttp.ClientSession() as session:
+        async with session.patch(
+            f"{get_settings().external_api}/connector/biosmart/work_times/{record.id}",
+            data=dump_worktime(record),
+        ) as resp:
+            if resp.status >= 400:
+                raise HTTPException(status_code=resp.status)
 
 
-def create_worktime(record: WorkTimeSchema) -> None:
+async def create_worktime(record: WorkTimeSchema) -> None:
     """Creates worktime"""
-    pass
-    # TODO:
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"{get_settings().external_api}/connector/biosmart/work_times",
+            data=dump_worktime(record),
+        ) as resp:
+            if resp.status >= 400:
+                raise HTTPException(status_code=resp.status)
 
 
 def export_worktimes(

@@ -6,6 +6,7 @@ from api.crm.routers import budget
 from api.crm.routers import department
 from api.crm.routers import bid
 from api.crm.routers import worktime
+from api.crm.routers import post
 
 
 def configure(crm: FastAPI):
@@ -16,3 +17,4 @@ def configure(crm: FastAPI):
     crm.include_router(department.router, prefix="/department")
     crm.include_router(bid.router, prefix="/bid")
     crm.include_router(worktime.router, prefix="/worktime")
+    crm.include_router(post.router, prefix="/post")
