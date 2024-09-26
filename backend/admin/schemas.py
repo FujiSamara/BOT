@@ -18,7 +18,6 @@ from db.models import (
     Group,
     WorkTime,
     AccountLogins,
-    KnowledgeBase,
     Subordination,
     MaterialValues,
 )
