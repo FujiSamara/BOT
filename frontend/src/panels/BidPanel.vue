@@ -37,6 +37,7 @@
 			@delete="onDelete"
 			:canApprove="true"
 			:canReject="true"
+			:can-delete="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -125,7 +126,8 @@ watch(table.notifies, () => {
 });
 
 const onDelete = async () => {
-	await table.delete(viewingIndex.value);
+	await table.delete(viewingIndex.value, true);
+	elementViewing.value = false;
 };
 const onApprove = async () => {
 	await table.approve(viewingIndex.value, true);

@@ -770,6 +770,13 @@ def get_groups() -> list[GroupSchema]:
         return [GroupSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
+def remove_bid(id: int) -> None:
+    """Removes bid by `id` if it exist in db."""
+    with session.begin() as s:
+        if bid := s.query(Bid).filter(Bid.id == id).first():
+            s.delete(bid)
+
+
 def get_group_by_name(name: str) -> GroupSchema:
     """Returns GroupSchema by name"""
     with session.begin() as s:

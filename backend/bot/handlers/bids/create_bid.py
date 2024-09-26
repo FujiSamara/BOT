@@ -93,13 +93,13 @@ async def get_settings_form(callback: CallbackQuery, state: FSMContext):
 async def send_bid(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await state.set_state(Base.none)
-    amount = data.get("amount")
-    payment_type = data.get("type")
-    department = data.get("department")
-    purpose = data.get("purpose")
+    amount = data["amount"]
+    payment_type = data["type"]
+    department = data["department"]
+    purpose = data["purpose"]
     comment = data.get("comment")
-    documents = data.get("document")
-    expenditure = data.get("expenditure")
+    documents = data["document"]
+    expenditure = data["expenditure"]
     need_edm = data.get("need_edm")
 
     document_files: list[UploadFile] = []
