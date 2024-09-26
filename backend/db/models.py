@@ -52,6 +52,10 @@ class FujiScope(enum.Enum):
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
     bot_dismissal = 25
+    bot_dismissal_kru = 26
+    bot_dismissal_accountant = 27
+    bot_dismissal_access = 28
+    bot_dismissal_tech = 29
 
 
 class DepartmentType(enum.Enum):
@@ -857,6 +861,41 @@ class TechnicalRequest(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="technical_requests", foreign_keys=[department_id]
     )
+
+
+# endregion
+
+
+# region Dismissal blank
+
+
+class DismissalDocument(Base):
+    """Документы заявлений об увольнении"""
+
+    __tablename__ = "dismissal_documents"
+
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
+    dismissal: Mapped["Dismissal"] = relationship(
+        "Dismissal", back_populates="problem_photos"
+    )
+
+
+class Dismissal(Base):
+    """Заявление об увольнении"""
+
+    __tablename__ = "dismissals"
+
+    problem_photos: Mapped[List["DismissalDocument"]] = relationship(
+        "DismissalDocument",
+        cascade="all,delete",
+        back_populates="dismissal",
+    )
+
+    tech_state: Mapped[approvalstatus]
+    accountant_state: Mapped[approvalstatus]
+    access_state: Mapped[approvalstatus]
+    kru_state: Mapped[approvalstatus]
 
 
 # endregion

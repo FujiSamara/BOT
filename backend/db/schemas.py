@@ -443,3 +443,17 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "creator": "Создал",
     },
 }
+
+
+# region Dismissal
+
+class DismissalSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    documents: list[DocumentSchema]
+    worker: WorkerSchema
+
+# endregion

@@ -37,6 +37,7 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
     aliases,
+    DismissalSchema,
 )
 import logging
 from datetime import datetime, timedelta
@@ -1943,5 +1944,67 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
         return None
     return repairman.telegram_id
 
+
+# endregion
+
+
+# region Dismissal request
+
+
+def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
+    worker = get_worker_by_telegram_id(telegram_id)
+    if not worker:
+        return None
+    return [
+        f"{worker.l_name} {worker.f_name} {worker.o_name}",
+        worker.post.name,
+        worker.department.name,
+    ]
+
+
+def create_dismissal_blank(files: list[UploadFile], telergam_id: str):
+    """
+    Creates an dismissal blank wrapped in `DismissalBlankShema` and adds it to database.
+    """
+
+    # cur_date = datetime.now()
+    last_blank_num = orm.get_last_dismissal_blank_id()
+    if not last_blank_num:
+        last_blank_num = 0
+
+    documents = []
+
+    for index, file in enumerate(files):
+        suffix = Path(file.filename).suffix
+        filename = f"document_dismissal_{last_blank_num}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    dismissal = DismissalSchema(
+        documents=documents,
+    )
+
+    orm.add_dismissal(dismissal)
+
+
+def get_dismissal_by_id(id: int) -> DismissalSchema:
+    return orm.get_dismissal_by_id(id)
+
+
+def get_pending_dismissal_blanks_by_column(column: Any) -> list[DismissalSchema]:
+    """
+    Returns all dismissal blanks in database with pending approval state at column.
+    """
+    return orm.get_specified_pengind_dismissal_blanks(column)
+
+
+async def update_dismissal_state(
+    dismissal: DismissalSchema, state_name: str, state: ApprovalStatus
+):
+    pass
+
+
+def update_dismissal(dismissal: DismissalSchema):
+    pass
 
 # endregion

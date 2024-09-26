@@ -29,6 +29,7 @@ from db.models import (
     BidIT,
     BidITWorkerDocument,
     BidITRepairmanDocument,
+    Dismissal,
 )
 from db.schemas import (
     BaseSchema,
@@ -46,6 +47,7 @@ from db.schemas import (
     PostSchema,
     ProblemITSchema,
     BidITSchema,
+    DismissalSchema,
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
@@ -1504,6 +1506,46 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
         if not raw_department:
             return None
         return WorkerSchema.model_validate(raw_department.it_repairman)
+
+
+# endregion
+
+# region Dismissal
+
+
+def get_last_dismissal_blank_id() -> int:
+    """
+    Returns last dismissal blank id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(Dismissal.id)).first()[0]
+
+
+def get_dismissal_by_id(id: int) -> DismissalSchema:
+    """Gets dismissal bid by its id."""
+    with session.begin() as s:
+        raw_bid = s.query(DismissalSchema).filter(DismissalSchema.id == id).first()
+        if not raw_bid:
+            return None
+        return DismissalSchema.model_validate(raw_bid)
+
+
+def add_dismissal(d: DismissalSchema):
+    pass
+
+
+def get_specified_pengind_dismissal_blanks(pending_column) -> list[DismissalSchema]:
+    """
+    Returns all dismissal_blanks in database with
+    pending approval state in `pending_column`.
+    """
+    with session.begin() as s:
+        raw_blanks = (
+            s.query(Dismissal)
+            .filter(pending_column == ApprovalStatus.pending_approval)
+            .all()
+        )
+        return [DismissalSchema.model_validate(raw_blank) for raw_blank in raw_blanks]
 
 
 # endregion

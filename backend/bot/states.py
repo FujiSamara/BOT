@@ -103,3 +103,14 @@ class DepartmentDirectorRequestForm(StatesGroup):
     group = State()
     problem = State()
     description = State()
+
+
+# Dismissal request
+
+
+class DismissalRequest(StatesGroup):
+    blank = State()
+
+
+class DismissalCoordination(StatesGroup):
+    comment = State()
