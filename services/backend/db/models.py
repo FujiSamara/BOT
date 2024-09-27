@@ -926,12 +926,15 @@ class Subordination(Base):
     __tablename__ = "subordinations"
 
     def __str__(self):
-        return str(self.chief)
+        return str(self.id)
 
     chief_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     chief: Mapped["Worker"] = relationship(
-        "Worker", back_populates="subordination_employee", foreign_keys=[chief_id]
+        "Worker",
+        back_populates="subordination_employee",
+        foreign_keys=[chief_id],
     )
+
     employee_id: Mapped[int] = mapped_column(
         ForeignKey("workers.id"), nullable=False, unique=True
     )

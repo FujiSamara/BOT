@@ -213,11 +213,13 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
     ]
+
     column_details_list = [
         Worker.l_name,
         Worker.f_name,
         Worker.o_name,
         Worker.post,
+        Worker.subordination_chief,
         Worker.phone_number,
         Worker.department,
         Worker.company,
@@ -239,7 +241,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
-        Worker.subordination_chief: "Руководитель",
+        Worker.subordination_chief: "id субординации",
         Worker.department: "Производство",
         Worker.group: "Отдел",
         Worker.post: "Должность",
@@ -263,7 +265,6 @@ class WorkerView(ModelView, model=Worker):
         Worker.l_name,
         Worker.o_name,
         Worker.phone_number,
-        Worker.subordination_chief,
         Worker.department,
         Worker.group,
         Worker.telegram_id,
