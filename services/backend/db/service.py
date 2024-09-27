@@ -39,6 +39,8 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
     aliases,
+    AccountLoginsSchema,
+    MaterialValuesSchema,
 )
 import logging
 from datetime import datetime, timedelta
@@ -2056,3 +2058,33 @@ def export_worktimes(
 
 
 # endregion
+
+
+def get_logins(worker_id) -> Optional[AccountLoginsSchema]:
+    logins = orm.get_logins(worker_id=worker_id)
+    if not logins:
+        return None
+    return logins
+
+
+def get_worker_chief(telegram_id: int) -> Optional[WorkerSchema]:
+    worker_id = get_worker_by_telegram_id(telegram_id).id
+    chief = orm.get_subordination_chief(worker_id=worker_id)
+    if chief is None:
+        return None
+    return chief
+
+
+def get_material_values(telegram_id: int) -> list[MaterialValuesSchema]:
+    worker_id = get_worker_by_telegram_id(telegram_id).id
+    material_values = orm.get_material_values(worker_id=worker_id)
+    return material_values
+
+
+def get_material_value_by_inventory_number(
+    inventory_number: int,
+) -> MaterialValuesSchema:
+    material_value = orm.get_material_value_by_inventory_number(
+        inventory_number=inventory_number
+    )
+    return material_value

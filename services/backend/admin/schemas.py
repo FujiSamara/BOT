@@ -17,6 +17,9 @@ from db.models import (
     TechnicalRequest,
     Group,
     WorkTime,
+    AccountLogins,
+    Subordination,
+    MaterialValues,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileSchema
@@ -210,11 +213,13 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
     ]
+
     column_details_list = [
         Worker.l_name,
         Worker.f_name,
         Worker.o_name,
         Worker.post,
+        Worker.subordination_chief,
         Worker.phone_number,
         Worker.department,
         Worker.company,
@@ -236,6 +241,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
+        Worker.subordination_chief: "Руководитель",
         Worker.department: "Производство",
         Worker.group: "Отдел",
         Worker.post: "Должность",
@@ -567,4 +573,174 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
         WorkTime.rating: "Рейтинг",
         WorkTime.fine: "Штраф",
         WorkTime.salary: "Зарплата",
+    }
+
+
+class AccountLoginsView(ModelView, model=AccountLogins):
+    name = "Логин"
+    name_plural = "Логины"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        AccountLogins.id,
+        AccountLogins.worker,
+        AccountLogins.cop_mail_login,
+        AccountLogins.liko_login,
+        AccountLogins.bitrix_login,
+        AccountLogins.pyrus_login,
+        AccountLogins.check_office_login,
+        AccountLogins.pbi_login,
+    ]
+
+    column_details_exclude_list = [AccountLogins.worker_id]
+
+    column_sortable_list = [
+        AccountLogins.id,
+    ]
+
+    column_labels = {
+        AccountLogins.id: "id",
+        AccountLogins.worker: "Работник",
+        AccountLogins.cop_mail_login: "Корпоративная почта",
+        AccountLogins.liko_login: "Iiko",
+        AccountLogins.bitrix_login: "Bitrix",
+        AccountLogins.pyrus_login: "Pyrus",
+        AccountLogins.check_office_login: "CheckOffice",
+        AccountLogins.pbi_login: "PBI",
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(AccountLogins).filter(
+            AccountLogins.worker_id.in_(workers_id),
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+
+class MaterialValuesView(ModelView, model=MaterialValues):
+    name = "Материальная ценность"
+    name_plural = "Материальные ценности"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        MaterialValues.id,
+        MaterialValues.worker,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
+    ]
+
+    column_details_exclude_list = [MaterialValues.worker_id]
+
+    column_sortable_list = [
+        MaterialValues.id,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(MaterialValues).filter(
+            or_(
+                MaterialValues.worker_id.in_(workers_id),
+                MaterialValues.item.ilike(f"%{term}%"),
+                MaterialValues.inventory_number.ilike(f"%{term}%"),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+        MaterialValues.item,
+        MaterialValues.inventory_number,
+    ]
+
+    column_labels = {
+        MaterialValues.worker: "Работник",
+        MaterialValues.item: "Предмет",
+        MaterialValues.quanity: "Количество",
+        MaterialValues.price: "Цена",
+        MaterialValues.inventory_number: "Инвентаризационный номер",
+        MaterialValues.issue_date: "Дата выдачи",
+    }
+
+
+class SubordinationView(ModelView, model=Subordination):
+    name = "Субординация"
+    name_plural = "Субординация"
+
+    can_create = True
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        Subordination.id,
+        Subordination.chief,
+        Subordination.employee,
+    ]
+    column_details_exclude_list = [
+        Subordination.employee_id,
+        Subordination.chief_id,
+    ]
+
+    column_sortable_list = [
+        Subordination.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(Subordination).filter(
+            or_(
+                Subordination.chief_id.in_(workers_id),
+                Subordination.employee_id.in_(workers_id),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+    column_labels = {
+        Subordination.chief: "Руководитель",
+        Subordination.employee: "Сотрудник",
+        Subordination.id: "id",
     }

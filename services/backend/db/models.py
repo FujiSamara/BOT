@@ -51,6 +51,7 @@ class FujiScope(enum.Enum):
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
+    bot_personal_cabinet = 25
 
 
 class DepartmentType(enum.Enum):
@@ -271,7 +272,7 @@ class Group(Base):
 
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
 
-    workers: Mapped["Worker"] = relationship(
+    workers: Mapped[List["Worker"]] = relationship(
         "Worker",
         back_populates="group",
         foreign_keys="Worker.group_id",
@@ -388,6 +389,29 @@ class Worker(Base):
         "BidIT",
         back_populates="territorial_manager",
         foreign_keys="[BidIT.territorial_manager_id]",
+    )
+
+    worker_account_logins: Mapped[list["AccountLogins"]] = relationship(
+        "AccountLogins",
+        back_populates="worker",
+        foreign_keys="[AccountLogins.worker_id]",
+    )
+
+    material_values: Mapped[list["MaterialValues"]] = relationship(
+        "MaterialValues",
+        back_populates="worker",
+        foreign_keys="[MaterialValues.worker_id]",
+    )
+
+    subordination_chief: Mapped["Subordination"] = relationship(
+        "Subordination",
+        back_populates="employee",
+        foreign_keys="[Subordination.employee_id]",
+    )
+    subordination_employee: Mapped[list["Subordination"]] = relationship(
+        "Subordination",
+        back_populates="chief",
+        foreign_keys="[Subordination.chief_id]",
     )
 
 
@@ -859,3 +883,61 @@ class TechnicalRequest(Base):
 
 
 # endregion
+
+
+class AccountLogins(Base):
+    """Логины от аккаунтов"""
+
+    __tablename__ = "account_logins"
+
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=False, unique=True
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker", back_populates="worker_account_logins", foreign_keys=[worker_id]
+    )
+    cop_mail_login: Mapped[str] = mapped_column(nullable=True)
+
+    liko_login: Mapped[str] = mapped_column(nullable=True)
+
+    bitrix_login: Mapped[str] = mapped_column(nullable=True)
+
+    pyrus_login: Mapped[str] = mapped_column(nullable=True)
+
+    check_office_login: Mapped[str] = mapped_column(nullable=True)
+
+    pbi_login: Mapped[str] = mapped_column(nullable=True)
+
+
+class MaterialValues(Base):
+    __tablename__ = "material_values"
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    worker: Mapped["Worker"] = relationship("Worker", back_populates="material_values")
+
+    item: Mapped[str] = mapped_column(nullable=False)
+    quanity: Mapped[int] = mapped_column(nullable=False)
+    price: Mapped[int] = mapped_column(nullable=False)
+    inventory_number: Mapped[str] = mapped_column(nullable=False)
+    issue_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+
+class Subordination(Base):
+    __tablename__ = "subordinations"
+
+    def __str__(self):
+        return str(self.id)
+
+    chief_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    chief: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="subordination_employee",
+        foreign_keys=[chief_id],
+    )
+
+    employee_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=False, unique=True
+    )
+    employee: Mapped["Worker"] = relationship(
+        "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
+    )

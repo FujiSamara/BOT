@@ -450,3 +450,35 @@ get_it_repairman_menu = InlineKeyboardButton(
 get_it_tm_menu = InlineKeyboardButton(
     text="IT заявки ТУ", callback_data="get_it_tm_menu"
 )
+
+
+# Personal cabinet
+
+get_personal_cabinet = InlineKeyboardButton(
+    text="Личный кабинет",
+    callback_data="get_per_cab",
+)
+
+get_per_cab_logins = InlineKeyboardButton(
+    text="Доступы",
+    callback_data="get_per_cab_logins",
+)
+
+get_per_cab_mat_vals = InlineKeyboardButton(
+    text="Материальные ценности",
+    callback_data="get_per_cab_mat_vals",
+)
+
+get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
+    text="Заявление на увольнение",
+    callback_data="get_per_cab_dismissal",
+)
+
+personal_cabinet_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_per_cab_logins],
+        [get_per_cab_mat_vals],
+        [get_per_cab_dismissal],
+        [main_menu_button],
+    ]
+)
