@@ -110,6 +110,7 @@ export class Table<T extends BaseSchema> {
 	private _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
 	private _newIds: Ref<Array<number>> = ref([]);
+	private _refreshingCount = 0;
 
 	/**
 	 * @param endpoint Endpoint name for api.
@@ -160,10 +161,14 @@ export class Table<T extends BaseSchema> {
 			[this._completedQuery, this._rowsQuery, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
+				this._refreshingCount++;
 				skipLoop = true;
 				await this.refreshInfo();
 				await this.refreshRows();
-				this.emulateLoading(false);
+				this._refreshingCount--;
+				if (this._refreshingCount === 0) {
+					this.emulateLoading(false);
+				}
 			},
 		);
 
