@@ -57,7 +57,7 @@ async def delete_worktime(
     await service.remove_worktime(id)
 
 
-@router.put("/")
+@router.patch("/")
 async def update_worktime(
     schema: WorkTimeSchema,
     _: User = Security(get_current_user, scopes=["crm_worktime"]),

@@ -2019,10 +2019,14 @@ async def remove_worktime(id: int) -> None:
 
 async def update_worktime(record: WorkTimeSchema) -> None:
     """Updates worktime by `WorkTimeSchema.id`"""
+    new = dump_worktime(record)
+    old = dump_worktime(get_work_time_record_by_id(record.id))
+    dif = dict(new.items() - old.items())
+
     async with aiohttp.ClientSession() as session:
-        async with session.patch(
+        async with session.put(
             f"{get_settings().external_api}/connector/biosmart/work_times/{record.id}",
-            data=dump_worktime(record),
+            json=dif,
         ) as resp:
             if resp.status >= 400:
                 raise HTTPException(status_code=resp.status)
@@ -2033,7 +2037,7 @@ async def create_worktime(record: WorkTimeSchema) -> None:
     async with aiohttp.ClientSession() as session:
         async with session.post(
             f"{get_settings().external_api}/connector/biosmart/work_times",
-            data=dump_worktime(record),
+            json=dump_worktime(record),
         ) as resp:
             if resp.status >= 400:
                 raise HTTPException(status_code=resp.status)
