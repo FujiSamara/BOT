@@ -114,7 +114,7 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
         return DepartmentSchema.model_validate(raw_department)
 
 
-def find_posts_by_column(column: any, value: any) -> PostSchema:
+def find_post_by_column(column: any, value: any) -> PostSchema:
     """
     Returns post in database by `column` with `value`.
     If post not exist return `None`.
