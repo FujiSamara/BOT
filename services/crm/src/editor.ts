@@ -29,6 +29,9 @@ class SmartField {
 		return `${value}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
+		if (newValue == "") {
+			newValue = typeof this._rawField.value === "string" ? "" : undefined;
+		}
 		this._rawField.value = newValue;
 		this._stringifyValue.value = undefined;
 	}
@@ -77,7 +80,6 @@ class Editor {
 		for (const field of this.fields) {
 			result[field.fieldName] = field.rawValue;
 		}
-
 		return result;
 	}
 }
