@@ -38,25 +38,21 @@ async def get_personal_data(callback: CallbackQuery):
     department_chef: Optional[WorkerSchema] = get_worker_chief(
         telegram_id=callback.message.chat.id
     )
-    text = ""
-
-    if worker.l_name is not None:
-        text += hbold(worker.l_name) + " "
-    if worker.f_name is not None:
-        text += hbold(worker.f_name) + " "
-    if worker.o_name is not None:
-        text += hbold(worker.o_name) + " "
+    text = (
+        hbold(worker.l_name) + " " + hbold(worker.f_name) + " " + hbold(worker.o_name)
+    )
 
     text += f"\nДолжность: {worker.post.name}\n\
 Предприятие: {worker.department.name}\n\
 ФИО руководителя: "
     if department_chef is not None:
-        if department_chef.l_name is not None:
-            text += department_chef.l_name + " "
-        if department_chef.f_name is not None:
-            text += department_chef.f_name + " "
-        if department_chef.o_name is not None:
-            text += department_chef.o_name + " "
+        text += (
+            department_chef.l_name
+            + " "
+            + department_chef.f_name
+            + " "
+            + department_chef.o_name
+        )
     else:
         text += "Не найден"
     text += f"\nДата приема на работу: {worker.employment_date}\n"
