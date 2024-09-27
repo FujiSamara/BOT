@@ -878,7 +878,9 @@ class DismissalDocument(Base):
 
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
-    dismissal: Mapped["Dismissal"] = relationship("Dismissal", back_populates="documents")
+    dismissal: Mapped["Dismissal"] = relationship(
+        "Dismissal", back_populates="documents"
+    )
 
 
 class Dismissal(Base):

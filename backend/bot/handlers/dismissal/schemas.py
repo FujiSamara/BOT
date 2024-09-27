@@ -13,7 +13,6 @@ class DismissalActionData(CallbackData, prefix="dismissal_action"):
     endpoint_name: str
 
 
-
 class DismissalCallbackData(CallbackData, prefix="dismissal"):
     id: int
     endpoint_name: str
