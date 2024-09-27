@@ -47,6 +47,7 @@ class Builder(ABC):
             schemas.BidSchema: models.Bid,
             schemas.PostSchema: models.Post,
             schemas.BudgetRecordSchema: models.BudgetRecord,
+            schemas.WorkTimeSchema: models.WorkTime,
         }
 
         # Model to schema dict
@@ -446,6 +447,7 @@ class XLSXExporter(Builder):
             schemas.ExpenditureSchema: self._format_expenditure,
             datetime: self._format_datetime,
             models.ApprovalStatus: self._format_approval_status,
+            schemas.PostSchema: self._format_post,
         }
 
     def export(self) -> BytesIO:
@@ -528,3 +530,6 @@ class XLSXExporter(Builder):
 
     def _format_approval_status(self, value: models.ApprovalStatus) -> str:
         return approval_status_dict[value]
+
+    def _format_post(self, value: schemas.PostSchema) -> str:
+        return value.name

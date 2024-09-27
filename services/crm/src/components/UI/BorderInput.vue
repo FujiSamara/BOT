@@ -50,4 +50,8 @@ input:focus {
 	transition: 0.5s;
 	outline: none;
 }
+
+input[disabled] {
+	cursor: not-allowed;
+}
 </style>

@@ -91,6 +91,22 @@ def find_workers_by_name(name: str) -> list[WorkerSchema]:
         return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
 
 
+def find_posts_by_name(name: str) -> list[PostSchema]:
+    """
+    Returns posts in database by given `name`.
+    Fields for search: `Post.name`
+
+    Search is equivalent sql like statement.
+    """
+    with session.begin() as s:
+        raw_posts = s.query(Post).filter(
+            or_(
+                Post.name.ilike(f"%{name}%"),
+            )
+        )
+        return [PostSchema.model_validate(raw_post) for raw_post in raw_posts]
+
+
 def find_department_by_column(column: any, value: any) -> DepartmentSchema:
     """
     Returns department in database by `column` with `value`.

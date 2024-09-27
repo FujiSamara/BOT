@@ -2,6 +2,7 @@ import {
 	DepartmentSchema,
 	DocumentSchema,
 	ExpenditureSchema,
+	PostSchema,
 	WorkerSchema,
 } from "@/types";
 import { Cell, CellLine } from "@/table";
@@ -65,4 +66,8 @@ export function formatPaymentType(payment_type: string) {
 
 export function formatCheck(check: boolean) {
 	return new Cell(new CellLine(check ? "Да" : "Нет"));
+}
+
+export function formatPost(post: PostSchema) {
+	return new Cell(new CellLine(post.name));
 }

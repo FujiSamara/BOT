@@ -21,6 +21,7 @@ export default {
 	font-weight: 400;
 	transition: 0.5s;
 	-webkit-transition: 0.5s;
+	flex-shrink: 0;
 }
 .button:hover {
 	transform: scale(1.02);

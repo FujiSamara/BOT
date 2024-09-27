@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     port: int = Field(validation_alias="PORT", default=5000)
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
+    external_api: str = Field(validation_alias="EXTERNAL_API")
     # endregion
 
     # region Security

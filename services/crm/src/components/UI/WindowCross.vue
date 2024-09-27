@@ -15,6 +15,7 @@ export default {
 	width: 24px;
 	height: 24px;
 	display: flex;
+	flex-shrink: 0;
 	justify-content: center;
 	align-items: center;
 	position: relative;

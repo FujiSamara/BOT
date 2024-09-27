@@ -29,6 +29,9 @@ class SmartField {
 		return `${value}`;
 	}
 	protected async setter(newValue: any): Promise<void> {
+		if (newValue == "") {
+			newValue = typeof this._rawField.value === "string" ? "" : undefined;
+		}
 		this._rawField.value = newValue;
 		this._stringifyValue.value = undefined;
 	}
@@ -77,7 +80,6 @@ class Editor {
 		for (const field of this.fields) {
 			result[field.fieldName] = field.rawValue;
 		}
-
 		return result;
 	}
 }
@@ -126,6 +128,32 @@ export class BudgetEditor extends Editor {
 				_instance?.department,
 			),
 			new SmartField("Лимит", "limit", _instance?.limit),
+		];
+	}
+}
+export class WorkTimeEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+
+		this.fields = [
+			new WorkerSmartField("Работник", "worker", _instance?.worker),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				_instance?.department,
+			),
+			new PostSmartField("Должность", "post", _instance?.post),
+			new SmartField("Начало смены", "work_begin", _instance?.work_begin),
+			new SmartField("Конец смены", "work_end", _instance?.work_end),
+			new SmartField("День", "day", _instance?.day),
+			new SmartField(
+				"Длительность работы",
+				"work_duration",
+				_instance?.work_duration,
+				false,
+			),
+			new SmartField("Оценка", "rating", _instance?.rating),
+			new SmartField("Штраф", "fine", _instance?.fine),
 		];
 	}
 }
@@ -222,6 +250,40 @@ class DepartmentSmartField extends SmartField {
 
 	protected formatter(value: any): string {
 		return `${value.name}`;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		const resp = await this._network.withAuthChecking(
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
+		);
+
+		this._tipList.value = resp.data;
+	}
+}
+
+class PostSmartField extends SmartField {
+	private _endpoint: string = "";
+	protected readonly _delay: number = 200;
+
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/post`;
+	}
+
+	protected formatter(value: any): string {
+		return value.name;
 	}
 	protected tipFormatter(value: any): string {
 		return this.formatter(value);

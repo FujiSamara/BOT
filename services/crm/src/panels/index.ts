@@ -5,6 +5,7 @@ import CCBidPanel from "@/panels/CCBidPanel.vue";
 import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
+import WorkTimePanel from "@/panels/WorkTimePanel.vue";
 import { shallowRef } from "vue";
 
 const panels: Array<PanelData> = [
@@ -55,6 +56,14 @@ const panels: Array<PanelData> = [
 		isActive: false,
 		panel: shallowRef(CCSupervisorBidPanel),
 		access: Access.CCSupervisorBid,
+	},
+	{
+		id: 7,
+		imageSrc: "/img/worktime.svg",
+		label: "Явки",
+		isActive: false,
+		panel: shallowRef(WorkTimePanel),
+		access: Access.Worktime,
 	},
 ];
 

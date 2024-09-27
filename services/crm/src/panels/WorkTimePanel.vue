@@ -1,7 +1,7 @@
 <template>
-	<div class="budget-content">
+	<div class="worktime-content">
 		<div v-if="!editingElement" class="header-content">
-			<h1>Бюджет</h1>
+			<h1>Явки</h1>
 			<PanelTools class="top-tools">
 				<SeacrhTool
 					id="topDepartmentSearch"
@@ -12,6 +12,8 @@
 					id="topSearch"
 					@input="(val) => (searchString = val)"
 				></SeacrhTool>
+				<ToolSeparator></ToolSeparator>
+				<ExportTool :callback="table.export.bind(table)"></ExportTool>
 			</PanelTools>
 		</div>
 		<PanelTable
@@ -37,10 +39,12 @@ import PanelTable from "@/components/PanelTable.vue";
 import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
+import ExportTool from "@/components/PanelTools/ExportTool.vue";
+import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { BudgetTable } from "@/table";
-import { BudgetEditor } from "@/editor";
+import { WorkTimeTable } from "@/table";
+import { WorkTimeEditor } from "@/editor";
 
 const props = defineProps({
 	id: {
@@ -56,7 +60,7 @@ const emit = defineEmits<{
 const editingElement = ref(false);
 
 // Edit page
-const editor: ShallowRef<BudgetEditor> = shallowRef(new BudgetEditor());
+const editor: ShallowRef<WorkTimeEditor> = shallowRef(new WorkTimeEditor());
 const editingElementKey: Ref<number> = ref(-1);
 
 const onSubmit = async () => {
@@ -68,7 +72,9 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-const table = new BudgetTable();
+const table = new WorkTimeTable();
+const fromDateString = ref("");
+const toDateString = ref("");
 
 const departmentSearchString = ref("");
 const searchString = ref("");
@@ -80,26 +86,39 @@ watch([departmentSearchString, searchString], () => {
 		result.push({
 			column: "department",
 			term: departmentSearchString.value,
+			groups: [0],
 		});
 	}
 
 	if (searchString.value.length > 3) {
 		result.push({
-			column: "expenditure",
+			column: "worker",
 			term: searchString.value,
+			groups: [0],
 		});
 	}
 
 	table.searchQuery.value = result;
 });
 
+watch([fromDateString, toDateString], () => {
+	const fromDate = new Date(fromDateString.value);
+	const toDate = new Date(toDateString.value);
+
+	table.byDate.value = {
+		column: "day",
+		start: fromDate,
+		end: toDate,
+	};
+});
+
 const onRowClicked = (rowKey: number) => {
-	editor.value = new BudgetEditor(table.getModel(rowKey));
+	editor.value = new WorkTimeEditor(table.getModel(rowKey));
 	editingElementKey.value = rowKey;
 	editingElement.value = true;
 };
 const onCreateClicked = () => {
-	editor.value = new BudgetEditor();
+	editor.value = new WorkTimeEditor();
 	editingElementKey.value = -1;
 	editingElement.value = true;
 };
@@ -108,7 +127,7 @@ watch(table.notifies, () => {
 });
 </script>
 <style scoped>
-.budget-content {
+.worktime-content {
 	height: 100%;
 	display: flex;
 	flex-direction: column;
