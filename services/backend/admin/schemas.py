@@ -241,7 +241,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
-        Worker.subordination_chief: "id субординации",
+        Worker.subordination_chief: "Руководитель",
         Worker.department: "Производство",
         Worker.group: "Отдел",
         Worker.post: "Должность",

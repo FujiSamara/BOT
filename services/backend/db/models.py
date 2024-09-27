@@ -408,7 +408,7 @@ class Worker(Base):
         back_populates="employee",
         foreign_keys="[Subordination.employee_id]",
     )
-    subordination_employee: Mapped["Subordination"] = relationship(
+    subordination_employee: Mapped[list["Subordination"]] = relationship(
         "Subordination",
         back_populates="chief",
         foreign_keys="[Subordination.chief_id]",
