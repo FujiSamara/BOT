@@ -20,14 +20,14 @@
 			</PanelTools>
 		</div>
 		<PanelTable
-			v-if="!editingElement"
+			v-show="!editingElement"
 			:table="table"
 			@click="onRowClicked"
 			@create="onCreateClicked"
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<div v-if="editingElement" class="edit-panel-element-wrapper">
+		<div v-show="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelRow
 				class="edit-page"
 				:editor="editor"
