@@ -104,13 +104,13 @@ watch([currentPage, props], () => {
 	border-top-right-radius: 15px;
 
 	margin: 0;
-	padding: 0;
+	padding: 0 15px;
 	display: flex;
 	flex-direction: row;
 	gap: 4px;
 	height: 60px;
 	max-height: 20%;
-	width: 300px;
+	min-width: 300px;
 	max-width: 100%;
 	overflow: hidden;
 	justify-content: center;
@@ -119,11 +119,13 @@ watch([currentPage, props], () => {
 }
 
 .page-button {
-	width: 24px;
+	min-width: 24px;
 	height: 24px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
+
+	padding: 5px;
 
 	user-select: none;
 	cursor: pointer;

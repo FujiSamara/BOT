@@ -21,6 +21,7 @@ export enum Access {
 	FACBid,
 	CCBid,
 	CCSupervisorBid,
+	Worktime,
 }
 
 export const accessesDict: any = {
@@ -82,4 +83,22 @@ export interface BidSchema extends BaseSchema {
 	documents: Array<DocumentSchema>;
 	status: string;
 	comment: string;
+}
+
+export interface PostSchema extends BaseSchema {
+	name: string;
+}
+
+export interface WorkTimeSchema extends BaseSchema {
+	worker?: WorkerSchema;
+	department?: DepartmentSchema;
+	post?: PostSchema;
+
+	work_begin?: string;
+	work_end?: string;
+	day: string;
+	work_duration: Number;
+
+	rating?: Number;
+	fine?: Number;
 }

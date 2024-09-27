@@ -1,16 +1,28 @@
 <template>
-	<purple-button class="button-wrapper" @click="props.callback">
+	<purple-button class="button-wrapper" @click="onClick">
 		<p style="margin: 0">Выгрузить в Excel</p>
-		<img src="/img/export.svg" />
+		<img v-if="!loading" src="/img/export.svg" />
+		<CircleLoader class="circle" v-if="loading"></CircleLoader>
 	</purple-button>
 </template>
 <script setup lang="ts">
+import { ref } from "vue";
+import CircleLoader from "../UI/CircleLoader.vue";
+
 const props = defineProps({
 	callback: {
 		type: Function,
 		required: true,
 	},
 });
+
+const loading = ref(false);
+
+const onClick = async () => {
+	loading.value = true;
+	await props.callback();
+	loading.value = false;
+};
 </script>
 <style scoped>
 .button-wrapper {
@@ -33,5 +45,10 @@ p {
 }
 img {
 	margin: 0;
+}
+.circle {
+	width: 20px;
+	height: 20px;
+	position: unset;
 }
 </style>

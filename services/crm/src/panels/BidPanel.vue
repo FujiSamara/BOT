@@ -22,7 +22,7 @@
 			</PanelTools>
 		</div>
 		<PanelTable
-			v-if="!elementViewing"
+			v-show="!elementViewing"
 			:table="table"
 			:can-delete="true"
 			:can-approve="true"
@@ -30,7 +30,7 @@
 			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
-			v-if="elementViewing"
+			v-show="elementViewing"
 			@close="elementViewing = false"
 			@approve="onApprove"
 			@reject="onReject"

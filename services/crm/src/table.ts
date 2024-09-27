@@ -7,6 +7,7 @@ import {
 	BidSchema,
 	BudgetSchema,
 	ExpenditureSchema,
+	WorkTimeSchema,
 } from "./types";
 import { useNetworkStore } from "./store/network";
 
@@ -109,6 +110,7 @@ export class Table<T extends BaseSchema> {
 	private _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
 	private _newIds: Ref<Array<number>> = ref([]);
+	private _refreshingCount = 0;
 
 	/**
 	 * @param endpoint Endpoint name for api.
@@ -159,10 +161,14 @@ export class Table<T extends BaseSchema> {
 			[this._completedQuery, this._rowsQuery, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
+				this._refreshingCount++;
 				skipLoop = true;
 				await this.refreshInfo();
 				await this.refreshRows();
-				this.emulateLoading(false);
+				this._refreshingCount--;
+				if (this._refreshingCount === 0) {
+					this.emulateLoading(false);
+				}
 			},
 		);
 
@@ -884,6 +890,26 @@ export class CCSupervisorBidTable extends BidTable {
 			approveEndpoint: "/cc_supervisor",
 			rejectEndpoint: "/cc_supervisor",
 		});
+	}
+}
+
+export class WorkTimeTable extends Table<WorkTimeSchema> {
+	constructor() {
+		super("worktime");
+		this._formatters.set("worker", parser.formatWorker);
+		this._formatters.set("department", parser.formatDepartment);
+		this._formatters.set("post", parser.formatPost);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("worker", "Работник");
+		this._aliases.set("department", "Производство");
+		this._aliases.set("post", "Должность");
+		this._aliases.set("work_begin", "Начало смены");
+		this._aliases.set("work_end", "Конец смены");
+		this._aliases.set("day", "День");
+		this._aliases.set("work_duration", "Длительность");
+		this._aliases.set("rating", "Оценка");
+		this._aliases.set("fine", "Штраф");
 	}
 }
 //#endregion
