@@ -23,7 +23,10 @@ from bot.handlers.utils import (
     handle_documents_form,
     send_menu_by_scopes,
 )
-from bot.handlers.dismissal.utils import clear_state_with_success_employee, with_next_line
+from bot.handlers.dismissal.utils import (
+    clear_state_with_success_employee,
+    with_next_line,
+)
 
 # db imports
 from db.service import (
@@ -72,9 +75,9 @@ async def send_dismissal_blank(callback: CallbackQuery, state: FSMContext):
     for doc in blank:
         document_files.append(await download_file(doc))
 
-    create_dismissal_blank(
+    await create_dismissal_blank(
         files=document_files,
-        telergam_id=callback.message.chat.id,
+        telegram_id=callback.message.chat.id,
     )
 
     await try_edit_message(message=callback.message, text="Успешно!")

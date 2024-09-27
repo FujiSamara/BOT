@@ -473,7 +473,7 @@ dismissal_menu = InlineKeyboardMarkup(
 async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
     blank = data.get("blank")
-    upload_blank_text = "Отправить заявление"
+    upload_blank_text = "Приложить заявление"
     all_field_exist = True
 
     if not blank or len(blank) == 0:
@@ -482,9 +482,9 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
     else:
         upload_blank_text += f" {len(blank)} ✅"
 
-    dismissal_callback_data = "dummy"
+    send_dismissal_callback_data = "dummy"
     if all_field_exist:
-        dismissal_callback_data = "send_dismissal_blank"
+        send_dismissal_callback_data = "send_dismissal_blank"
 
     keyboard = [
         [
@@ -495,14 +495,14 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text="Приложить заявление", callback_data="upload_dismissal_blank"
+                text=upload_blank_text, callback_data="upload_dismissal_blank"
             )
         ],
     ]
     keyboard.append(
         [
             InlineKeyboardButton(
-                text=upload_blank_text, callback_data=dismissal_callback_data
+                text="Отправить заявление", callback_data=send_dismissal_callback_data
             )
         ]
     )

@@ -1,6 +1,6 @@
 from aiogram import Router
 from bot.handlers.dismissal import (
-    employee,
+    worker,
     dismissal_coordination,
 )
 
@@ -8,4 +8,4 @@ router = Router(name="dismissal_main")
 
 dismissal_coordination.build_coordination()
 
-router.include_routers(employee.router, dismissal_coordination.router)
+router.include_routers(worker.router, dismissal_coordination.router)

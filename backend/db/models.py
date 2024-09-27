@@ -395,6 +395,8 @@ class Worker(Base):
         foreign_keys="[BidIT.territorial_manager_id]",
     )
 
+    dismissal: Mapped["Dismissal"] = relationship("Dismissal", back_populates="worker")
+
 
 class Bid(Base):
     """Заявки"""
@@ -876,9 +878,7 @@ class DismissalDocument(Base):
 
     document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
     dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
-    dismissal: Mapped["Dismissal"] = relationship(
-        "Dismissal", back_populates="problem_photos"
-    )
+    dismissal: Mapped["Dismissal"] = relationship("Dismissal", back_populates="documents")
 
 
 class Dismissal(Base):
@@ -886,16 +886,35 @@ class Dismissal(Base):
 
     __tablename__ = "dismissals"
 
-    problem_photos: Mapped[List["DismissalDocument"]] = relationship(
+    documents: Mapped[List["DismissalDocument"]] = relationship(
         "DismissalDocument",
         cascade="all,delete",
         back_populates="dismissal",
     )
 
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    worker: Mapped[Worker] = relationship("Worker", back_populates="dismissal")
+
+    # States
     tech_state: Mapped[approvalstatus]
     accountant_state: Mapped[approvalstatus]
     access_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
+
+    # Comments
+    tech_comment: Mapped[str] = mapped_column(nullable=True)
+    accountant_comment: Mapped[str] = mapped_column(nullable=True)
+    access_comment: Mapped[str] = mapped_column(nullable=True)
+    kru_comment: Mapped[str] = mapped_column(nullable=True)
+
+    # Dates
+    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    kru_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    accountant_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
 # endregion
