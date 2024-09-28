@@ -1356,10 +1356,22 @@ def get_coordinator_bid_count(
                     dependencies=[FilterSchema(column="phone_number", value=phone)],
                 )
             ],
-        )
+        ),
     )
 
     return get_bid_count(query_schema)
+
+
+def apply_bid_status_filter(
+    query_schema: QuerySchema, status_field: str, status: ApprovalStatus
+):
+    """Apply filter query by bid status to bid query."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column=status_field,
+            value=status,
+        ),
+    )
 
 
 def export_bid_records(
