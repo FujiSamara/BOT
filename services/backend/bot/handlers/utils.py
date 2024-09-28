@@ -31,6 +31,11 @@ from bot.kb import (
     create_reply_keyboard,
     get_it_repairman_menu,
     get_it_tm_menu,
+    create_dismissal_menu_button,
+    kru_dismissal_menu_button,
+    access_dismissal_menu_button,
+    accountant_dismissal_menu_button,
+    tech_dismissal_menu_button,
     get_personal_cabinet,
 )
 from bot.handlers.tech_request.kb import (
@@ -64,6 +69,11 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
         FujiScope.bot_bid_it_tm: get_it_tm_menu,
+        FujiScope.bot_dismissal: create_dismissal_menu_button,
+        FujiScope.bot_dismissal_kru: kru_dismissal_menu_button,
+        FujiScope.bot_dismissal_accountant: accountant_dismissal_menu_button,
+        FujiScope.bot_dismissal_access: access_dismissal_menu_button,
+        FujiScope.bot_dismissal_tech: tech_dismissal_menu_button,
         FujiScope.bot_personal_cabinet: get_personal_cabinet,
     }
 

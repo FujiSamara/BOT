@@ -6,6 +6,7 @@ from bot.handlers import (
     rate_handler,
     bid_it_handler,
     tech_req_handler,
+    dismissal_handler,
     personal_cab_handler,
 )
 
@@ -20,5 +21,6 @@ router.include_routers(
     rate_handler.router,
     bid_it_handler.router,
     tech_req_handler.router,
+    dismissal_handler.router,
     personal_cab_handler.router,
 )

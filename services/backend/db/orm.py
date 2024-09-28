@@ -29,6 +29,8 @@ from db.models import (
     BidIT,
     BidITWorkerDocument,
     BidITRepairmanDocument,
+    Dismissal,
+    DismissalDocument,
     AccountLogins,
     Subordination,
     MaterialValues,
@@ -49,6 +51,7 @@ from db.schemas import (
     PostSchema,
     ProblemITSchema,
     BidITSchema,
+    DismissalSchema,
     AccountLoginsSchema,
     MaterialValuesSchema,
 )
@@ -1525,6 +1528,97 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
         if not raw_department:
             return None
         return WorkerSchema.model_validate(raw_department.it_repairman)
+
+
+# endregion
+
+# region Dismissal
+
+
+def get_last_dismissal_blank_id() -> int:
+    """
+    Returns last dismissal blank id in database.
+    """
+    with session.begin() as s:
+        return s.query(func.max(Dismissal.id)).first()[0]
+
+
+def get_dismissal_by_id(id: int) -> DismissalSchema:
+    """Gets dismissal bid by its id."""
+    with session.begin() as s:
+        raw_bid = s.query(Dismissal).filter(Dismissal.id == id).first()
+        if not raw_bid:
+            return None
+        return DismissalSchema.model_validate(raw_bid)
+
+
+def get_specified_pengind_dismissal_blanks(pending_column) -> list[DismissalSchema]:
+    """
+    Returns all dismissal_blanks in database with
+    pending approval state in `pending_column`.
+    """
+    with session.begin() as s:
+        raw_blanks = (
+            s.query(Dismissal)
+            .filter(pending_column == ApprovalStatus.pending_approval)
+            .all()
+        )
+        return [DismissalSchema.model_validate(raw_blank) for raw_blank in raw_blanks]
+
+
+def add_dismissal(dismissal: DismissalSchema):
+    """
+    Adds `dismissal` to database.
+    """
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.id == dismissal.worker.id).first()
+
+        dismissal_model = Dismissal(
+            worker=worker,
+            tech_state=dismissal.tech_state,
+            accountant_state=dismissal.accountant_state,
+            access_state=dismissal.access_state,
+            kru_state=dismissal.kru_state,
+            create_date=dismissal.create_date,
+        )
+        s.add(dismissal_model)
+
+        for document in dismissal.documents:
+            s.add(
+                DismissalDocument(dismissal=dismissal_model, document=document.document)
+            )
+
+
+def update_dismissal(dismissal: DismissalSchema):
+    """Updates dismissal by it id."""
+    with session.begin() as s:
+        cur_dismissal = s.query(Dismissal).filter(Dismissal.id == dismissal.id).first()
+        if not cur_dismissal:
+            return None
+
+        cur_dismissal.kru_state = dismissal.kru_state
+        cur_dismissal.kru_comment = dismissal.kru_comment
+        cur_dismissal.kru_approval_date = dismissal.kru_approval_date
+
+        cur_dismissal.access_state = dismissal.access_state
+        cur_dismissal.access_comment = dismissal.access_comment
+        cur_dismissal.access_approval_date = dismissal.access_approval_date
+
+        cur_dismissal.accountant_state = dismissal.accountant_state
+        cur_dismissal.accountant_comment = dismissal.accountant_comment
+        cur_dismissal.accountant_approval_date = dismissal.accountant_approval_date
+
+        cur_dismissal.tech_state = dismissal.tech_state
+        cur_dismissal.tech_comment = dismissal.tech_comment
+        cur_dismissal.tech_approval_date = dismissal.tech_approval_date
+
+        if (
+            cur_dismissal.tech_approval_date
+            and cur_dismissal.accountant_approval_date
+            and cur_dismissal.access_approval_date
+            and cur_dismissal.kru_approval_date
+        ):
+            cur_dismissal.close_date = datetime.now()
 
 
 # endregion

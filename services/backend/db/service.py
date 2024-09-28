@@ -39,6 +39,7 @@ from db.schemas import (
     ProblemITSchema,
     BidITSchema,
     aliases,
+    DismissalSchema,
     AccountLoginsSchema,
     MaterialValuesSchema,
 )
@@ -1956,6 +1957,128 @@ def get_repairman_telegram_id_by_department(department_name: str) -> int:
 # endregion
 
 
+# region Dismissal request
+
+
+def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
+    worker = get_worker_by_telegram_id(telegram_id)
+    if not worker:
+        return None
+    return [
+        f"{worker.l_name} {worker.f_name} {worker.o_name}",
+        worker.post.name,
+        worker.department.name,
+    ]
+
+
+async def create_dismissal_blank(files: list[UploadFile], telegram_id: str):
+    """
+    Creates an dismissal blank wrapped in `DismissalSchema` and adds it to database.
+    """
+
+    cur_date = datetime.now()
+
+    worker = get_worker_by_telegram_id(telegram_id)
+    if not worker:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id {telegram_id} wasn't found"
+        )
+
+    last_blank_num = orm.get_last_dismissal_blank_id()
+    if not last_blank_num:
+        last_blank_num = 0
+
+    documents = []
+
+    for index, file in enumerate(files):
+        suffix = Path(file.filename).suffix
+        filename = f"document_dismissal_{last_blank_num + 1}_{index + 1}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+
+    dismissal = DismissalSchema(
+        worker=worker,
+        documents=documents,
+        create_date=cur_date,
+        kru_state=ApprovalStatus.pending_approval,
+        access_state=ApprovalStatus.pending_approval,
+        accountant_state=ApprovalStatus.pending_approval,
+        tech_state=ApprovalStatus.pending_approval,
+    )
+
+    orm.add_dismissal(dismissal)
+
+    await notify_next_dismissal_coordinator(dismissal)
+
+
+async def notify_next_dismissal_coordinator(dismissal: DismissalSchema):
+    """Notifies next dismissal coordinator with `ApprovalStatus.pending_approval`."""
+    from bot.handlers.utils import (
+        notify_workers_by_scope,
+    )
+
+    message = "У вас новая заявка!"
+
+    if dismissal.kru_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_dismissal_kru, message=message
+        )
+    elif dismissal.access_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_dismissal_access, message=message
+        )
+    elif dismissal.accountant_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_dismissal_accountant, message=message
+        )
+    elif dismissal.tech_state == ApprovalStatus.pending_approval:
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_dismissal_tech, message=message
+        )
+
+
+def get_dismissal_by_id(id: int) -> DismissalSchema:
+    return orm.get_dismissal_by_id(id)
+
+
+def get_pending_dismissal_blanks_by_column(column: Any) -> list[DismissalSchema]:
+    """
+    Returns all dismissal blanks in database with pending approval state at column.
+    """
+    return orm.get_specified_pengind_dismissal_blanks(column)
+
+
+def update_dismissal(
+    dismissal: DismissalSchema,
+    state_name: str,
+    comment: str | None,
+):
+    cur_date = datetime.now()
+
+    match state_name:
+        case "kru_state":
+            dismissal.kru_state = ApprovalStatus.approved
+            dismissal.kru_comment = comment
+            dismissal.kru_approval_date = cur_date
+        case "access_state":
+            dismissal.access_state = ApprovalStatus.approved
+            dismissal.access_comment = comment
+            dismissal.access_approval_date = cur_date
+        case "accountant_state":
+            dismissal.accountant_state = ApprovalStatus.approved
+            dismissal.accountant_comment = comment
+            dismissal.accountant_approval_date = cur_date
+        case "tech_state":
+            dismissal.tech_state = ApprovalStatus.approved
+            dismissal.tech_comment = comment
+            dismissal.tech_approval_date = cur_date
+
+    orm.update_dismissal(dismissal)
+
+    # create_xls_file(dismissal)
+
+
+# endregion
 # region Worktime
 def get_wortkime_count(
     query_schema: QuerySchema,

@@ -452,6 +452,80 @@ get_it_tm_menu = InlineKeyboardButton(
 )
 
 
+# dismissal
+
+create_dismissal_menu_button = InlineKeyboardButton(
+    text="Уволиться", callback_data="get_create_dismissal_menu"
+)
+
+dismissal_request_button = InlineKeyboardButton(
+    text="Заявление на увольнение", callback_data="create_dismissal_request"
+)
+
+dismissal_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [dismissal_request_button],
+        [main_menu_button],
+    ]
+)
+
+
+async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    blank = data.get("blank")
+    upload_blank_text = "Приложить заявление"
+    all_field_exist = True
+
+    if not blank or len(blank) == 0:
+        all_field_exist = False
+        upload_blank_text += " 0"
+    else:
+        upload_blank_text += f" {len(blank)} ✅"
+
+    send_dismissal_callback_data = "dummy"
+    if all_field_exist:
+        send_dismissal_callback_data = "send_dismissal_blank"
+
+    keyboard = [
+        [
+            InlineKeyboardButton(
+                text="Заявление",
+                url="https://github.com",
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text=upload_blank_text, callback_data="upload_dismissal_blank"
+            )
+        ],
+    ]
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text="Отправить заявление", callback_data=send_dismissal_callback_data
+            )
+        ]
+    )
+    keyboard.append([main_menu_button])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+kru_dismissal_menu_button = InlineKeyboardButton(
+    text="Увольнения КРУ", callback_data="get_create_kru_dismissal_menu"
+)
+
+access_dismissal_menu_button = InlineKeyboardButton(
+    text="Увольнения Доступы", callback_data="get_create_access_dismissal_menu"
+)
+
+accountant_dismissal_menu_button = InlineKeyboardButton(
+    text="Увольнения Бухгалтерия", callback_data="get_create_accountant_dismissal_menu"
+)
+
+tech_dismissal_menu_button = InlineKeyboardButton(
+    text="Увольнения Техника", callback_data="get_create_tech_dismissal_menu"
+)
 # Personal cabinet
 
 get_personal_cabinet = InlineKeyboardButton(
