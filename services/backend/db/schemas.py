@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Any, Optional, Type
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
@@ -6,7 +6,6 @@ from pathlib import Path
 from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
-import logging
 
 
 # region Shemas for models
@@ -94,9 +93,6 @@ class DocumentSchema(BaseModel):
             if Path(val.path).is_file():
                 return UploadFile(val.open(), filename=val.name)
             else:
-                logging.getLogger("uvicorn.error").warning(
-                    f"File with path: {val.path} not exist"
-                )
                 return UploadFile(BytesIO(b"File not exist"), filename=val.name)
         return val
 
@@ -430,8 +426,8 @@ class FilterSchema(BaseModel):
     column: str
     """Column name for search."""
 
-    value: str
-    """Term for search."""
+    value: Any
+    """Term for filtrate."""
 
     dependencies: list["FilterSchema"] = []
 
