@@ -11,17 +11,17 @@ import enum
 
 
 class ApprovalStatus(enum.Enum):
-    pending = (1,)
-    approved = (2,)
-    denied = (3,)
-    pending_approval = (4,)
-    skipped = (5,)
-    not_relevant = (6,)
+    pending = 1
+    approved = 2
+    denied = 3
+    pending_approval = 4
+    skipped = 5
+    not_relevant = 6
 
 
 class Gender(enum.Enum):
-    man = (1,)
-    woman = (2,)
+    man = 1
+    woman = 2
 
 
 class FujiScope(enum.Enum):
