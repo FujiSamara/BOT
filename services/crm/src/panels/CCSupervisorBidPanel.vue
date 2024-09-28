@@ -30,7 +30,7 @@
 			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
-			v-show="elementViewing"
+			v-if="elementViewing"
 			@close="elementViewing = false"
 			@approve="onApprove"
 			@reject="onReject"
