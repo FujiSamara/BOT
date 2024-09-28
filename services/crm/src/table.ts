@@ -672,7 +672,7 @@ export class Table<T extends BaseSchema> {
 			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
 		);
 
-		await this.refreshInfo();
+		this.forceRefresh();
 	}
 	public async update(model: T, index: number): Promise<void> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
