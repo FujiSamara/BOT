@@ -471,7 +471,7 @@ export class Table<T extends BaseSchema> {
 			const model = this._loadedRows.value[index];
 
 			const color = this._highlighted.value[index]
-				? "fdf7fd"
+				? "#fdf7fd"
 				: this.color(model);
 			result.push(color);
 		}
