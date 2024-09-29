@@ -1438,6 +1438,41 @@ def apply_bid_creator_filter(
     return query_schema
 
 
+def apply_bid_archive_filter(query_schema: QuerySchema) -> QuerySchema:
+    """Apply filter query by bid denied or approved status to bid query.
+    Return query with applied filter."""
+    query_schema.filter_query.extend(
+        [
+            FilterSchema(column="fac_state", value=ApprovalStatus.denied, groups=[0]),
+            FilterSchema(column="cc_state", value=ApprovalStatus.denied, groups=[0]),
+            FilterSchema(
+                column="cc_supervisor_state", value=ApprovalStatus.denied, groups=[0]
+            ),
+            FilterSchema(column="kru_state", value=ApprovalStatus.denied, groups=[0]),
+            FilterSchema(column="owner_state", value=ApprovalStatus.denied, groups=[0]),
+            FilterSchema(
+                column="accountant_card_state", value=ApprovalStatus.denied, groups=[0]
+            ),
+            FilterSchema(
+                column="accountant_cash_state", value=ApprovalStatus.denied, groups=[0]
+            ),
+            FilterSchema(
+                column="teller_card_state", value=ApprovalStatus.denied, groups=[0]
+            ),
+            FilterSchema(
+                column="teller_card_state", value=ApprovalStatus.approved, groups=[0]
+            ),
+            FilterSchema(
+                column="teller_cash_state", value=ApprovalStatus.denied, groups=[0]
+            ),
+            FilterSchema(
+                column="teller_cash_state", value=ApprovalStatus.approved, groups=[0]
+            ),
+        ]
+    )
+    return query_schema
+
+
 def export_bid_records(
     query_schema: QuerySchema,
 ) -> BytesIO:
