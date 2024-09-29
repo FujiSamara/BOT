@@ -1261,25 +1261,74 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
     match state_name:
         case "worker_state":
             if expenditure.fac.id == bid.worker.id:
-                bid.fac_state = ApprovalStatus.skipped
-                bid.cc_state = ApprovalStatus.pending_approval
+                bid.fac_state = (
+                    ApprovalStatus.skipped
+                    if bid.fac_state != ApprovalStatus.approved
+                    and bid.fac_state != ApprovalStatus.denied
+                    else bid.fac_state
+                )
             if expenditure.cc.id == bid.worker.id:
-                bid.cc_state = ApprovalStatus.skipped
-                bid.cc_supervisor_state = ApprovalStatus.pending_approval
+                bid.cc_state = (
+                    ApprovalStatus.skipped
+                    if bid.cc != ApprovalStatus.approved
+                    and bid.cc != ApprovalStatus.denied
+                    else bid.cc_state
+                )
             if expenditure.cc_supervisor.id == bid.worker.id:
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.pending_approval
+                bid.cc_supervisor_state = (
+                    ApprovalStatus.skipped
+                    if bid.cc_supervisor_state != ApprovalStatus.approved
+                    and bid.cc_supervisor_state != ApprovalStatus.denied
+                    else bid.cc_supervisor_state
+                )
         case "fac_state":
             if expenditure.cc.id == expenditure.fac.id:
-                bid.cc_state = ApprovalStatus.skipped
-                bid.cc_supervisor_state = ApprovalStatus.pending_approval
+                bid.cc_state = (
+                    ApprovalStatus.skipped
+                    if bid.cc_state != ApprovalStatus.approved
+                    and bid.cc_state != ApprovalStatus.denied
+                    else bid.cc_state
+                )
             if expenditure.cc_supervisor.id == expenditure.fac.id:
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.pending_approval
+                bid.cc_supervisor_state = (
+                    ApprovalStatus.skipped
+                    if bid.cc_supervisor_state != ApprovalStatus.approved
+                    and bid.cc_supervisor_state != ApprovalStatus.denied
+                    else bid.cc_supervisor_state
+                )
         case "cc_state":
             if expenditure.cc_supervisor.id == expenditure.cc.id:
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.pending_approval
+                bid.cc_supervisor_state = (
+                    ApprovalStatus.skipped
+                    if bid.cc_supervisor_state != ApprovalStatus.approved
+                    and bid.cc_supervisor_state != ApprovalStatus.denied
+                    else bid.cc_supervisor_state
+                )
+
+    if bid.fac_state == ApprovalStatus.skipped:
+        if bid.cc_state == ApprovalStatus.skipped:
+            if bid.cc_supervisor_state == ApprovalStatus.skipped:
+                bid.kru_state = (
+                    ApprovalStatus.pending_approval
+                    if bid.kru_state != ApprovalStatus.approved
+                    and bid.kru_state != ApprovalStatus.denied
+                    else bid.kru_state
+                )
+
+            else:
+                bid.cc_supervisor_state = (
+                    ApprovalStatus.pending_approval
+                    if bid.cc_supervisor_state != ApprovalStatus.approved
+                    and bid.cc_supervisor_state != ApprovalStatus.denied
+                    else bid.cc_supervisor_state
+                )
+        else:
+            bid.cc_state = (
+                ApprovalStatus.pending_approval
+                if bid.cc_state != ApprovalStatus.approved
+                and bid.cc_state != ApprovalStatus.denied
+                else bid.cc_state
+            )
 
 
 def update_bid(bid: BidSchema):
@@ -1364,14 +1413,15 @@ def get_coordinator_bid_count(
 
 def apply_bid_status_filter(
     query_schema: QuerySchema, status_field: str, status: ApprovalStatus
-):
-    """Apply filter query by bid status to bid query."""
+) -> QuerySchema:
+    """Apply filter query by bid status to bid query. Return query with applied filter."""
     query_schema.filter_query.append(
         FilterSchema(
             column=status_field,
             value=status,
         ),
     )
+    return query_schema
 
 
 def export_bid_records(

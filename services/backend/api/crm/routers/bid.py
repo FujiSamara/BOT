@@ -101,7 +101,11 @@ async def get_fac_bid_pages_info(
     service.apply_bid_status_filter(query, "fac_state", ApprovalStatus.pending_approval)
     record_count = service.get_coordinator_bid_count(query, user.username, "fac")
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "fac"
+        service.apply_bid_status_filter(
+            QuerySchema(), "fac_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "fac",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -172,7 +176,11 @@ async def get_cc_bid_pages_info(
     service.apply_bid_status_filter(query, "cc_state", ApprovalStatus.pending_approval)
     record_count = service.get_coordinator_bid_count(query, user.username, "cc")
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "cc"
+        service.apply_bid_status_filter(
+            QuerySchema(), "cc_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "cc",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -247,7 +255,11 @@ async def get_cc_supervisor_bid_pages_info(
         query, user.username, "cc_supervisor"
     )
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "cc_supervisor"
+        service.apply_bid_status_filter(
+            QuerySchema(), "cc_supervisor_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "cc_supervisor",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
