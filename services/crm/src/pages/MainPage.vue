@@ -6,9 +6,20 @@
 			@click="onNavButtonClicked"
 			@logout="onLogout"
 		></NavigationPanel>
-		<keep-alive>
-			<panel :id="panelID" @notify="onNotify" class="panel-content"></panel>
-		</keep-alive>
+
+		<component
+			v-for="panelData in panelsData"
+			class="panel-content"
+			:is="panelData.panel"
+			:id="panelID"
+			@notify="onNotify"
+			v-show="panelData.isActive"
+		></component>
+		<component
+			class="panel-content"
+			:is="panel"
+			v-if="panelsData.length === 0"
+		></component>
 	</div>
 </template>
 <script setup lang="ts">
@@ -21,10 +32,10 @@ import { ref, shallowRef } from "vue";
 const networkStore = useNetworkStore();
 
 const panelsData = ref(getPanelsByAccesses(networkStore.accesses));
+
 const panel = shallowRef(DefaultPanel);
 let panelID = 0;
 if (panelsData.value.length > 0) {
-	panel.value = panelsData.value[0].panel;
 	panelsData.value[0].isActive = true;
 	panelID = panelsData.value[0].id;
 }
@@ -40,7 +51,6 @@ const onNavButtonClicked = async (id: number) => {
 	if (activePanelData) activePanelData.isActive = false;
 
 	panelID = panelData.id;
-	panel.value = panelData.panel;
 	panelData.isActive = true;
 };
 
