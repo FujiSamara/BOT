@@ -431,6 +431,17 @@ class FilterSchema(BaseModel):
 
     dependencies: list["FilterSchema"] = []
 
+    groups: list[int] = []
+
+    """Specifies groups at same level.
+    
+    All elements in one group handles by `or_` statement.
+    
+    All groups handles by `and_` statement.
+
+    - Note: If group not specified then handles node by `and_` statement with another nodes.
+    """
+
 
 class QuerySchema(BaseModel):
     """Presents general query schema for working with crm tables."""
