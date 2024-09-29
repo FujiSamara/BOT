@@ -197,19 +197,15 @@ export class Table<T extends BaseSchema> {
 			axios.post(this._infoQuery.value, this._completedQuery.value),
 		);
 
-		if (
-			this.rowCount.value !== resp.data.all_record_count &&
-			this.rowCount.value !== 0
-		) {
-			await this.handleNewRows(this.rowCount.value, resp.data.all_record_count);
-		}
-
 		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
 			if (this._loadedRows.value.length !== this._rowsPerPage) {
 				this.isLoading.value = true;
 			}
 
-			await this.refreshRows();
+			await this.refreshRows(
+				this.rowCount.value !== resp.data.all_record_count &&
+					this.rowCount.value !== 0,
+			);
 			this.isLoading.value = false;
 		}
 
@@ -217,42 +213,15 @@ export class Table<T extends BaseSchema> {
 		this.rowCountWithFilters.value = resp.data.record_count;
 		this.rowCount.value = resp.data.all_record_count;
 	}
-	/** Stores new row id's. */
-	private async handleNewRows(oldCount: number, newCount: number) {
-		const difference = newCount - oldCount;
-		if (difference < 0) {
-			return;
-		}
-		let rowsPerPage;
-		let page;
-
-		if (newCount - difference >= difference) {
-			rowsPerPage = newCount - difference;
-			page = 2;
-		} else {
-			rowsPerPage = newCount;
-			page = 1;
-		}
-
-		const link = `${this._endpoint}${this._getEndpoint}/page/${page}?records_per_page=${rowsPerPage}`;
-
-		const resp = await this._network.withAuthChecking(axios.post(link, {}));
-
-		const rawRows: Array<T> = resp.data;
-		const newRows = rawRows.slice(-newCount, rawRows.length);
-		for (const row of newRows) {
-			this._newIds.value.push(row.id);
-		}
-	}
 	/** Updates rows. */
-	private async refreshRows() {
+	private async refreshRows(findNew: boolean = false) {
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._rowsQuery.value, this._completedQuery.value),
 		);
 
-		this._loadedRows.value = resp.data;
+		const rows: Array<T> = resp.data;
 
-		const rowsLength = this._loadedRows.value.length;
+		const rowsLength = rows.length;
 
 		if (rowsLength === 0) {
 			this.currentPage.value = 1;
@@ -264,14 +233,29 @@ export class Table<T extends BaseSchema> {
 		);
 		this._checked.value = Array<boolean>(rowsLength).fill(false, 0, rowsLength);
 
-		for (let index = 0; index < this._loadedRows.value.length; index++) {
-			const row = this._loadedRows.value[index];
-			if (
-				this._newIds.value.find((id: number) => id === row.id) !== undefined
-			) {
-				this._elementHighlighted(index, true);
+		if (findNew) {
+			for (let index = 0; index < rows.length; index++) {
+				const model = rows[index];
+
+				if (
+					this._loadedRows.value.find((el) => el.id === model.id) === undefined
+				) {
+					if (this._newIds.value.findIndex((el) => el === model.id) === -1) {
+						this._newIds.value.push(model.id);
+					}
+				}
 			}
 		}
+
+		for (let index = 0; index < rows.length; index++) {
+			const model = rows[index];
+
+			if (this._newIds.value.findIndex((el) => el === model.id) !== -1) {
+				this._highlighted.value[index] = true;
+			}
+		}
+
+		this._loadedRows.value = rows;
 	}
 	/** Forces updating rows. */
 	protected forceRefresh() {
@@ -452,7 +436,7 @@ export class Table<T extends BaseSchema> {
 	public highlighted = computed(() => {
 		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this.rows.value.rows.length; index++) {
+		for (let index = 0; index < this._highlighted.value.length; index++) {
 			result.push(
 				new TableElementObserver(
 					this._highlighted.value[index],
