@@ -526,6 +526,15 @@ accountant_dismissal_menu_button = InlineKeyboardButton(
 tech_dismissal_menu_button = InlineKeyboardButton(
     text="Увольнения Техника", callback_data="get_create_tech_dismissal_menu"
 )
+
+chief_dismissal_menu_button = InlineKeyboardButton(
+    text="Увольнения Руководитель", callback_data="get_create_chief_dismissal_menu"
+)
+
+chief_pending_button = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="chief_dismissal_pending"
+)
+
 # Personal cabinet
 
 get_personal_cabinet = InlineKeyboardButton(

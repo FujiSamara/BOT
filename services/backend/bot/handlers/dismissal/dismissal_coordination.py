@@ -251,12 +251,6 @@ async def comment_decline(message: Message, state: FSMContext):
     callback: CallbackQuery = data["callback"]
     callback_data: DismissalCallbackData = data["callback_data"]
     await state.update_data(comment=message.text)
-    # await try_edit_message(callback.message, None, await get_dismissal_blank)
-    # dismissal: DismissalSchema = data["dismissal"]
-    # column_name = data["column_name"]
-    # dismissal.denying_reason = message.text
-    # update_dismissal(dismissal)
-    # await update_dismissal_state(dismissal, column_name, ApprovalStatus.denied)
 
     await try_delete_message(message)
     await generator(callback, callback_data, state)

@@ -45,16 +45,18 @@ def with_next_line(strings: list[str]) -> str:
 
 def get_dismissal_blank_info(blank: DismissalSchema) -> str:
     info = list()
-    info.append(f"{blank.worker.l_name} {blank.worker.f_name} {blank.worker.o_name}")
-    info.append(blank.worker.post.name)
-    info.append(blank.worker.department.name)
+    info.append(
+        f"{blank.subordination.employee.l_name} {blank.subordination.employee.f_name} {blank.subordination.employee.o_name}"
+    )
+    info.append(blank.subordination.employee.post.name)
+    info.append(blank.subordination.employee.department.name)
 
     return with_next_line(info)
 
 
 def get_dismissal_list_info(blank: DismissalSchema) -> str:
     return (
-        f"{blank.id}: {blank.worker.l_name} "
+        f"{blank.id}: {blank.subordination.employee.l_name} "
         + f"{blank.create_date.strftime('%d.%m.%Y')} "
-        + f"{blank.worker.department.name}"
+        + f"{blank.subordination.employee.department.name}"
     )

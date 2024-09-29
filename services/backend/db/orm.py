@@ -43,6 +43,7 @@ from db.schemas import (
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
+    SubordinationSchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerBidSchema,
@@ -1566,15 +1567,37 @@ def get_specified_pengind_dismissal_blanks(pending_column) -> list[DismissalSche
         return [DismissalSchema.model_validate(raw_blank) for raw_blank in raw_blanks]
 
 
+def get_pengind_dismissal_blanks_for_chief(
+    chief: WorkerSchema,
+) -> list[DismissalSchema]:
+    with session.begin() as s:
+        raw_blanks = (
+            s.query(Dismissal)
+            .join(Dismissal.subordination)
+            .filter(
+                and_(
+                    Dismissal.chief_state == ApprovalStatus.pending_approval,
+                    Subordination.chief_id == chief.id,
+                )
+            )
+            .all()
+        )
+        return [DismissalSchema.model_validate(raw_blank) for raw_blank in raw_blanks]
+
+
 def add_dismissal(dismissal: DismissalSchema):
     """
     Adds `dismissal` to database.
     """
     with session.begin() as s:
-        worker = s.query(Worker).filter(Worker.id == dismissal.worker.id).first()
-
+        subordination = (
+            s.query(Subordination)
+            .filter(Subordination.id == dismissal.subordination.id)
+            .first()
+        )
         dismissal_model = Dismissal(
-            worker=worker,
+            subordination=subordination,
+            chief_state=dismissal.chief_state,
             tech_state=dismissal.tech_state,
             accountant_state=dismissal.accountant_state,
             access_state=dismissal.access_state,
@@ -1596,6 +1619,10 @@ def update_dismissal(dismissal: DismissalSchema):
         if not cur_dismissal:
             return None
 
+        cur_dismissal.chief_state = dismissal.chief_state
+        cur_dismissal.chief_comment = dismissal.chief_comment
+        cur_dismissal.chief_approval_date = dismissal.chief_approval_date
+
         cur_dismissal.kru_state = dismissal.kru_state
         cur_dismissal.kru_comment = dismissal.kru_comment
         cur_dismissal.kru_approval_date = dismissal.kru_approval_date
@@ -1611,6 +1638,8 @@ def update_dismissal(dismissal: DismissalSchema):
         cur_dismissal.tech_state = dismissal.tech_state
         cur_dismissal.tech_comment = dismissal.tech_comment
         cur_dismissal.tech_approval_date = dismissal.tech_approval_date
+
+        cur_dismissal.close_date = dismissal.close_date
 
         if (
             cur_dismissal.tech_approval_date
@@ -1671,3 +1700,15 @@ def get_material_value_by_inventory_number(
             .first()
         )
         return MaterialValuesSchema.model_validate(material_value)
+
+
+def get_subordination_id_by_worker(worker_id: int) -> Optional[WorkerSchema]:
+    with session.begin() as s:
+        subordination = (
+            s.query(Subordination)
+            .filter(Subordination.employee_id == worker_id)
+            .first()
+        )
+        if subordination is None:
+            return None
+        return SubordinationSchema.model_validate(subordination)

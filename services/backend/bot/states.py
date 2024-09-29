@@ -114,3 +114,7 @@ class DismissalRequest(StatesGroup):
 
 class DismissalCoordination(StatesGroup):
     comment = State()
+
+
+class DismissalChief(StatesGroup):
+    comment = State()

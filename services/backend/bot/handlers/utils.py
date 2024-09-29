@@ -37,6 +37,7 @@ from bot.kb import (
     accountant_dismissal_menu_button,
     tech_dismissal_menu_button,
     get_personal_cabinet,
+    chief_dismissal_menu_button,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -75,6 +76,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_dismissal_access: access_dismissal_menu_button,
         FujiScope.bot_dismissal_tech: tech_dismissal_menu_button,
         FujiScope.bot_personal_cabinet: get_personal_cabinet,
+        FujiScope.bot_dismissal_chief: chief_dismissal_menu_button,
     }
 
 

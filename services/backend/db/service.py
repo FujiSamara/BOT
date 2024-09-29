@@ -1971,7 +1971,7 @@ def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
     ]
 
 
-async def create_dismissal_blank(files: list[UploadFile], telegram_id: str):
+async def create_dismissal_blank(files: list[UploadFile], telegram_id: str) -> bool:
     """
     Creates an dismissal blank wrapped in `DismissalSchema` and adds it to database.
     """
@@ -1983,6 +1983,13 @@ async def create_dismissal_blank(files: list[UploadFile], telegram_id: str):
         logging.getLogger("uvicorn.error").error(
             f"Worker with telegram id {telegram_id} wasn't found"
         )
+
+    sub = orm.get_subordination_id_by_worker(worker.id)
+    if not sub:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id {telegram_id} hasn't chief"
+        )
+        return False
 
     last_blank_num = orm.get_last_dismissal_blank_id()
     if not last_blank_num:
@@ -1997,18 +2004,32 @@ async def create_dismissal_blank(files: list[UploadFile], telegram_id: str):
         documents.append(DocumentSchema(document=file))
 
     dismissal = DismissalSchema(
-        worker=worker,
+        subordination=sub,
         documents=documents,
         create_date=cur_date,
-        kru_state=ApprovalStatus.pending_approval,
-        access_state=ApprovalStatus.pending_approval,
-        accountant_state=ApprovalStatus.pending_approval,
-        tech_state=ApprovalStatus.pending_approval,
+        chief_state=ApprovalStatus.pending_approval,
+        kru_state=ApprovalStatus.pending,
+        access_state=ApprovalStatus.pending,
+        accountant_state=ApprovalStatus.pending,
+        tech_state=ApprovalStatus.pending,
     )
 
     orm.add_dismissal(dismissal)
 
-    await notify_next_dismissal_coordinator(dismissal)
+    await notify_chief(dismissal)
+
+    return True
+
+
+async def notify_chief(dismissal: DismissalSchema):
+    from bot.handlers.utils import (
+        notify_worker_by_telegram_id,
+    )
+
+    message = "У вас новая заявка!"
+    await notify_worker_by_telegram_id(
+        dismissal.subordination.chief.telegram_id, message
+    )
 
 
 async def notify_next_dismissal_coordinator(dismissal: DismissalSchema):
@@ -2046,6 +2067,31 @@ def get_pending_dismissal_blanks_by_column(column: Any) -> list[DismissalSchema]
     Returns all dismissal blanks in database with pending approval state at column.
     """
     return orm.get_specified_pengind_dismissal_blanks(column)
+
+
+def get_pending_dismissal_blanks_for_chief(telegram_id: str) -> list[DismissalSchema]:
+    chief = get_worker_by_telegram_id(telegram_id)
+    return orm.get_pengind_dismissal_blanks_for_chief(chief)
+
+
+async def update_dismissal_by_chief(dismissal: DismissalSchema, comment: str = None):
+    cur_date = datetime.now()
+
+    dismissal.chief_approval_date = cur_date
+
+    if dismissal.chief_state == ApprovalStatus.denied:
+        dismissal.chief_comment = comment
+        dismissal.close_date = cur_date
+    else:
+        dismissal.chief_state = ApprovalStatus.approved
+        dismissal.kru_state = ApprovalStatus.pending_approval
+        dismissal.access_state = ApprovalStatus.pending_approval
+        dismissal.accountant_state = ApprovalStatus.pending_approval
+        dismissal.tech_state = ApprovalStatus.pending_approval
+
+    orm.update_dismissal(dismissal)
+
+    await notify_next_dismissal_coordinator(dismissal)
 
 
 def update_dismissal(

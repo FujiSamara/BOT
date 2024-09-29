@@ -1,7 +1,7 @@
 """Add dismissal scope
 
 Revision ID: e94820119bb7
-Revises: aaa237c15607
+Revises: 4749aedb1134
 Create Date: 2024-09-23 13:35:23.703197
 
 """
@@ -35,15 +35,25 @@ old_options = (
     "bot_bid_it_worker",
     "bot_bid_it_repairman",
     "bot_bid_it_tm",
+    "bot_personal_cabinet",
 )
-new_options = sorted(old_options + ("bot_dismissal",))
+new_options = sorted(
+    old_options
+    + (
+        "bot_dismissal",
+        "bot_dismissal_kru",
+        "bot_dismissal_accountant",
+        "bot_dismissal_access",
+        "bot_dismissal_tech",
+        "bot_dismissal_chief",
+    )
+)
 
 table_columns = {"post_scopes": ["scope"]}
 
-
 # revision identifiers, used by Alembic.
 revision: str = "e94820119bb7"
-down_revision: Union[str, None] = "aaa237c15607"
+down_revision: Union[str, None] = "4749aedb1134"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -51,12 +51,13 @@ class FujiScope(enum.Enum):
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
-    bot_dismissal = 25
-    bot_dismissal_kru = 26
-    bot_dismissal_accountant = 27
-    bot_dismissal_access = 28
-    bot_dismissal_tech = 29
     bot_personal_cabinet = 25
+    bot_dismissal = 26
+    bot_dismissal_kru = 27
+    bot_dismissal_accountant = 28
+    bot_dismissal_access = 29
+    bot_dismissal_tech = 30
+    bot_dismissal_chief = 31
 
 
 class DepartmentType(enum.Enum):
@@ -396,7 +397,6 @@ class Worker(Base):
         foreign_keys="[BidIT.territorial_manager_id]",
     )
 
-    dismissal: Mapped["Dismissal"] = relationship("Dismissal", back_populates="worker")
     worker_account_logins: Mapped[list["AccountLogins"]] = relationship(
         "AccountLogins",
         back_populates="worker",
@@ -891,58 +891,6 @@ class TechnicalRequest(Base):
 # endregion
 
 
-# region Dismissal blank
-
-
-class DismissalDocument(Base):
-    """Документы заявлений об увольнении"""
-
-    __tablename__ = "dismissal_documents"
-
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
-    dismissal: Mapped["Dismissal"] = relationship(
-        "Dismissal", back_populates="documents"
-    )
-
-
-class Dismissal(Base):
-    """Заявление об увольнении"""
-
-    __tablename__ = "dismissals"
-
-    documents: Mapped[List["DismissalDocument"]] = relationship(
-        "DismissalDocument",
-        cascade="all,delete",
-        back_populates="dismissal",
-    )
-
-    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
-    worker: Mapped[Worker] = relationship("Worker", back_populates="dismissal")
-
-    # States
-    tech_state: Mapped[approvalstatus]
-    accountant_state: Mapped[approvalstatus]
-    access_state: Mapped[approvalstatus]
-    kru_state: Mapped[approvalstatus]
-
-    # Comments
-    tech_comment: Mapped[str] = mapped_column(nullable=True)
-    accountant_comment: Mapped[str] = mapped_column(nullable=True)
-    access_comment: Mapped[str] = mapped_column(nullable=True)
-    kru_comment: Mapped[str] = mapped_column(nullable=True)
-
-    # Dates
-    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
-    kru_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    accountant_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
-
-# endregion
 class AccountLogins(Base):
     """Логины от аккаунтов"""
 
@@ -999,3 +947,66 @@ class Subordination(Base):
     employee: Mapped["Worker"] = relationship(
         "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
     )
+
+    dismissal = relationship("Dismissal", back_populates="subordination")
+
+
+# region Dismissal blank
+
+
+class DismissalDocument(Base):
+    """Документы заявлений об увольнении"""
+
+    __tablename__ = "dismissal_documents"
+
+    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
+    dismissal: Mapped["Dismissal"] = relationship(
+        "Dismissal", back_populates="documents"
+    )
+
+
+class Dismissal(Base):
+    """Заявление об увольнении"""
+
+    __tablename__ = "dismissals"
+
+    documents: Mapped[List["DismissalDocument"]] = relationship(
+        "DismissalDocument",
+        cascade="all,delete",
+        back_populates="dismissal",
+    )
+
+    subordination_id: Mapped[int] = mapped_column(
+        ForeignKey("subordinations.id"), nullable=False
+    )
+    subordination: Mapped[Subordination] = relationship(
+        "Subordination", back_populates="dismissal"
+    )
+
+    # States
+    chief_state: Mapped[approvalstatus]
+    tech_state: Mapped[approvalstatus]
+    accountant_state: Mapped[approvalstatus]
+    access_state: Mapped[approvalstatus]
+    kru_state: Mapped[approvalstatus]
+
+    # Comments
+    chief_comment: Mapped[str] = mapped_column(nullable=True)
+    tech_comment: Mapped[str] = mapped_column(nullable=True)
+    accountant_comment: Mapped[str] = mapped_column(nullable=True)
+    access_comment: Mapped[str] = mapped_column(nullable=True)
+    kru_comment: Mapped[str] = mapped_column(nullable=True)
+
+    # Dates
+    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    chief_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    kru_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    accountant_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+
+# endregion

@@ -16,12 +16,11 @@ from bot.states import (
 )
 
 from bot.handlers.utils import (
+    send_menu_by_scopes,
     try_edit_message,
-    # try_delete_message,
     download_file,
     handle_documents,
     handle_documents_form,
-    send_menu_by_scopes,
 )
 from bot.handlers.dismissal.utils import (
     clear_state_with_success_employee,
@@ -75,13 +74,16 @@ async def send_dismissal_blank(callback: CallbackQuery, state: FSMContext):
     for doc in blank:
         document_files.append(await download_file(doc))
 
-    await create_dismissal_blank(
+    ans = await create_dismissal_blank(
         files=document_files,
         telegram_id=callback.message.chat.id,
     )
-
-    await try_edit_message(message=callback.message, text="Успешно!")
+    if not ans:
+        await try_edit_message(message=callback.message, text="У вас нет руководителя")
+    else:
+        await try_edit_message(message=callback.message, text="Успешно!")
     await asyncio.sleep(1)
     await state.clear()
     await state.set_state(Base.none)
+    # await state.clear()
     await send_menu_by_scopes(callback.message, edit=True)
