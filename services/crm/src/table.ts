@@ -93,7 +93,8 @@ interface DateSchema {
 
 interface FilterSchema {
 	column: string;
-	value: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
 }
 
 interface QuerySchema {
@@ -148,13 +149,11 @@ export class Table<T extends BaseSchema> {
 		this._exportEndpoint =
 			options && options.exportEndpoint ? options.exportEndpoint : "";
 		//#endregion
-
-		this.startUpdatingLoop();
 	}
 
 	//#region Rows
 	//#region Refreshing
-	private async startUpdatingLoop() {
+	public async startUpdatingLoop() {
 		let skipLoop = false;
 
 		watch(
@@ -275,7 +274,7 @@ export class Table<T extends BaseSchema> {
 		return this.byDate.value;
 	});
 	private _filteredQuery = computed(() => {
-		return [];
+		return this.filterQuery.value;
 	});
 	private _orderedQuery = computed((): OrderBySchema => {
 		return {
@@ -524,6 +523,8 @@ export class Table<T extends BaseSchema> {
 	public desc: Ref<boolean> = ref(true);
 	/** Search query. */
 	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
+	/** Filter query. */
+	public filterQuery: Ref<Array<FilterSchema>> = ref([]);
 	/** Date query. */
 	public byDate: Ref<DateSchema | undefined> = ref();
 	/** Order of column in table. */
@@ -873,6 +874,18 @@ export class CCSupervisorBidTable extends BidTable {
 			exportEndpoint: "/cc_supervisor",
 			approveEndpoint: "/cc_supervisor",
 			rejectEndpoint: "/cc_supervisor",
+		});
+	}
+}
+
+export class MyBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/my",
+			infoEndpoint: "/my",
+			exportEndpoint: "/my",
+			approveEndpoint: "/my",
+			rejectEndpoint: "/my",
 		});
 	}
 }

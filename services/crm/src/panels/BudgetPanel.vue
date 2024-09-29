@@ -38,7 +38,7 @@ import EditPanelRow from "@/components/EditPanelRow.vue";
 import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { BudgetTable } from "@/table";
 import { BudgetEditor } from "@/editor";
 
@@ -106,6 +106,7 @@ const onCreateClicked = () => {
 watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .budget-content {

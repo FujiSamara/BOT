@@ -52,7 +52,7 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { BidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
@@ -142,6 +142,7 @@ const onRowClicked = (rowKey: number) => {
 	elementViewing.value = true;
 	viewingIndex.value = rowKey;
 };
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .bid-content {

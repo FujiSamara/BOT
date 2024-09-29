@@ -45,7 +45,7 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { ExpenditureTable } from "@/table";
 import { ExpenditureEditor } from "@/editor";
 
@@ -148,6 +148,7 @@ const onCreateClicked = () => {
 watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .expenditure-content {
