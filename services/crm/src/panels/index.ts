@@ -8,6 +8,7 @@ import BudgetPanel from "@/panels/BudgetPanel.vue";
 import WorkTimePanel from "@/panels/WorkTimePanel.vue";
 import { shallowRef } from "vue";
 import MyBidPanel from "@/panels/MyBidPanel.vue";
+import ArchiveBidPanel from "@/panels/ArchiveBidPanel.vue";
 
 const panels: Array<PanelData> = [
 	{
@@ -72,6 +73,14 @@ const panels: Array<PanelData> = [
 		label: "Мои заявки",
 		isActive: false,
 		panel: shallowRef(MyBidPanel),
+		access: Access.Authed,
+	},
+	{
+		id: 9,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Архив заявок",
+		isActive: false,
+		panel: shallowRef(ArchiveBidPanel),
 		access: Access.Authed,
 	},
 ];

@@ -890,6 +890,18 @@ export class MyBidTable extends BidTable {
 	}
 }
 
+export class ArchiveBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/archive",
+			infoEndpoint: "/archive",
+			exportEndpoint: "/archive",
+			approveEndpoint: "/archive",
+			rejectEndpoint: "/archive",
+		});
+	}
+}
+
 export class WorkTimeTable extends Table<WorkTimeSchema> {
 	constructor() {
 		super("worktime");
