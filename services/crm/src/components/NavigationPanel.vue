@@ -48,6 +48,7 @@ const emit = defineEmits(["click", "logout"]);
 	height: fit-content;
 	flex-grow: 0;
 	overflow: hidden;
+	white-space: nowrap;
 }
 .panel-wrapper img {
 	width: 85px;
