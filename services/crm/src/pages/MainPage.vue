@@ -12,7 +12,7 @@
 			class="panel-content"
 			:is="panelData.panel"
 			:id="panelID"
-			@notify="onNotify"
+			@notify="(count: number, _: number) => (panelData.notifyCount = count)"
 			v-show="panelData.isActive"
 		></component>
 		<component
@@ -56,13 +56,6 @@ const onNavButtonClicked = async (id: number) => {
 
 const onLogout = () => {
 	networkStore.logout();
-};
-
-const onNotify = (count: number, id: number) => {
-	const panelData = panelsData.value.find((panelData) => panelData.id === id);
-	if (!panelData) return;
-
-	panelData.notifyCount = count;
 };
 </script>
 <style scoped>
