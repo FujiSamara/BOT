@@ -22,6 +22,7 @@ export enum Access {
 	CCBid,
 	CCSupervisorBid,
 	Worktime,
+	Authed,
 }
 
 export const accessesDict: any = {
@@ -32,6 +33,7 @@ export const accessesDict: any = {
 	crm_fac_bid: Access.FACBid,
 	crm_cc_bid: Access.CCBid,
 	crm_cc_supervisor_bid: Access.CCSupervisorBid,
+	authenticated: Access.Authed,
 };
 
 export interface PanelData extends NavigationData {
