@@ -1424,6 +1424,20 @@ def apply_bid_status_filter(
     return query_schema
 
 
+def apply_bid_creator_filter(
+    query_schema: QuerySchema, creator_phone: str
+) -> QuerySchema:
+    """Apply filter query by bid creator to bid query. Return query with applied filter."""
+    query_schema.filter_query.append(
+        FilterSchema(
+            column="worker",
+            value="",
+            dependencies=[FilterSchema(column="phone_number", value=creator_phone)],
+        ),
+    )
+    return query_schema
+
+
 def export_bid_records(
     query_schema: QuerySchema,
 ) -> BytesIO:

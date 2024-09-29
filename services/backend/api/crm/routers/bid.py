@@ -327,6 +327,58 @@ async def reject_cc_supervisor_bid(
 # endregion cc supervisor bids
 
 
+# region my bids
+@router.post("/my/page/info")
+async def get_my_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> TalbeInfoSchema:
+    service.apply_bid_creator_filter(query, user.username)
+    record_count = service.get_bid_count(query)
+    all_record_count = service.get_bid_count(
+        service.apply_bid_creator_filter(QuerySchema(), user.username)
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/my/page/{page}")
+async def get_my_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> list[BidRecordSchema]:
+    service.apply_bid_creator_filter(query, user.username)
+    return service.get_bid_record_at_page(page, records_per_page, query)
+
+
+@router.post("/my/export")
+async def export_my_bids(
+    query: QuerySchema,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> Response:
+    service.apply_bid_creator_filter(query, user.username)
+    file = service.export_bid_records(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=my_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+# endregion
+
+
 async def approve_coordinator_bid(id: int, coordinator_field: str):
     """Approves bid by `id` if coordinator is current coordinator."""
     bid = service.get_bid_by_id(id)
