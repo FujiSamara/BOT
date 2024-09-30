@@ -4,13 +4,15 @@ import * as config from "@/config";
 import { useNetworkStore } from "./store/network";
 import { DocumentSchema } from "./types";
 
-class SmartField {
+export class SmartField {
 	protected _rawField: Ref<any> = ref();
+	public completed: Ref<boolean> = ref(false); // indicates completed field or not.
 
 	constructor(
 		public name: string,
 		public fieldName: string,
 		public readonly canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {}
 
 	public get rawValue() {
@@ -30,8 +32,10 @@ export class InputSmartField extends SmartField {
 		public fieldName: string,
 		defaultValue?: any,
 		public readonly canEdit: boolean = true,
+		public readonly required: boolean = false,
+		public readonly simple: boolean = true,
 	) {
-		super(name, fieldName, canEdit);
+		super(name, fieldName, canEdit, required);
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
 		}
@@ -59,6 +63,7 @@ export class InputSmartField extends SmartField {
 			return this.formatter(this._rawField.value);
 		},
 		set: async (newValue: string) => {
+			this.completed.value = !this.simple;
 			this._stringifyValue.value = newValue;
 			clearTimeout(this._delaySetter);
 			this._delaySetter = setTimeout(async () => {
@@ -79,6 +84,7 @@ export class InputSmartField extends SmartField {
 		this._stringifyValue.value = undefined;
 		this._rawField.value = this._tipList.value[index];
 		this._tipList.value = [];
+		this.completed.value = true;
 	}
 }
 
@@ -90,8 +96,9 @@ export class DocumentSmartField extends SmartField {
 		public name: string,
 		public fieldName: string,
 		public readonly canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, canEdit);
+		super(name, fieldName, canEdit, required);
 
 		watch(this.files.value, async () => {
 			const files = [];
@@ -102,8 +109,8 @@ export class DocumentSmartField extends SmartField {
 				});
 				files.push(file);
 			}
-			this._rawField.value = files.map((el) => ({
-				name: "",
+			this._rawField.value = files.map((el, index) => ({
+				name: this.files.value[index].name,
 				href: "",
 				file: el,
 			}));
@@ -124,8 +131,15 @@ class EnumSmartField extends InputSmartField {
 		protected list: Array<string>,
 		defaultValue?: any,
 		canEdit: boolean = true,
+		formatter?: (value: any) => string,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(name, fieldName, defaultValue, canEdit, required);
+		this._tipList.value = this.list;
+
+		if (formatter) {
+			this.formatter = formatter;
+		}
 	}
 
 	protected formatter(value: any): string {
@@ -136,12 +150,14 @@ class EnumSmartField extends InputSmartField {
 	}
 	protected async setter(newValue: any): Promise<void> {
 		if (newValue.length === 0) {
-			this._tipList.value = [];
+			this._tipList.value = this.list;
 			return;
 		}
 
 		this._tipList.value = this.list.filter(
-			(val) => val.toLowerCase().indexOf(newValue.toLowerCase()) !== -1,
+			(val) =>
+				this.formatter(val).toLowerCase().indexOf(newValue.toLowerCase()) !==
+				-1,
 		);
 	}
 }
@@ -152,8 +168,17 @@ class BoolSmartField extends EnumSmartField {
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, ["Да", "Нет"], defaultValue, canEdit);
+		super(
+			name,
+			fieldName,
+			["Да", "Нет"],
+			defaultValue,
+			canEdit,
+			undefined,
+			required,
+		);
 	}
 
 	public get rawValue(): boolean {
@@ -253,7 +278,25 @@ export class BidEditor extends Editor {
 
 		this.fields = [
 			new InputSmartField("Cумма", "amount"),
-			new PaymentTypeSmartField("Тип оплаты", "payment_type"),
+			new EnumSmartField(
+				"Тип оплаты",
+				"payment_type",
+				["cash", "card", "taxi"],
+				undefined,
+				true,
+				(val) => {
+					switch (val) {
+						case "cash":
+							return "Наличная";
+						case "card":
+							return "Безналичная";
+						case "taxi":
+							return "Требуется такси";
+					}
+					return val;
+				},
+				true,
+			),
 			new ExpenditureSmartField("Статья", "expenditure"),
 			new BoolSmartField("Счет в ЭДО", "need_edm", "Нет"),
 			new DepartmentSmartField("Производство", "department"),
@@ -276,8 +319,9 @@ class WorkerSmartField extends InputSmartField {
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(name, fieldName, defaultValue, canEdit, required, false);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/worker`;
 	}
 
@@ -311,8 +355,9 @@ class ExpenditureSmartField extends InputSmartField {
 		defaultValue?: any,
 		canEdit: boolean = true,
 		protected chapterField?: InputSmartField,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(name, fieldName, defaultValue, canEdit, required, false);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
 		if (chapterField) {
 			watch(this._rawField, () => {
@@ -350,8 +395,9 @@ class DepartmentSmartField extends InputSmartField {
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(name, fieldName, defaultValue, canEdit, required, false);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/department`;
 	}
 
@@ -384,8 +430,9 @@ class PostSmartField extends InputSmartField {
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
+		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(name, fieldName, defaultValue, canEdit, required, false);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/post`;
 	}
 
@@ -406,34 +453,6 @@ class PostSmartField extends InputSmartField {
 		);
 
 		this._tipList.value = resp.data;
-	}
-}
-
-class PaymentTypeSmartField extends EnumSmartField {
-	constructor(
-		name: string,
-		fieldName: string,
-		defaultValue?: any,
-		canEdit: boolean = true,
-	) {
-		super(
-			name,
-			fieldName,
-			["Наличная", "Безналичная", "Требуется такси"],
-			defaultValue,
-			canEdit,
-		);
-	}
-
-	public get rawValue() {
-		switch (this._rawField.value) {
-			case "Наличная":
-				return "cash";
-			case "Безналичная":
-				return "card";
-			case "Требуется такси":
-				return "taxi";
-		}
 	}
 }
 //#endregion

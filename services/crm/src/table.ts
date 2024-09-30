@@ -843,7 +843,7 @@ export class BidTable extends Table<BidSchema> {
 
 	public async create(model: BidSchema): Promise<void> {
 		const data = new FormData();
-		model.documents.map((doc) => data.append("files", doc.file!));
+		model.documents.map((doc) => data.append("files", doc.file!, doc.name));
 
 		const resp = await this._network.withAuthChecking(
 			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),

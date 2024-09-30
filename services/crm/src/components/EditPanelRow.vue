@@ -9,7 +9,15 @@
 				@focusout="(event: FocusEvent) => onFocusOut(event, index)"
 				@focusin="inputFocused[index] = true"
 			>
-				<p class="input-header">{{ field.name }}:</p>
+				<p class="input-header">
+					<span>{{ field.name }}</span>
+					<span class="input-required" v-if="field.required">
+						(обязательно)</span
+					>
+					<span>:</span>
+				</p>
+
+				<!-- Input field -->
 				<border-input
 					v-if="field instanceof InputSmartField"
 					:id="field.name"
@@ -17,12 +25,6 @@
 					class="input"
 					v-model:value="field.formattedField.value"
 				></border-input>
-
-				<choose-files
-					v-if="field instanceof DocumentSmartField"
-					class="files"
-					v-model:files="field.files.value"
-				></choose-files>
 				<Transition>
 					<select-list
 						v-if="
@@ -34,17 +36,27 @@
 						@select="(index: number) => field.applySelection(index)"
 					></select-list>
 				</Transition>
+
+				<!-- Documents field -->
+				<choose-files
+					v-if="field instanceof DocumentSmartField"
+					class="files"
+					v-model:files="field.files.value"
+				></choose-files>
 			</div>
 		</div>
 
-		<purple-button class="button"
+		<purple-button
+			class="button"
+			:disabled="!submitEnabled"
+			:class="{ disabled: !submitEnabled }"
 			><p style="margin: 0">Сохранить</p></purple-button
 		>
 	</form>
 </template>
 <script setup lang="ts">
 import { Editor, InputSmartField, DocumentSmartField } from "@/editor";
-import { ref, type PropType } from "vue";
+import { computed, ref, type PropType } from "vue";
 
 const props = defineProps({
 	editor: {
@@ -53,6 +65,17 @@ const props = defineProps({
 	},
 });
 const inputFocused = ref(props.editor.fields.map((_) => false));
+const submitEnabled = computed((): boolean => {
+	for (let index = 0; index < props.editor.fields.length; index++) {
+		const field = props.editor.fields[index];
+
+		if (field.required && !field.completed.value) {
+			return false;
+		}
+	}
+
+	return true;
+});
 const onFocusOut = (event: FocusEvent, index: number) => {
 	const relatedTarget = event.relatedTarget;
 	if (relatedTarget instanceof HTMLElement) {
@@ -131,11 +154,22 @@ const emit = defineEmits(["submit", "close"]);
 	font-size: 18px;
 	margin: 0;
 }
+.input-required {
+	color: #f5767c;
+	font-family: Stolzl;
+	font-weight: 500;
+	font-size: 14px;
+	margin: 0;
+}
 .button {
 	width: calc(100% - 40px);
 	background-color: #f5ecf6;
 	color: #993ca6;
 	font-size: 17px;
+}
+.disabled {
+	background-color: #d0d0d0;
+	color: #7f7f7f;
 }
 
 .v-enter-active,
