@@ -11,14 +11,25 @@
 			>
 				<p class="input-header">{{ field.name }}:</p>
 				<border-input
+					v-if="field instanceof InputSmartField"
 					:id="field.name"
 					:disabled="!field.canEdit"
 					class="input"
 					v-model:value="field.formattedField.value"
 				></border-input>
+
+				<choose-files
+					v-if="field instanceof DocumentSmartField"
+					class="files"
+					v-model:files="field.files.value"
+				></choose-files>
 				<Transition>
 					<select-list
-						v-if="field.selectList.value.length > 0 && inputFocused[index]"
+						v-if="
+							field instanceof InputSmartField &&
+							field.selectList.value.length > 0 &&
+							inputFocused[index]
+						"
 						:selectList="field.selectList.value"
 						@select="(index: number) => field.applySelection(index)"
 					></select-list>
@@ -32,12 +43,12 @@
 	</form>
 </template>
 <script setup lang="ts">
-import type { ExpenditureEditor } from "@/editor";
+import { Editor, InputSmartField, DocumentSmartField } from "@/editor";
 import { ref, type PropType } from "vue";
 
 const props = defineProps({
 	editor: {
-		type: Object as PropType<ExpenditureEditor>,
+		type: Object as PropType<Editor>,
 		required: true,
 	},
 });
@@ -143,5 +154,17 @@ const emit = defineEmits(["submit", "close"]);
 	position: relative;
 	top: 15px;
 	right: 15px;
+}
+
+.icon {
+	width: 20px;
+	margin-top: 10px;
+	margin-bottom: 0;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+.files {
+	margin-top: 10px;
 }
 </style>

@@ -5,11 +5,24 @@ import { useNetworkStore } from "./store/network";
 
 class SmartField {
 	protected _rawField: Ref<any> = ref();
+
+	constructor(
+		public name: string,
+		public fieldName: string,
+		public readonly canEdit: boolean = true,
+	) {}
+
+	public get rawValue() {
+		return this._rawField.value;
+	}
+}
+
+export class InputSmartField extends SmartField {
 	protected _tipList: Ref<Array<any>> = ref([]);
-	private _delaySetter: number = setTimeout(() => {}, 0);
 	protected _stringifyValue: Ref<string | undefined> = ref(undefined);
-	protected _network = useNetworkStore();
+	private _delaySetter: number = setTimeout(() => {}, 0);
 	protected readonly _delay: number = 0;
+	protected _network = useNetworkStore();
 
 	constructor(
 		public name: string,
@@ -17,6 +30,7 @@ class SmartField {
 		defaultValue?: any,
 		public readonly canEdit: boolean = true,
 	) {
+		super(name, fieldName, canEdit);
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
 		}
@@ -52,10 +66,6 @@ class SmartField {
 		},
 	});
 
-	public get rawValue() {
-		return this._rawField.value;
-	}
-
 	public selectList = computed(() => {
 		return this._tipList.value.map((value) => this.tipFormatter(value));
 	});
@@ -71,7 +81,24 @@ class SmartField {
 	}
 }
 
-class Editor {
+export class DocumentSmartField extends SmartField {
+	protected _rawField: Ref<Array<File>> = ref([]);
+
+	public files: Ref<Array<File>> = computed({
+		get: () => {
+			return this._rawField.value;
+		},
+		set: (files) => {
+			this._rawField.value = files;
+		},
+	});
+
+	public get rawValue(): Array<Blob> {
+		return this._rawField.value as Array<Blob>;
+	}
+}
+
+export class Editor {
 	public fields: Array<SmartField> = [];
 	protected _network = useNetworkStore();
 
@@ -90,8 +117,8 @@ export class ExpenditureEditor extends Editor {
 		super();
 
 		this.fields = [
-			new SmartField("Статья", "name", _instance?.name),
-			new SmartField("Раздел", "chapter", _instance?.chapter),
+			new InputSmartField("Статья", "name", _instance?.name),
+			new InputSmartField("Раздел", "chapter", _instance?.chapter),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
 			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
 			new WorkerSmartField(
@@ -106,7 +133,7 @@ export class BudgetEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
 
-		const chapterField = new SmartField(
+		const chapterField = new InputSmartField(
 			"Раздел",
 			"chapter",
 			_instance?.expenditure.chapter,
@@ -127,7 +154,7 @@ export class BudgetEditor extends Editor {
 				"department",
 				_instance?.department,
 			),
-			new SmartField("Лимит", "limit", _instance?.limit),
+			new InputSmartField("Лимит", "limit", _instance?.limit),
 		];
 	}
 }
@@ -143,24 +170,39 @@ export class WorkTimeEditor extends Editor {
 				_instance?.department,
 			),
 			new PostSmartField("Должность", "post", _instance?.post),
-			new SmartField("Начало смены", "work_begin", _instance?.work_begin),
-			new SmartField("Конец смены", "work_end", _instance?.work_end),
-			new SmartField("День", "day", _instance?.day),
-			new SmartField(
+			new InputSmartField("Начало смены", "work_begin", _instance?.work_begin),
+			new InputSmartField("Конец смены", "work_end", _instance?.work_end),
+			new InputSmartField("День", "day", _instance?.day),
+			new InputSmartField(
 				"Длительность работы",
 				"work_duration",
 				_instance?.work_duration,
 				false,
 			),
-			new SmartField("Оценка", "rating", _instance?.rating),
-			new SmartField("Штраф", "fine", _instance?.fine),
+			new InputSmartField("Оценка", "rating", _instance?.rating),
+			new InputSmartField("Штраф", "fine", _instance?.fine),
+		];
+	}
+}
+export class BidEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+
+		this.fields = [
+			new InputSmartField("Cумма", "amount"),
+			new PaymentTypeSmartField("Тип оплаты", "payment_type"),
+			new DepartmentSmartField("Производство", "department"),
+			new WorkerSmartField("Работник", "worker"),
+			new InputSmartField("Цель", "purpose"),
+			new DocumentSmartField("Документы", "documents"),
+			new InputSmartField("Комментарий", "comment"),
 		];
 	}
 }
 //#endregion
 
 //#region Panels smart Fields
-class WorkerSmartField extends SmartField {
+class WorkerSmartField extends InputSmartField {
 	private _endpoint: string = "";
 	protected readonly _delay: number = 200;
 
@@ -194,7 +236,7 @@ class WorkerSmartField extends SmartField {
 	}
 }
 
-class ExpenditureSmartField extends SmartField {
+class ExpenditureSmartField extends InputSmartField {
 	private _endpoint: string = "";
 	protected readonly _delay: number = 200;
 
@@ -203,7 +245,7 @@ class ExpenditureSmartField extends SmartField {
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
-		protected chapterField?: SmartField,
+		protected chapterField?: InputSmartField,
 	) {
 		super(name, fieldName, defaultValue, canEdit);
 		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
@@ -234,7 +276,7 @@ class ExpenditureSmartField extends SmartField {
 	}
 }
 
-class DepartmentSmartField extends SmartField {
+class DepartmentSmartField extends InputSmartField {
 	private _endpoint: string = "";
 	protected readonly _delay: number = 200;
 
@@ -268,7 +310,7 @@ class DepartmentSmartField extends SmartField {
 	}
 }
 
-class PostSmartField extends SmartField {
+class PostSmartField extends InputSmartField {
 	private _endpoint: string = "";
 	protected readonly _delay: number = 200;
 
@@ -301,4 +343,33 @@ class PostSmartField extends SmartField {
 		this._tipList.value = resp.data;
 	}
 }
+
+class PaymentTypeSmartField extends InputSmartField {
+	protected readonly _delay: number = 50;
+
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
+	}
+
+	protected formatter(value: any): string {
+		return value.name;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length < 4) {
+			this._tipList.value = [];
+			return;
+		}
+
+		this._tipList.value = ["Наличная", "Безналичная", "Требуется такси"];
+	}
+}
+
 //#endregion
