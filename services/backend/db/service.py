@@ -1046,12 +1046,11 @@ async def create_bid(
         last_bid_id = 0
 
     documents = []
-    for file in files:
+    for index, file in enumerate(files):
         suffix = Path(file.filename).suffix
-        filename = f"document_bid_{last_bid_id + 1}{suffix}"
+        filename = f"document_bid_{last_bid_id + 1}_{index + 1}{suffix}"
         file.filename = filename
         documents.append(DocumentSchema(document=file))
-
     bid = BidSchema(
         amount=amount,
         payment_type=payment_type,
@@ -1086,9 +1085,9 @@ async def create_bid(
 def add_documents_to_bid(id, files: list[UploadFile]):
     """Adds `files` to bid by bid `id`"""
     documents = []
-    for file in files:
+    for index, file in enumerate(files):
         suffix = Path(file.filename).suffix
-        filename = f"document_bid_{id}{suffix}"
+        filename = f"document_bid_{id}_{index + 1}{suffix}"
         file.filename = filename
         documents.append(DocumentSchema(document=file))
     orm.add_documents_to_bid(id, documents)
