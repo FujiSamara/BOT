@@ -1,10 +1,10 @@
-from fastapi import Response, Security
+from fastapi import Response, Security, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
 from db import service
-from db.schemas import BidRecordSchema, QuerySchema, TalbeInfoSchema
+from db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from bot.handlers.bids.utils import get_current_coordinator_field
 
 from api.auth import User, get_current_user
@@ -37,7 +37,7 @@ async def get_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     return service.get_bid_record_at_page(page, records_per_page, query)
 
 
@@ -88,6 +88,23 @@ async def delete_bid(
     service.remove_bid(id)
 
 
+@router.post("/")
+async def create_my_bid(
+    bid: BidInSchema,
+    _: User = Security(get_current_user, scopes=["authenticated"]),
+) -> BidOutSchema:
+    return await service.create_bid_by_in_schema(bid)
+
+
+@router.post("/{id}")
+async def add_document(
+    id: int,
+    files: list[UploadFile],
+    _: User = Security(get_current_user, scopes=["authenticated"]),
+):
+    service.add_documents_to_bid(id, files)
+
+
 # endregion
 
 
@@ -122,7 +139,7 @@ async def get_fac_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     service.apply_bid_status_filter(query, "fac_state", ApprovalStatus.pending_approval)
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "fac"
@@ -197,7 +214,7 @@ async def get_cc_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     service.apply_bid_status_filter(query, "cc_state", ApprovalStatus.pending_approval)
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "cc"
@@ -276,7 +293,7 @@ async def get_cc_supervisor_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     service.apply_bid_status_filter(
         query, "cc_supervisor_state", ApprovalStatus.pending_approval
     )
@@ -354,7 +371,7 @@ async def get_my_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["authenticated"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     service.apply_bid_creator_filter(query, user.username)
     return service.get_bid_record_at_page(page, records_per_page, query)
 
@@ -409,7 +426,7 @@ async def get_archive_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["authenticated"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     service.apply_bid_creator_filter(query, user.username)
     service.apply_bid_archive_filter(query)
     return service.get_bid_record_at_page(page, records_per_page, query)

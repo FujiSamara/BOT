@@ -333,8 +333,8 @@ class BudgetRecordWithChapter(BudgetRecordSchema):
     chapter: str
 
 
-class BidRecordSchema(BaseSchema):
-    """Shortened version of `BidSchema` for crm api"""
+class BidOutSchema(BaseSchema):
+    """Out version of `BidSchema` for crm api"""
 
     amount: float
     payment_type: str
@@ -361,10 +361,27 @@ class BidRecordSchema(BaseSchema):
                 if isinstance(doc, UploadFile):
                     if hasattr(doc.file, "name"):
                         result.append(service.get_file_data(doc.file.name, "api"))
-                else:
-                    return val
             return result
         return val
+
+
+class BidInSchema(BaseModel):
+    """In version of `BidSchema` for crm api"""
+
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    amount: float
+    payment_type: str
+    department: DepartmentSchema
+    worker: WorkerSchema
+    purpose: str
+    comment: Optional[str] = ""
+    expenditure: ExpenditureSchema
+    need_edm: Optional[bool]
 
 
 class TalbeInfoSchema(BaseModel):

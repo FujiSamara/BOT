@@ -108,7 +108,7 @@ export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
 	private _loadedRows: Ref<Array<T>> = ref([]);
-	private _network = useNetworkStore();
+	protected _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
 	private _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
@@ -640,7 +640,7 @@ export class Table<T extends BaseSchema> {
 		this._network.saveFile(filename, resp.data);
 	}
 	// Endpoints.
-	private _endpoint: string = "";
+	protected _endpoint: string = "";
 	protected _getEndpoint: string = "";
 	protected _infoEndpoint: string = "";
 	protected _createEndpoint: string = "";
@@ -840,6 +840,25 @@ export class BidTable extends Table<BidSchema> {
 				return "#ffffff";
 		}
 	}
+
+	public async create(model: BidSchema): Promise<void> {
+		const data = new FormData();
+		model.documents.map((doc) => data.append("files", doc.file!));
+
+		const resp = await this._network.withAuthChecking(
+			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
+		);
+
+		await this._network.withAuthChecking(
+			axios.post(`${this._endpoint}/${resp.data.id}`, data, {
+				headers: {
+					"Content-Type": `multipart/form-data`,
+				},
+			}),
+		);
+
+		this.forceRefresh();
+	}
 }
 
 export class FACBidTable extends BidTable {
@@ -884,8 +903,7 @@ export class MyBidTable extends BidTable {
 			getEndpoint: "/my",
 			infoEndpoint: "/my",
 			exportEndpoint: "/my",
-			approveEndpoint: "/my",
-			rejectEndpoint: "/my",
+			createEndpoint: "",
 		});
 	}
 }

@@ -39,7 +39,7 @@ async def get_expenditures(
 
 @router.get("/find")
 async def find_expenditures(
-    record: str, _: User = Security(get_current_user, scopes=["crm_expenditure"])
+    record: str, _: User = Security(get_current_user, scopes=["authenticated"])
 ) -> list[ExpenditureSchema]:
     """Finds expenditures by given `record`.
 

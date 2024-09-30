@@ -72,6 +72,7 @@ export interface DepartmentSchema extends BaseSchema {
 export interface DocumentSchema {
 	name: string;
 	href: string;
+	file?: Blob;
 }
 
 export interface BidSchema extends BaseSchema {
@@ -85,6 +86,7 @@ export interface BidSchema extends BaseSchema {
 	documents: Array<DocumentSchema>;
 	status: string;
 	comment: string;
+	need_edm: boolean;
 }
 
 export interface PostSchema extends BaseSchema {

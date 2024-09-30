@@ -38,6 +38,7 @@ from db.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
+    DocumentSchema,
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
@@ -193,7 +194,15 @@ def get_last_worker_bid_id() -> int:
         return s.query(func.max(WorkerBid.id)).first()[0]
 
 
-def add_bid(bid: BidSchema):
+def add_documents_to_bid(id, documents: DocumentSchema):
+    with session.begin() as s:
+        bid = s.query(Bid).filter(Bid.id == id).first()
+
+        for document in documents:
+            s.add(BidDocument(bid=bid, document=document.document))
+
+
+def add_bid(bid: BidSchema) -> BidSchema:
     """
     Adds `bid` to database.
     """
@@ -231,6 +240,12 @@ def add_bid(bid: BidSchema):
 
         for document in bid.documents:
             s.add(BidDocument(bid=bid_model, document=document.document))
+        s.flush()
+        s.refresh(bid_model)
+
+        bid.id = bid_model.id
+
+        return bid
 
 
 def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:

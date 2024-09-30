@@ -2,6 +2,7 @@ import axios from "axios";
 import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
 import { useNetworkStore } from "./store/network";
+import { DocumentSchema } from "./types";
 
 class SmartField {
 	protected _rawField: Ref<any> = ref();
@@ -82,19 +83,81 @@ export class InputSmartField extends SmartField {
 }
 
 export class DocumentSmartField extends SmartField {
-	protected _rawField: Ref<Array<File>> = ref([]);
+	protected _rawField: Ref<Array<DocumentSchema>> = ref([]);
+	public files: Ref<Array<File>> = ref([]);
 
-	public files: Ref<Array<File>> = computed({
-		get: () => {
-			return this._rawField.value;
-		},
-		set: (files) => {
-			this._rawField.value = files;
-		},
-	});
+	constructor(
+		public name: string,
+		public fieldName: string,
+		public readonly canEdit: boolean = true,
+	) {
+		super(name, fieldName, canEdit);
 
-	public get rawValue(): Array<Blob> {
-		return this._rawField.value as Array<Blob>;
+		watch(this.files.value, async () => {
+			const files = [];
+			for (let index = 0; index < this.files.value.length; index++) {
+				const doc = this.files.value[index];
+				const file = new Blob([await doc.arrayBuffer()], {
+					type: "application/octet-stream",
+				});
+				files.push(file);
+			}
+			this._rawField.value = files.map((el) => ({
+				name: "",
+				href: "",
+				file: el,
+			}));
+		});
+	}
+
+	public get rawValue(): Array<DocumentSchema> {
+		return this._rawField.value;
+	}
+}
+
+class EnumSmartField extends InputSmartField {
+	protected readonly _delay: number = 50;
+
+	constructor(
+		name: string,
+		fieldName: string,
+		protected list: Array<string>,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, defaultValue, canEdit);
+	}
+
+	protected formatter(value: any): string {
+		return value;
+	}
+	protected tipFormatter(value: any): string {
+		return this.formatter(value);
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue.length === 0) {
+			this._tipList.value = [];
+			return;
+		}
+
+		this._tipList.value = this.list.filter(
+			(val) => val.toLowerCase().indexOf(newValue.toLowerCase()) !== -1,
+		);
+	}
+}
+
+class BoolSmartField extends EnumSmartField {
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+	) {
+		super(name, fieldName, ["Да", "Нет"], defaultValue, canEdit);
+	}
+
+	public get rawValue(): boolean {
+		return this._rawField.value === "Да";
 	}
 }
 
@@ -191,6 +254,8 @@ export class BidEditor extends Editor {
 		this.fields = [
 			new InputSmartField("Cумма", "amount"),
 			new PaymentTypeSmartField("Тип оплаты", "payment_type"),
+			new ExpenditureSmartField("Статья", "expenditure"),
+			new BoolSmartField("Счет в ЭДО", "need_edm", "Нет"),
 			new DepartmentSmartField("Производство", "department"),
 			new WorkerSmartField("Работник", "worker"),
 			new InputSmartField("Цель", "purpose"),
@@ -344,32 +409,31 @@ class PostSmartField extends InputSmartField {
 	}
 }
 
-class PaymentTypeSmartField extends InputSmartField {
-	protected readonly _delay: number = 50;
-
+class PaymentTypeSmartField extends EnumSmartField {
 	constructor(
 		name: string,
 		fieldName: string,
 		defaultValue?: any,
 		canEdit: boolean = true,
 	) {
-		super(name, fieldName, defaultValue, canEdit);
+		super(
+			name,
+			fieldName,
+			["Наличная", "Безналичная", "Требуется такси"],
+			defaultValue,
+			canEdit,
+		);
 	}
 
-	protected formatter(value: any): string {
-		return value.name;
-	}
-	protected tipFormatter(value: any): string {
-		return this.formatter(value);
-	}
-	protected async setter(newValue: any): Promise<void> {
-		if (newValue.length < 4) {
-			this._tipList.value = [];
-			return;
+	public get rawValue() {
+		switch (this._rawField.value) {
+			case "Наличная":
+				return "cash";
+			case "Безналичная":
+				return "card";
+			case "Требуется такси":
+				return "taxi";
 		}
-
-		this._tipList.value = ["Наличная", "Безналичная", "Требуется такси"];
 	}
 }
-
 //#endregion

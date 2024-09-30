@@ -21,7 +21,7 @@ from db.models import (
     BidIT,
 )
 from db.schemas import (
-    BidRecordSchema,
+    BidOutSchema,
     BidSchema,
     BudgetRecordSchema,
     ExpenditureSchema,
@@ -41,6 +41,7 @@ from db.schemas import (
     aliases,
     AccountLoginsSchema,
     MaterialValuesSchema,
+    BidInSchema,
 )
 import logging
 from datetime import datetime, timedelta
@@ -933,15 +934,63 @@ def get_bid_record_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     """Return bid records with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
     return [
-        bid_to_bid_record(bid)
+        bid_to_out_bid(bid)
         for bid in orm.get_models(Bid, BidSchema, page, records_per_page, query_schema)
     ]
+
+
+async def create_bid_by_in_schema(bid_in: BidInSchema):
+    """
+    Creates an bid wrapped in `BidSchema` by `BidInSchema` and adds it to database.
+    Returns created bid in bd as `BidOutSchema`
+    """
+    bid = BidSchema(
+        amount=bid_in.amount,
+        payment_type=bid_in.payment_type,
+        department=bid_in.department,
+        expenditure=bid_in.expenditure,
+        worker=bid_in.worker,
+        purpose=bid_in.purpose,
+        create_date=datetime.now(),
+        close_date=None,
+        comment=bid_in.comment,
+        denying_reason=None,
+        documents=[],
+        fac_state=ApprovalStatus.pending_approval,
+        cc_state=ApprovalStatus.pending,
+        cc_supervisor_state=ApprovalStatus.pending,
+        kru_state=ApprovalStatus.pending,
+        owner_state=ApprovalStatus.skipped
+        if int(bid_in.amount) <= 30000
+        else ApprovalStatus.pending,
+        accountant_card_state=ApprovalStatus.pending
+        if bid_in.payment_type == "card"
+        else ApprovalStatus.skipped,
+        accountant_cash_state=ApprovalStatus.skipped
+        if bid_in.payment_type == "card"
+        else ApprovalStatus.pending,
+        teller_card_state=ApprovalStatus.pending
+        if bid_in.payment_type == "card"
+        else ApprovalStatus.skipped,
+        teller_cash_state=ApprovalStatus.skipped
+        if bid_in.payment_type == "card"
+        else ApprovalStatus.pending,
+        need_edm=bid_in.need_edm,
+    )
+
+    skip_repeating_bid_state(bid, "worker_state")
+
+    bid = orm.add_bid(bid)
+
+    await notify_next_coordinator(bid)
+
+    return bid_to_out_bid(bid)
 
 
 async def create_bid(
@@ -1032,6 +1081,17 @@ async def create_bid(
     orm.add_bid(bid)
 
     await notify_next_coordinator(bid)
+
+
+def add_documents_to_bid(id, files: list[UploadFile]):
+    """Adds `files` to bid by bid `id`"""
+    documents = []
+    for file in files:
+        suffix = Path(file.filename).suffix
+        filename = f"document_bid_{id}{suffix}"
+        file.filename = filename
+        documents.append(DocumentSchema(document=file))
+    orm.add_documents_to_bid(id, documents)
 
 
 def remove_bid(id: int) -> None:
@@ -1270,8 +1330,8 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
             if expenditure.cc.id == bid.worker.id:
                 bid.cc_state = (
                     ApprovalStatus.skipped
-                    if bid.cc != ApprovalStatus.approved
-                    and bid.cc != ApprovalStatus.denied
+                    if bid.cc_state != ApprovalStatus.approved
+                    and bid.cc_state != ApprovalStatus.denied
                     else bid.cc_state
                 )
             if expenditure.cc_supervisor.id == bid.worker.id:
@@ -1336,11 +1396,11 @@ def update_bid(bid: BidSchema):
     orm.update_bid(bid)
 
 
-def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
+def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:
     """Converts `BidSchema` to `BidRecordSchema`"""
     from bot.handlers.bids.utils import get_bid_state_info
 
-    return BidRecordSchema(
+    return BidOutSchema(
         id=bid.id,
         amount=bid.amount,
         payment_type=bid.payment_type,
@@ -1358,9 +1418,9 @@ def bid_to_bid_record(bid: BidSchema) -> BidRecordSchema:
     )
 
 
-def get_bid_records() -> list[BidRecordSchema]:
+def get_bid_records() -> list[BidOutSchema]:
     """Returns all bid records in database."""
-    return [bid_to_bid_record(bid) for bid in orm.get_bids()]
+    return [bid_to_out_bid(bid) for bid in orm.get_bids()]
 
 
 def get_coordinator_bid_records_at_page(
@@ -1369,7 +1429,7 @@ def get_coordinator_bid_records_at_page(
     query_schema: QuerySchema,
     phone: int,
     coordinator: str,
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     """Returns all coordinator bid records in database."""
     query_schema.filter_query.append(
         FilterSchema(
