@@ -24,7 +24,7 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<div v-show="editingElement" class="edit-panel-element-wrapper">
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelRow
 				class="edit-page"
 				:editor="editor"
