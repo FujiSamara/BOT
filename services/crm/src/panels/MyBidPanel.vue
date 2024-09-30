@@ -22,13 +22,16 @@
 			</PanelTools>
 		</div>
 		<PanelTable
-			v-show="!elementViewing"
+			v-show="!elementViewing && !editingElement"
 			:table="table"
 			:can-delete="true"
+			:can-create="true"
 			:can-approve="false"
 			:can-reject="false"
 			@click="onRowClicked"
+			@create="onCreateClicked"
 		></PanelTable>
+
 		<ViewPanelRow
 			v-if="elementViewing"
 			@close="elementViewing = false"
@@ -39,6 +42,14 @@
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
+			<EditPanelRow
+				class="edit-page"
+				:editor="editor"
+				@submit="onSubmit"
+				@close="editingElement = false"
+			></EditPanelRow>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -53,6 +64,8 @@ import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { MyBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
+import EditPanelRow from "@/components/EditPanelRow.vue";
+import { BidEditor } from "@/editor";
 
 const props = defineProps({
 	id: {
@@ -64,8 +77,6 @@ const props = defineProps({
 const emit = defineEmits<{
 	(e: "notify", count: number, id: number): void;
 }>();
-
-const editingElement = ref(false);
 
 const table = new MyBidTable();
 
@@ -79,6 +90,20 @@ const viewingIndex: Ref<number> = ref(-1);
 
 const departmentSearchString = ref("");
 const searchString = ref("");
+
+// Edit page
+const editingElement = ref(false);
+const editor: ShallowRef<BidEditor> = shallowRef(new BidEditor());
+const editingElementKey: Ref<number> = ref(-1);
+
+const onSubmit = async () => {
+	if (editingElementKey.value !== -1) {
+		await table.update(editor.value.toInstanse(), editingElementKey.value);
+	} else {
+		await table.create(editor.value.toInstanse());
+	}
+	editingElement.value = false;
+};
 
 watch([departmentSearchString, searchString], () => {
 	const result = [];
@@ -132,6 +157,11 @@ const onRowClicked = (rowKey: number) => {
 	viewer.value = new BidViewer(table.getModel(rowKey));
 	elementViewing.value = true;
 	viewingIndex.value = rowKey;
+};
+const onCreateClicked = () => {
+	editor.value = new BidEditor();
+	editingElementKey.value = -1;
+	editingElement.value = true;
 };
 onMounted(() => table.startUpdatingLoop());
 </script>
