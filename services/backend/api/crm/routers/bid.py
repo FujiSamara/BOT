@@ -83,7 +83,7 @@ async def export_bids(
 
 @router.delete("/{id}")
 async def delete_bid(
-    id: int, _: User = Security(get_current_user, scopes=["crm_bid"])
+    id: int, _: User = Security(get_current_user, scopes=["authenticated"])
 ) -> None:
     service.remove_bid(id)
 
