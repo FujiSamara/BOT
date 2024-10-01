@@ -19,7 +19,6 @@
 	max-width: 80%;
 	min-width: 0;
 	flex-shrink: 0;
-	flex-grow: 1;
 }
 
 .tools-wrapper::-webkit-scrollbar {
