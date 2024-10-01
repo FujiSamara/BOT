@@ -91,9 +91,11 @@ interface DateSchema {
 	end: Date;
 }
 
-interface FilterSchema {
+export interface FilterSchema {
 	column: string;
-	value: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
 }
 
 interface QuerySchema {
@@ -107,7 +109,7 @@ export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
 	private _loadedRows: Ref<Array<T>> = ref([]);
-	private _network = useNetworkStore();
+	protected _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
 	private _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
@@ -148,13 +150,11 @@ export class Table<T extends BaseSchema> {
 		this._exportEndpoint =
 			options && options.exportEndpoint ? options.exportEndpoint : "";
 		//#endregion
-
-		this.startUpdatingLoop();
 	}
 
 	//#region Rows
 	//#region Refreshing
-	private async startUpdatingLoop() {
+	public async startUpdatingLoop() {
 		let skipLoop = false;
 
 		watch(
@@ -197,19 +197,15 @@ export class Table<T extends BaseSchema> {
 			axios.post(this._infoQuery.value, this._completedQuery.value),
 		);
 
-		if (
-			this.rowCount.value !== resp.data.all_record_count &&
-			this.rowCount.value !== 0
-		) {
-			await this.handleNewRows(this.rowCount.value, resp.data.all_record_count);
-		}
-
 		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
 			if (this._loadedRows.value.length !== this._rowsPerPage) {
 				this.isLoading.value = true;
 			}
 
-			await this.refreshRows();
+			await this.refreshRows(
+				this.rowCount.value !== resp.data.all_record_count &&
+					this.rowCount.value !== 0,
+			);
 			this.isLoading.value = false;
 		}
 
@@ -217,42 +213,15 @@ export class Table<T extends BaseSchema> {
 		this.rowCountWithFilters.value = resp.data.record_count;
 		this.rowCount.value = resp.data.all_record_count;
 	}
-	/** Stores new row id's. */
-	private async handleNewRows(oldCount: number, newCount: number) {
-		const difference = newCount - oldCount;
-		if (difference < 0) {
-			return;
-		}
-		let rowsPerPage;
-		let page;
-
-		if (newCount - difference >= difference) {
-			rowsPerPage = newCount - difference;
-			page = 2;
-		} else {
-			rowsPerPage = newCount;
-			page = 1;
-		}
-
-		const link = `${this._endpoint}${this._getEndpoint}/page/${page}?records_per_page=${rowsPerPage}`;
-
-		const resp = await this._network.withAuthChecking(axios.post(link, {}));
-
-		const rawRows: Array<T> = resp.data;
-		const newRows = rawRows.slice(-newCount, rawRows.length);
-		for (const row of newRows) {
-			this._newIds.value.push(row.id);
-		}
-	}
 	/** Updates rows. */
-	private async refreshRows() {
+	private async refreshRows(findNew: boolean = false) {
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._rowsQuery.value, this._completedQuery.value),
 		);
 
-		this._loadedRows.value = resp.data;
+		const rows: Array<T> = resp.data;
 
-		const rowsLength = this._loadedRows.value.length;
+		const rowsLength = rows.length;
 
 		if (rowsLength === 0) {
 			this.currentPage.value = 1;
@@ -264,14 +233,29 @@ export class Table<T extends BaseSchema> {
 		);
 		this._checked.value = Array<boolean>(rowsLength).fill(false, 0, rowsLength);
 
-		for (let index = 0; index < this._loadedRows.value.length; index++) {
-			const row = this._loadedRows.value[index];
-			if (
-				this._newIds.value.find((id: number) => id === row.id) !== undefined
-			) {
-				this._elementHighlighted(index, true);
+		if (findNew) {
+			for (let index = 0; index < rows.length; index++) {
+				const model = rows[index];
+
+				if (
+					this._loadedRows.value.find((el) => el.id === model.id) === undefined
+				) {
+					if (this._newIds.value.findIndex((el) => el === model.id) === -1) {
+						this._newIds.value.push(model.id);
+					}
+				}
 			}
 		}
+
+		for (let index = 0; index < rows.length; index++) {
+			const model = rows[index];
+
+			if (this._newIds.value.findIndex((el) => el === model.id) !== -1) {
+				this._highlighted.value[index] = true;
+			}
+		}
+
+		this._loadedRows.value = rows;
 	}
 	/** Forces updating rows. */
 	protected forceRefresh() {
@@ -291,7 +275,7 @@ export class Table<T extends BaseSchema> {
 		return this.byDate.value;
 	});
 	private _filteredQuery = computed(() => {
-		return [];
+		return this.filterQuery.value;
 	});
 	private _orderedQuery = computed((): OrderBySchema => {
 		return {
@@ -322,15 +306,10 @@ export class Table<T extends BaseSchema> {
 		for (const fieldName in this._nonIgnoredRows.value[0]) {
 			const alias = this.getAlias(fieldName);
 
-			const index = this._columsOrder.get(fieldName);
-
-			if (index && result.length > index) {
-				result.splice(index, 0, alias);
-			} else {
-				result.push(alias);
-			}
+			result.push(alias);
 		}
-		return result;
+
+		return this.sort(result, Object.keys(this._nonIgnoredRows.value[0]));
 	}
 
 	//#region Generating rows
@@ -368,16 +347,13 @@ export class Table<T extends BaseSchema> {
 
 				const formattedField: Cell = formatter(field);
 
-				const index = this._columsOrder.get(fieldName);
-
-				if (index && columns.length > index) {
-					columns.splice(index, 0, formattedField);
-				} else {
-					columns.push(formattedField);
-				}
+				columns.push(formattedField);
 			}
 
-			result.rows.push({ id: model.id, columns: columns });
+			result.rows.push({
+				id: model.id,
+				columns: this.sort(columns, Object.keys(model)),
+			});
 		}
 
 		return result;
@@ -452,7 +428,7 @@ export class Table<T extends BaseSchema> {
 	public highlighted = computed(() => {
 		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this.rows.value.rows.length; index++) {
+		for (let index = 0; index < this._highlighted.value.length; index++) {
 			result.push(
 				new TableElementObserver(
 					this._highlighted.value[index],
@@ -471,7 +447,7 @@ export class Table<T extends BaseSchema> {
 			const model = this._loadedRows.value[index];
 
 			const color = this._highlighted.value[index]
-				? "fdf7fd"
+				? "#fdf7fd"
 				: this.color(model);
 			result.push(color);
 		}
@@ -487,6 +463,25 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Auxiliary
+	/** Sorts elements by **this._columsOrder**. Returns sorted elements. */
+	private sort(elements: Array<any>, fieldNames: Array<any>): Array<any> {
+		const length = this._columsOrder.size;
+
+		const result: Array<any> = new Array<any>(length);
+
+		for (let index = 0; index < fieldNames.length; index++) {
+			const fieldName = fieldNames[index];
+			const element = elements[index];
+
+			const order = this._columsOrder.get(fieldName);
+			if (order !== undefined) {
+				result[order] = element;
+			} else {
+				result.push(element);
+			}
+		}
+		return result;
+	}
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page. */
@@ -540,6 +535,8 @@ export class Table<T extends BaseSchema> {
 	public desc: Ref<boolean> = ref(true);
 	/** Search query. */
 	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
+	/** Filter query. */
+	public filterQuery: Ref<Array<FilterSchema>> = ref([]);
 	/** Date query. */
 	public byDate: Ref<DateSchema | undefined> = ref();
 	/** Order of column in table. */
@@ -655,7 +652,7 @@ export class Table<T extends BaseSchema> {
 		this._network.saveFile(filename, resp.data);
 	}
 	// Endpoints.
-	private _endpoint: string = "";
+	protected _endpoint: string = "";
 	protected _getEndpoint: string = "";
 	protected _infoEndpoint: string = "";
 	protected _createEndpoint: string = "";
@@ -672,7 +669,7 @@ export class Table<T extends BaseSchema> {
 			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
 		);
 
-		await this.refreshInfo();
+		this.forceRefresh();
 	}
 	public async update(model: T, index: number): Promise<void> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
@@ -816,7 +813,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
-		this._aliases.set("department", "Произовдство");
+		this._aliases.set("department", "Производство");
 		this._aliases.set("worker", "Работник");
 		this._aliases.set("purpose", "Цель");
 		this._aliases.set("create_date", "Дата создания");
@@ -829,19 +826,19 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("need_edm", "Счет в ЭДО");
 
 		this._columsOrder.set("id", 0);
-		this._columsOrder.set("create_date", 1);
-		this._columsOrder.set("close_date", 2);
-		this._columsOrder.set("worker", 3);
-		this._columsOrder.set("amount", 4);
-		this._columsOrder.set("documents", 5);
-		this._columsOrder.set("payment_type", 6);
-		this._columsOrder.set("department", 7);
-		this._columsOrder.set("purpose", 8);
-		this._columsOrder.set("status", 9);
-		this._columsOrder.set("denying_reason", 10);
-		this._columsOrder.set("comment", 11);
-		this._columsOrder.set("expenditure", 12);
-		this._columsOrder.set("need_edm", 13);
+		this._columsOrder.set("worker", 1);
+		this._columsOrder.set("expenditure", 2);
+		this._columsOrder.set("amount", 3);
+		this._columsOrder.set("department", 4);
+		this._columsOrder.set("purpose", 5);
+		this._columsOrder.set("documents", 6);
+		this._columsOrder.set("status", 7);
+		this._columsOrder.set("comment", 8);
+		this._columsOrder.set("payment_type", 9);
+		this._columsOrder.set("need_edm", 10);
+		this._columsOrder.set("denying_reason", 11);
+		this._columsOrder.set("create_date", 12);
+		this._columsOrder.set("close_date", 13);
 	}
 
 	protected color(model: BidSchema): string {
@@ -854,6 +851,25 @@ export class BidTable extends Table<BidSchema> {
 			default:
 				return "#ffffff";
 		}
+	}
+
+	public async create(model: BidSchema): Promise<void> {
+		const data = new FormData();
+		model.documents.map((doc) => data.append("files", doc.file!, doc.name));
+
+		const resp = await this._network.withAuthChecking(
+			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
+		);
+
+		await this._network.withAuthChecking(
+			axios.post(`${this._endpoint}/${resp.data.id}`, data, {
+				headers: {
+					"Content-Type": `multipart/form-data`,
+				},
+			}),
+		);
+
+		this.forceRefresh();
 	}
 }
 
@@ -889,6 +905,29 @@ export class CCSupervisorBidTable extends BidTable {
 			exportEndpoint: "/cc_supervisor",
 			approveEndpoint: "/cc_supervisor",
 			rejectEndpoint: "/cc_supervisor",
+		});
+	}
+}
+
+export class MyBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/my",
+			infoEndpoint: "/my",
+			exportEndpoint: "/my",
+			createEndpoint: "",
+		});
+	}
+}
+
+export class ArchiveBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/archive",
+			infoEndpoint: "/archive",
+			exportEndpoint: "/archive",
+			approveEndpoint: "/archive",
+			rejectEndpoint: "/archive",
 		});
 	}
 }

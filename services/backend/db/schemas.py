@@ -1,4 +1,4 @@
-from typing import Optional, Type
+from typing import Any, Optional, Type
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, field_validator
 import datetime
@@ -6,7 +6,6 @@ from pathlib import Path
 from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
-import logging
 
 
 # region Shemas for models
@@ -94,9 +93,6 @@ class DocumentSchema(BaseModel):
             if Path(val.path).is_file():
                 return UploadFile(val.open(), filename=val.name)
             else:
-                logging.getLogger("uvicorn.error").warning(
-                    f"File with path: {val.path} not exist"
-                )
                 return UploadFile(BytesIO(b"File not exist"), filename=val.name)
         return val
 
@@ -337,8 +333,8 @@ class BudgetRecordWithChapter(BudgetRecordSchema):
     chapter: str
 
 
-class BidRecordSchema(BaseSchema):
-    """Shortened version of `BidSchema` for crm api"""
+class BidOutSchema(BaseSchema):
+    """Out version of `BidSchema` for crm api"""
 
     amount: float
     payment_type: str
@@ -365,10 +361,27 @@ class BidRecordSchema(BaseSchema):
                 if isinstance(doc, UploadFile):
                     if hasattr(doc.file, "name"):
                         result.append(service.get_file_data(doc.file.name, "api"))
-                else:
-                    return val
             return result
         return val
+
+
+class BidInSchema(BaseModel):
+    """In version of `BidSchema` for crm api"""
+
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    amount: float
+    payment_type: str
+    department: DepartmentSchema
+    worker: Optional[WorkerSchema] = None
+    purpose: str
+    comment: Optional[str] = ""
+    expenditure: ExpenditureSchema
+    need_edm: Optional[bool]
 
 
 class TalbeInfoSchema(BaseModel):
@@ -430,10 +443,21 @@ class FilterSchema(BaseModel):
     column: str
     """Column name for search."""
 
-    value: str
-    """Term for search."""
+    value: Any
+    """Term for filtrate."""
 
     dependencies: list["FilterSchema"] = []
+
+    groups: list[int] = []
+
+    """Specifies groups at same level.
+    
+    All elements in one group handles by `or_` statement.
+    
+    All groups handles by `and_` statement.
+
+    - Note: If group not specified then handles node by `and_` statement with another nodes.
+    """
 
 
 class QuerySchema(BaseModel):

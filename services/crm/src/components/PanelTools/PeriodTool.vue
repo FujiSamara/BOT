@@ -1,6 +1,5 @@
 <template>
 	<div class="period-tool-wrapper">
-		<p>Период:</p>
 		<span>с</span>
 		<input
 			type="date"

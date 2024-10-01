@@ -1,7 +1,7 @@
 <template>
 	<div class="bid-content">
 		<div v-if="!editingElement" class="header-content">
-			<h1>Заявки ЦЗ</h1>
+			<h1>Архив заявок</h1>
 			<PanelTools class="top-tools">
 				<BidStatusTool
 					@submit="
@@ -31,19 +31,18 @@
 		<PanelTable
 			v-show="!elementViewing"
 			:table="table"
-			:can-delete="false"
-			:can-approve="true"
-			:can-reject="true"
+			:can-delete="true"
+			:can-approve="false"
+			:can-reject="false"
 			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
 			v-if="elementViewing"
 			@close="elementViewing = false"
-			@approve="onApprove"
-			@reject="onReject"
-			:canApprove="true"
-			:canReject="true"
-			:can-delete="false"
+			@delete="onDelete"
+			:canApprove="false"
+			:canReject="false"
+			:can-delete="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -60,7 +59,7 @@ import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
 
 import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { CCBidTable, FilterSchema } from "@/table";
+import { ArchiveBidTable, FilterSchema } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -76,7 +75,8 @@ const emit = defineEmits<{
 
 const editingElement = ref(false);
 
-const table = new CCBidTable();
+const table = new ArchiveBidTable();
+
 const fromDateString = ref("");
 const toDateString = ref("");
 
@@ -132,12 +132,8 @@ watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
 
-const onApprove = async () => {
-	await table.approve(viewingIndex.value, true);
-	elementViewing.value = false;
-};
-const onReject = async (reason: string) => {
-	await table.reject(viewingIndex.value, true, reason);
+const onDelete = async () => {
+	await table.delete(viewingIndex.value, true);
 	elementViewing.value = false;
 };
 const onRowClicked = (rowKey: number) => {

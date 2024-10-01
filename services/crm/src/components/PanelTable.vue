@@ -385,7 +385,7 @@ th {
 }
 
 .highlighted {
-	background-color: #fdf7fd;
+	background-color: #fdf7fd !important;
 }
 
 .table-tools {

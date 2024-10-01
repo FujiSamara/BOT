@@ -1,10 +1,10 @@
-from fastapi import Response, Security
+from fastapi import Response, Security, UploadFile
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
 from db import service
-from db.schemas import BidRecordSchema, QuerySchema, TalbeInfoSchema
+from db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from bot.handlers.bids.utils import get_current_coordinator_field
 
 from api.auth import User, get_current_user
@@ -37,7 +37,7 @@ async def get_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_current_user, scopes=["crm_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
     return service.get_bid_record_at_page(page, records_per_page, query)
 
 
@@ -83,9 +83,27 @@ async def export_bids(
 
 @router.delete("/{id}")
 async def delete_bid(
-    id: int, _: User = Security(get_current_user, scopes=["crm_bid"])
+    id: int, _: User = Security(get_current_user, scopes=["authenticated"])
 ) -> None:
     service.remove_bid(id)
+
+
+@router.post("/")
+async def create_my_bid(
+    bid: BidInSchema,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> BidOutSchema:
+    bid.worker = service.get_worker_by_phone_number(user.username)
+    return await service.create_bid_by_in_schema(bid)
+
+
+@router.post("/{id}")
+async def add_document(
+    id: int,
+    files: list[UploadFile],
+    _: User = Security(get_current_user, scopes=["authenticated"]),
+):
+    service.add_documents_to_bid(id, files)
 
 
 # endregion
@@ -98,9 +116,14 @@ async def get_fac_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
 ) -> TalbeInfoSchema:
+    service.apply_bid_status_filter(query, "fac_state", ApprovalStatus.pending_approval)
     record_count = service.get_coordinator_bid_count(query, user.username, "fac")
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "fac"
+        service.apply_bid_status_filter(
+            QuerySchema(), "fac_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "fac",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -117,7 +140,8 @@ async def get_fac_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_fac_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
+    service.apply_bid_status_filter(query, "fac_state", ApprovalStatus.pending_approval)
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "fac"
     )
@@ -127,6 +151,7 @@ async def get_fac_bids(
 async def export_fac_bids(
     query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_fac_bid"])
 ) -> Response:
+    service.apply_bid_status_filter(query, "fac_state", ApprovalStatus.pending_approval)
     file = service.export_coordintator_bid_records(query, user.username, "fac")
 
     return StreamingResponse(
@@ -166,9 +191,14 @@ async def get_cc_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
 ) -> TalbeInfoSchema:
+    service.apply_bid_status_filter(query, "cc_state", ApprovalStatus.pending_approval)
     record_count = service.get_coordinator_bid_count(query, user.username, "cc")
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "cc"
+        service.apply_bid_status_filter(
+            QuerySchema(), "cc_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "cc",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -185,7 +215,8 @@ async def get_cc_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
+    service.apply_bid_status_filter(query, "cc_state", ApprovalStatus.pending_approval)
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "cc"
     )
@@ -195,6 +226,7 @@ async def get_cc_bids(
 async def export_cc_bids(
     query: QuerySchema, user: User = Security(get_current_user, scopes=["crm_cc_bid"])
 ) -> Response:
+    service.apply_bid_status_filter(query, "cc_state", ApprovalStatus.pending_approval)
     file = service.export_coordintator_bid_records(query, user.username, "cc")
 
     return StreamingResponse(
@@ -234,11 +266,18 @@ async def get_cc_supervisor_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> TalbeInfoSchema:
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
     record_count = service.get_coordinator_bid_count(
         query, user.username, "cc_supervisor"
     )
     all_record_count = service.get_coordinator_bid_count(
-        QuerySchema(), user.username, "cc_supervisor"
+        service.apply_bid_status_filter(
+            QuerySchema(), "cc_supervisor_state", ApprovalStatus.pending_approval
+        ),
+        user.username,
+        "cc_supervisor",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -255,7 +294,10 @@ async def get_cc_supervisor_bids(
     query: QuerySchema,
     records_per_page: int = 15,
     user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
-) -> list[BidRecordSchema]:
+) -> list[BidOutSchema]:
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "cc_supervisor"
     )
@@ -266,6 +308,9 @@ async def export_cc_supervisor_bids(
     query: QuerySchema,
     user: User = Security(get_current_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> Response:
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
     file = service.export_coordintator_bid_records(
         query, user.username, "cc_supervisor"
     )
@@ -298,6 +343,115 @@ async def reject_cc_supervisor_bid(
 
 
 # endregion cc supervisor bids
+
+
+# region my bids
+@router.post("/my/page/info")
+async def get_my_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> TalbeInfoSchema:
+    service.apply_bid_creator_filter(query, user.username)
+    record_count = service.get_bid_count(query)
+    all_record_count = service.get_bid_count(
+        service.apply_bid_creator_filter(QuerySchema(), user.username)
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/my/page/{page}")
+async def get_my_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> list[BidOutSchema]:
+    service.apply_bid_creator_filter(query, user.username)
+    return service.get_bid_record_at_page(page, records_per_page, query)
+
+
+@router.post("/my/export")
+async def export_my_bids(
+    query: QuerySchema,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> Response:
+    service.apply_bid_creator_filter(query, user.username)
+    file = service.export_bid_records(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=my_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+# endregion
+
+
+# region archive bids
+@router.post("/archive/page/info")
+async def get_archive_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> TalbeInfoSchema:
+    service.apply_bid_creator_filter(query, user.username)
+    service.apply_bid_archive_filter(query)
+    record_count = service.get_bid_count(query)
+    all_record_count = service.get_bid_count(
+        service.apply_bid_archive_filter(
+            service.apply_bid_creator_filter(QuerySchema(), user.username)
+        )
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/archive/page/{page}")
+async def get_archive_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> list[BidOutSchema]:
+    service.apply_bid_creator_filter(query, user.username)
+    service.apply_bid_archive_filter(query)
+    return service.get_bid_record_at_page(page, records_per_page, query)
+
+
+@router.post("/archive/export")
+async def export_archive_bids(
+    query: QuerySchema,
+    user: User = Security(get_current_user, scopes=["authenticated"]),
+) -> Response:
+    service.apply_bid_creator_filter(query, user.username)
+    service.apply_bid_archive_filter(query)
+    file = service.export_bid_records(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=my_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+# endregion
 
 
 async def approve_coordinator_bid(id: int, coordinator_field: str):

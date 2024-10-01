@@ -3,6 +3,13 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки РЗЦ</h1>
 			<PanelTools class="top-tools">
+				<BidStatusTool
+					@submit="
+						(filters: Array<FilterSchema>) =>
+							(table.filterQuery.value = filters)
+					"
+				></BidStatusTool>
+				<ToolSeparator></ToolSeparator>
 				<PeriodTool
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
@@ -30,7 +37,7 @@
 			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
-			v-show="elementViewing"
+			v-if="elementViewing"
 			@close="elementViewing = false"
 			@approve="onApprove"
 			@reject="onReject"
@@ -50,9 +57,10 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
+import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { CCSupervisorBidTable } from "@/table";
+import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import { CCSupervisorBidTable, FilterSchema } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -137,6 +145,7 @@ const onRowClicked = (rowKey: number) => {
 	elementViewing.value = true;
 	viewingIndex.value = rowKey;
 };
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .bid-content {
@@ -151,7 +160,7 @@ const onRowClicked = (rowKey: number) => {
 	display: flex;
 	align-items: center;
 	flex-direction: row;
-	overflow: hidden;
+	position: relative;
 	flex-shrink: 0;
 }
 .header-content h1 {

@@ -70,12 +70,12 @@ class QueryBuilder(Builder):
 
     Important:
     1) Searching can applying for field inherit `BaseModel` and simple field.
-    Filtering can only applying simple field (`str`, `int`, etc...),
-    but filtering can applying any deep query, for example `Dog.owner.name`
-    where `name` is `str` and `owner` is `BaseModel` child.
+    Filtering can applying any field (`str`, `int`, etc...),
+    but filtering can applying any deep query, for example `Dog.owner.name`.
     2) Searching supports groups, different groups handles by `or_` statement,
     terms inside group handles by `_and` statement.
-    Filtering use `_and` everywhere.
+    Filtering also supports groups, but  different groups handles by `and_` statement,
+    terms inside group handles by `_or` statement.
     3) Searching use `ilike('%term%')` syntax.
     Filtering use `column == value` syntax.
     4) Order by can work with up level field (not Dog.owner.name, only Dow.owner).
@@ -365,49 +365,80 @@ class QueryBuilder(Builder):
         filter_schemas: list[schemas.FilterSchema],
     ):
         schema_type = self._model_to_schema[model_type]
-        filter_clauses: list[BinaryExpression[bool]] = []
 
+        # Dict for all groups in current level.
+        groups: dict[int, list[schemas.SearchSchema]] = {-1: []}
         for filter_schema in filter_schemas:
-            column_name = filter_schema.column
-            value = filter_schema.value
-
-            filter_clause: BinaryExpression[bool] = None
-
-            # Type inference
-            column_type = self._get_schema_column_type(schema_type, column_name)
-
-            # If column is pydantic schema.
-            if issubclass(column_type, BaseModel):
-                column: InstrumentedAttribute[any] = getattr(
-                    model_type, column_name + "_id"
-                )
-
-                if len(filter_schema.dependencies) > 0:
-                    column_model_type = self._schema_to_model[column_type]
-                    cur_level_select = select(column_model_type.id)
-
-                    dependency_clause = self._get_filter_clause(
-                        column_model_type, filter_schema.dependencies
-                    )
-                    if dependency_clause is not None:
-                        cur_level_select = cur_level_select.filter(dependency_clause)
+            for group in filter_schema.groups:
+                if group in groups:
+                    groups[group].append(filter_schema)
                 else:
-                    self._warning(
-                        f"Attempt to filter with non simple type, column type: {column_type}"
+                    groups[group] = [filter_schema]
+
+            if len(filter_schema.groups) == 0:
+                groups[-1].append(filter_schema)
+
+        # Calcs clause for every group
+        group_clauses = []
+        for group_id in groups:
+            group = groups[group_id]
+            inside_group_clauses: list[BinaryExpression[bool]] = []
+
+            for filter_schema in group:
+                column_name = filter_schema.column
+                value = filter_schema.value
+
+                filter_clause: BinaryExpression[bool] = None
+
+                # Type inference
+                column_type = self._get_schema_column_type(schema_type, column_name)
+
+                # If column is pydantic schema.
+                if issubclass(column_type, BaseModel):
+                    column: InstrumentedAttribute[any] = getattr(
+                        model_type, column_name + "_id"
                     )
-                    continue
 
-                # Filters by entry from column table.
-                filter_clause = column.in_(cur_level_select)
+                    if len(filter_schema.dependencies) > 0:
+                        column_model_type = self._schema_to_model[column_type]
+                        cur_level_select = select(column_model_type.id)
 
-            # If column is simple type.
-            else:
-                column: InstrumentedAttribute[any] = getattr(model_type, column_name)
-                filter_clause = column == value
+                        dependency_clause = self._get_filter_clause(
+                            column_model_type, filter_schema.dependencies
+                        )
+                        if dependency_clause is not None:
+                            cur_level_select = cur_level_select.filter(
+                                dependency_clause
+                            )
+                    else:
+                        self._warning(
+                            f"Attempt to filter with non simple type, column type: {column_type}"
+                        )
+                        continue
 
-            filter_clauses.append(filter_clause)
+                    # Filters by entry from column table.
+                    filter_clause = column.in_(cur_level_select)
 
-        return and_(*filter_clauses) if len(filter_clauses) > 0 else None
+                # If column is simple type.
+                else:
+                    column: InstrumentedAttribute[any] = getattr(
+                        model_type, column_name
+                    )
+                    filter_clause = column == value
+
+                inside_group_clauses.append(filter_clause)
+
+            if len(inside_group_clauses) > 0:
+                group_clause: BinaryExpression[bool]
+                # Group -1 is default group.
+                if group_id != -1:
+                    group_clause = or_(*inside_group_clauses)
+                else:
+                    group_clause = and_(*inside_group_clauses)
+
+                group_clauses.append(group_clause)
+
+        return and_(*group_clauses) if len(group_clauses) > 0 else None
 
     # endregion
 
