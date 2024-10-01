@@ -63,7 +63,7 @@ export class InputSmartField extends SmartField {
 			return this.formatter(this._rawField.value);
 		},
 		set: async (newValue: string) => {
-			this.completed.value = !this.simple;
+			this.completed.value = this.simple && newValue.length !== 0;
 			this._stringifyValue.value = newValue;
 			clearTimeout(this._delaySetter);
 			this._delaySetter = setTimeout(async () => {
@@ -136,7 +136,7 @@ class EnumSmartField extends InputSmartField {
 		formatter?: (value: any) => string,
 		public readonly required: boolean = false,
 	) {
-		super(name, fieldName, defaultValue, canEdit, required);
+		super(name, fieldName, defaultValue, canEdit, required, false);
 		this._tipList.value = this.list;
 
 		if (formatter) {
