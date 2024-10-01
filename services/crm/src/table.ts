@@ -91,10 +91,11 @@ interface DateSchema {
 	end: Date;
 }
 
-interface FilterSchema {
+export interface FilterSchema {
 	column: string;
 	value: any;
 	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
 }
 
 interface QuerySchema {
@@ -464,10 +465,9 @@ export class Table<T extends BaseSchema> {
 	//#region Auxiliary
 	/** Sorts elements by **this._columsOrder**. Returns sorted elements. */
 	private sort(elements: Array<any>, fieldNames: Array<any>): Array<any> {
-		let length = elements.length - this._columsOrder.size;
-		length = length >= 0 ? length : 0;
+		const length = this._columsOrder.size;
 
-		const result: Array<any> = new Array(length);
+		const result: Array<any> = new Array<any>(length);
 
 		for (let index = 0; index < fieldNames.length; index++) {
 			const fieldName = fieldNames[index];
@@ -480,7 +480,6 @@ export class Table<T extends BaseSchema> {
 				result.push(element);
 			}
 		}
-
 		return result;
 	}
 	/** Table update timeout in second. */
