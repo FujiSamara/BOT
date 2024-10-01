@@ -16,5 +16,6 @@
 	border-radius: 2000px;
 	white-space: nowrap;
 	overflow: hidden;
+	flex-shrink: 0;
 }
 </style>
