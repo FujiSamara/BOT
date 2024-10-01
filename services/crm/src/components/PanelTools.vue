@@ -21,4 +21,23 @@
 	flex-shrink: 0;
 	flex-grow: 1;
 }
+
+.tools-wrapper::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+	border-radius: 2000px;
+}
+
+.tools-wrapper::-webkit-scrollbar-track {
+	background-color: #e7e7e7;
+	margin: 20px;
+}
+
+.tools-wrapper::-webkit-scrollbar-thumb:horizontal {
+	height: 10px;
+	width: 5px;
+	height: 15px !important;
+	border-radius: 22px;
+	background-color: #993ca6;
+}
 </style>
