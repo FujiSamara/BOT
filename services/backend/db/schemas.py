@@ -377,7 +377,7 @@ class BidInSchema(BaseModel):
     amount: float
     payment_type: str
     department: DepartmentSchema
-    worker: WorkerSchema
+    worker: Optional[WorkerSchema] = None
     purpose: str
     comment: Optional[str] = ""
     expenditure: ExpenditureSchema

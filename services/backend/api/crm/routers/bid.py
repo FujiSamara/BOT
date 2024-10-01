@@ -91,8 +91,9 @@ async def delete_bid(
 @router.post("/")
 async def create_my_bid(
     bid: BidInSchema,
-    _: User = Security(get_current_user, scopes=["authenticated"]),
+    user: User = Security(get_current_user, scopes=["authenticated"]),
 ) -> BidOutSchema:
+    bid.worker = service.get_worker_by_phone_number(user.username)
     return await service.create_bid_by_in_schema(bid)
 
 
