@@ -305,15 +305,10 @@ export class Table<T extends BaseSchema> {
 		for (const fieldName in this._nonIgnoredRows.value[0]) {
 			const alias = this.getAlias(fieldName);
 
-			const index = this._columsOrder.get(fieldName);
-
-			if (index && result.length > index) {
-				result.splice(index, 0, alias);
-			} else {
-				result.push(alias);
-			}
+			result.push(alias);
 		}
-		return result;
+
+		return this.sort(result, Object.keys(this._nonIgnoredRows.value[0]));
 	}
 
 	//#region Generating rows
@@ -351,16 +346,13 @@ export class Table<T extends BaseSchema> {
 
 				const formattedField: Cell = formatter(field);
 
-				const index = this._columsOrder.get(fieldName);
-
-				if (index && columns.length > index) {
-					columns.splice(index, 0, formattedField);
-				} else {
-					columns.push(formattedField);
-				}
+				columns.push(formattedField);
 			}
 
-			result.rows.push({ id: model.id, columns: columns });
+			result.rows.push({
+				id: model.id,
+				columns: this.sort(columns, Object.keys(model)),
+			});
 		}
 
 		return result;
@@ -470,6 +462,27 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Auxiliary
+	/** Sorts elements by **this._columsOrder**. Returns sorted elements. */
+	private sort(elements: Array<any>, fieldNames: Array<any>): Array<any> {
+		let length = elements.length - this._columsOrder.size;
+		length = length >= 0 ? length : 0;
+
+		const result: Array<any> = new Array(length);
+
+		for (let index = 0; index < fieldNames.length; index++) {
+			const fieldName = fieldNames[index];
+			const element = elements[index];
+
+			const order = this._columsOrder.get(fieldName);
+			if (order !== undefined) {
+				result[order] = element;
+			} else {
+				result.push(element);
+			}
+		}
+
+		return result;
+	}
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page. */
@@ -801,7 +814,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
-		this._aliases.set("department", "Произовдство");
+		this._aliases.set("department", "Производство");
 		this._aliases.set("worker", "Работник");
 		this._aliases.set("purpose", "Цель");
 		this._aliases.set("create_date", "Дата создания");
@@ -814,19 +827,19 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("need_edm", "Счет в ЭДО");
 
 		this._columsOrder.set("id", 0);
-		this._columsOrder.set("create_date", 1);
-		this._columsOrder.set("close_date", 2);
-		this._columsOrder.set("worker", 3);
-		this._columsOrder.set("amount", 4);
-		this._columsOrder.set("documents", 5);
-		this._columsOrder.set("payment_type", 6);
-		this._columsOrder.set("department", 7);
-		this._columsOrder.set("purpose", 8);
-		this._columsOrder.set("status", 9);
-		this._columsOrder.set("denying_reason", 10);
-		this._columsOrder.set("comment", 11);
-		this._columsOrder.set("expenditure", 12);
-		this._columsOrder.set("need_edm", 13);
+		this._columsOrder.set("worker", 1);
+		this._columsOrder.set("expenditure", 2);
+		this._columsOrder.set("amount", 3);
+		this._columsOrder.set("department", 4);
+		this._columsOrder.set("purpose", 5);
+		this._columsOrder.set("documents", 6);
+		this._columsOrder.set("status", 7);
+		this._columsOrder.set("comment", 8);
+		this._columsOrder.set("payment_type", 9);
+		this._columsOrder.set("need_edm", 10);
+		this._columsOrder.set("denying_reason", 11);
+		this._columsOrder.set("create_date", 12);
+		this._columsOrder.set("close_date", 13);
 	}
 
 	protected color(model: BidSchema): string {
