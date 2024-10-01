@@ -3,6 +3,13 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки РЗЦ</h1>
 			<PanelTools class="top-tools">
+				<BidStatusTool
+					@submit="
+						(filters: Array<FilterSchema>) =>
+							(table.filterQuery.value = filters)
+					"
+				></BidStatusTool>
+				<ToolSeparator></ToolSeparator>
 				<PeriodTool
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
@@ -50,9 +57,10 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
+import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
 
 import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { CCSupervisorBidTable } from "@/table";
+import { CCSupervisorBidTable, FilterSchema } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -152,7 +160,7 @@ onMounted(() => table.startUpdatingLoop());
 	display: flex;
 	align-items: center;
 	flex-direction: row;
-	overflow: hidden;
+	position: relative;
 	flex-shrink: 0;
 }
 .header-content h1 {

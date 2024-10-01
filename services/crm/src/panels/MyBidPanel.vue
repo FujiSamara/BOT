@@ -3,6 +3,13 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Мои заявки</h1>
 			<PanelTools class="top-tools">
+				<BidStatusTool
+					@submit="
+						(filters: Array<FilterSchema>) =>
+							(table.filterQuery.value = filters)
+					"
+				></BidStatusTool>
+				<ToolSeparator></ToolSeparator>
 				<PeriodTool
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
@@ -62,10 +69,11 @@ import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
 import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { MyBidTable } from "@/table";
+import { FilterSchema, MyBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 import EditPanelRow from "@/components/EditPanelRow.vue";
 import { BidEditor } from "@/editor";
+import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
 
 const props = defineProps({
 	id: {
@@ -178,8 +186,8 @@ onMounted(() => table.startUpdatingLoop());
 	display: flex;
 	align-items: center;
 	flex-direction: row;
-	overflow: hidden;
 	flex-shrink: 0;
+	position: relative;
 }
 .header-content h1 {
 	font-family: Stolzl;
