@@ -101,6 +101,8 @@ export class DocumentSmartField extends SmartField {
 		super(name, fieldName, canEdit, required);
 
 		watch(this.files.value, async () => {
+			this.completed.value = this.files.value.length !== 0;
+
 			const files = [];
 			for (let index = 0; index < this.files.value.length; index++) {
 				const doc = this.files.value[index];
@@ -277,7 +279,7 @@ export class BidEditor extends Editor {
 		super();
 
 		this.fields = [
-			new InputSmartField("Cумма", "amount"),
+			new InputSmartField("Cумма", "amount", undefined, true, true),
 			new EnumSmartField(
 				"Тип оплаты",
 				"payment_type",
@@ -297,12 +299,24 @@ export class BidEditor extends Editor {
 				},
 				true,
 			),
-			new ExpenditureSmartField("Статья", "expenditure"),
+			new ExpenditureSmartField(
+				"Статья",
+				"expenditure",
+				undefined,
+				true,
+				undefined,
+				true,
+			),
 			new BoolSmartField("Счет в ЭДО", "need_edm", "Нет"),
-			new DepartmentSmartField("Производство", "department"),
-			new WorkerSmartField("Работник", "worker"),
-			new InputSmartField("Цель", "purpose"),
-			new DocumentSmartField("Документы", "documents"),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				undefined,
+				true,
+				true,
+			),
+			new InputSmartField("Цель", "purpose", undefined, true, true),
+			new DocumentSmartField("Документы", "documents", undefined, true),
 			new InputSmartField("Комментарий", "comment"),
 		];
 	}
