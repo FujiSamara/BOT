@@ -46,8 +46,14 @@ const viewerOptions: Viewer.Options = {
 const documents: Array<string> = [];
 for (const document of props.documents) {
 	const documentData = await network.getFile(document.href);
+
+	let type = "application/octet-stream";
+	let extension = document.name.split(".").reverse()[0];
+	if (extension === "svg") {
+		type = "image/svg+xml";
+	}
 	const blob = new Blob([documentData], {
-		type: "application/octet-stream",
+		type: type,
 	});
 
 	documents.push(window.URL.createObjectURL(blob));
