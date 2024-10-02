@@ -76,10 +76,11 @@ const filteredIndexToIndex = (index: number): number => {
 	for (let i = 0; i < field.rawSelectList.value.length; i++) {
 		const rawElement = field.rawSelectList.value[i];
 
-		if (rawSelectList.value.findIndex((el) => el.id === rawElement.id) === -1) {
+		if (rawSelectList.value.findIndex((el) => el.id === rawElement.id) !== -1) {
 			counter++;
 		}
-		if (counter === index) {
+
+		if (counter + index === i) {
 			return i;
 		}
 	}
