@@ -3,11 +3,14 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки</h1>
 			<PanelTools class="top-tools">
+				<BidExpenditureTool
+					v-model:filters="expenditureFilters"
+					:group="1"
+				></BidExpenditureTool>
+				<ToolSeparator></ToolSeparator>
 				<BidStatusTool
-					@submit="
-						(filters: Array<FilterSchema>) =>
-							(table.filterQuery.value = filters)
-					"
+					v-model:filters="statusFilters"
+					:group="0"
 				></BidStatusTool>
 				<ToolSeparator></ToolSeparator>
 				<PeriodTool
@@ -59,9 +62,18 @@ import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
+import BidExpenditureTool from "@/components/PanelTools/BidExpenditureTool.vue";
 
-import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
-import { BidTable, FilterSchema } from "@/table";
+import {
+	computed,
+	onMounted,
+	Ref,
+	ref,
+	shallowRef,
+	ShallowRef,
+	watch,
+} from "vue";
+import { BidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -131,6 +143,13 @@ watch([fromDateString, toDateString], () => {
 
 watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
+});
+
+// Filters
+const expenditureFilters = ref([]);
+const statusFilters = ref([]);
+table.filterQuery = computed(() => {
+	return [...statusFilters.value, ...expenditureFilters.value];
 });
 
 const onDelete = async () => {

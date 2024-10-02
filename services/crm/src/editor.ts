@@ -359,7 +359,7 @@ class WorkerSmartField extends InputSmartField {
 	}
 }
 
-class ExpenditureSmartField extends InputSmartField {
+export class ExpenditureSmartField extends InputSmartField {
 	private _endpoint: string = "";
 	protected readonly _delay: number = 200;
 
