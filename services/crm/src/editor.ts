@@ -76,6 +76,10 @@ export class InputSmartField extends SmartField {
 		return this._tipList.value.map((value) => this.tipFormatter(value));
 	});
 
+	public rawSelectList = computed(() => {
+		return this._tipList.value;
+	});
+
 	public applySelection(index: number) {
 		if (index >= this._tipList.value.length) {
 			throw Error("Bad index");
