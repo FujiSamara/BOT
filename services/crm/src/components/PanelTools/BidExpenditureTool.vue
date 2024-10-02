@@ -5,15 +5,16 @@
 			placeholder="По статьям"
 			class="input"
 			v-model:value="field.formattedField.value"
-			@focusin="inputFocused = true"
+			@focusin="
+				inputFocused = true;
+				selectListVisible = false;
+			"
 			@focusout="inputFocused = false"
 		></border-input>
 		<div class="list-wrapper">
 			<Transition>
 				<select-list
-					v-show="
-						fieldFilteredList.length > 0 && inputFocused && !selectListVisible
-					"
+					v-show="fieldFilteredList.length > 0 && inputFocused"
 					:selectList="fieldFilteredList"
 					@select="onSelect"
 				></select-list>
