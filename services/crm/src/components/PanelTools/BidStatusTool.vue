@@ -29,12 +29,15 @@ import BorderInput from "../UI/BorderInput.vue";
 import ClickableIcon from "../UI/ClickableIcon.vue";
 import { FilterSchema } from "@/table";
 
+const props = defineProps({
+	group: {
+		type: Number,
+		required: true,
+	},
+});
+const filters = defineModel("filters");
+
 const listVisible = ref(false);
-
-const emit = defineEmits<{
-	(e: "submit", filter: Array<FilterSchema>): void;
-}>();
-
 const value = ref("Не выбрано");
 const list = ref([
 	"Не выбрано",
@@ -52,11 +55,11 @@ const onClick = async (index: number) => {
 	value.value = list.value.filter((el) => el !== value.value)[index];
 	listVisible.value = false;
 
-	let filters: Array<FilterSchema> = [];
+	let tempFilters: Array<FilterSchema> = [];
 
 	switch (value.value) {
 		case "Согласование ЦФО":
-			filters = [
+			tempFilters = [
 				{
 					column: "fac_state",
 					value: "pending_approval",
@@ -65,7 +68,7 @@ const onClick = async (index: number) => {
 			break;
 
 		case "Согласование ЦЗ":
-			filters = [
+			tempFilters = [
 				{
 					column: "cc_state",
 					value: "pending_approval",
@@ -74,7 +77,7 @@ const onClick = async (index: number) => {
 			break;
 
 		case "Согласование РЦЗ":
-			filters = [
+			tempFilters = [
 				{
 					column: "cc_supervisor_state",
 					value: "pending_approval",
@@ -83,7 +86,7 @@ const onClick = async (index: number) => {
 			break;
 
 		case "Согласование КРУ":
-			filters = [
+			tempFilters = [
 				{
 					column: "kru_state",
 					value: "pending_approval",
@@ -92,96 +95,96 @@ const onClick = async (index: number) => {
 			break;
 
 		case "Согласование бух.":
-			filters = [
+			tempFilters = [
 				{
 					column: "accountant_cash_state",
 					value: "pending_approval",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "accountant_card_state",
 					value: "pending_approval",
-					groups: [0],
+					groups: [props.group],
 				},
 			];
 			break;
 
 		case "Согласование кассир":
-			filters = [
+			tempFilters = [
 				{
 					column: "teller_cash_state",
 					value: "pending_approval",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "teller_card_state",
 					value: "pending_approval",
-					groups: [0],
+					groups: [props.group],
 				},
 			];
 			break;
 
 		case "Выплачена":
-			filters = [
+			tempFilters = [
 				{
 					column: "teller_cash_state",
 					value: "approved",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "teller_card_state",
 					value: "approved",
-					groups: [0],
+					groups: [props.group],
 				},
 			];
 			break;
 		case "Отклонена":
-			filters = [
+			tempFilters = [
 				{
 					column: "fac_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "cc_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "cc_supervisor_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "kru_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "accountant_cash_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "accountant_card_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "teller_cash_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 				{
 					column: "teller_card_state",
 					value: "denied",
-					groups: [0],
+					groups: [props.group],
 				},
 			];
 			break;
 	}
 
-	emit("submit", filters);
+	filters.value = tempFilters;
 };
 </script>
 <style scoped>
