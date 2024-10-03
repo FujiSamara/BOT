@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.responses import FileResponse
 
-from api.auth import User, get_current_user
+from api.auth import User, authorize
 
 
 def register_base_routes(api: FastAPI):
@@ -11,7 +11,7 @@ def register_base_routes(api: FastAPI):
 
 
 async def download_file(
-    path: str, _: User = Security(get_current_user, scopes=["authenticated"])
+    path: str, _: User = Security(authorize, scopes=["authenticated"])
 ) -> FileResponse:
     """Returns file by his `path`."""
     if not Path(path).is_file():

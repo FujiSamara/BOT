@@ -69,7 +69,7 @@ def create_source_token(files: list[str]) -> str:
     return access_token
 
 
-async def get_current_user(
+async def authorize(
     security_scopes: SecurityScopes, token: str = Depends(_oauth2_schema)
 ) -> User:
     """Validates user permissions.

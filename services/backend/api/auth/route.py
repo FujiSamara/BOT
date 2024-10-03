@@ -9,7 +9,7 @@ from api.auth.authentication import authenticate_user, create_access_token
 from settings import get_settings
 
 from api.auth.schemas import User
-from api.auth.authentication import get_current_user
+from api.auth.authentication import authorize
 
 
 def register_general_routes(auth: FastAPI):
@@ -19,7 +19,7 @@ def register_general_routes(auth: FastAPI):
     auth.get("/")(check_auth)
 
 
-async def check_auth(_: User = Security(get_current_user, scopes=["authenticated"])):
+async def check_auth(_: User = Security(authorize, scopes=["authenticated"])):
     return
 
 
