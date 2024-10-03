@@ -51,7 +51,6 @@ export const useNetworkStore = defineStore("network", {
 					{
 						username: username,
 						password: password,
-						scope: "admin",
 					},
 					{
 						headers: {
@@ -100,17 +99,20 @@ export const useNetworkStore = defineStore("network", {
 				}
 			});
 		},
-		async getFile(href: string): Promise<Uint8Array> {
+		async getFile(filename: string): Promise<Uint8Array> {
 			const resp = await this.withAuthChecking(
-				axios.get(href, {
-					responseType: "blob",
-				}),
+				axios.get(
+					`${config.fullBackendURL}/${config.filesEndpoint}/?name=${filename}`,
+					{
+						responseType: "blob",
+					},
+				),
 			);
 
 			return resp.data as Uint8Array;
 		},
-		async downloadFile(href: string, filename: string) {
-			this.saveFile(filename, await this.getFile(href));
+		async downloadFile(filename: string) {
+			this.saveFile(filename, await this.getFile(filename));
 		},
 		saveFile(filename: string, file: Uint8Array) {
 			const fileBlob = new Blob([file], {

@@ -19,7 +19,7 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
+def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
     """Authenticates user by his `username` and `password`.
 
     Returns corresponding `User` if `username` and `password` correct,
@@ -37,7 +37,10 @@ def authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
     return UserWithScopes(
         username=worker.phone_number,
         full_name=f"{worker.l_name} {worker.f_name}",
-        scopes=[_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes],
+        scopes=[
+            *(_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes),
+            "file_all",
+        ],
     )
 
 
@@ -52,7 +55,7 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     return encoded_jwt
 
 
-def create_source_token(files: list[str]) -> str:
+def create_files_token(files: list[str]) -> str:
     """Returns temprorary token for access to needed files.
 
     :param files: File names needing access by token
@@ -69,9 +72,9 @@ def create_source_token(files: list[str]) -> str:
     return access_token
 
 
-async def authorize(
+async def get_user(
     security_scopes: SecurityScopes, token: str = Depends(_oauth2_schema)
-) -> User:
+) -> UserWithScopes:
     """Validates user permissions.
     Returns instance of `User` if user has enough permissions for `security scopes`,
     throw `HTTPException` with `401` status code otherwise."""
@@ -104,16 +107,20 @@ async def authorize(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    user: User
+    user: UserWithScopes
 
     if username == "guest":
-        user = User(username="guest", full_name="guest")
+        user = UserWithScopes(
+            username="guest", full_name="guest", scopes=token_data.scopes
+        )
     else:
         worker = service.get_worker_by_phone_number(username)
         if not worker:
             raise credentials_exception
         user = User(
-            username=worker.phone_number, full_name=f"{worker.l_name} {worker.f_name}"
+            username=worker.phone_number,
+            full_name=f"{worker.l_name} {worker.f_name}",
+            scopes=token_data.scopes,
         )
 
     for scope in security_scopes.scopes:

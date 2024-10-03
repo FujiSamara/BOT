@@ -9,7 +9,7 @@ from db.schemas import (
     TalbeInfoSchema,
 )
 
-from api.auth import User, authorize
+from api.auth import User, get_user
 
 
 router = APIRouter()
@@ -19,7 +19,7 @@ router = APIRouter()
 async def get_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(authorize, scopes=["crm_worktime"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> TalbeInfoSchema:
     record_count = service.get_wortkime_count(query)
     all_record_count = service.get_wortkime_count(QuerySchema())
@@ -37,7 +37,7 @@ async def get_worktimes(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(authorize, scopes=["crm_worktime"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> list[WorkTimeSchema]:
     return service.get_worktimes_at_page(page, records_per_page, query)
 
@@ -45,14 +45,14 @@ async def get_worktimes(
 @router.post("/")
 async def create_worktime(
     schema: WorkTimeSchema,
-    _: User = Security(authorize, scopes=["crm_worktime"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> None:
     await service.create_worktime(schema)
 
 
 @router.delete("/{id}")
 async def delete_worktime(
-    id: int, _: User = Security(authorize, scopes=["crm_worktime"])
+    id: int, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> None:
     await service.remove_worktime(id)
 
@@ -60,14 +60,14 @@ async def delete_worktime(
 @router.patch("/")
 async def update_worktime(
     schema: WorkTimeSchema,
-    _: User = Security(authorize, scopes=["crm_worktime"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> None:
     await service.update_worktime(schema)
 
 
 @router.post("/export")
 async def export_bids(
-    query: QuerySchema, _: User = Security(authorize, scopes=["crm_worktime"])
+    query: QuerySchema, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> Response:
     file = service.export_worktimes(query)
 

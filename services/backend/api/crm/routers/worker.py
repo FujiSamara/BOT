@@ -4,7 +4,7 @@ from fastapi.routing import APIRouter
 from db import service
 from db.schemas import WorkerSchema
 
-from api.auth import User, authorize
+from api.auth import User, get_user
 
 
 router = APIRouter()
@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.get("/by/name")
 async def find_workers(
-    name: str, _: User = Security(authorize, scopes=["authenticated"])
+    name: str, _: User = Security(get_user, scopes=["authenticated"])
 ) -> list[WorkerSchema]:
     """Finds workers by given `name`.
 
@@ -23,7 +23,7 @@ async def find_workers(
 
 @router.get("/by/phone")
 async def get_worker_by_number(
-    phone: str, _: User = Security(authorize, scopes=["authenticated"])
+    phone: str, _: User = Security(get_user, scopes=["authenticated"])
 ) -> WorkerSchema:
     """Finds worker by given `phone`."""
     return service.get_worker_by_phone_number(phone)
