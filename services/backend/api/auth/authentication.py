@@ -19,7 +19,7 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def _authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
+def authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
     """Authenticates user by his `username` and `password`.
 
     Returns corresponding `User` if `username` and `password` correct,
@@ -41,7 +41,7 @@ def _authenticate_user(username: str, password: str) -> Optional[UserWithScopes]
     )
 
 
-def _create_access_token(data: dict, expires_delta: timedelta) -> str:
+def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """Returns new access token with `data` and `expires_delta`."""
     to_encode = data.copy()
     expire = datetime.now() + expires_delta
@@ -50,6 +50,23 @@ def _create_access_token(data: dict, expires_delta: timedelta) -> str:
         to_encode, get_settings().secret_key, algorithm=get_settings().token_algorithm
     )
     return encoded_jwt
+
+
+def create_source_token(files: list[str]) -> str:
+    """Returns temprorary token for access to needed files.
+
+    :param files: File names needing access by token
+    """
+    access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
+    access_token = create_access_token(
+        data={
+            "sub": "guest",
+            "scopes": [*(f"file_{filename}" for filename in files), "authenticated"],
+        },
+        expires_delta=access_token_expires,
+    )
+
+    return access_token
 
 
 async def get_current_user(
@@ -87,9 +104,17 @@ async def get_current_user(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    worker = service.get_worker_by_phone_number(username)
-    if not worker:
-        raise credentials_exception
+    user: User
+
+    if username == "guest":
+        user = User(username="guest", full_name="guest")
+    else:
+        worker = service.get_worker_by_phone_number(username)
+        if not worker:
+            raise credentials_exception
+        user = User(
+            username=worker.phone_number, full_name=f"{worker.l_name} {worker.f_name}"
+        )
 
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes and "admin" not in token_data.scopes:
@@ -99,6 +124,4 @@ async def get_current_user(
                 headers={"WWW-Authenticate": authenticate_value},
             )
 
-    return User(
-        username=worker.phone_number, full_name=f"{worker.l_name} {worker.f_name}"
-    )
+    return user
