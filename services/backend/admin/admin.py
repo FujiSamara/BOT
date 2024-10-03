@@ -12,6 +12,8 @@ from fastapi.responses import FileResponse, Response
 from pathlib import Path
 from hashlib import sha256
 
+from settings import get_settings
+
 
 class FujiAdmin(Admin):
     def __init__(
@@ -46,15 +48,14 @@ class FujiAdmin(Admin):
 
     @login_required
     async def download_file(self, request: Request) -> FileResponse | Response:
-        """Returns file by his path."""
-        path = request.query_params.get("path")
+        """Returns file by his name."""
+        filename = request.query_params.get("name")
+        path = Path.joinpath(Path(get_settings().storage_path), Path(filename))
         if not Path(path).is_file():
             return Response(content="File not found", status_code=400)
 
         if not path:
             return Response(content="Path is empty", status_code=400)
-
-        filename = Path(path).name
 
         return FileResponse(
             path=path, filename=filename, media_type="multipart/form-data"

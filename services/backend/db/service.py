@@ -151,7 +151,7 @@ def get_posts_names() -> list[str]:
     return [post.name for post in orm.get_posts()]
 
 
-def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
+def get_file_data(filename: str, mode: str = "sqladmin") -> FileSchema:
     """Returns file `FileSchema` with file href and name.
     - `mode`  Specifies file request source.
     """
@@ -161,8 +161,6 @@ def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
     if get_settings().ssl_certfile:
         proto = "https"
 
-    filename = Path(file_path).name
-
     source: str = ""
 
     if mode == "sqladmin":
@@ -171,7 +169,7 @@ def get_file_data(file_path: str, mode: str = "sqladmin") -> FileSchema:
         source = "/api"
 
     return FileSchema(
-        name=filename, href=f"{proto}://{host}:{port}{source}/download?path={file_path}"
+        name=filename, href=f"{proto}://{host}:{port}{source}/download?name={filename}"
     )
 
 

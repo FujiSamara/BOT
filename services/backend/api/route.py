@@ -16,7 +16,7 @@ async def get_file(
     _: User = Security(get_user, scopes=["authenticated", "file_all"]),
 ) -> FileResponse:
     """Returns file by his `name`."""
-    path = Path.joinpath(get_settings().storage_path, name)
+    path = Path.joinpath(Path(get_settings().storage_path), Path(name))
     if not Path(path).is_file():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File not exist"

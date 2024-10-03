@@ -102,7 +102,7 @@ export const useNetworkStore = defineStore("network", {
 		async getFile(filename: string): Promise<Uint8Array> {
 			const resp = await this.withAuthChecking(
 				axios.get(
-					`${config.fullBackendURL}/${config.filesEndpoint}/?name=${filename}`,
+					`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
 					{
 						responseType: "blob",
 					},
