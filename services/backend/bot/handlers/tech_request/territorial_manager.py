@@ -276,8 +276,6 @@ async def save_rate(
         mark=mark, request_id=request_id, description=description
     )
 
-    logging.getLogger("uvicorn.error").error(request_data)
-
     if mark < 3 and request_data["state"] not in [
         ApprovalStatus.approved,
         ApprovalStatus.skipped,

@@ -51,6 +51,7 @@ async def show_form(
 Номер телефона: {request.worker.phone_number}\n\
 Должность: {request.worker.post.name}\n\
 ФИО исполнителя: {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\n\
+Номер телефона: {request.repairman.phone_number}\n\
 Статус: "
     )
 
