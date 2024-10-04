@@ -932,8 +932,10 @@ def update_technical_request_from_territorial_manager(record: TechnicalRequestSc
         cur_request.score = record.score
         cur_request.confirmation_description = record.confirmation_description
         cur_request.close_description = record.close_description
-        cur_request.acceptor_post = record.acceptor_post
-
+        if record.acceptor_post:
+            cur_request.acceptor_post = (
+                s.query(Post).filter(Post.id == record.acceptor_post.id).first()
+            )
     return True
 
 

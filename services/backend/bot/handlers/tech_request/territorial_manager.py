@@ -1,4 +1,3 @@
-import logging
 from aiogram import Router, F
 from aiogram.types import (
     CallbackQuery,
@@ -275,8 +274,6 @@ async def save_rate(
     request_data = update_technical_request_from_territorial_manager(
         mark=mark, request_id=request_id, description=description
     )
-
-    logging.getLogger("uvicorn.error").error(request_data)
 
     if mark < 3 and request_data["state"] not in [
         ApprovalStatus.approved,
