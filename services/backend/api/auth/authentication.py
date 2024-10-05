@@ -55,21 +55,26 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     return encoded_jwt
 
 
-def create_files_token(files: list[str]) -> str:
-    """Returns temprorary token for access to needed files.
+def create_access_link(scopes: list[str] = None) -> str:
+    """Returns guest temprorary access link for specified `scopes`
 
-    :param files: File names needing access by token
+    :param scopes: Needed accesses, if not specified equals `["authenticated"]`
     """
+    if scopes is None:
+        scopes = ["authenticated"]
+
     access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
     access_token = create_access_token(
         data={
             "sub": "guest",
-            "scopes": [*(f"file_{filename}" for filename in files), "authenticated"],
+            "scopes": scopes,
         },
         expires_delta=access_token_expires,
     )
 
-    return access_token
+    link = get_settings().crm_link
+
+    return f"{link}?token={access_token}"
 
 
 async def get_user(
