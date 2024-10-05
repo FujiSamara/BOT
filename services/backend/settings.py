@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     ssl_keyfile: Optional[str] = Field(validation_alias="SSL_KEYFILE", default=None)
     ssl_certfile: Optional[str] = Field(validation_alias="SSL_CERTFILE", default=None)
     external_api: str = Field(validation_alias="EXTERNAL_API")
+    crm_link: str = Field(validation_alias="CRM_LINK")
     # endregion
 
     # region Security

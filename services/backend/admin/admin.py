@@ -50,7 +50,7 @@ class FujiAdmin(Admin):
     async def download_file(self, request: Request) -> FileResponse | Response:
         """Returns file by his name."""
         filename = request.query_params.get("name")
-        path = Path.joinpath(Path(get_settings().storage_path), Path(filename))
+        path = Path(get_settings().storage_path).joinpath(Path(filename))
         if not Path(path).is_file():
             return Response(content="File not found", status_code=400)
 
