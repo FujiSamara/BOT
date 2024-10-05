@@ -60,16 +60,18 @@ export const useNetworkStore = defineStore("network", {
 				)
 				.then((resp) => {
 					const data: Token = resp.data;
-					axios.defaults.headers.common["Authorization"] =
-						`${data.token_type} ${data.access_token}`;
-					this.$cookies.set("access_token", data.access_token);
-					this.$cookies.set("token_type", data.token_type);
+					this.setCredentials(data.access_token, data.token_type);
 
 					return true;
 				})
 				.catch(() => {
 					return false;
 				});
+		},
+		setCredentials(token: string, token_type: string): void {
+			axios.defaults.headers.common["Authorization"] = `${token_type} ${token}`;
+			this.$cookies.set("access_token", token);
+			this.$cookies.set("token_type", token_type);
 		},
 		setUserData(token: string): void {
 			const decoded: any = jwtDecode(token);

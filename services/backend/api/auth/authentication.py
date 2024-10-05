@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from api.auth.schemas import TokenData, User, UserWithScopes
 from api.auth.permissions import _oauth2_schema, _to_auth_scope
+from db.models import FujiScope
 from settings import get_settings
 from db import service
 
@@ -37,10 +38,7 @@ def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
     return UserWithScopes(
         username=worker.phone_number,
         full_name=f"{worker.l_name} {worker.f_name}",
-        scopes=[
-            *(_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes),
-            "file_all",
-        ],
+        scopes=[_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes],
     )
 
 
@@ -55,13 +53,21 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     return encoded_jwt
 
 
-def create_access_link(scopes: list[str] = None) -> str:
+def create_access_link(scopes: list[Union[str, FujiScope]] = None) -> str:
     """Returns guest temprorary access link for specified `scopes`
 
-    :param scopes: Needed accesses, if not specified equals `["authenticated"]`
+    :param scopes: Needed accesses, consists `["authenticated"]`
     """
     if scopes is None:
-        scopes = ["authenticated"]
+        scopes = []
+
+    scopes = [
+        *(
+            _to_auth_scope(scope) if isinstance(scope, FujiScope) else scope
+            for scope in scopes
+        ),
+        "authenticated",
+    ]
 
     access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
     access_token = create_access_token(
@@ -74,7 +80,7 @@ def create_access_link(scopes: list[str] = None) -> str:
 
     link = get_settings().crm_addr
 
-    return f"{link}/crm/guest?token={access_token}"
+    return f"{link}/crm/guest?token={access_token}&token_type=bearer"
 
 
 async def get_user(
