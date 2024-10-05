@@ -36,6 +36,8 @@ const routes = [
 						to.query.token_type as string,
 					);
 
+					to.query = {};
+
 					return { name: "home" };
 				},
 			},
