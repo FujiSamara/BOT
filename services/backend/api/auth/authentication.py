@@ -72,9 +72,9 @@ def create_access_link(scopes: list[str] = None) -> str:
         expires_delta=access_token_expires,
     )
 
-    link = get_settings().crm_link
+    link = get_settings().crm_addr
 
-    return f"{link}?token={access_token}"
+    return f"{link}/crm/guest?token={access_token}"
 
 
 async def get_user(
