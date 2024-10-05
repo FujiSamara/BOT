@@ -73,7 +73,7 @@ const panels: Array<PanelData> = [
 		label: "Мои заявки",
 		isActive: false,
 		panel: shallowRef(MyBidPanel),
-		access: Access.Authed,
+		access: Access.MyBid,
 	},
 	{
 		id: 9,
@@ -81,7 +81,7 @@ const panels: Array<PanelData> = [
 		label: "Архив заявок",
 		isActive: false,
 		panel: shallowRef(ArchiveBidPanel),
-		access: Access.Authed,
+		access: Access.ArchiveBid,
 	},
 ];
 
