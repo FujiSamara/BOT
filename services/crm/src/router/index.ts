@@ -1,4 +1,9 @@
-import { createRouter, createWebHistory } from "vue-router";
+import {
+	createRouter,
+	createWebHistory,
+	RouteLocation,
+	RouteLocationRaw,
+} from "vue-router";
 import { useNetworkStore } from "@/store/network";
 
 const routes = [
@@ -14,6 +19,27 @@ const routes = [
 				name: "login",
 				path: "login",
 				component: async () => await import("@/pages/AuthPage.vue"),
+			},
+			{
+				path: "guest",
+				redirect: (to: RouteLocation): RouteLocationRaw => {
+					if (
+						to.query.token === undefined ||
+						to.query.token_type === undefined
+					) {
+						return { name: "login" };
+					}
+
+					const network = useNetworkStore();
+					network.setCredentials(
+						to.query.token as string,
+						to.query.token_type as string,
+					);
+
+					to.query = {};
+
+					return { name: "home" };
+				},
 			},
 		],
 	},

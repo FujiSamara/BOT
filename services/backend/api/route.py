@@ -2,25 +2,24 @@ from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.responses import FileResponse
 
-from api.auth import User, get_current_user
+from api.auth import User, get_user
+from settings import get_settings
 
 
 def register_base_routes(api: FastAPI):
     """Registers base api routes"""
-    api.get("/download")(download_file)
+    api.get("/download")(get_file)
 
 
-async def download_file(
-    path: str, _: User = Security(get_current_user, scopes=["authenticated"])
+async def get_file(
+    name: str,
+    _: User = Security(get_user, scopes=["authenticated", "file_all"]),
 ) -> FileResponse:
-    """Returns file by his `path`."""
+    """Returns file by his `name`."""
+    path = Path(get_settings().storage_path).joinpath(Path(name))
     if not Path(path).is_file():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File not exist"
         )
 
-    filename = Path(path).name
-
-    return FileResponse(
-        path=path, filename=filename, media_type="application/octet-stream"
-    )
+    return FileResponse(path=path, filename=name, media_type="application/octet-stream")

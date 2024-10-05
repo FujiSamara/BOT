@@ -360,7 +360,7 @@ class BidOutSchema(BaseSchema):
             for doc in val:
                 if isinstance(doc, UploadFile):
                     if hasattr(doc.file, "name"):
-                        result.append(service.get_file_data(doc.file.name, "api"))
+                        result.append(service.get_file_data(doc.filename, "api"))
             return result
         return val
 

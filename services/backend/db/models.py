@@ -33,6 +33,9 @@ class FujiScope(enum.Enum):
     crm_fac_bid = 18
     crm_cc_bid = 19
     crm_cc_supervisor_bid = 20
+    crm_my_bid = 26
+    crm_archive_bid = 27
+    crm_my_file = 28
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6
