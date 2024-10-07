@@ -7,6 +7,8 @@ from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
 
+from settings import get_settings
+
 
 # region Shemas for models
 class BaseSchema(BaseModel):
@@ -339,6 +341,28 @@ class FileSchema(BaseModel):
                 return UploadFile(BytesIO(b"File not exist"), filename=val.name)
         return val
 
+    def to_out(self, mode="api") -> "FileOutSchema":
+        """Converted `FileSchema` to `FileOutSchema`"""
+        proto = "http"
+
+        host = get_settings().domain
+        port = get_settings().port
+        if get_settings().ssl_certfile:
+            proto = "https"
+
+        source: str = ""
+
+        if mode == "sqladmin":
+            source = "/admin"
+        elif mode == "api":
+            source = "/api"
+
+        return FileOutSchema(
+            name=self.file.filename,
+            href=f"{proto}://{host}:{port}{source}/download?name={self.file.filename}",
+            description=self.description,
+        )
+
     description: Optional[str] = None
 
 
@@ -349,6 +373,7 @@ class FileSchema(BaseModel):
 class FileOutSchema(BaseModel):
     name: str
     href: str
+    description: Optional[str] = None
 
 
 class BudgetRecordWithChapter(BudgetRecordSchema):
