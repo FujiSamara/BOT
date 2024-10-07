@@ -944,3 +944,24 @@ class Subordination(Base):
     employee: Mapped["Worker"] = relationship(
         "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
     )
+
+
+class File(Base):
+    """Класс для хранения файлов"""
+
+    __tablename__ = "files"
+
+    file: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    description: Mapped[str] = mapped_column(nullable=True)
+
+
+class WorkerFile(Base):
+    """Промежуточный класс для создания связи между файлами и работниками"""
+
+    __tablename__ = "worker_files"
+
+    file_id: Mapped[int] = mapped_column(ForeignKey("files.id"), nullable=False)
+    file: Mapped[File] = relationship("File")
+
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    worker: Mapped[Worker] = relationship("Worker")
