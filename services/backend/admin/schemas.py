@@ -22,7 +22,7 @@ from db.models import (
     MaterialValues,
 )
 from bot.kb import payment_type_dict, approval_status_dict
-from db.schemas import FileSchema
+from db.schemas import FileOutSchema
 from db import service
 from api.auth import encrypt_password
 
@@ -413,7 +413,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def files_format(inst, column):
         documents: list[WorkerBidDocument] = getattr(inst, column)
-        urls: list[FileSchema] = []
+        urls: list[FileOutSchema] = []
         for doc in documents:
             url = service.get_file_data(doc.document)
             if url:

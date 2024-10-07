@@ -10,7 +10,7 @@ from db.schemas import (
     PostSchema,
     WorkerSchema,
     DepartmentSchema,
-    FileSchema,
+    FileOutSchema,
     AccountLoginsSchema,
     MaterialValuesSchema,
 )
@@ -120,7 +120,7 @@ def get_posts_names() -> list[str]:
     return [post.name for post in orm.get_posts()]
 
 
-def get_file_data(filename: str, mode: str = "sqladmin") -> FileSchema:
+def get_file_data(filename: str, mode: str = "sqladmin") -> FileOutSchema:
     """Returns file `FileSchema` with file href and name.
     - `mode`  Specifies file request source.
     """
@@ -137,7 +137,7 @@ def get_file_data(filename: str, mode: str = "sqladmin") -> FileSchema:
     elif mode == "api":
         source = "/api"
 
-    return FileSchema(
+    return FileOutSchema(
         name=filename, href=f"{proto}://{host}:{port}{source}/download?name={filename}"
     )
 

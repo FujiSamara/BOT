@@ -320,11 +320,33 @@ class SubordinationSchema(BaseSchema):
     employee: WorkerSchema
 
 
+class FileSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    file: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
+        return val
+
+    description: Optional[str] = None
+
+
 # endregion
 
 
 # region Extended schemas for api
-class FileSchema(BaseModel):
+class FileOutSchema(BaseModel):
     name: str
     href: str
 
@@ -343,7 +365,7 @@ class BidOutSchema(BaseSchema):
     purpose: str
     create_date: datetime.datetime
     close_date: Optional[datetime.datetime]
-    documents: list[FileSchema]
+    documents: list[FileOutSchema]
     status: str
     comment: Optional[str]
     denying_reason: Optional[str]
