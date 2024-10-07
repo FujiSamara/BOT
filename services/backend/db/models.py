@@ -955,13 +955,13 @@ class File(Base):
     description: Mapped[str] = mapped_column(nullable=True)
 
 
-class WorkerFile(Base):
-    """Промежуточный класс для создания связи между файлами и работниками"""
+class PostFile(Base):
+    """Промежуточный класс для создания связи между файлами и должностями"""
 
-    __tablename__ = "worker_files"
+    __tablename__ = "post_files"
 
     file_id: Mapped[int] = mapped_column(ForeignKey("files.id"), nullable=False)
     file: Mapped[File] = relationship("File")
 
-    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
-    worker: Mapped[Worker] = relationship("Worker")
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
+    post: Mapped[Post] = relationship("Post")
