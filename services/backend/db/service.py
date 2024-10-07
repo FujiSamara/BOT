@@ -1338,6 +1338,32 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     and bid.cc_supervisor_state != ApprovalStatus.denied
                     else bid.cc_supervisor_state
                 )
+
+            if bid.fac_state == ApprovalStatus.skipped:
+                if bid.cc_state == ApprovalStatus.skipped:
+                    if bid.cc_supervisor_state == ApprovalStatus.skipped:
+                        bid.kru_state = (
+                            ApprovalStatus.pending_approval
+                            if bid.kru_state != ApprovalStatus.approved
+                            and bid.kru_state != ApprovalStatus.denied
+                            else bid.kru_state
+                        )
+
+                    else:
+                        bid.cc_supervisor_state = (
+                            ApprovalStatus.pending_approval
+                            if bid.cc_supervisor_state != ApprovalStatus.approved
+                            and bid.cc_supervisor_state != ApprovalStatus.denied
+                            else bid.cc_supervisor_state
+                        )
+                else:
+                    bid.cc_state = (
+                        ApprovalStatus.pending_approval
+                        if bid.cc_state != ApprovalStatus.approved
+                        and bid.cc_state != ApprovalStatus.denied
+                        else bid.cc_state
+                    )
+
         case "fac_state":
             if expenditure.cc.id == expenditure.fac.id:
                 bid.cc_state = (
@@ -1353,6 +1379,23 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     and bid.cc_supervisor_state != ApprovalStatus.denied
                     else bid.cc_supervisor_state
                 )
+
+            if bid.cc_state == ApprovalStatus.skipped:
+                if bid.cc_supervisor_state == ApprovalStatus.skipped:
+                    bid.kru_state = (
+                        ApprovalStatus.pending_approval
+                        if bid.kru_state != ApprovalStatus.approved
+                        and bid.kru_state != ApprovalStatus.denied
+                        else bid.kru_state
+                    )
+
+                else:
+                    bid.cc_supervisor_state = (
+                        ApprovalStatus.pending_approval
+                        if bid.cc_supervisor_state != ApprovalStatus.approved
+                        and bid.cc_supervisor_state != ApprovalStatus.denied
+                        else bid.cc_supervisor_state
+                    )
         case "cc_state":
             if expenditure.cc_supervisor.id == expenditure.cc.id:
                 bid.cc_supervisor_state = (
@@ -1362,8 +1405,6 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     else bid.cc_supervisor_state
                 )
 
-    if bid.fac_state == ApprovalStatus.skipped:
-        if bid.cc_state == ApprovalStatus.skipped:
             if bid.cc_supervisor_state == ApprovalStatus.skipped:
                 bid.kru_state = (
                     ApprovalStatus.pending_approval
@@ -1371,21 +1412,6 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     and bid.kru_state != ApprovalStatus.denied
                     else bid.kru_state
                 )
-
-            else:
-                bid.cc_supervisor_state = (
-                    ApprovalStatus.pending_approval
-                    if bid.cc_supervisor_state != ApprovalStatus.approved
-                    and bid.cc_supervisor_state != ApprovalStatus.denied
-                    else bid.cc_supervisor_state
-                )
-        else:
-            bid.cc_state = (
-                ApprovalStatus.pending_approval
-                if bid.cc_state != ApprovalStatus.approved
-                and bid.cc_state != ApprovalStatus.denied
-                else bid.cc_state
-            )
 
 
 def update_bid(bid: BidSchema):
