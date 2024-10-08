@@ -119,6 +119,9 @@ async def show_form(
             "Комментарий при закрытие заявки: " + request.close_description + "\n"
         )
 
+    if request.score:
+        text_form += f"Оценка проделанной работы {request.score}\n"
+
     buttons.append(
         [
             InlineKeyboardButton(

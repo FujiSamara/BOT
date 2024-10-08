@@ -384,7 +384,7 @@ def update_technical_request_from_territorial_manager(
 
     request.score = mark
 
-    if mark >= 3:
+    if mark != 1:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
         request.acceptor_post = request.territorial_manager.post

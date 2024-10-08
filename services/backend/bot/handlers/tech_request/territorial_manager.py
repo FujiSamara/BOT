@@ -275,7 +275,7 @@ async def save_rate(
         mark=mark, request_id=request_id, description=description
     )
 
-    if mark < 3 and request_data["state"] not in [
+    if mark == 1 and request_data["state"] not in [
         ApprovalStatus.approved,
         ApprovalStatus.skipped,
     ]:

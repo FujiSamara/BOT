@@ -1,9 +1,10 @@
+import asyncio
+from typing import Optional
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.markdown import hbold
 from aiogram.filters.callback_data import CallbackData
-from typing import Optional
-import asyncio
+from aiogram.utils.markdown import hbold
+from settings import get_settings
 from bot.kb import (
     get_personal_cabinet,
     personal_cabinet_menu,
@@ -143,8 +144,10 @@ async def get_mat_val(callback: CallbackQuery, callback_data: ShowLoginCallbackD
     text = f"Предмет: {material_value.item}\
 \nКоличество: {material_value.quanity}\
 \nСтоимость: {material_value.price}\
-\nДата выдачи: {material_value.issue_date}\
-\nИнвентаризационный номер: {material_value.inventory_number}"
+\nДата выдачи: {material_value.issue_date.date().strftime(get_settings().date_format)}"
+    if material_value.return_date:
+        text += f"\nДата возврата: {material_value.return_date.date().strftime(get_settings().date_format)}"
+    text += f"\nИнвентаризационный номер: {material_value.inventory_number}"
     await try_edit_or_answer(
         text=text,
         message=callback.message,

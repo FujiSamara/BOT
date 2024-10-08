@@ -312,6 +312,7 @@ class MaterialValuesSchema(BaseSchema):
     price: int
     inventory_number: str
     issue_date: datetime.datetime
+    return_date: Optional[datetime.datetime] = None
 
 
 class SubordinationSchema(BaseSchema):
