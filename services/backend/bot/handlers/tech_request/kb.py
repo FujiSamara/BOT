@@ -545,7 +545,7 @@ async def tm_rate_kb(
         form_complete = False
     else:
         mark_text = f"{mark} ✅"
-        if mark < 3:
+        if mark == 1:
             if not description:
                 description = ""
                 form_complete = False
