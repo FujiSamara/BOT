@@ -246,7 +246,7 @@ async def get_description(
 ):
     await state.set_state(TerritorialManagerRequestForm.description)
     await try_delete_message(callback.message)
-    msg = await callback.message.answer(text=hbold("Введите описание доработки:"))
+    msg = await callback.message.answer(text=hbold("Введите комментарий:"))
     await state.update_data(msg=msg)
 
 

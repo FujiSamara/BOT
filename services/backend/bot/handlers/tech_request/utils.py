@@ -83,16 +83,15 @@ async def show_form(
             + request.confirmation_date.date().strftime(get_settings().date_format)
             + "\n"
         )
+        if request.confirmation_description:
+            text_form += "Комментарий ТУ: " + request.confirmation_description + "\n \n"
+
         if request.reopen_date:
             text_form += (
                 "Дата переоткрытия заявки: "
                 + request.reopen_date.date().strftime(get_settings().date_format)
                 + "\n"
             )
-            if request.confirmation_description:
-                text_form += (
-                    "Комментарий ТУ: " + request.confirmation_description + "\n"
-                )
         if request.reopen_repair_date:
             text_form += (
                 "Повторная дата ремонта: "
@@ -107,20 +106,18 @@ async def show_form(
                 )
                 + "\n"
             )
+            if request.close_description:
+                text_form += "Комментарий ТУ: " + request.close_description + "\n \n"
 
-    if request.close_date:
-        text_form += (
-            "Дата закрытия заявки: "
-            + request.close_date.date().strftime(get_settings().date_format)
-            + "\n"
-        )
-    if request.close_description:
-        text_form += (
-            "Комментарий при закрытие заявки: " + request.close_description + "\n"
-        )
+        if request.close_date:
+            text_form += (
+                "Дата закрытия заявки: "
+                + request.close_date.date().strftime(get_settings().date_format)
+                + "\n"
+            )
 
-    if request.score:
-        text_form += f"Оценка проделанной работы: {request.score}\n"
+        if request.score:
+            text_form += f"\nОценка проделанной работы: {request.score}\n"
 
     buttons.append(
         [

@@ -545,27 +545,26 @@ async def tm_rate_kb(
         form_complete = False
     else:
         mark_text = f"{mark} ✅"
-        if mark == 1:
-            if not description:
-                description = ""
-                form_complete = False
-            else:
-                description = (
-                    description if len(description) <= 16 else description[:16] + "..."
-                )
-                description += " ✅"
+        if not description:
+            description = ""
+            form_complete = False
+        else:
+            description = (
+                description if len(description) <= 16 else description[:16] + "..."
+            )
+            description += " ✅"
 
-            desc_button = [
-                InlineKeyboardButton(
-                    text="Комментарий",
-                    callback_data=ShowRequestCallbackData(
-                        request_id=callback_data.request_id,
-                        end_point="description_TM_TR",
-                        last_end_point=callback_data.last_end_point,
-                    ).pack(),
-                ),
-                InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
-            ]
+        desc_button = [
+            InlineKeyboardButton(
+                text="Комментарий",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="description_TM_TR",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ]
 
     buttons.append(
         [
