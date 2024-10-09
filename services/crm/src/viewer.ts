@@ -65,8 +65,8 @@ export class BidViewer extends Viewer<BidSchema> {
 
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("worker", parser.formatWorker);
-		this._formatters.set("create_date", parser.formatDate);
-		this._formatters.set("close_date", parser.formatDate);
+		this._formatters.set("create_date", parser.formatDateTime);
+		this._formatters.set("close_date", parser.formatDateTime);
 		this._formatters.set("documents", parser.formatDocuments);
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);

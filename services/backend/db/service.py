@@ -2186,19 +2186,19 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
         "company_id": record.department.company.id,
         "post_id": record.post.id,
         "department_id": record.department.id,
-        "work_begin": record.work_begin,
-        "day": record.day,
+        "work_begin": record.work_begin.strftime(get_settings().date_format),
+        "day": record.day.strftime(get_settings().date_format).split()[0],
     }
 
-    if hasattr(record, "work_end"):
-        dump["work_end"] = record.work_end
-    if hasattr(record, "work_duration"):
+    if hasattr(record, "work_end") and record.work_end is not None:
+        dump["work_end"] = record.work_end.strftime(get_settings().date_format)
+    if hasattr(record, "work_duration") and record.work_duration is not None:
         dump["work_duration"] = record.work_duration
-    if hasattr(record, "salary"):
+    if hasattr(record, "salary") and record.salary is not None:
         dump["salary"] = record.salary
-    if hasattr(record, "fine"):
+    if hasattr(record, "fine") and record.fine is not None:
         dump["fine"] = record.fine
-    if hasattr(record, "rating"):
+    if hasattr(record, "rating") and record.rating is not None:
         dump["rating"] = record.rating
 
     return dump
