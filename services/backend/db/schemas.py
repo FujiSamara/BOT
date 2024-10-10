@@ -332,7 +332,7 @@ class FileSchema(BaseModel):
 
     file: UploadFile
 
-    @field_validator("document", mode="before")
+    @field_validator("file", mode="before")
     @classmethod
     def upload_file_validate(cls, val):
         if isinstance(val, StorageFile):
