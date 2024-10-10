@@ -376,7 +376,7 @@ def update_technical_request_from_territorial_manager(
 ) -> Optional[dict]:
     """
     Update technical request
-    Return repairman telegram id if mark < 3 else None
+    Return repairman telegram id if mark == 1 else None
     """
     cur_date = datetime.now()
 
@@ -384,7 +384,12 @@ def update_technical_request_from_territorial_manager(
 
     request.score = mark
 
-    if mark >= 3:
+    if request.reopen_date:
+        request.close_description = description
+    else:
+        request.confirmation_description = description
+
+    if mark != 1:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
         request.acceptor_post = request.territorial_manager.post
@@ -394,12 +399,10 @@ def update_technical_request_from_territorial_manager(
             request.confirmation_date = cur_date
     else:
         if request.reopen_date:
-            request.close_description = description
             request.state = ApprovalStatus.skipped
             request.close_date = cur_date
             request.reopen_confirmation_date = cur_date
         else:
-            request.confirmation_description = description
             request.state = ApprovalStatus.pending
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
