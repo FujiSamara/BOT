@@ -2003,6 +2003,15 @@ async def create_dismissal_blank(files: list[UploadFile], telegram_id: str) -> b
         file.filename = filename
         documents.append(DocumentSchema(document=file))
 
+    work_times = orm.get_worker_times(worker.id)
+    duration: float = float()
+    fines: int = int()
+    for work_time in work_times:
+        if work_time.work_duration:
+            duration += work_time.work_duration
+        if work_time.fine:
+            fines += work_time.fine
+
     dismissal = DismissalSchema(
         subordination=sub,
         documents=documents,

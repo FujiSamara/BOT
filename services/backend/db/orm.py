@@ -1535,6 +1535,15 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
 
 # region Dismissal
 
+def get_worker_times(id: int) -> list[WorkTimeSchema]:
+    with session.begin() as s:
+        raws = (
+            s.query(WorkTime)
+            .filter(id == WorkTime.worker_id)
+            .all()
+        )
+        return [WorkTimeSchema.model_validate(raw) for raw in raws]
+
 
 def get_last_dismissal_blank_id() -> int:
     """

@@ -357,6 +357,16 @@ class DismissalSchema(BaseModel):
     access_approval_date: Optional[datetime.datetime] = None
     tech_approval_date: Optional[datetime.datetime] = None
 
+    # Others
+    dismissal_reason: Optional[str]
+
+    has_material_values: Optional[bool]
+    has_debt: Optional[bool]
+    has_med_debt: Optional[bool]
+
+    fines: Optional[float]
+    worked_hours: Optional[datetime.datetime]
+
 
 # endregion
 

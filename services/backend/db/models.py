@@ -1008,5 +1008,17 @@ class Dismissal(Base):
     access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
+    # Others
+    dismissal_reason: Mapped[str] = mapped_column(nullable=False)
+
+    has_material_values: Mapped[bool] = mapped_column(nullable=False)
+    has_debt: Mapped[bool] = mapped_column(nullable=False)
+    has_med_debt: Mapped[bool] = mapped_column(nullable=False)
+
+    fines: Mapped[float] = mapped_column(nullable=False)
+    worked_hours: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    
+
+
 
 # endregion
