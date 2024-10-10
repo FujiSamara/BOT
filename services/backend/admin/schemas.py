@@ -647,6 +647,8 @@ class MaterialValuesView(ModelView, model=MaterialValues):
         MaterialValues.item,
         MaterialValues.price,
         MaterialValues.inventory_number,
+        MaterialValues.issue_date,
+        MaterialValues.return_date,
     ]
 
     column_details_exclude_list = [MaterialValues.worker_id]
@@ -656,6 +658,8 @@ class MaterialValuesView(ModelView, model=MaterialValues):
         MaterialValues.item,
         MaterialValues.price,
         MaterialValues.inventory_number,
+        MaterialValues.return_date,
+        MaterialValues.issue_date,
     ]
 
     @staticmethod
@@ -691,6 +695,7 @@ class MaterialValuesView(ModelView, model=MaterialValues):
         MaterialValues.price: "Цена",
         MaterialValues.inventory_number: "Инвентаризационный номер",
         MaterialValues.issue_date: "Дата выдачи",
+        MaterialValues.return_date: "Дата возврата",
     }
 
 

@@ -143,9 +143,9 @@ class WorkTimeSchema(BaseModel):
     department: Optional[DepartmentSchema] = None
     post: Optional[PostSchema] = None
 
-    work_begin: Optional[str] = None
-    work_end: Optional[str] = None
-    day: str
+    work_begin: Optional[datetime.datetime] = None
+    work_end: Optional[datetime.datetime] = None
+    day: datetime.date
     work_duration: Optional[float] = None
 
     rating: Optional[int] = None
@@ -314,6 +314,7 @@ class MaterialValuesSchema(BaseSchema):
     price: int
     inventory_number: str
     issue_date: datetime.datetime
+    return_date: Optional[datetime.datetime] = None
 
 
 class SubordinationSchema(BaseSchema):

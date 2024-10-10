@@ -14,9 +14,40 @@ export function formatWorker(worker: WorkerSchema): Cell {
 	);
 }
 
-export function formatDate(dateString: string): Cell {
+export function formatDateTime(dateString: string): Cell {
+	if (!dateString) {
+		return new Cell(new CellLine());
+	}
+
 	const date = new Date(dateString);
-	return new Cell(new CellLine(date.toLocaleString()));
+	const formattedDate =
+		date.getFullYear() +
+		"-" +
+		(date.getMonth() + 1).toString().padStart(2, "0") +
+		"-" +
+		date.getDate().toString().padStart(2, "0") +
+		" " +
+		date.getHours().toString().padStart(2, "0") +
+		":" +
+		date.getMinutes().toString().padStart(2, "0") +
+		":" +
+		date.getSeconds().toString().padStart(2, "0");
+	return new Cell(new CellLine(formattedDate));
+}
+
+export function formatDate(dateString: string): Cell {
+	if (!dateString) {
+		return new Cell(new CellLine());
+	}
+
+	const date = new Date(dateString);
+	const formattedDate =
+		date.getFullYear() +
+		"-" +
+		(date.getMonth() + 1).toString().padStart(2, "0") +
+		"-" +
+		date.getDate().toString().padStart(2, "0");
+	return new Cell(new CellLine(formattedDate));
 }
 
 export function formatExpenditure(expenditure: ExpenditureSchema): Cell {

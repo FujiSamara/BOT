@@ -571,10 +571,10 @@ class WorkTime(Base):
         "Department", back_populates="work_times"
     )
 
-    work_begin: Mapped[str] = mapped_column(nullable=True)
-    work_end: Mapped[str] = mapped_column(nullable=True)
+    work_begin: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    work_end: Mapped[datetime.datetime] = mapped_column(nullable=True)
     work_duration: Mapped[float] = mapped_column(nullable=True)
-    day: Mapped[str] = mapped_column(nullable=True)
+    day: Mapped[datetime.date] = mapped_column(nullable=True)
 
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
@@ -923,6 +923,7 @@ class MaterialValues(Base):
     price: Mapped[int] = mapped_column(nullable=False)
     inventory_number: Mapped[str] = mapped_column(nullable=False)
     issue_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    return_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
 class Subordination(Base):
