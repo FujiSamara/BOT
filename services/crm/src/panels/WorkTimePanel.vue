@@ -1,6 +1,6 @@
 <template>
 	<div class="worktime-content">
-		<div v-if="!editingElement" class="header-content">
+		<div v-show="!editingElement" class="header-content">
 			<h1>Явки</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool
