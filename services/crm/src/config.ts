@@ -1,5 +1,6 @@
 export const crmEndpoint = "api/crm";
 export const authEndpoint = "api/auth";
+export const filesEndpoint = "api/download";
 export const protocol = import.meta.env.VITE_PROTOCOL;
 export const backendDomain = import.meta.env.VITE_DOMAIN;
 export const backendPort = import.meta.env.VITE_PORT;

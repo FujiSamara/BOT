@@ -52,8 +52,7 @@
 								<p v-if="cellLine.href.length > 0">
 									<a
 										@click.stop="
-											async () =>
-												await onHrefClicked(cellLine.href, cellLine.value)
+											async () => await onHrefClicked(cellLine.value)
 										"
 										class="link"
 										>{{ cellLine.value }}</a
@@ -147,8 +146,8 @@ const onRejectCommentSubmit = () => {
 	emit("reject", rejectReason.value);
 	rejectReason.value = "";
 };
-const onHrefClicked = async (href: string, filename: string) => {
-	await networkStore.downloadFile(href, filename);
+const onHrefClicked = async (filename: string) => {
+	await networkStore.downloadFile(filename);
 };
 const onExpandClicked = (cell: Cell, index: number) => {
 	const docs = [];

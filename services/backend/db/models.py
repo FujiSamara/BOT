@@ -11,17 +11,17 @@ import enum
 
 
 class ApprovalStatus(enum.Enum):
-    pending = (1,)
-    approved = (2,)
-    denied = (3,)
-    pending_approval = (4,)
-    skipped = (5,)
-    not_relevant = (6,)
+    pending = 1
+    approved = 2
+    denied = 3
+    pending_approval = 4
+    skipped = 5
+    not_relevant = 6
 
 
 class Gender(enum.Enum):
-    man = (1,)
-    woman = (2,)
+    man = 1
+    woman = 2
 
 
 class FujiScope(enum.Enum):
@@ -33,6 +33,9 @@ class FujiScope(enum.Enum):
     crm_fac_bid = 18
     crm_cc_bid = 19
     crm_cc_supervisor_bid = 20
+    crm_my_bid = 26
+    crm_archive_bid = 27
+    crm_my_file = 28
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6

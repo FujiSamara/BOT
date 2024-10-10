@@ -105,8 +105,7 @@
 									<p v-if="cellLine.href.length > 0">
 										<a
 											@click.stop="
-												async () =>
-													await onHrefClicked(cellLine.href, cellLine.value)
+												async () => await onHrefClicked(cellLine.value)
 											"
 											class="link"
 											>{{ cellLine.value }}</a
@@ -231,8 +230,8 @@ const onRejectCommentSubmit = async () => {
 	rejectReason.value = "";
 	emit("reject");
 };
-const onHrefClicked = async (href: string, filename: string) => {
-	await networkStore.downloadFile(href, filename);
+const onHrefClicked = async (filename: string) => {
+	await networkStore.downloadFile(filename);
 };
 const onExpandClicked = (cell: Cell, index: number) => {
 	const docs = [];
@@ -385,7 +384,7 @@ th {
 }
 
 .highlighted {
-	background-color: #fdf7fd;
+	background-color: #fdf7fd !important;
 }
 
 .table-tools {

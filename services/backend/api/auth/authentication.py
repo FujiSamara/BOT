@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from api.auth.schemas import TokenData, User, UserWithScopes
 from api.auth.permissions import _oauth2_schema, _to_auth_scope
+from db.models import FujiScope
 from settings import get_settings
 from db import service
 
@@ -19,7 +20,7 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def _authenticate_user(username: str, password: str) -> Optional[UserWithScopes]:
+def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
     """Authenticates user by his `username` and `password`.
 
     Returns corresponding `User` if `username` and `password` correct,
@@ -41,7 +42,7 @@ def _authenticate_user(username: str, password: str) -> Optional[UserWithScopes]
     )
 
 
-def _create_access_token(data: dict, expires_delta: timedelta) -> str:
+def create_access_token(data: dict, expires_delta: timedelta) -> str:
     """Returns new access token with `data` and `expires_delta`."""
     to_encode = data.copy()
     expire = datetime.now() + expires_delta
@@ -52,9 +53,39 @@ def _create_access_token(data: dict, expires_delta: timedelta) -> str:
     return encoded_jwt
 
 
-async def get_current_user(
+def create_access_link(scopes: list[Union[str, FujiScope]] = None) -> str:
+    """Returns guest temprorary access link for specified `scopes`
+
+    :param scopes: Needed accesses, consists `["authenticated"]`
+    """
+    if scopes is None:
+        scopes = []
+
+    scopes = [
+        *(
+            _to_auth_scope(scope) if isinstance(scope, FujiScope) else scope
+            for scope in scopes
+        ),
+        "authenticated",
+    ]
+
+    access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
+    access_token = create_access_token(
+        data={
+            "sub": "guest",
+            "scopes": scopes,
+        },
+        expires_delta=access_token_expires,
+    )
+
+    link = get_settings().crm_addr
+
+    return f"{link}/crm/guest?token={access_token}&token_type=bearer"
+
+
+async def get_user(
     security_scopes: SecurityScopes, token: str = Depends(_oauth2_schema)
-) -> User:
+) -> UserWithScopes:
     """Validates user permissions.
     Returns instance of `User` if user has enough permissions for `security scopes`,
     throw `HTTPException` with `401` status code otherwise."""
@@ -87,9 +118,21 @@ async def get_current_user(
     except (JWTError, ValidationError):
         raise credentials_exception
 
-    worker = service.get_worker_by_phone_number(username)
-    if not worker:
-        raise credentials_exception
+    user: UserWithScopes
+
+    if username == "guest":
+        user = UserWithScopes(
+            username="guest", full_name="guest", scopes=token_data.scopes
+        )
+    else:
+        worker = service.get_worker_by_phone_number(username)
+        if not worker:
+            raise credentials_exception
+        user = User(
+            username=worker.phone_number,
+            full_name=f"{worker.l_name} {worker.f_name}",
+            scopes=token_data.scopes,
+        )
 
     for scope in security_scopes.scopes:
         if scope not in token_data.scopes and "admin" not in token_data.scopes:
@@ -99,6 +142,4 @@ async def get_current_user(
                 headers={"WWW-Authenticate": authenticate_value},
             )
 
-    return User(
-        username=worker.phone_number, full_name=f"{worker.l_name} {worker.f_name}"
-    )
+    return user

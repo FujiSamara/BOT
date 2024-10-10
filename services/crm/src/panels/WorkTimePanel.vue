@@ -24,7 +24,7 @@
 			:canCreate="true"
 			:canDelete="true"
 		></PanelTable>
-		<div v-show="editingElement" class="edit-panel-element-wrapper">
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
 			<EditPanelRow
 				class="edit-page"
 				:editor="editor"
@@ -42,7 +42,7 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { WorkTimeTable } from "@/table";
 import { WorkTimeEditor } from "@/editor";
 
@@ -125,6 +125,7 @@ const onCreateClicked = () => {
 watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .worktime-content {

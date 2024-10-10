@@ -47,7 +47,7 @@ export default {
 	display: flex;
 	flex-direction: column;
 	align-self: center;
-	width: calc(100% - 20px);
+	min-width: calc(100% - 20px);
 	border: 1px solid #e8e8e8;
 	border-top: none;
 	border-bottom-left-radius: 10px;

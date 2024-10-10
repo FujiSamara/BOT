@@ -3,6 +3,16 @@
 		<div v-if="!editingElement" class="header-content">
 			<h1>Заявки ЦФО</h1>
 			<PanelTools class="top-tools">
+				<BidExpenditureTool
+					v-model:filters="expenditureFilters"
+					:group="1"
+				></BidExpenditureTool>
+				<ToolSeparator></ToolSeparator>
+				<BidStatusTool
+					v-model:filters="statusFilters"
+					:group="0"
+				></BidStatusTool>
+				<ToolSeparator></ToolSeparator>
 				<PeriodTool
 					v-model:from-date="fromDateString"
 					v-model:to-date="toDateString"
@@ -30,7 +40,7 @@
 			@click="onRowClicked"
 		></PanelTable>
 		<ViewPanelRow
-			v-show="elementViewing"
+			v-if="elementViewing"
 			@close="elementViewing = false"
 			@approve="onApprove"
 			@reject="onReject"
@@ -50,8 +60,18 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
+import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
+import BidExpenditureTool from "@/components/PanelTools/BidExpenditureTool.vue";
 
-import { Ref, ref, shallowRef, ShallowRef, watch } from "vue";
+import {
+	computed,
+	onMounted,
+	Ref,
+	ref,
+	shallowRef,
+	ShallowRef,
+	watch,
+} from "vue";
 import { FACBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
@@ -124,6 +144,13 @@ watch(table.notifies, () => {
 	emit("notify", table.notifies.value, props.id);
 });
 
+// Filters
+const expenditureFilters = ref([]);
+const statusFilters = ref([]);
+table.filterQuery = computed(() => {
+	return [...statusFilters.value, ...expenditureFilters.value];
+});
+
 const onApprove = async () => {
 	await table.approve(viewingIndex.value, true);
 	elementViewing.value = false;
@@ -137,6 +164,7 @@ const onRowClicked = (rowKey: number) => {
 	elementViewing.value = true;
 	viewingIndex.value = rowKey;
 };
+onMounted(() => table.startUpdatingLoop());
 </script>
 <style scoped>
 .bid-content {
@@ -151,7 +179,7 @@ const onRowClicked = (rowKey: number) => {
 	display: flex;
 	align-items: center;
 	flex-direction: row;
-	overflow: hidden;
+	position: relative;
 	flex-shrink: 0;
 }
 .header-content h1 {

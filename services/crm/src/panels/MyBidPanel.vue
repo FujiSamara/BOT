@@ -1,7 +1,7 @@
 <template>
 	<div class="bid-content">
 		<div v-if="!editingElement" class="header-content">
-			<h1>Заявки ЦЗ</h1>
+			<h1>Мои заявки</h1>
 			<PanelTools class="top-tools">
 				<BidExpenditureTool
 					v-model:filters="expenditureFilters"
@@ -32,24 +32,34 @@
 			</PanelTools>
 		</div>
 		<PanelTable
-			v-show="!elementViewing"
+			v-show="!elementViewing && !editingElement"
 			:table="table"
-			:can-delete="false"
-			:can-approve="true"
-			:can-reject="true"
+			:can-delete="true"
+			:can-create="true"
+			:can-approve="false"
+			:can-reject="false"
 			@click="onRowClicked"
+			@create="onCreateClicked"
 		></PanelTable>
+
 		<ViewPanelRow
 			v-if="elementViewing"
 			@close="elementViewing = false"
-			@approve="onApprove"
-			@reject="onReject"
-			:canApprove="true"
-			:canReject="true"
-			:can-delete="false"
+			@delete="onDelete"
+			:canApprove="false"
+			:canReject="false"
+			:can-delete="true"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
+		<div v-if="editingElement" class="edit-panel-element-wrapper">
+			<EditPanelRow
+				class="edit-page"
+				:editor="editor"
+				@submit="onSubmit"
+				@close="editingElement = false"
+			></EditPanelRow>
+		</div>
 	</div>
 </template>
 <script setup lang="ts">
@@ -60,8 +70,6 @@ import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
-import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
-import BidExpenditureTool from "@/components/PanelTools/BidExpenditureTool.vue";
 
 import {
 	computed,
@@ -72,8 +80,12 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { CCBidTable } from "@/table";
+import { MyBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
+import EditPanelRow from "@/components/EditPanelRow.vue";
+import { BidEditor } from "@/editor";
+import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
+import BidExpenditureTool from "@/components/PanelTools/BidExpenditureTool.vue";
 
 const props = defineProps({
 	id: {
@@ -86,9 +98,8 @@ const emit = defineEmits<{
 	(e: "notify", count: number, id: number): void;
 }>();
 
-const editingElement = ref(false);
+const table = new MyBidTable();
 
-const table = new CCBidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 
@@ -99,6 +110,20 @@ const viewingIndex: Ref<number> = ref(-1);
 
 const departmentSearchString = ref("");
 const searchString = ref("");
+
+// Edit page
+const editingElement = ref(false);
+const editor: ShallowRef<BidEditor> = shallowRef(new BidEditor());
+const editingElementKey: Ref<number> = ref(-1);
+
+const onSubmit = async () => {
+	if (editingElementKey.value !== -1) {
+		await table.update(editor.value.toInstanse(), editingElementKey.value);
+	} else {
+		await table.create(editor.value.toInstanse());
+	}
+	editingElement.value = false;
+};
 
 watch([departmentSearchString, searchString], () => {
 	const result = [];
@@ -151,18 +176,19 @@ table.filterQuery = computed(() => {
 	return [...statusFilters.value, ...expenditureFilters.value];
 });
 
-const onApprove = async () => {
-	await table.approve(viewingIndex.value, true);
-	elementViewing.value = false;
-};
-const onReject = async (reason: string) => {
-	await table.reject(viewingIndex.value, true, reason);
+const onDelete = async () => {
+	await table.delete(viewingIndex.value, true);
 	elementViewing.value = false;
 };
 const onRowClicked = (rowKey: number) => {
 	viewer.value = new BidViewer(table.getModel(rowKey));
 	elementViewing.value = true;
 	viewingIndex.value = rowKey;
+};
+const onCreateClicked = () => {
+	editor.value = new BidEditor();
+	editingElementKey.value = -1;
+	editingElement.value = true;
 };
 onMounted(() => table.startUpdatingLoop());
 </script>
@@ -179,8 +205,8 @@ onMounted(() => table.startUpdatingLoop());
 	display: flex;
 	align-items: center;
 	flex-direction: row;
-	position: relative;
 	flex-shrink: 0;
+	position: relative;
 }
 .header-content h1 {
 	font-family: Stolzl;

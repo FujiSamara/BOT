@@ -22,6 +22,10 @@ export enum Access {
 	CCBid,
 	CCSupervisorBid,
 	Worktime,
+	Authed,
+	MyBid,
+	ArchiveBid,
+	MyFile,
 }
 
 export const accessesDict: any = {
@@ -32,6 +36,10 @@ export const accessesDict: any = {
 	crm_fac_bid: Access.FACBid,
 	crm_cc_bid: Access.CCBid,
 	crm_cc_supervisor_bid: Access.CCSupervisorBid,
+	authenticated: Access.Authed,
+	crm_my_bid: Access.MyBid,
+	crm_archive_bid: Access.ArchiveBid,
+	crm_my_file: Access.MyFile,
 };
 
 export interface PanelData extends NavigationData {
@@ -70,6 +78,7 @@ export interface DepartmentSchema extends BaseSchema {
 export interface DocumentSchema {
 	name: string;
 	href: string;
+	file?: Blob;
 }
 
 export interface BidSchema extends BaseSchema {
@@ -83,6 +92,7 @@ export interface BidSchema extends BaseSchema {
 	documents: Array<DocumentSchema>;
 	status: string;
 	comment: string;
+	need_edm: boolean;
 }
 
 export interface PostSchema extends BaseSchema {

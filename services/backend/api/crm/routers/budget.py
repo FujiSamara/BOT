@@ -10,7 +10,7 @@ from db.schemas import (
     TalbeInfoSchema,
 )
 
-from api.auth import User, get_current_user
+from api.auth import User, get_user
 
 
 router = APIRouter()
@@ -20,7 +20,7 @@ router = APIRouter()
 async def get_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_current_user, scopes=["crm_budget"]),
+    _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> TalbeInfoSchema:
     record_count = service.get_budget_records_count(query)
     all_record_count = service.get_budget_records_count(QuerySchema())
@@ -38,7 +38,7 @@ async def get_bid_records(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_current_user, scopes=["crm_budget"]),
+    _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> list[BudgetRecordWithChapter]:
     return [
         BudgetRecordWithChapter(
@@ -55,7 +55,7 @@ async def get_bid_records(
 
 @router.get("/last")
 async def get_last_budget_record(
-    _: User = Security(get_current_user, scopes=["crm_budget"]),
+    _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> Optional[BudgetRecordWithChapter]:
     record = service.get_last_budget_record()
     if record:
@@ -72,7 +72,7 @@ async def get_last_budget_record(
 
 @router.delete("/{id}")
 async def delete_budget_record(
-    id: int, _: User = Security(get_current_user, scopes=["crm_budget"])
+    id: int, _: User = Security(get_user, scopes=["crm_budget"])
 ) -> None:
     service.remove_budget_record(id)
 
@@ -80,6 +80,6 @@ async def delete_budget_record(
 @router.patch("/")
 async def update_budget_record(
     schema: BudgetRecordSchema,
-    _: User = Security(get_current_user, scopes=["crm_budget"]),
+    _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> None:
     service.update_budget_record(schema)
