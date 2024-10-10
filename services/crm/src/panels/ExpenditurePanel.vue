@@ -1,6 +1,6 @@
 <template>
 	<div class="expenditure-content">
-		<div v-if="!editingElement" class="header-content">
+		<div v-show="!editingElement" class="header-content">
 			<h1>Статьи</h1>
 			<PanelTools class="top-tools">
 				<PeriodTool

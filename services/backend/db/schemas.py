@@ -143,7 +143,7 @@ class WorkTimeSchema(BaseModel):
 
     work_begin: Optional[datetime.datetime] = None
     work_end: Optional[datetime.datetime] = None
-    day: datetime.date
+    day: Optional[datetime.date] = None
     work_duration: Optional[float] = None
 
     rating: Optional[int] = None

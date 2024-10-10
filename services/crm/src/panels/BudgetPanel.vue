@@ -1,6 +1,6 @@
 <template>
 	<div class="budget-content">
-		<div v-if="!editingElement" class="header-content">
+		<div v-show="!editingElement" class="header-content">
 			<h1>Бюджет</h1>
 			<PanelTools class="top-tools">
 				<SeacrhTool
