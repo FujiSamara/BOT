@@ -1,7 +1,7 @@
 """Corrected work time date types
 
 Revision ID: 31ce6b07d5e5
-Revises: 92b06114c96e
+Revises: 126cbefe665d
 Create Date: 2024-10-09 15:50:42.780949
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "31ce6b07d5e5"
-down_revision: Union[str, None] = "92b06114c96e"
+down_revision: Union[str, None] = "126cbefe665d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
