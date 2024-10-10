@@ -3,6 +3,7 @@ import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
 import { useNetworkStore } from "./store/network";
 import { DocumentSchema } from "./types";
+import * as parser from "@/parser";
 
 export class SmartField {
 	protected _rawField: Ref<any> = ref();
@@ -38,6 +39,7 @@ export class InputSmartField extends SmartField {
 		super(name, fieldName, canEdit, required);
 		if (defaultValue) {
 			this._rawField.value = defaultValue;
+			this.completed.value = true;
 		}
 	}
 
@@ -192,6 +194,42 @@ class BoolSmartField extends EnumSmartField {
 	}
 }
 
+class DateTimeSmartField extends InputSmartField {
+	constructor(
+		name: string,
+		fieldName: string,
+		defaultValue?: any,
+		canEdit: boolean = true,
+		public readonly required: boolean = false,
+		public mode: string = "datetime",
+	) {
+		super(name, fieldName, defaultValue, canEdit, required, false);
+	}
+
+	protected formatter(value: any): string {
+		if (this.mode === "datetime") {
+			return parser.formatDateTime(value).toString();
+		} else {
+			return parser.formatDate(value).toString();
+		}
+	}
+	protected async setter(newValue: any): Promise<void> {
+		if (newValue === "") {
+			this._rawField.value = null;
+			return;
+		}
+
+		this._rawField.value = newValue;
+
+		const date: any = new Date(newValue);
+		if (date instanceof Date && !isNaN(date.getDate())) {
+			this.completed.value = true;
+		} else {
+			this.completed.value = false;
+		}
+	}
+}
+
 export class Editor {
 	public fields: Array<SmartField> = [];
 	protected _network = useNetworkStore();
@@ -255,18 +293,25 @@ export class BudgetEditor extends Editor {
 export class WorkTimeEditor extends Editor {
 	constructor(_instance?: any) {
 		super();
-
 		this.fields = [
-			new WorkerSmartField("Работник", "worker", _instance?.worker),
+			new WorkerSmartField("Работник", "worker", _instance?.worker, true, true),
 			new DepartmentSmartField(
 				"Производство",
 				"department",
 				_instance?.department,
+				true,
+				true,
 			),
-			new PostSmartField("Должность", "post", _instance?.post),
-			new InputSmartField("Начало смены", "work_begin", _instance?.work_begin),
-			new InputSmartField("Конец смены", "work_end", _instance?.work_end),
-			new InputSmartField("День", "day", _instance?.day),
+			new PostSmartField("Должность", "post", _instance?.post, true, true),
+			new DateTimeSmartField(
+				"Начало смены",
+				"work_begin",
+				_instance?.work_begin,
+				true,
+				true,
+			),
+			new DateTimeSmartField("Конец смены", "work_end", _instance?.work_end),
+			new DateTimeSmartField("День", "day", _instance?.day, true, true, "date"),
 			new InputSmartField(
 				"Длительность работы",
 				"work_duration",
