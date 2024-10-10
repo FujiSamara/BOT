@@ -545,26 +545,14 @@ async def tm_rate_kb(
         form_complete = False
     else:
         mark_text = f"{mark} ✅"
-        if not description:
-            description = ""
-            form_complete = False
-        else:
-            description = (
-                description if len(description) <= 16 else description[:16] + "..."
-            )
-            description += " ✅"
-
-        desc_button = [
-            InlineKeyboardButton(
-                text="Комментарий",
-                callback_data=ShowRequestCallbackData(
-                    request_id=callback_data.request_id,
-                    end_point="description_TM_TR",
-                    last_end_point=callback_data.last_end_point,
-                ).pack(),
-            ),
-            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
-        ]
+    if not description:
+        description = ""
+        form_complete = False
+    else:
+        description = (
+            description if len(description) <= 16 else description[:16] + "..."
+        )
+        description += " ✅"
 
     buttons.append(
         [
@@ -577,10 +565,20 @@ async def tm_rate_kb(
                 ).pack(),
             ),
             InlineKeyboardButton(text=f"{mark_text}", callback_data="dummy"),
-        ]
+        ],
+        [
+            InlineKeyboardButton(
+                text="Комментарий",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="description_TM_TR",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
     )
-    if desc_button:
-        buttons.append(desc_button)
+
     buttons.append(
         [
             InlineKeyboardButton(
@@ -595,7 +593,7 @@ async def tm_rate_kb(
     )
 
     if form_complete:
-        if mark >= 3 or (
+        if mark > 1 or (
             get_technical_request_by_id(
                 request_id=data.get("request_id")
             ).reopen_repair_date
