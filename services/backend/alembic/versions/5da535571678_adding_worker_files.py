@@ -1,7 +1,7 @@
 """Adding worker files
 
 Revision ID: 5da535571678
-Revises: 92b06114c96e
+Revises: 31ce6b07d5e5
 Create Date: 2024-10-07 15:08:54.080002
 
 """
@@ -17,7 +17,7 @@ from settings import get_settings
 
 # revision identifiers, used by Alembic.
 revision: str = "5da535571678"
-down_revision: Union[str, None] = "92b06114c96e"
+down_revision: Union[str, None] = "31ce6b07d5e5"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
