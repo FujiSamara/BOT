@@ -752,7 +752,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._formatters.set("cc", parser.formatWorker);
 		this._formatters.set("cc_supervisor", parser.formatWorker);
 		this._formatters.set("creator", parser.formatWorker);
-		this._formatters.set("create_date", parser.formatDate);
+		this._formatters.set("create_date", parser.formatDateTime);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("name", "Статья");
@@ -803,8 +803,8 @@ export class BidTable extends Table<BidSchema> {
 
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("worker", parser.formatWorker);
-		this._formatters.set("create_date", parser.formatDate);
-		this._formatters.set("close_date", parser.formatDate);
+		this._formatters.set("create_date", parser.formatDateTime);
+		this._formatters.set("close_date", parser.formatDateTime);
 		this._formatters.set("documents", parser.formatDocuments);
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);
@@ -938,6 +938,9 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._formatters.set("worker", parser.formatWorker);
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("post", parser.formatPost);
+		this._formatters.set("work_begin", parser.formatDateTime);
+		this._formatters.set("work_end", parser.formatDateTime);
+		this._formatters.set("day", parser.formatDateTime);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
