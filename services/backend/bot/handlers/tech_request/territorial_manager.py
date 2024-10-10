@@ -246,7 +246,7 @@ async def get_description(
 ):
     await state.set_state(TerritorialManagerRequestForm.description)
     await try_delete_message(callback.message)
-    msg = await callback.message.answer(text=hbold("Введите описание доработки:"))
+    msg = await callback.message.answer(text=hbold("Введите комментарий:"))
     await state.update_data(msg=msg)
 
 
@@ -275,7 +275,7 @@ async def save_rate(
         mark=mark, request_id=request_id, description=description
     )
 
-    if mark < 3 and request_data["state"] not in [
+    if mark == 1 and request_data["state"] not in [
         ApprovalStatus.approved,
         ApprovalStatus.skipped,
     ]:

@@ -923,6 +923,7 @@ class MaterialValues(Base):
     price: Mapped[int] = mapped_column(nullable=False)
     inventory_number: Mapped[str] = mapped_column(nullable=False)
     issue_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    return_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
 
 class Subordination(Base):
