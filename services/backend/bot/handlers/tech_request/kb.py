@@ -537,8 +537,6 @@ async def tm_rate_kb(
     form_complete = True
     mark = data.get("mark")
     description = data.get("description")
-    buttons = []
-    desc_button = None
 
     if not mark:
         mark_text = ""
@@ -554,7 +552,7 @@ async def tm_rate_kb(
         )
         description += " ✅"
 
-    buttons.append(
+    buttons = [
         [
             InlineKeyboardButton(
                 text="Оценка",
@@ -577,9 +575,6 @@ async def tm_rate_kb(
             ),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
         ],
-    )
-
-    buttons.append(
         [
             InlineKeyboardButton(
                 text="К заявке",
@@ -589,8 +584,8 @@ async def tm_rate_kb(
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
-        ]
-    )
+        ],
+    ]
 
     if form_complete:
         if mark > 1 or (
