@@ -32,20 +32,30 @@ const validateDate = (date: string): boolean => {
 	return true;
 };
 
-const fromChange = (e: Event) => {
-	const value = (e.target as HTMLInputElement).value;
+const delay = 500;
+let delaySetter: number = setTimeout(() => {}, 0);
 
-	if (validateDate(value)) {
-		fromValue.value = value;
-	}
+const fromChange = (e: Event) => {
+	clearTimeout(delaySetter);
+	delaySetter = setTimeout(() => {
+		console.log("here");
+		const value = (e.target as HTMLInputElement).value;
+
+		if (validateDate(value)) {
+			fromValue.value = value;
+		}
+	}, delay);
 };
 
 const toChange = (e: Event) => {
-	const value = (e.target as HTMLInputElement).value;
+	clearTimeout(delaySetter);
+	delaySetter = setTimeout(() => {
+		const value = (e.target as HTMLInputElement).value;
 
-	if (validateDate(value)) {
-		toValue.value = value;
-	}
+		if (validateDate(value)) {
+			toValue.value = value;
+		}
+	}, delay);
 };
 
 onMounted(() => {

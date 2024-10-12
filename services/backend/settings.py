@@ -83,7 +83,8 @@ class Settings(BaseSettings):
     telegram_token: str = Field(validate_default="TELEGRAM_TOKEN")
     bot_webhook_url: str = Field(validate_default="BOT_WEBHOOK_URL")
 
-    date_format: str = "%d.%m.%Y %H:%M:%S"
+    date_format: str = "%d.%m.%Y"
+    date_time_format: str = "%d.%m.%Y %H:%M:%S"
 
 
 @lru_cache
