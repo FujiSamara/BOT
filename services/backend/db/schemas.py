@@ -7,6 +7,8 @@ from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
 
+from settings import get_settings
+
 
 # region Shemas for models
 class BaseSchema(BaseModel):
@@ -321,13 +323,58 @@ class SubordinationSchema(BaseSchema):
     employee: WorkerSchema
 
 
+class FileSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+
+    file: UploadFile
+
+    @field_validator("file", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
+        return val
+
+    def to_out(self, mode="api") -> "FileOutSchema":
+        """Converted `FileSchema` to `FileOutSchema`"""
+        proto = "http"
+
+        host = get_settings().domain
+        port = get_settings().port
+        if get_settings().ssl_certfile:
+            proto = "https"
+
+        source: str = ""
+
+        if mode == "sqladmin":
+            source = "/admin"
+        elif mode == "api":
+            source = "/api"
+
+        return FileOutSchema(
+            name=self.file.filename,
+            href=f"{proto}://{host}:{port}{source}/download?name={self.file.filename}",
+            description=self.description,
+        )
+
+    description: Optional[str] = None
+
+
 # endregion
 
 
 # region Extended schemas for api
-class FileSchema(BaseModel):
+class FileOutSchema(BaseModel):
     name: str
     href: str
+    description: Optional[str] = None
 
 
 class BudgetRecordWithChapter(BudgetRecordSchema):
@@ -344,7 +391,7 @@ class BidOutSchema(BaseSchema):
     purpose: str
     create_date: datetime.datetime
     close_date: Optional[datetime.datetime]
-    documents: list[FileSchema]
+    documents: list[FileOutSchema]
     status: str
     comment: Optional[str]
     denying_reason: Optional[str]
