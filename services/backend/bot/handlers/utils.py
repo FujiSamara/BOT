@@ -1,4 +1,4 @@
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Optional
 from functools import cache
 from aiogram.types import (
     Message,
@@ -97,7 +97,11 @@ async def send_menu_by_scopes(message: Message, edit=None):
             reply_markup=menu,
         )
     else:
-        await message.answer(hbold("Фуджи team"), reply_markup=menu)
+        await try_answer(
+            message=message,
+            text=hbold("Фуджи team"),
+            reply_markup=menu,
+        )
 
 
 async def try_delete_message(message: Message) -> bool:
@@ -126,7 +130,21 @@ async def try_edit_message(
         return False
 
 
-async def try_edit_or_answer(message: Message, text: str, reply_markup: Any = None):
+async def try_answer(message: Message, text: str, reply_markup: Any = None) -> bool:
+    """
+    Tries to answer message.
+    Returns: `True` if message answered, `False` otherwise.
+    """
+    try:
+        await message.answer(text=text, reply_markup=reply_markup)
+        return True
+    except Exception:
+        return False
+
+
+async def try_edit_or_answer(
+    message: Message, text: str, reply_markup: Any = None
+) -> bool:
     """
     Tries to edit message.
     if the `message` unsuccessfully edited
@@ -137,7 +155,7 @@ async def try_edit_or_answer(message: Message, text: str, reply_markup: Any = No
     if not await try_edit_message(
         message=message, text=text, reply_markup=reply_markup
     ):
-        await message.answer(text=text, reply_markup=reply_markup)
+        await try_answer(message, text, reply_markup)
         return False
 
     return True
@@ -156,16 +174,21 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
         if not worker.telegram_id:
             continue
         msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+        if not msg:
+            continue
         await send_menu_by_scopes(message=msg)
 
 
-async def notify_worker_by_telegram_id(id: int, message: str) -> Message:
+async def notify_worker_by_telegram_id(id: int, message: str) -> Optional[Message]:
     """
-    Sends notify `message` to worker by their `id`.
+    Tries to sends notify `message` to worker by their `id`.
 
     Returns sended `Message`.
     """
-    return await get_bot().send_message(chat_id=id, text=message)
+    try:
+        await get_bot().send_message(chat_id=id, text=message)
+    except Exception:
+        return None
 
 
 async def handle_documents(
