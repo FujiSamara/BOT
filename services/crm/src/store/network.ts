@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { Access, accessesDict, Token } from "@/types";
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 import * as config from "@/config";
 import { inject } from "vue";
 import { VueCookies } from "vue-cookies";
@@ -26,6 +26,7 @@ export const useNetworkStore = defineStore("network", {
 			accesses: new Array<Access>(),
 			$cookies: $cookies,
 			username: undefined,
+			errors: new Array<string>(),
 		};
 	},
 	actions: {
@@ -91,12 +92,20 @@ export const useNetworkStore = defineStore("network", {
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,
 		): Promise<any> {
-			return await handler.catch((error) => {
+			return await handler.catch((error: AxiosError) => {
 				const statusCode = error.response ? error.response.status : null;
 
 				if (statusCode === 401) {
 					router.go(0);
 				} else {
+					let msg;
+					if (error.response && (error.response.data as any).detail) {
+						msg = JSON.stringify((error.response.data as any).detail);
+					} else {
+						msg = error.message;
+					}
+
+					this.errors.push(msg);
 					return Promise.reject(error);
 				}
 			});
