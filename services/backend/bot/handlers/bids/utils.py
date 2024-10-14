@@ -54,10 +54,10 @@ def get_bid_state_info(bid: BidSchema) -> str:
         stage += "ЦФО"
     elif bid.cc_state == ApprovalStatus.pending_approval:
         stage += "ЦЗ"
-    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
-        stage += "Руководитель ЦЗ"
     elif bid.kru_state == ApprovalStatus.pending_approval:
         stage += "КРУ"
+    elif bid.paralegal_state == ApprovalStatus.pending_approval:
+        stage += "Помощник юрисконсульта"
     elif bid.owner_state == ApprovalStatus.pending_approval:
         stage += "Собственник"
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
@@ -71,8 +71,8 @@ def get_bid_state_info(bid: BidSchema) -> str:
     elif (
         bid.fac_state == ApprovalStatus.denied
         or bid.cc_state == ApprovalStatus.denied
-        or bid.cc_supervisor_state == ApprovalStatus.denied
         or bid.kru_state == ApprovalStatus.denied
+        or bid.paralegal_state == ApprovalStatus.denied
         or bid.owner_state == ApprovalStatus.denied
         or bid.accountant_card_state == ApprovalStatus.denied
         or bid.accountant_cash_state == ApprovalStatus.denied
@@ -107,11 +107,11 @@ def get_current_coordinator_field(bid: BidSchema) -> str:
         return "fac_state"
     elif bid.cc_state == ApprovalStatus.pending_approval:
         return "cc_state"
-    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
-        return "cc_supervisor_state"
-
     elif bid.kru_state == ApprovalStatus.pending_approval:
         return "kru_state"
+
+    elif bid.paralegal_state == ApprovalStatus.pending_approval:
+        return "paralegal_state"
     elif bid.owner_state == ApprovalStatus.pending_approval:
         return "owner_state"
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:

@@ -10,7 +10,7 @@ from bot.kb import (
     create_inline_keyboard,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    kru_menu_button,
+    paralegal_menu_button,
     owner_menu_button,
     accountant_card_menu_button,
     accountant_cash_menu_button,
@@ -277,9 +277,9 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
 def build_coordinations():
     CoordinationFactory(
         router=router,
-        coordinator_menu_button=kru_menu_button,
-        state_column=Bid.kru_state,
-        name="kru",
+        coordinator_menu_button=paralegal_menu_button,
+        state_column=Bid.paralegal_state,
+        name="paralegal",
     )
     CoordinationFactory(
         router=router,

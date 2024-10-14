@@ -760,7 +760,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		super("expenditure");
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
-		this._formatters.set("cc_supervisor", parser.formatWorker);
+		this._formatters.set("kru", parser.formatWorker);
 		this._formatters.set("creator", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDateTime);
 
@@ -770,7 +770,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("create_date", "Дата создания");
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
-		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
+		this._aliases.set("kru", "КРУ");
 		this._aliases.set("creator", "Создал");
 	}
 }
@@ -907,14 +907,14 @@ export class CCBidTable extends BidTable {
 	}
 }
 
-export class CCSupervisorBidTable extends BidTable {
+export class KRUBidTable extends BidTable {
 	constructor() {
 		super({
-			getEndpoint: "/cc_supervisor",
-			infoEndpoint: "/cc_supervisor",
-			exportEndpoint: "/cc_supervisor",
-			approveEndpoint: "/cc_supervisor",
-			rejectEndpoint: "/cc_supervisor",
+			getEndpoint: "/kru",
+			infoEndpoint: "/kru",
+			exportEndpoint: "/kru",
+			approveEndpoint: "/kru",
+			rejectEndpoint: "/kru",
 		});
 	}
 }

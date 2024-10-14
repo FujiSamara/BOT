@@ -66,8 +66,8 @@ async def create_bid_by_in_schema(bid_in: BidInSchema):
         documents=[],
         fac_state=ApprovalStatus.pending_approval,
         cc_state=ApprovalStatus.pending,
-        cc_supervisor_state=ApprovalStatus.pending,
         kru_state=ApprovalStatus.pending,
+        paralegal_state=ApprovalStatus.pending,
         owner_state=ApprovalStatus.skipped
         if int(bid_in.amount) <= 30000
         else ApprovalStatus.pending,
@@ -105,8 +105,8 @@ async def create_bid(
     files: list[UploadFile],
     fac_state: ApprovalStatus,
     cc_state: ApprovalStatus,
-    cc_supervisor_state: ApprovalStatus,
     kru_state: ApprovalStatus,
+    paralegal_state: ApprovalStatus,
     owner_state: ApprovalStatus,
     accountant_cash_state: ApprovalStatus,
     accountant_card_state: ApprovalStatus,
@@ -167,8 +167,8 @@ async def create_bid(
         documents=documents,
         fac_state=fac_state,
         cc_state=cc_state,
-        cc_supervisor_state=cc_supervisor_state,
         kru_state=kru_state,
+        paralegal_state=paralegal_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
         accountant_cash_state=accountant_cash_state,
@@ -271,8 +271,8 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             bid.cc_state = ApprovalStatus.pending_approval
             if state == ApprovalStatus.denied:
                 bid.cc_state = ApprovalStatus.skipped
-                bid.cc_supervisor_state = ApprovalStatus.skipped
                 bid.kru_state = ApprovalStatus.skipped
+                bid.paralegal_state = ApprovalStatus.skipped
                 bid.owner_state = ApprovalStatus.skipped
                 bid.accountant_card_state = ApprovalStatus.skipped
                 bid.accountant_cash_state = ApprovalStatus.skipped
@@ -280,20 +280,10 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 bid.teller_cash_state = ApprovalStatus.skipped
         case "cc_state":
             bid.cc_state = state
-            bid.cc_supervisor_state = ApprovalStatus.pending_approval
-            if state == ApprovalStatus.denied:
-                bid.cc_supervisor_state = ApprovalStatus.skipped
-                bid.kru_state = ApprovalStatus.skipped
-                bid.owner_state = ApprovalStatus.skipped
-                bid.accountant_card_state = ApprovalStatus.skipped
-                bid.accountant_cash_state = ApprovalStatus.skipped
-                bid.teller_card_state = ApprovalStatus.skipped
-                bid.teller_cash_state = ApprovalStatus.skipped
-        case "cc_supervisor_state":
-            bid.cc_supervisor_state = state
             bid.kru_state = ApprovalStatus.pending_approval
             if state == ApprovalStatus.denied:
                 bid.kru_state = ApprovalStatus.skipped
+                bid.paralegal_state = ApprovalStatus.skipped
                 bid.owner_state = ApprovalStatus.skipped
                 bid.accountant_card_state = ApprovalStatus.skipped
                 bid.accountant_cash_state = ApprovalStatus.skipped
@@ -301,6 +291,16 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 bid.teller_cash_state = ApprovalStatus.skipped
         case "kru_state":
             bid.kru_state = state
+            bid.paralegal_state = ApprovalStatus.pending_approval
+            if state == ApprovalStatus.denied:
+                bid.paralegal_state = ApprovalStatus.skipped
+                bid.owner_state = ApprovalStatus.skipped
+                bid.accountant_card_state = ApprovalStatus.skipped
+                bid.accountant_cash_state = ApprovalStatus.skipped
+                bid.teller_card_state = ApprovalStatus.skipped
+                bid.teller_cash_state = ApprovalStatus.skipped
+        case "paralegal_state":
+            bid.paralegal_state = state
             if bid.owner_state == ApprovalStatus.skipped:
                 if bid.accountant_cash_state == ApprovalStatus.skipped:
                     bid.accountant_card_state = ApprovalStatus.pending_approval
@@ -354,10 +354,10 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 stage = "Ваша заявка согласована ЦФО!"
             case "cc_state":
                 stage = "Ваша заявка согласована ЦЗ!"
-            case "cc_supervisor_state":
-                stage = "Ваша заявка согласована руководителем ЦЗ!"
             case "kru_state":
-                stage = "Ваша заявка согласована КРУ!"
+                stage = "Ваша заявка согласована руководителем ЦЗ!"
+            case "paralegal_state":
+                stage = "Ваша заявка согласована помощником юрисконсульта!"
             case "owner_state":
                 stage = "Ваша заявка согласована собственником!"
             case "accountant_card_state":
@@ -390,9 +390,9 @@ async def notify_next_coordinator(bid: BidSchema):
         notify_workers_by_scope,
     )
 
-    if bid.kru_state == ApprovalStatus.pending_approval:
+    if bid.paralegal_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_paralegal, message="У вас новая заявка!"
         )
     elif bid.owner_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
@@ -435,30 +435,30 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     and bid.cc_state != ApprovalStatus.denied
                     else bid.cc_state
                 )
-            if expenditure.cc_supervisor.id == bid.worker.id:
-                bid.cc_supervisor_state = (
+            if expenditure.kru.id == bid.worker.id:
+                bid.kru_state = (
                     ApprovalStatus.skipped
-                    if bid.cc_supervisor_state != ApprovalStatus.approved
-                    and bid.cc_supervisor_state != ApprovalStatus.denied
-                    else bid.cc_supervisor_state
+                    if bid.kru_state != ApprovalStatus.approved
+                    and bid.kru_state != ApprovalStatus.denied
+                    else bid.kru_state
                 )
 
             if bid.fac_state == ApprovalStatus.skipped:
                 if bid.cc_state == ApprovalStatus.skipped:
-                    if bid.cc_supervisor_state == ApprovalStatus.skipped:
+                    if bid.kru_state == ApprovalStatus.skipped:
+                        bid.paralegal_state = (
+                            ApprovalStatus.pending_approval
+                            if bid.paralegal_state != ApprovalStatus.approved
+                            and bid.paralegal_state != ApprovalStatus.denied
+                            else bid.paralegal_state
+                        )
+
+                    else:
                         bid.kru_state = (
                             ApprovalStatus.pending_approval
                             if bid.kru_state != ApprovalStatus.approved
                             and bid.kru_state != ApprovalStatus.denied
                             else bid.kru_state
-                        )
-
-                    else:
-                        bid.cc_supervisor_state = (
-                            ApprovalStatus.pending_approval
-                            if bid.cc_supervisor_state != ApprovalStatus.approved
-                            and bid.cc_supervisor_state != ApprovalStatus.denied
-                            else bid.cc_supervisor_state
                         )
                 else:
                     bid.cc_state = (
@@ -476,45 +476,45 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                     and bid.cc_state != ApprovalStatus.denied
                     else bid.cc_state
                 )
-            if expenditure.cc_supervisor.id == expenditure.fac.id:
-                bid.cc_supervisor_state = (
+            if expenditure.kru.id == expenditure.fac.id:
+                bid.kru_state = (
                     ApprovalStatus.skipped
-                    if bid.cc_supervisor_state != ApprovalStatus.approved
-                    and bid.cc_supervisor_state != ApprovalStatus.denied
-                    else bid.cc_supervisor_state
+                    if bid.kru_state != ApprovalStatus.approved
+                    and bid.kru_state != ApprovalStatus.denied
+                    else bid.kru_state
                 )
 
             if bid.cc_state == ApprovalStatus.skipped:
-                if bid.cc_supervisor_state == ApprovalStatus.skipped:
+                if bid.kru_state == ApprovalStatus.skipped:
+                    bid.paralegal_state = (
+                        ApprovalStatus.pending_approval
+                        if bid.paralegal_state != ApprovalStatus.approved
+                        and bid.paralegal_state != ApprovalStatus.denied
+                        else bid.paralegal_state
+                    )
+
+                else:
                     bid.kru_state = (
                         ApprovalStatus.pending_approval
                         if bid.kru_state != ApprovalStatus.approved
                         and bid.kru_state != ApprovalStatus.denied
                         else bid.kru_state
                     )
-
-                else:
-                    bid.cc_supervisor_state = (
-                        ApprovalStatus.pending_approval
-                        if bid.cc_supervisor_state != ApprovalStatus.approved
-                        and bid.cc_supervisor_state != ApprovalStatus.denied
-                        else bid.cc_supervisor_state
-                    )
         case "cc_state":
-            if expenditure.cc_supervisor.id == expenditure.cc.id:
-                bid.cc_supervisor_state = (
-                    ApprovalStatus.skipped
-                    if bid.cc_supervisor_state != ApprovalStatus.approved
-                    and bid.cc_supervisor_state != ApprovalStatus.denied
-                    else bid.cc_supervisor_state
-                )
-
-            if bid.cc_supervisor_state == ApprovalStatus.skipped:
+            if expenditure.kru.id == expenditure.cc.id:
                 bid.kru_state = (
-                    ApprovalStatus.pending_approval
+                    ApprovalStatus.skipped
                     if bid.kru_state != ApprovalStatus.approved
                     and bid.kru_state != ApprovalStatus.denied
                     else bid.kru_state
+                )
+
+            if bid.kru_state == ApprovalStatus.skipped:
+                bid.paralegal_state = (
+                    ApprovalStatus.pending_approval
+                    if bid.paralegal_state != ApprovalStatus.approved
+                    and bid.paralegal_state != ApprovalStatus.denied
+                    else bid.paralegal_state
                 )
 
 
@@ -632,10 +632,10 @@ def apply_bid_archive_filter(query_schema: QuerySchema) -> QuerySchema:
         [
             FilterSchema(column="fac_state", value=ApprovalStatus.denied, groups=[0]),
             FilterSchema(column="cc_state", value=ApprovalStatus.denied, groups=[0]),
-            FilterSchema(
-                column="cc_supervisor_state", value=ApprovalStatus.denied, groups=[0]
-            ),
             FilterSchema(column="kru_state", value=ApprovalStatus.denied, groups=[0]),
+            FilterSchema(
+                column="paralegal_state", value=ApprovalStatus.denied, groups=[0]
+            ),
             FilterSchema(column="owner_state", value=ApprovalStatus.denied, groups=[0]),
             FilterSchema(
                 column="accountant_card_state", value=ApprovalStatus.denied, groups=[0]
@@ -678,8 +678,8 @@ def export_bid_records(
             "documents",
             "fac_state",
             "cc_state",
-            "cc_supervisor_state",
             "kru_state",
+            "paralegal_state",
             "owner_state",
             "accountant_card_state",
             "accountant_cash_state",
