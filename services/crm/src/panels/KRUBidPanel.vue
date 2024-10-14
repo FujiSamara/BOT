@@ -1,7 +1,7 @@
 <template>
 	<div class="bid-content">
 		<div v-show="!editingElement" class="header-content">
-			<h1>Заявки РЗЦ</h1>
+			<h1>Заявки КРУ</h1>
 			<PanelTools class="top-tools">
 				<BidExpenditureTool
 					v-model:filters="expenditureFilters"
@@ -72,7 +72,7 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { CCSupervisorBidTable } from "@/table";
+import { KRUBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -88,7 +88,7 @@ const emit = defineEmits<{
 
 const editingElement = ref(false);
 
-const table = new CCSupervisorBidTable();
+const table = new KRUBidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 
