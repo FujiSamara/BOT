@@ -6,6 +6,13 @@
 			@click="onNavButtonClicked"
 			@logout="onLogout"
 		></NavigationPanel>
+		<ModalMessage
+			v-if="errorWindowVisible"
+			title="Ошибка"
+			:description="errorDescription"
+			@close="onErrorClosed"
+		>
+		</ModalMessage>
 
 		<component
 			v-for="panelData in panelsData"
@@ -27,7 +34,8 @@ import NavigationPanel from "@/components/NavigationPanel.vue";
 import DefaultPanel from "@/panels/DefaultPanel.vue";
 import { getPanelsByAccesses } from "@/panels";
 import { useNetworkStore } from "@/store/network";
-import { ref, shallowRef } from "vue";
+import { ref, shallowRef, watch } from "vue";
+import ModalMessage from "@/components/ModalMessage.vue";
 
 const networkStore = useNetworkStore();
 
@@ -57,6 +65,20 @@ const onNavButtonClicked = async (id: number) => {
 const onLogout = () => {
 	networkStore.logout();
 };
+
+const errorWindowVisible = ref(false);
+const errorDescription = ref("");
+const onErrorClosed = () => {
+	errorWindowVisible.value = false;
+	networkStore.errors.pop();
+};
+watch(networkStore.errors, () => {
+	if (networkStore.errors.length === 0) {
+		return;
+	}
+	errorDescription.value = networkStore.errors[networkStore.errors.length - 1];
+	errorWindowVisible.value = true;
+});
 </script>
 <style scoped>
 .wrapper {

@@ -665,9 +665,11 @@ export class Table<T extends BaseSchema> {
 
 	//#region CRUD
 	public async create(model: T): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
+			)
+			.catch((_) => {});
 
 		this.forceRefresh();
 	}
@@ -675,23 +677,27 @@ export class Table<T extends BaseSchema> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
-			await this._network.withAuthChecking(
-				axios.patch(
-					`${this._endpoint}${this._updateEndpoint}/`,
-					this._loadedRows.value[index],
-				),
-			);
+			await this._network
+				.withAuthChecking(
+					axios.patch(
+						`${this._endpoint}${this._updateEndpoint}/`,
+						this._loadedRows.value[index],
+					),
+				)
+				.catch((_) => {});
 		}
 	}
 	public async delete(
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.delete(
-				`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.delete(
+					`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
@@ -706,11 +712,13 @@ export class Table<T extends BaseSchema> {
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.patch(
-				`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
@@ -726,11 +734,13 @@ export class Table<T extends BaseSchema> {
 		needRefresh: boolean = false,
 		reason: string,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.patch(
-				`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
