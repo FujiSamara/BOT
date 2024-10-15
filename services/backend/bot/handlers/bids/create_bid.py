@@ -101,6 +101,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     documents = data["document"]
     expenditure = data["expenditure"]
     need_edm = data.get("need_edm")
+    activity_type = data.get("activity_type")
 
     document_files: list[UploadFile] = []
 
@@ -145,6 +146,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         teller_card_state=teller_card_state,
         teller_cash_state=teller_cash_state,
         need_edm=need_edm,
+        activity_type=activity_type,
     )
 
     await try_edit_message(message=callback.message, text="Успешно!")
@@ -339,6 +341,28 @@ async def set_edm(message: Message, state: FSMContext):
         await clear_state_with_success(message, state, sleep_time=0)
     elif message.text in ["Да", "Нет"]:
         await state.update_data(need_edm=message.text == "Да")
+        await clear_state_with_success(message, state)
+    else:
+        await message.answer(format_err)
+
+
+# Activity type
+@router.callback_query(F.data == "get_activity_type_form")
+async def get_activity_type_form(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.activity_type)
+    await callback.message.delete()
+    await callback.message.answer(
+        hbold("Тип деятельности:"),
+        reply_markup=create_reply_keyboard("Инвестиционная", "Текущая"),
+    )
+
+
+@router.message(BidCreating.activity_type)
+async def set_activity_type(message: Message, state: FSMContext):
+    if message.text == "⏪ Назад":
+        await clear_state_with_success(message, state, sleep_time=0)
+    elif message.text in ["Инвестиционная", "Текущая"]:
+        await state.update_data(activity_type=message.text)
         await clear_state_with_success(message, state)
     else:
         await message.answer(format_err)

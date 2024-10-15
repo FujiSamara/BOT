@@ -66,6 +66,7 @@ async def create_bid_by_in_schema(bid_in: BidInSchema):
     Returns created bid in bd as `BidOutSchema`
     """
     bid = BidSchema(
+        activity_type=bid_in.activity_type,
         amount=bid_in.amount,
         payment_type=bid_in.payment_type,
         department=bid_in.department,
@@ -125,6 +126,7 @@ async def create_bid(
     accountant_card_state: ApprovalStatus,
     teller_cash_state: ApprovalStatus,
     teller_card_state: ApprovalStatus,
+    activity_type: str,
     comment: Optional[str] = None,
     need_edm: Optional[bool] = None,
 ):
@@ -188,6 +190,7 @@ async def create_bid(
         teller_card_state=teller_card_state,
         teller_cash_state=teller_cash_state,
         need_edm=need_edm,
+        activity_type=activity_type,
     )
 
     skip_repeating_bid_state(bid, "worker_state")
@@ -440,6 +443,7 @@ def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:
         status=get_bid_state_info(bid),
         denying_reason=bid.denying_reason,
         expenditure=bid.expenditure,
+        activity_type=bid.activity_type,
     )
 
 

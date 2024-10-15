@@ -834,6 +834,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("documents", "Документы");
 		this._aliases.set("expenditure", "Статья");
 		this._aliases.set("need_edm", "Счет в ЭДО");
+		this._aliases.set("activity_type", "Тип деятельности");
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("worker", 1);
@@ -849,6 +850,7 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("denying_reason", 11);
 		this._columsOrder.set("create_date", 12);
 		this._columsOrder.set("close_date", 13);
+		this._columsOrder.set("activity_type", 14);
 	}
 
 	protected color(model: BidSchema): string {
