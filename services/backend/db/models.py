@@ -32,7 +32,7 @@ class FujiScope(enum.Enum):
     crm_expenditure = 4
     crm_fac_bid = 18
     crm_cc_bid = 19
-    crm_cc_supervisor_bid = 20
+    crm_paralegal_bid = 20
     crm_my_bid = 26
     crm_archive_bid = 27
     crm_my_file = 28
@@ -328,10 +328,10 @@ class Worker(Base):
     ccs: Mapped[List["Expenditure"]] = relationship(
         "Expenditure", back_populates="cc", foreign_keys="Expenditure.cc_id"
     )
-    cc_supervisors: Mapped[List["Expenditure"]] = relationship(
+    paralegals: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
-        back_populates="cc_supervisor",
-        foreign_keys="Expenditure.cc_supervisor_id",
+        back_populates="paralegal",
+        foreign_keys="Expenditure.paralegal_id",
     )
     expenditures: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
@@ -454,7 +454,7 @@ class Bid(Base):
     # States
     fac_state: Mapped[approvalstatus]
     cc_state: Mapped[approvalstatus]
-    cc_supervisor_state: Mapped[approvalstatus]
+    paralegal_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
     owner_state: Mapped[approvalstatus]
     accountant_cash_state: Mapped[approvalstatus]
@@ -603,9 +603,9 @@ class Expenditure(Base):
     )
 
     # cost center supervisor
-    cc_supervisor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
-    cc_supervisor: Mapped["Worker"] = relationship(
-        "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
+    paralegal_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    paralegal: Mapped["Worker"] = relationship(
+        "Worker", back_populates="paralegals", foreign_keys=[paralegal_id]
     )
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
