@@ -24,6 +24,19 @@ from datetime import datetime
 from fastapi import UploadFile
 from typing import Any, Optional
 
+# In right order
+states = [
+    "fac_state",
+    "cc_state",
+    "kru_state",
+    "paralegal_state",
+    "owner_state",
+    "accountant_card_state",
+    "accountant_cash_state",
+    "teller_card_state",
+    "teller_cash_state",
+]
+
 
 def get_bid_count(
     query_schema: QuerySchema,
@@ -167,8 +180,8 @@ async def create_bid(
         documents=documents,
         fac_state=fac_state,
         cc_state=cc_state,
-        paralegal_state=paralegal_state,
         kru_state=kru_state,
+        paralegal_state=paralegal_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
         accountant_cash_state=accountant_cash_state,
@@ -310,19 +323,6 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
 
 
 def increment_bid_state(bid: BidSchema, state: ApprovalStatus):
-    # In right order
-    states = [
-        "fac_state",
-        "cc_state",
-        "kru_state",
-        "paralegal_state",
-        "owner_state",
-        "accountant_card_state",
-        "accountant_cash_state",
-        "teller_card_state",
-        "teller_cash_state",
-    ]
-
     pending_approval_found = False
 
     for state_name in states:
@@ -382,23 +382,16 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
     match state_name:
         case "worker_state":
             if expenditure.fac.id == bid.worker.id:
-                bid.fac_state = (
-                    ApprovalStatus.skipped
-                    if bid.fac_state != ApprovalStatus.pending_approval
-                    else bid.fac_state
-                )
+                bid.fac_state = ApprovalStatus.skipped
             if expenditure.cc.id == bid.worker.id:
-                bid.cc_state = (
-                    ApprovalStatus.skipped
-                    if bid.cc_state != ApprovalStatus.pending_approval
-                    else bid.cc_state
-                )
+                bid.cc_state = ApprovalStatus.skipped
             if expenditure.paralegal.id == bid.worker.id:
-                bid.paralegal_state = (
-                    ApprovalStatus.skipped
-                    if bid.paralegal_state != ApprovalStatus.pending_approval
-                    else bid.paralegal_state
-                )
+                bid.paralegal_state = ApprovalStatus.skipped
+
+            for state_name in states:
+                if getattr(bid, state_name) == ApprovalStatus.pending:
+                    setattr(bid, state_name, ApprovalStatus.pending_approval)
+                    return
 
         case "fac_state":
             if expenditure.cc.id == expenditure.fac.id:
