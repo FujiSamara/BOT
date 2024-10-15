@@ -35,7 +35,7 @@ export const accessesDict: any = {
 	crm_expenditure: Access.Expenditure,
 	crm_fac_bid: Access.FACBid,
 	crm_cc_bid: Access.CCBid,
-	crm_cc_supervisor_bid: Access.CCSupervisorBid,
+	crm_paralegal_bid: Access.CCSupervisorBid,
 	authenticated: Access.Authed,
 	crm_my_bid: Access.MyBid,
 	crm_archive_bid: Access.ArchiveBid,
@@ -63,7 +63,7 @@ export interface ExpenditureSchema extends BaseSchema {
 	create_date: Date;
 	fac: WorkerSchema;
 	cc: WorkerSchema;
-	cc_supervisor: WorkerSchema;
+	paralegal: WorkerSchema;
 }
 
 export interface BudgetSchema extends BaseSchema {

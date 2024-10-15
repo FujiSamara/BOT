@@ -232,7 +232,7 @@ def add_bid(bid: BidSchema) -> BidSchema:
             teller_cash_state=bid.teller_cash_state,
             fac_state=bid.fac_state,
             cc_state=bid.cc_state,
-            cc_supervisor_state=bid.cc_supervisor_state,
+            paralegal_state=bid.paralegal_state,
             expenditure=expenditure,
             need_edm=bid.need_edm,
         )
@@ -279,7 +279,7 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
                     or_(
                         Bid.fac_state == ApprovalStatus.pending_approval,
                         Bid.cc_state == ApprovalStatus.pending_approval,
-                        Bid.cc_supervisor_state == ApprovalStatus.pending_approval,
+                        Bid.paralegal_state == ApprovalStatus.pending_approval,
                         Bid.accountant_card_state == ApprovalStatus.pending_approval,
                         Bid.accountant_cash_state == ApprovalStatus.pending_approval,
                         Bid.teller_card_state == ApprovalStatus.pending_approval,
@@ -370,7 +370,7 @@ def update_bid(bid: BidSchema):
         cur_bid.teller_cash_state = bid.teller_cash_state
         cur_bid.fac_state = bid.fac_state
         cur_bid.cc_state = bid.cc_state
-        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
+        cur_bid.paralegal_state = bid.paralegal_state
         cur_bid.need_edm = bid.need_edm
 
 
@@ -573,12 +573,12 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
     with session.begin() as s:
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        cc_supervisor = (
-            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        paralegal = (
+            s.query(Worker).filter(Worker.id == expenditure.paralegal.id).first()
         )
         creator = s.query(Worker).filter(Worker.id == expenditure.creator.id).first()
 
-        if not cc or not fac or not cc_supervisor or not creator:
+        if not cc or not fac or not paralegal or not creator:
             return False
 
         expenditure_model = Expenditure(
@@ -587,7 +587,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             create_date=expenditure.create_date,
             fac=fac,
             cc=cc,
-            cc_supervisor=cc_supervisor,
+            paralegal=paralegal,
             creator=creator,
         )
 
@@ -613,11 +613,11 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
 
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        cc_supervisor = (
-            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        paralegal = (
+            s.query(Worker).filter(Worker.id == expenditure.paralegal.id).first()
         )
 
-        if not old or not cc or not fac or not cc_supervisor:
+        if not old or not cc or not fac or not paralegal:
             return False
 
         old.name = expenditure.name
@@ -625,7 +625,7 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
         old.create_date = expenditure.create_date
         old.fac = fac
         old.cc = cc
-        old.cc_supervisor = cc_supervisor
+        old.paralegal = paralegal
 
     return True
 

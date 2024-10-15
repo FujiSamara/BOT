@@ -256,24 +256,22 @@ async def reject_cc_bid(
 
 
 # region cc supervisor bids
-@router.post("/cc_supervisor/page/info")
-async def get_cc_supervisor_bid_pages_info(
+@router.post("/paralegal/page/info")
+async def get_paralegal_bid_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
+    user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> TalbeInfoSchema:
     service.apply_bid_status_filter(
-        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+        query, "paralegal_state", ApprovalStatus.pending_approval
     )
-    record_count = service.get_coordinator_bid_count(
-        query, user.username, "cc_supervisor"
-    )
+    record_count = service.get_coordinator_bid_count(query, user.username, "paralegal")
     all_record_count = service.get_coordinator_bid_count(
         service.apply_bid_status_filter(
-            QuerySchema(), "cc_supervisor_state", ApprovalStatus.pending_approval
+            QuerySchema(), "paralegal_state", ApprovalStatus.pending_approval
         ),
         user.username,
-        "cc_supervisor",
+        "paralegal",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -284,58 +282,56 @@ async def get_cc_supervisor_bid_pages_info(
     )
 
 
-@router.post("/cc_supervisor/page/{page}")
-async def get_cc_supervisor_bids(
+@router.post("/paralegal/page/{page}")
+async def get_paralegal_bids(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
+    user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> list[BidOutSchema]:
     service.apply_bid_status_filter(
-        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+        query, "paralegal_state", ApprovalStatus.pending_approval
     )
     return service.get_coordinator_bid_records_at_page(
-        page, records_per_page, query, user.username, "cc_supervisor"
+        page, records_per_page, query, user.username, "paralegal"
     )
 
 
-@router.post("/cc_supervisor/export")
-async def export_cc_supervisor_bids(
+@router.post("/paralegal/export")
+async def export_paralegal_bids(
     query: QuerySchema,
-    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
+    user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> Response:
     service.apply_bid_status_filter(
-        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+        query, "paralegal_state", ApprovalStatus.pending_approval
     )
-    file = service.export_coordintator_bid_records(
-        query, user.username, "cc_supervisor"
-    )
+    file = service.export_coordintator_bid_records(query, user.username, "paralegal")
 
     return StreamingResponse(
         content=file,
         headers={
-            "Content-Disposition": "filename=cc_supervisor_bids.xlsx",
+            "Content-Disposition": "filename=paralegal_bids.xlsx",
         },
         media_type="application/octet-stream",
     )
 
 
-@router.patch("/cc_supervisor/approve/{id}")
-async def approve_cc_supervisor_bid(
-    id: int, _: User = Security(get_user, scopes=["crm_cc_supervisor_bid"])
+@router.patch("/paralegal/approve/{id}")
+async def approve_paralegal_bid(
+    id: int, _: User = Security(get_user, scopes=["crm_paralegal_bid"])
 ):
     """Approves bid by `id`"""
-    await approve_coordinator_bid(id, "cc_supervisor_state")
+    await approve_coordinator_bid(id, "paralegal_state")
 
 
-@router.patch("/cc_supervisor/reject/{id}")
-async def reject_cc_supervisor_bid(
+@router.patch("/paralegal/reject/{id}")
+async def reject_paralegal_bid(
     id: int,
     reason: str,
-    _: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
+    _: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "cc_supervisor")
+    await reject_coordinator_bid(id, reason, "paralegal")
 
 
 # endregion cc supervisor bids

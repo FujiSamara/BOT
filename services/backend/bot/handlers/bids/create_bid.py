@@ -109,7 +109,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
 
     fac_state = ApprovalStatus.pending_approval
     cc_state = ApprovalStatus.pending
-    cc_supervisor_state = ApprovalStatus.pending
+    paralegal_state = ApprovalStatus.pending
     kru_state = ApprovalStatus.pending
     owner_state = ApprovalStatus.pending
     if int(amount) <= 30000:
@@ -137,7 +137,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
         telegram_id=callback.message.chat.id,
         fac_state=fac_state,
         cc_state=cc_state,
-        cc_supervisor_state=cc_supervisor_state,
+        paralegal_state=paralegal_state,
         kru_state=kru_state,
         owner_state=owner_state,
         accountant_card_state=accountant_card_state,
