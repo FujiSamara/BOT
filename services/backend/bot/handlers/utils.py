@@ -14,7 +14,7 @@ from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
 from db.models import FujiScope
-from db.schemas import WorkerSchema, DepartmentSchema
+from db.schemas import WorkerSchema
 import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
