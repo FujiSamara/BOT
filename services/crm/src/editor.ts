@@ -253,11 +253,7 @@ export class ExpenditureEditor extends Editor {
 			new InputSmartField("Раздел", "chapter", _instance?.chapter),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
 			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
-			new WorkerSmartField(
-				"Руководитель ЦЗ",
-				"cc_supervisor",
-				_instance?.cc_supervisor,
-			),
+			new WorkerSmartField("Юрисконсульт", "paralegal", _instance?.paralegal),
 		];
 	}
 }
@@ -365,6 +361,15 @@ export class BidEditor extends Editor {
 				true,
 			),
 			new InputSmartField("Цель", "purpose", undefined, true, true),
+			new EnumSmartField(
+				"Тип деятельности",
+				"activity_type",
+				["Инвестиционная", "Текущая"],
+				undefined,
+				true,
+				undefined,
+				true,
+			),
 			new DocumentSmartField("Документы", "documents", undefined, true),
 			new InputSmartField("Комментарий", "comment"),
 		];

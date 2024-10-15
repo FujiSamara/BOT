@@ -120,11 +120,12 @@ class BidSchema(BaseModel):
 
     expenditure: "ExpenditureSchema"
     need_edm: Optional[bool]
+    activity_type: str
 
     # States
     fac_state: ApprovalStatus
     cc_state: ApprovalStatus
-    cc_supervisor_state: ApprovalStatus
+    paralegal_state: ApprovalStatus
     kru_state: ApprovalStatus
     owner_state: ApprovalStatus
     accountant_card_state: ApprovalStatus
@@ -192,7 +193,7 @@ class ExpenditureSchema(BaseModel):
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
     fac: WorkerSchema
     cc: WorkerSchema
-    cc_supervisor: WorkerSchema
+    paralegal: WorkerSchema
     creator: Optional[WorkerSchema] = None
 
 
@@ -397,6 +398,7 @@ class BidOutSchema(BaseSchema):
     denying_reason: Optional[str]
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
     @field_validator("documents", mode="before")
     @classmethod
@@ -430,6 +432,7 @@ class BidInSchema(BaseModel):
     comment: Optional[str] = ""
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
 
 class TalbeInfoSchema(BaseModel):
@@ -550,7 +553,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "create_date": "Дата создания",
         "fac": "ЦФО",
         "cc": "ЦЗ",
-        "cc_supervisor": "Руководитель ЦЗ",
+        "paralegal": "Юрисконсульт",
         "creator": "Создал",
     },
     WorkTimeSchema: {
