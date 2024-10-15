@@ -2,7 +2,7 @@ import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
 import FACBidPanel from "@/panels/FACBidPanel.vue";
 import CCBidPanel from "@/panels/CCBidPanel.vue";
-import KRUBidPanel from "@/panels/KRUBidPanel.vue";
+import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
 import WorkTimePanel from "@/panels/WorkTimePanel.vue";
@@ -54,10 +54,10 @@ const panels: Array<PanelData> = [
 	{
 		id: 6,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки КРУ",
+		label: "Заявки РЦЗ",
 		isActive: false,
-		panel: shallowRef(KRUBidPanel),
-		access: Access.KRUBid,
+		panel: shallowRef(CCSupervisorBidPanel),
+		access: Access.CCSupervisorBid,
 	},
 	{
 		id: 7,

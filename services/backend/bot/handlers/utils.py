@@ -25,7 +25,7 @@ from bot.kb import (
     accountant_card_menu_button,
     accountant_cash_menu_button,
     owner_menu_button,
-    paralegal_menu_button,
+    kru_menu_button,
     rating_menu_button,
     worker_bid_menu_button,
     create_reply_keyboard,
@@ -47,7 +47,7 @@ import asyncio
 def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
     """Returns cached scope-menu dict"""
     return {
-        FujiScope.bot_bid_paralegal: paralegal_menu_button,
+        FujiScope.bot_bid_kru: kru_menu_button,
         FujiScope.bot_bid_owner: owner_menu_button,
         FujiScope.bot_bid_accountant_card: accountant_card_menu_button,
         FujiScope.bot_bid_accountant_cash: accountant_cash_menu_button,

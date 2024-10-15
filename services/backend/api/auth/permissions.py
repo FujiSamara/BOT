@@ -10,7 +10,7 @@ _scopes = {
     "crm_expenditure": "Can view expenditure crm page",
     "crm_fac_bid": "Can view fac bid crm page",
     "crm_cc_bid": "Can view cc bid crm page",
-    "crm_kru_bid": "Can view cc supervisor bid crm page",
+    "crm_cc_supervisor_bid": "Can view cc supervisor bid crm page",
 }
 
 

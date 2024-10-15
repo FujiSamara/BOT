@@ -256,20 +256,24 @@ async def reject_cc_bid(
 
 
 # region cc supervisor bids
-@router.post("/kru/page/info")
-async def get_kru_bid_pages_info(
+@router.post("/cc_supervisor/page/info")
+async def get_cc_supervisor_bid_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    user: User = Security(get_user, scopes=["crm_kru_bid"]),
+    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_status_filter(query, "kru_state", ApprovalStatus.pending_approval)
-    record_count = service.get_coordinator_bid_count(query, user.username, "kru")
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
+    record_count = service.get_coordinator_bid_count(
+        query, user.username, "cc_supervisor"
+    )
     all_record_count = service.get_coordinator_bid_count(
         service.apply_bid_status_filter(
-            QuerySchema(), "kru_state", ApprovalStatus.pending_approval
+            QuerySchema(), "cc_supervisor_state", ApprovalStatus.pending_approval
         ),
         user.username,
-        "kru",
+        "cc_supervisor",
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -280,52 +284,58 @@ async def get_kru_bid_pages_info(
     )
 
 
-@router.post("/kru/page/{page}")
-async def get_kru_bids(
+@router.post("/cc_supervisor/page/{page}")
+async def get_cc_supervisor_bids(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    user: User = Security(get_user, scopes=["crm_kru_bid"]),
+    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_status_filter(query, "kru_state", ApprovalStatus.pending_approval)
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
     return service.get_coordinator_bid_records_at_page(
-        page, records_per_page, query, user.username, "kru"
+        page, records_per_page, query, user.username, "cc_supervisor"
     )
 
 
-@router.post("/kru/export")
-async def export_kru_bids(
+@router.post("/cc_supervisor/export")
+async def export_cc_supervisor_bids(
     query: QuerySchema,
-    user: User = Security(get_user, scopes=["crm_kru_bid"]),
+    user: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
 ) -> Response:
-    service.apply_bid_status_filter(query, "kru_state", ApprovalStatus.pending_approval)
-    file = service.export_coordintator_bid_records(query, user.username, "kru")
+    service.apply_bid_status_filter(
+        query, "cc_supervisor_state", ApprovalStatus.pending_approval
+    )
+    file = service.export_coordintator_bid_records(
+        query, user.username, "cc_supervisor"
+    )
 
     return StreamingResponse(
         content=file,
         headers={
-            "Content-Disposition": "filename=kru_bids.xlsx",
+            "Content-Disposition": "filename=cc_supervisor_bids.xlsx",
         },
         media_type="application/octet-stream",
     )
 
 
-@router.patch("/kru/approve/{id}")
-async def approve_kru_bid(
-    id: int, _: User = Security(get_user, scopes=["crm_kru_bid"])
+@router.patch("/cc_supervisor/approve/{id}")
+async def approve_cc_supervisor_bid(
+    id: int, _: User = Security(get_user, scopes=["crm_cc_supervisor_bid"])
 ):
     """Approves bid by `id`"""
-    await approve_coordinator_bid(id, "kru_state")
+    await approve_coordinator_bid(id, "cc_supervisor_state")
 
 
-@router.patch("/kru/reject/{id}")
-async def reject_kru_bid(
+@router.patch("/cc_supervisor/reject/{id}")
+async def reject_cc_supervisor_bid(
     id: int,
     reason: str,
-    _: User = Security(get_user, scopes=["crm_kru_bid"]),
+    _: User = Security(get_user, scopes=["crm_cc_supervisor_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "kru")
+    await reject_coordinator_bid(id, reason, "cc_supervisor")
 
 
 # endregion cc supervisor bids

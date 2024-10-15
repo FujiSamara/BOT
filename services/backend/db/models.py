@@ -32,13 +32,13 @@ class FujiScope(enum.Enum):
     crm_expenditure = 4
     crm_fac_bid = 18
     crm_cc_bid = 19
-    crm_kru_bid = 20
+    crm_cc_supervisor_bid = 20
     crm_my_bid = 26
     crm_archive_bid = 27
     crm_my_file = 28
     # BOT
     bot_bid_create = 5
-    bot_bid_paralegal = 6
+    bot_bid_kru = 6
     bot_bid_owner = 7
     bot_bid_teller_cash = 8
     bot_bid_teller_card = 9
@@ -328,10 +328,10 @@ class Worker(Base):
     ccs: Mapped[List["Expenditure"]] = relationship(
         "Expenditure", back_populates="cc", foreign_keys="Expenditure.cc_id"
     )
-    krus: Mapped[List["Expenditure"]] = relationship(
+    cc_supervisors: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
-        back_populates="kru",
-        foreign_keys="Expenditure.kru_id",
+        back_populates="cc_supervisor",
+        foreign_keys="Expenditure.cc_supervisor_id",
     )
     expenditures: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
@@ -454,8 +454,8 @@ class Bid(Base):
     # States
     fac_state: Mapped[approvalstatus]
     cc_state: Mapped[approvalstatus]
+    cc_supervisor_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
-    paralegal_state: Mapped[approvalstatus]
     owner_state: Mapped[approvalstatus]
     accountant_cash_state: Mapped[approvalstatus]
     accountant_card_state: Mapped[approvalstatus]
@@ -603,9 +603,9 @@ class Expenditure(Base):
     )
 
     # cost center supervisor
-    kru_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
-    kru: Mapped["Worker"] = relationship(
-        "Worker", back_populates="krus", foreign_keys=[kru_id]
+    cc_supervisor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    cc_supervisor: Mapped["Worker"] = relationship(
+        "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
     )
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))

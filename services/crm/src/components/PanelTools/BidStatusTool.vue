@@ -43,8 +43,8 @@ const list = ref([
 	"Не выбрано",
 	"Согласование ЦФО",
 	"Согласование ЦЗ",
+	"Согласование РЦЗ",
 	"Согласование КРУ",
-	"Согласование помощник юрисконсульта",
 	"Согласование бух.",
 	"Согласование кассир",
 	"Выплачена",
@@ -76,19 +76,19 @@ const onClick = async (index: number) => {
 			];
 			break;
 
-		case "Согласование КРУ":
+		case "Согласование РЦЗ":
 			tempFilters = [
 				{
-					column: "kru_state",
+					column: "cc_supervisor_state",
 					value: "pending_approval",
 				},
 			];
 			break;
 
-		case "Согласование помощник юрисконсульта":
+		case "Согласование КРУ":
 			tempFilters = [
 				{
-					column: "paralegal_state",
+					column: "kru_state",
 					value: "pending_approval",
 				},
 			];
@@ -151,12 +151,12 @@ const onClick = async (index: number) => {
 					groups: [props.group],
 				},
 				{
-					column: "kru_state",
+					column: "cc_supervisor_state",
 					value: "denied",
 					groups: [props.group],
 				},
 				{
-					column: "paralegal_state",
+					column: "kru_state",
 					value: "denied",
 					groups: [props.group],
 				},
