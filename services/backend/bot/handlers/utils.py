@@ -183,12 +183,7 @@ async def notify_workers_in_department_by_scope(
     scope: FujiScope, department_id: int, message: str
 ) -> None:
     """
-    Sends notify `message` to workers by their `scope`.
-
-    Args:
-        scope(FujiScope):
-        department_id(int): Bid.department_id
-        message(str):
+    Sends notify `message` to workers in department by their `scope`.
     """
     workers: list[WorkerSchema] = [
         *service.get_workers_in_department_by_scope(scope, department_id),

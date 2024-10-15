@@ -467,13 +467,6 @@ def get_workers_in_department_with_scope(
 ) -> list[WorkerSchema]:
     """
     Returns all `Worker` as `WorkerSchema` from the specified department with the given scope.
-
-    :param scope: The scope to filter workers by.
-    :type scope: FujiScope
-    :param department_id: The id of the department.
-    :type department_id: int
-    :returns: A list of `WorkerSchema` objects representing workers in the department with the specified scope.
-    :rtype: list[WorkerSchema]
     """
     with session.begin() as s:
         raw_models = (

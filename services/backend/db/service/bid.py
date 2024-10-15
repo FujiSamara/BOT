@@ -253,9 +253,6 @@ def get_pending_bids_by_column(column: Any) -> list[BidSchema]:
 def get_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
     """
     Returns all bids in database with pending approval state at column for teller cash.
-
-    :param tg_id: teller cash telegram id
-    :type tg_id: int
     """
 
     return orm.get_specified_pending_bids_for_teller_cash(tg_id)
