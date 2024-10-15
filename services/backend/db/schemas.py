@@ -124,8 +124,8 @@ class BidSchema(BaseModel):
     # States
     fac_state: ApprovalStatus
     cc_state: ApprovalStatus
+    cc_supervisor_state: ApprovalStatus
     kru_state: ApprovalStatus
-    paralegal_state: ApprovalStatus
     owner_state: ApprovalStatus
     accountant_card_state: ApprovalStatus
     accountant_cash_state: ApprovalStatus
@@ -192,7 +192,7 @@ class ExpenditureSchema(BaseModel):
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
     fac: WorkerSchema
     cc: WorkerSchema
-    kru: WorkerSchema
+    cc_supervisor: WorkerSchema
     creator: Optional[WorkerSchema] = None
 
 
@@ -550,7 +550,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "create_date": "Дата создания",
         "fac": "ЦФО",
         "cc": "ЦЗ",
-        "kru": "КРУ",
+        "cc_supervisor": "Руководитель ЦЗ",
         "creator": "Создал",
     },
     WorkTimeSchema: {

@@ -224,7 +224,7 @@ def add_bid(bid: BidSchema) -> BidSchema:
             department=department,
             worker=worker,
             documents=[],
-            paralegal_state=bid.paralegal_state,
+            kru_state=bid.kru_state,
             owner_state=bid.owner_state,
             accountant_card_state=bid.accountant_card_state,
             accountant_cash_state=bid.accountant_cash_state,
@@ -232,7 +232,7 @@ def add_bid(bid: BidSchema) -> BidSchema:
             teller_cash_state=bid.teller_cash_state,
             fac_state=bid.fac_state,
             cc_state=bid.cc_state,
-            kru_state=bid.kru_state,
+            cc_supervisor_state=bid.cc_supervisor_state,
             expenditure=expenditure,
             need_edm=bid.need_edm,
         )
@@ -279,12 +279,12 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
                     or_(
                         Bid.fac_state == ApprovalStatus.pending_approval,
                         Bid.cc_state == ApprovalStatus.pending_approval,
-                        Bid.kru_state == ApprovalStatus.pending_approval,
+                        Bid.cc_supervisor_state == ApprovalStatus.pending_approval,
                         Bid.accountant_card_state == ApprovalStatus.pending_approval,
                         Bid.accountant_cash_state == ApprovalStatus.pending_approval,
                         Bid.teller_card_state == ApprovalStatus.pending_approval,
                         Bid.teller_cash_state == ApprovalStatus.pending_approval,
-                        Bid.paralegal_state == ApprovalStatus.pending_approval,
+                        Bid.kru_state == ApprovalStatus.pending_approval,
                         Bid.owner_state == ApprovalStatus.pending_approval,
                     ),
                 )
@@ -362,7 +362,7 @@ def update_bid(bid: BidSchema):
         # cur_bid.document = bid.document
         # cur_bid.document1 = bid.document1
         # cur_bid.document2 = bid.document2
-        cur_bid.paralegal_state = bid.paralegal_state
+        cur_bid.kru_state = bid.kru_state
         cur_bid.owner_state = bid.owner_state
         cur_bid.accountant_card_state = bid.accountant_card_state
         cur_bid.accountant_cash_state = bid.accountant_cash_state
@@ -370,7 +370,7 @@ def update_bid(bid: BidSchema):
         cur_bid.teller_cash_state = bid.teller_cash_state
         cur_bid.fac_state = bid.fac_state
         cur_bid.cc_state = bid.cc_state
-        cur_bid.kru_state = bid.kru_state
+        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
         cur_bid.need_edm = bid.need_edm
 
 
@@ -573,10 +573,12 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
     with session.begin() as s:
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        kru = s.query(Worker).filter(Worker.id == expenditure.kru.id).first()
+        cc_supervisor = (
+            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        )
         creator = s.query(Worker).filter(Worker.id == expenditure.creator.id).first()
 
-        if not cc or not fac or not kru or not creator:
+        if not cc or not fac or not cc_supervisor or not creator:
             return False
 
         expenditure_model = Expenditure(
@@ -585,7 +587,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             create_date=expenditure.create_date,
             fac=fac,
             cc=cc,
-            kru=kru,
+            cc_supervisor=cc_supervisor,
             creator=creator,
         )
 
@@ -611,9 +613,11 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
 
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        kru = s.query(Worker).filter(Worker.id == expenditure.kru.id).first()
+        cc_supervisor = (
+            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        )
 
-        if not old or not cc or not fac or not kru:
+        if not old or not cc or not fac or not cc_supervisor:
             return False
 
         old.name = expenditure.name
@@ -621,7 +625,7 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
         old.create_date = expenditure.create_date
         old.fac = fac
         old.cc = cc
-        old.kru = kru
+        old.cc_supervisor = cc_supervisor
 
     return True
 

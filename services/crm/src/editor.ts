@@ -253,7 +253,11 @@ export class ExpenditureEditor extends Editor {
 			new InputSmartField("Раздел", "chapter", _instance?.chapter),
 			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
 			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
-			new WorkerSmartField("КРУ", "kru", _instance?.kru),
+			new WorkerSmartField(
+				"Руководитель ЦЗ",
+				"cc_supervisor",
+				_instance?.cc_supervisor,
+			),
 		];
 	}
 }
