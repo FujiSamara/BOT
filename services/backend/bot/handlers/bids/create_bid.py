@@ -450,7 +450,7 @@ async def get_bid(
 @router.callback_query(F.data == "get_create_history_bid")
 async def get_bids_history(callback: CallbackQuery):
     bids = get_bids_by_worker_telegram_id(callback.message.chat.id)
-    bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+    bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
     keyboard = create_inline_keyboard(
         *(
             InlineKeyboardButton(
@@ -491,7 +491,7 @@ async def get_bid_state(callback: CallbackQuery, callback_data: BidCallbackData)
 @router.callback_query(F.data == "get_create_pending_bid")
 async def get_bids_pending(callback: CallbackQuery):
     bids = get_pending_bids_by_worker_telegram_id(callback.message.chat.id)
-    bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+    bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
     keyboard = create_inline_keyboard(
         *(
             InlineKeyboardButton(

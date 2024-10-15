@@ -218,7 +218,7 @@ class CoordinationFactory:
             bids = get_pending_bids_by_column(self.state_column)
         else:
             bids = get_history_bids_by_column(self.state_column)
-        bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+        bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
         return create_inline_keyboard(
             *(
                 InlineKeyboardButton(
