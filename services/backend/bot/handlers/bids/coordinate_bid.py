@@ -22,7 +22,9 @@ from db.models import Bid
 from db.schemas import ApprovalStatus, BidSchema
 from db.service import (
     get_pending_bids_by_column,
+    get_pending_bids_for_teller_cash,
     get_history_bids_by_column,
+    get_history_bids_for_teller_cash,
     get_bid_by_id,
     update_bid_state,
     update_bid,
@@ -212,12 +214,20 @@ class CoordinationFactory:
             reply_markup=create_inline_keyboard(*buttons),
         )
 
-    def get_specified_bids_keyboard(self, type: str) -> InlineKeyboardMarkup:
+    def get_specified_bids_keyboard(
+        self, type: str, tg_id: int
+    ) -> InlineKeyboardMarkup:
         bids = []
         if type == "pending":
-            bids = get_pending_bids_by_column(self.state_column)
+            if self.state_column == Bid.teller_cash_state:
+                bids = get_pending_bids_for_teller_cash(tg_id)
+            else:
+                bids = get_pending_bids_by_column(self.state_column)
         else:
-            bids = get_history_bids_by_column(self.state_column)
+            if self.state_column == Bid.teller_cash_state:
+                bids = get_history_bids_for_teller_cash(tg_id)
+            else:
+                bids = get_history_bids_by_column(self.state_column)
         bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
         return create_inline_keyboard(
             *(
@@ -238,13 +248,13 @@ class CoordinationFactory:
         )
 
     async def get_pendings(self, callback: CallbackQuery):
-        keyboard = self.get_specified_bids_keyboard("pending")
+        keyboard = self.get_specified_bids_keyboard("pending", callback.message.chat.id)
         await try_delete_message(callback.message)
 
         await callback.message.answer("Ожидающие согласования:", reply_markup=keyboard)
 
     async def get_history(self, callback: CallbackQuery):
-        keyboard = self.get_specified_bids_keyboard("history")
+        keyboard = self.get_specified_bids_keyboard("history", callback.message.chat.id)
         await try_delete_message(callback.message)
 
         await callback.message.answer("История согласования:", reply_markup=keyboard)

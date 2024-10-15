@@ -247,7 +247,18 @@ def get_pending_bids_by_column(column: Any) -> list[BidSchema]:
     """
     Returns all bids in database with pending approval state at column.
     """
-    return orm.get_specified_pengind_bids(column)
+    return orm.get_specified_pending_bids(column)
+
+
+def get_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with pending approval state at column for teller cash.
+
+    :param tg_id: teller cash telegram id
+    :type tg_id: int
+    """
+
+    return orm.get_specified_pending_bids_for_teller_cash(tg_id)
 
 
 def get_history_bids_by_column(column: Any) -> list[BidSchema]:
@@ -255,6 +266,13 @@ def get_history_bids_by_column(column: Any) -> list[BidSchema]:
     Returns all bids in database past through worker with `column`.
     """
     return orm.get_specified_history_bids(column)
+
+
+def get_history_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with pending approval state at column.
+    """
+    return orm.get_specified_history_bids_in_department(tg_id)
 
 
 async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatus):
@@ -388,6 +406,7 @@ async def notify_next_coordinator(bid: BidSchema):
     """Notifies next coordinator with `ApprovalStatus.pending_approval`."""
     from bot.handlers.utils import (
         notify_workers_by_scope,
+        notify_workers_in_department_by_scope,
     )
 
     if bid.kru_state == ApprovalStatus.pending_approval:
@@ -411,8 +430,10 @@ async def notify_next_coordinator(bid: BidSchema):
             scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_cash, message="У вас новая заявка!"
+        await notify_workers_in_department_by_scope(
+            scope=FujiScope.bot_bid_teller_cash,
+            department_id=bid.department.id,
+            message="У вас новая заявка!",
         )
 
 

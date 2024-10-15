@@ -33,6 +33,20 @@ def get_workers_by_scope(scope: FujiScope) -> list[WorkerSchema]:
     return orm.get_workers_with_scope(scope)
 
 
+def get_workers_in_department_by_scope(
+    scope: FujiScope, department_id: int
+) -> list[WorkerSchema]:
+    """
+    Returns all workers in department in database by `scope`.
+
+    Args:
+        scope(FujiScope):
+        department_name(id): Bid.department_id
+    """
+
+    return orm.get_workers_in_department_with_scope(scope, department_id)
+
+
 def get_worker_department_by_telegram_id(id: str) -> DepartmentSchema:
     """
     Returns worker department by his telegram id.

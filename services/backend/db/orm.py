@@ -294,7 +294,7 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_pengind_bids(pending_column) -> list[BidSchema]:
+def get_specified_pending_bids(pending_column) -> list[BidSchema]:
     """
     Returns all bids in database with
     pending approval state in `pending_column`.
@@ -302,6 +302,28 @@ def get_specified_pengind_bids(pending_column) -> list[BidSchema]:
     with session.begin() as s:
         raw_bids = (
             s.query(Bid).filter(pending_column == ApprovalStatus.pending_approval).all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_specified_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with pending_approval
+    state in teller_cash_state collumn for teller cash with tg_id.
+    """
+    with session.begin() as s:
+        department_id = (
+            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+        )
+        raw_bids = (
+            s.query(Bid)
+            .filter(
+                and_(
+                    Bid.teller_cash_state == ApprovalStatus.pending_approval,
+                    Bid.department_id == department_id,
+                )
+            )
+            .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
@@ -318,6 +340,32 @@ def get_specified_history_bids(pending_column) -> list[BidSchema]:
                 or_(
                     pending_column == ApprovalStatus.denied,
                     pending_column == ApprovalStatus.approved,
+                )
+            )
+            .all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with approval or
+    denied state in teller_cash_state collumn.
+    """
+
+    with session.begin() as s:
+        department_id = (
+            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+        )
+        raw_bids = (
+            s.query(Bid)
+            .filter(
+                and_(
+                    or_(
+                        Bid.teller_cash_state == ApprovalStatus.denied,
+                        Bid.teller_cash_state == ApprovalStatus.approved,
+                    ),
+                    Bid.department_id == department_id,
                 )
             )
             .all()
@@ -410,6 +458,31 @@ def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
             .join(Worker.post)
             .join(Post.scopes)
             .filter(PostScope.scope == scope)
+        ).all()
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_workers_in_department_with_scope(
+    scope: FujiScope, department_id: int
+) -> list[WorkerSchema]:
+    """
+    Returns all `Worker` as `WorkerSchema` from the specified department with the given scope.
+
+    :param scope: The scope to filter workers by.
+    :type scope: FujiScope
+    :param department_id: The id of the department.
+    :type department_id: int
+    :returns: A list of `WorkerSchema` objects representing workers in the department with the specified scope.
+    :rtype: list[WorkerSchema]
+    """
+    with session.begin() as s:
+        raw_models = (
+            s.query(Worker)
+            .join(Worker.post)
+            .join(Post.scopes)
+            .filter(
+                and_(PostScope.scope == scope, Worker.department_id == department_id)
+            )
         ).all()
         return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 

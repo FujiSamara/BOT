@@ -14,7 +14,7 @@ from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
 from db.models import FujiScope
-from db.schemas import WorkerSchema
+from db.schemas import WorkerSchema, DepartmentSchema
 import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
@@ -167,6 +167,31 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     """
     workers: list[WorkerSchema] = [
         *service.get_workers_by_scope(scope),
+        *service.get_workers_by_scope(FujiScope.admin),
+    ]
+
+    for worker in workers:
+        if not worker.telegram_id:
+            continue
+        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+        if not msg:
+            continue
+        await send_menu_by_scopes(message=msg)
+
+
+async def notify_workers_in_department_by_scope(
+    scope: FujiScope, department_id: int, message: str
+) -> None:
+    """
+    Sends notify `message` to workers by their `scope`.
+
+    Args:
+        scope(FujiScope):
+        department_id(int): Bid.department_id
+        message(str):
+    """
+    workers: list[WorkerSchema] = [
+        *service.get_workers_in_department_by_scope(scope, department_id),
         *service.get_workers_by_scope(FujiScope.admin),
     ]
 
