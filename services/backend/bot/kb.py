@@ -91,6 +91,7 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     document = data.get("document")
     expenditure = data.get("expenditure")
     need_edm = data.get("need_edm")
+    activity_type = data.get("activity_type")
 
     all_field_exist = True
 
@@ -127,6 +128,12 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         document = f"{len(document)} ✅"
 
+    activity_type_postfix = ""
+    if not activity_type or len(activity_type) == 0:
+        all_field_exist = False
+    else:
+        activity_type_postfix = " ✅"
+
     keyboard = [
         [
             InlineKeyboardButton(text="Сумма", callback_data="get_amount_form"),
@@ -161,6 +168,12 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="Цель платежа" + purpose_postfix, callback_data="get_purpose_form"
+            )
+        ],
+        [
+            InlineKeyboardButton(
+                text="Тип деятельности" + activity_type_postfix,
+                callback_data="get_activity_type_form",
             )
         ],
         [create_bid_menu_button],

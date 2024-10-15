@@ -361,6 +361,15 @@ export class BidEditor extends Editor {
 				true,
 			),
 			new InputSmartField("Цель", "purpose", undefined, true, true),
+			new EnumSmartField(
+				"Тип деятельности",
+				"activity_type",
+				["Инвестиционная", "Текущая"],
+				undefined,
+				true,
+				undefined,
+				true,
+			),
 			new DocumentSmartField("Документы", "documents", undefined, true),
 			new InputSmartField("Комментарий", "comment"),
 		];

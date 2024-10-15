@@ -435,6 +435,7 @@ class Bid(Base):
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     # Electronic document management
     need_edm: Mapped[bool] = mapped_column(nullable=True)
+    activity_type: Mapped[str] = mapped_column(nullable=False)
 
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped["Department"] = relationship("Department", back_populates="bids")

@@ -8,6 +8,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
     bid_state = get_bid_state_info(bid)
 
     bid_info = f"""{hbold("Номер заявки")}: {bid.id}
+{hbold("Создатель")}: {bid.worker.l_name} {bid.worker.f_name}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
 {hbold("Предприятие")}: {bid.department.name}
@@ -16,6 +17,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {bid_state}
 {hbold("Счет в ЭДО?")}: {"Да" if bid.need_edm else "Нет"}
+{hbold("Тип деятельности")}: {bid.activity_type}
 """
 
     if bid_state == "Отказано":

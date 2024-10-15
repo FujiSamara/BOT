@@ -120,6 +120,7 @@ class BidSchema(BaseModel):
 
     expenditure: "ExpenditureSchema"
     need_edm: Optional[bool]
+    activity_type: str
 
     # States
     fac_state: ApprovalStatus
@@ -397,6 +398,7 @@ class BidOutSchema(BaseSchema):
     denying_reason: Optional[str]
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
     @field_validator("documents", mode="before")
     @classmethod
@@ -430,6 +432,7 @@ class BidInSchema(BaseModel):
     comment: Optional[str] = ""
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
 
 class TalbeInfoSchema(BaseModel):

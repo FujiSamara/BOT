@@ -20,6 +20,7 @@ class BidCreating(StatesGroup):
     comment = State()
     documents = State()
     edm = State()
+    activity_type = State()
 
 
 class BidCoordination(StatesGroup):

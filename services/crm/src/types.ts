@@ -93,6 +93,7 @@ export interface BidSchema extends BaseSchema {
 	status: string;
 	comment: string;
 	need_edm: boolean;
+	activity_type: string;
 }
 
 export interface PostSchema extends BaseSchema {
