@@ -338,13 +338,14 @@ def increment_bid_state(bid: BidSchema, state: ApprovalStatus):
         return
 
     if state == ApprovalStatus.denied:
-        if getattr(bid, state_name) == ApprovalStatus.pending:
-            setattr(bid, state_name, ApprovalStatus.skipped)
-
-    for state_name in states:
-        if getattr(bid, state_name) == ApprovalStatus.pending:
-            setattr(bid, state_name, ApprovalStatus.pending_approval)
-            return
+        for state_name in states:
+            if getattr(bid, state_name) == ApprovalStatus.pending:
+                setattr(bid, state_name, ApprovalStatus.skipped)
+    else:
+        for state_name in states:
+            if getattr(bid, state_name) == ApprovalStatus.pending:
+                setattr(bid, state_name, ApprovalStatus.pending_approval)
+                return
 
 
 async def notify_next_coordinator(bid: BidSchema):
