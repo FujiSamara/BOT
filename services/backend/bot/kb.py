@@ -487,11 +487,27 @@ get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
     callback_data="get_per_cab_dismissal",
 )
 
+set_per_cab_department = InlineKeyboardButton(
+    text="Сменить предприятие",
+    callback_data="set_per_cab_department",
+)
+
+
 personal_cabinet_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [get_per_cab_logins],
         [get_per_cab_mat_vals],
         [get_per_cab_dismissal],
+        [main_menu_button],
+    ]
+)
+
+personal_cabinet_menu_teller_cash = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [get_per_cab_logins],
+        [get_per_cab_mat_vals],
+        [get_per_cab_dismissal],
+        [set_per_cab_department],
         [main_menu_button],
     ]
 )

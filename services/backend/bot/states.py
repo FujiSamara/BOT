@@ -104,3 +104,8 @@ class DepartmentDirectorRequestForm(StatesGroup):
     group = State()
     problem = State()
     description = State()
+
+
+# Persconal Cabinet form
+class PersconalCabinet(StatesGroup):
+    department = State()
