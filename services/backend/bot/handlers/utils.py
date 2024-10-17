@@ -179,6 +179,26 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
         await send_menu_by_scopes(message=msg)
 
 
+async def notify_workers_in_department_by_scope(
+    scope: FujiScope, department_id: int, message: str
+) -> None:
+    """
+    Sends notify `message` to workers in department by their `scope`.
+    """
+    workers: list[WorkerSchema] = [
+        *service.get_workers_in_department_by_scope(scope, department_id),
+        *service.get_workers_by_scope(FujiScope.admin),
+    ]
+
+    for worker in workers:
+        if not worker.telegram_id:
+            continue
+        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+        if not msg:
+            continue
+        await send_menu_by_scopes(message=msg)
+
+
 async def notify_worker_by_telegram_id(id: int, message: str) -> Optional[Message]:
     """
     Tries to sends notify `message` to worker by their `id`.
