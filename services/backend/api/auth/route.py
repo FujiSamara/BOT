@@ -31,7 +31,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     access_token = create_access_token(
         data={
             "sub": user.username,
-            "scopes": [*user.scopes, "authenticated", "file_all"],
+            "scopes": [
+                *user.scopes,
+                "authenticated",
+                "file_all",
+            ],
         },
         expires_delta=access_token_expires,
     )
