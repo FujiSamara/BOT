@@ -29,7 +29,10 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.username, "scopes": [*user.scopes, "authenticated"]},
+        data={
+            "sub": user.username,
+            "scopes": [*user.scopes, "authenticated", "file_all"],
+        },
         expires_delta=access_token_expires,
     )
 
