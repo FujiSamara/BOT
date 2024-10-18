@@ -411,6 +411,8 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                 bid.paralegal_state = ApprovalStatus.skipped
 
             for state_name in states:
+                if getattr(bid, state_name) == ApprovalStatus.pending_approval:
+                    return
                 if getattr(bid, state_name) == ApprovalStatus.pending:
                     setattr(bid, state_name, ApprovalStatus.pending_approval)
                     return
