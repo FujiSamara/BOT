@@ -109,6 +109,7 @@ class BidSchema(BaseModel):
     amount: int
     payment_type: str
     department: DepartmentSchema
+    department_issue: Optional[DepartmentSchema] = None
     worker: WorkerSchema
     purpose: str
     create_date: datetime.datetime

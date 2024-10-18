@@ -25,6 +25,7 @@ class BidCreating(StatesGroup):
 
 class BidCoordination(StatesGroup):
     comment = State()
+    department = State()
 
 
 class WorkerBidCreating(StatesGroup):
