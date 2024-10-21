@@ -10,6 +10,7 @@ from db.service import (
     get_material_value_by_inventory_number,
     get_worker_by_telegram_id,
     get_material_values,
+    get_logins,
 )
 from db.schemas import WorkerSchema
 from bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
@@ -57,30 +58,32 @@ def get_material_values_text(callback_data: ShowLoginCallbackData) -> str:
     return text
 
 
-def get_logins(telegram_id: int):
-    logins = [
-        data
-        for data in get_logins(get_worker_by_telegram_id(telegram_id).id)
-        if data[0] not in ["id", "worker"]
-    ]
+def get_logins_bts(telegram_id: int) -> list[InlineKeyboardButton]:
+    try:
+        logins = [
+            data
+            for data in get_logins(get_worker_by_telegram_id(telegram_id).id)
+            if data[0] not in ["id", "worker"]
+        ]
+        buttons: list[InlineKeyboardButton] = []
+        for i in range(len(logins)):
+            if logins[i][1]:
+                buttons.append(
+                    [
+                        InlineKeyboardButton(
+                            text=personal_cabinet_logins_dict[logins[i][0]],
+                            callback_data=ShowLoginCallbackData(
+                                end_point="get_per_cab_login",
+                                login=logins[i][1],
+                                service=logins[i][0],
+                            ).pack(),
+                        )
+                    ]
+                )
+    except Exception:
+        buttons: list[InlineKeyboardButton] = []
 
-    buttons: list[InlineKeyboardButton] = []
-    for i in range(len(logins)):
-        if logins[i][1]:
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text=personal_cabinet_logins_dict[logins[i][0]],
-                        callback_data=ShowLoginCallbackData(
-                            end_point="get_per_cab_login",
-                            login=logins[i][1],
-                            service=logins[i][0],
-                        ).pack(),
-                    )
-                ]
-            )
     buttons.append([get_personal_cabinet])
-
     return buttons
 
 
@@ -89,13 +92,15 @@ def get_mat_vals_bts(telegram_id: int) -> list[InlineKeyboardButton]:
     buttons: list[InlineKeyboardButton] = []
     for material_value in material_values:
         buttons.append(
-            InlineKeyboardButton(
-                text=material_value.item,
-                callback_data=ShowLoginCallbackData(
-                    end_point="get_per_cab_mat_val",
-                    inventory_number=material_value.inventory_number,
-                ).pack(),
-            )
+            [
+                InlineKeyboardButton(
+                    text=material_value.item,
+                    callback_data=ShowLoginCallbackData(
+                        end_point="get_per_cab_mat_val",
+                        inventory_number=material_value.inventory_number,
+                    ).pack(),
+                )
+            ]
         )
 
     return buttons
