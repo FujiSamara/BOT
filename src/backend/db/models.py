@@ -121,16 +121,7 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
-    # айдишник из биосмарта для определения конкретного подразделения
-    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
-    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
-    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
-    bs_import: Mapped[bool] = mapped_column(nullable=True)
-    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
-    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
-    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
-    # Если прошлый флаг true, здесь будет описание ошибки
-    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+    fingerprint_device_id: Mapped[str] = mapped_column(nullable=True)
 
     # Данные из iiko для связи с таблицей orders
     uuid: Mapped[UUID] = mapped_column(nullable=True)
@@ -172,16 +163,8 @@ class Worker(Base):
         "WorkTime", back_populates="worker"
     )
 
-    # айдишник из биосмарта для определения конкретного рабочего
-    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
-    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
-    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
-    bs_import: Mapped[bool] = mapped_column(nullable=True)
-    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
-    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
-    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
-    # Если прошлый флаг true, здесь будет описание ошибки
-    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
+    fingerprint_card: Mapped[str] = mapped_column(nullable=True)
+    fingerprint_finger_cell: Mapped[str] = mapped_column(nullable=True)
 
 
 class Bid(Base):
