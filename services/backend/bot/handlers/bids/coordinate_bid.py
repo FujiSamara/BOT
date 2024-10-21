@@ -365,7 +365,7 @@ async def set_department(message: Message, state: FSMContext):
             state=state,
         )
     elif message.text in get_departments_names():
-        update_bid(bid, department_issue_name=message.text)
+        update_bid(bid, paying_department_name=message.text)
         bid = get_bid_by_id(bid.id)
         await update_bid_state(bid, column_name, ApprovalStatus.approved)
 

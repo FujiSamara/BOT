@@ -179,10 +179,10 @@ class Department(Base):
         back_populates="department",
         foreign_keys="Bid.department_id",
     )
-    bids_issue: Mapped[List["Bid"]] = relationship(
+    bids_paying: Mapped[List["Bid"]] = relationship(
         "Bid",
-        back_populates="department_issue",
-        foreign_keys="Bid.department_issue_id",
+        back_populates="paying_department",
+        foreign_keys="Bid.paying_department_id",
     )
 
     workers_bids: Mapped[List["WorkerBid"]] = relationship(
@@ -455,13 +455,13 @@ class Bid(Base):
         back_populates="bids",
         foreign_keys=[department_id],
     )
-    department_issue_id: Mapped[int] = mapped_column(
-        ForeignKey("departments.id", name="department_issue_id"), nullable=True
+    paying_department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id", name="paying_department_id"), nullable=True
     )
-    department_issue: Mapped["Department"] = relationship(
+    paying_department: Mapped["Department"] = relationship(
         "Department",
-        back_populates="bids_issue",
-        foreign_keys=[department_issue_id],
+        back_populates="bids_paying",
+        foreign_keys=[paying_department_id],
     )
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
