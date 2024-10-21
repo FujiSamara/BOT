@@ -85,7 +85,7 @@ async def get_logins_pers_cab(callback: CallbackQuery):
         text=hbold("Доступы"),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=utils.get_logins(callback.message.chat.id)
+            inline_keyboard=utils.get_logins_bts(callback.message.chat.id)
         ),
     )
 
@@ -108,7 +108,7 @@ async def get_mat_vals(callback: CallbackQuery):
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
-                utils.get_mat_vals_bts(callback.message.chat.id),
+                *utils.get_mat_vals_bts(callback.message.chat.id),
                 [get_personal_cabinet],
             ]
         ),
@@ -120,7 +120,7 @@ async def get_mat_vals(callback: CallbackQuery):
 )
 async def get_mat_val(callback: CallbackQuery, callback_data: ShowLoginCallbackData):
     await try_edit_or_answer(
-        text=utils.get_material_values_text,
+        text=utils.get_material_values_text(callback_data=callback_data),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[[get_per_cab_mat_vals]]),
     )
@@ -142,7 +142,7 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
 
 
 @router.message(PersconalCabinet.department)
-async def change_department(message: Message, state: FSMContext):
+async def set_department(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
     departments_names = get_departments_names()
