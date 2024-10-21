@@ -172,6 +172,7 @@ async def create_bid(
         amount=amount,
         payment_type=payment_type,
         department=department_inst,
+        paying_department=None,
         expenditure=expenditure_inst,
         worker=worker_inst,
         purpose=purpose,
@@ -319,7 +320,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             case "accountant_card_state":
                 stage = "Ваша заявка согласована бухгалтерией!"
             case "accountant_cash_state":
-                stage = "Денежные средства по вашей заявке готовы к выдачи!"
+                stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа производстве {bid.paying_department.name}."
             case "teller_card_state":
                 stage = "Денежные средства выданы."
             case "teller_cash_state":
@@ -440,9 +441,9 @@ def skip_repeating_bid_state(bid: BidSchema, state_name: str):
                 )
 
 
-def update_bid(bid: BidSchema):
+def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
     """Updated bid in database by `bid`"""
-    orm.update_bid(bid)
+    orm.update_bid(bid, paying_department_name)
 
 
 def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:

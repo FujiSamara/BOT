@@ -222,6 +222,7 @@ def add_bid(bid: BidSchema) -> BidSchema:
             comment=bid.comment,
             create_date=bid.create_date,
             department=department,
+            paying_department=None,
             worker=worker,
             documents=[],
             kru_state=bid.kru_state,
@@ -321,7 +322,7 @@ def get_specified_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
             .filter(
                 and_(
                     Bid.teller_cash_state == ApprovalStatus.pending_approval,
-                    Bid.department_id == department_id,
+                    Bid.paying_department_id == department_id,
                 )
             )
             .all()
@@ -366,7 +367,7 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
                         Bid.teller_cash_state == ApprovalStatus.denied,
                         Bid.teller_cash_state == ApprovalStatus.approved,
                     ),
-                    Bid.department_id == department_id,
+                    Bid.paying_department_id == department_id,
                 )
             )
             .all()
@@ -374,7 +375,7 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def update_bid(bid: BidSchema):
+def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
     """Updates bid by it id."""
     with session.begin() as s:
         cur_bid = s.query(Bid).filter(Bid.id == bid.id).first()
@@ -405,6 +406,18 @@ def update_bid(bid: BidSchema):
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
+        if paying_department_name is None:
+            cur_bid.paying_department = cur_bid.paying_department
+            cur_bid.paying_department_id = cur_bid.paying_department_id
+        else:
+            department = (
+                s.query(Department)
+                .filter(Department.name == paying_department_name)
+                .first()
+            )
+            cur_bid.paying_department = department
+            cur_bid.paying_department_id = department.id
+
         cur_bid.worker = new_worker
         cur_bid.expenditure = new_expenditure
         # TODO: Update documents
