@@ -207,3 +207,13 @@ def get_material_value_by_inventory_number(
         inventory_number=inventory_number
     )
     return material_value
+
+
+def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
+    """Change department for worker"""
+    if orm.set_department_for_worker(telegram_id, department_name):
+        return True
+    logging.getLogger("uvicorn.error").error(
+        f"The employee's department could not be changed. TG id: {telegram_id}. Department_name: {department_name}"
+    )
+    return False

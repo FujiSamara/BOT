@@ -71,6 +71,7 @@ from db.service.extra import (
     get_workers_by_scope,
     get_workers_in_department_by_scope,
     update_worker_tg_id_by_number,
+    set_department_for_worker,
 )
 from db.service.it_problem import (
     create_bid_it,
@@ -255,5 +256,6 @@ __all__ = [
     "update_work_time_record",
     "update_worker_bid_state",
     "update_worker_tg_id_by_number",
+    "set_department_for_worker",
     "update_worktime",
 ]
