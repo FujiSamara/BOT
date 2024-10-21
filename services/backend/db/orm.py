@@ -1662,3 +1662,19 @@ def get_material_value_by_inventory_number(
             .first()
         )
         return MaterialValuesSchema.model_validate(material_value)
+
+
+def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
+    """Change department for worker"""
+    with session.begin() as s:
+        worker = s.query(Worker).filter(Worker.telegram_id == telegram_id).first()
+        department = (
+            s.query(Department).filter(Department.name == department_name).first()
+        )
+
+        if department:
+            worker.department = department
+            worker.department_id = department.id
+            return True
+        else:
+            return False
