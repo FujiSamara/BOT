@@ -1,8 +1,13 @@
 <template>
 	<div class="worktime-content">
-		<div v-if="!editingElement" class="header-content">
+		<div v-show="!editingElement" class="header-content">
 			<h1>Явки</h1>
 			<PanelTools class="top-tools">
+				<PeriodTool
+					v-model:from-date="fromDateString"
+					v-model:to-date="toDateString"
+				></PeriodTool>
+				<ToolSeparator></ToolSeparator>
 				<SeacrhTool
 					id="topDepartmentSearch"
 					placeholder="Производство"
@@ -41,6 +46,7 @@ import PanelTools from "@/components/PanelTools.vue";
 import SeacrhTool from "@/components/PanelTools/SearchTool.vue";
 import ExportTool from "@/components/PanelTools/ExportTool.vue";
 import ToolSeparator from "@/components/PanelTools/ToolSeparator.vue";
+import PeriodTool from "@/components/PanelTools/PeriodTool.vue";
 
 import { onMounted, Ref, ref, shallowRef, ShallowRef, watch } from "vue";
 import { WorkTimeTable } from "@/table";

@@ -22,7 +22,7 @@ from db.models import (
     MaterialValues,
 )
 from bot.kb import payment_type_dict, approval_status_dict
-from db.schemas import FileSchema
+from db.schemas import FileOutSchema
 from db import service
 from api.auth import encrypt_password
 
@@ -413,7 +413,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def files_format(inst, column):
         documents: list[WorkerBidDocument] = getattr(inst, column)
-        urls: list[FileSchema] = []
+        urls: list[FileOutSchema] = []
         for doc in documents:
             url = service.get_file_data(doc.document)
             if url:
@@ -612,6 +612,13 @@ class AccountLoginsView(ModelView, model=AccountLogins):
         AccountLogins.pbi_login: "PBI",
     }
 
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
     @staticmethod
     def search_query(stmt: Select, term):
         workers_id = select(Worker.id).filter(
@@ -698,6 +705,13 @@ class MaterialValuesView(ModelView, model=MaterialValues):
         MaterialValues.return_date: "Дата возврата",
     }
 
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
 
 class SubordinationView(ModelView, model=Subordination):
     name = "Субординация"
@@ -748,4 +762,15 @@ class SubordinationView(ModelView, model=Subordination):
         Subordination.chief: "Руководитель",
         Subordination.employee: "Сотрудник",
         Subordination.id: "id",
+    }
+
+    form_ajax_refs = {
+        "chief": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "employee": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
     }

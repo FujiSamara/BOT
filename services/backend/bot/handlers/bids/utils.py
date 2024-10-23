@@ -8,14 +8,18 @@ def get_full_bid_info(bid: BidSchema) -> str:
     bid_state = get_bid_state_info(bid)
 
     bid_info = f"""{hbold("Номер заявки")}: {bid.id}
+{hbold("Создатель")}: {bid.worker.l_name} {bid.worker.f_name}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
-{hbold("Предприятие")}: {bid.department.name}
-{hbold("Документы")}: Прикреплены к сообщению.
+{hbold("Предприятие заявителя")}: {bid.department.name}"""
+    if bid.teller_cash_state != ApprovalStatus.skipped:
+        bid_info += f"""\n{hbold("Предприятие плательщик")}: {bid.paying_department .name if bid.paying_department else "Определяется"}\n"""
+    bid_info += f"""{hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {bid_state}
 {hbold("Счет в ЭДО?")}: {"Да" if bid.need_edm else "Нет"}
+{hbold("Тип деятельности")}: {bid.activity_type}
 """
 
     if bid_state == "Отказано":
@@ -54,8 +58,8 @@ def get_bid_state_info(bid: BidSchema) -> str:
         stage += "ЦФО"
     elif bid.cc_state == ApprovalStatus.pending_approval:
         stage += "ЦЗ"
-    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
-        stage += "Руководитель ЦЗ"
+    elif bid.paralegal_state == ApprovalStatus.pending_approval:
+        stage += "Юрисконсульт"
     elif bid.kru_state == ApprovalStatus.pending_approval:
         stage += "КРУ"
     elif bid.owner_state == ApprovalStatus.pending_approval:
@@ -71,7 +75,7 @@ def get_bid_state_info(bid: BidSchema) -> str:
     elif (
         bid.fac_state == ApprovalStatus.denied
         or bid.cc_state == ApprovalStatus.denied
-        or bid.cc_supervisor_state == ApprovalStatus.denied
+        or bid.paralegal_state == ApprovalStatus.denied
         or bid.kru_state == ApprovalStatus.denied
         or bid.owner_state == ApprovalStatus.denied
         or bid.accountant_card_state == ApprovalStatus.denied
@@ -107,8 +111,8 @@ def get_current_coordinator_field(bid: BidSchema) -> str:
         return "fac_state"
     elif bid.cc_state == ApprovalStatus.pending_approval:
         return "cc_state"
-    elif bid.cc_supervisor_state == ApprovalStatus.pending_approval:
-        return "cc_supervisor_state"
+    elif bid.paralegal_state == ApprovalStatus.pending_approval:
+        return "paralegal_state"
 
     elif bid.kru_state == ApprovalStatus.pending_approval:
         return "kru_state"

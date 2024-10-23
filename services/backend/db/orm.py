@@ -226,6 +226,7 @@ def add_bid(bid: BidSchema) -> BidSchema:
             comment=bid.comment,
             create_date=bid.create_date,
             department=department,
+            paying_department=None,
             worker=worker,
             documents=[],
             kru_state=bid.kru_state,
@@ -236,9 +237,10 @@ def add_bid(bid: BidSchema) -> BidSchema:
             teller_cash_state=bid.teller_cash_state,
             fac_state=bid.fac_state,
             cc_state=bid.cc_state,
-            cc_supervisor_state=bid.cc_supervisor_state,
+            paralegal_state=bid.paralegal_state,
             expenditure=expenditure,
             need_edm=bid.need_edm,
+            activity_type=bid.activity_type,
         )
         s.add(bid_model)
 
@@ -283,7 +285,7 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
                     or_(
                         Bid.fac_state == ApprovalStatus.pending_approval,
                         Bid.cc_state == ApprovalStatus.pending_approval,
-                        Bid.cc_supervisor_state == ApprovalStatus.pending_approval,
+                        Bid.paralegal_state == ApprovalStatus.pending_approval,
                         Bid.accountant_card_state == ApprovalStatus.pending_approval,
                         Bid.accountant_cash_state == ApprovalStatus.pending_approval,
                         Bid.teller_card_state == ApprovalStatus.pending_approval,
@@ -298,7 +300,7 @@ def get_pending_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_pengind_bids(pending_column) -> list[BidSchema]:
+def get_specified_pending_bids(pending_column) -> list[BidSchema]:
     """
     Returns all bids in database with
     pending approval state in `pending_column`.
@@ -306,6 +308,28 @@ def get_specified_pengind_bids(pending_column) -> list[BidSchema]:
     with session.begin() as s:
         raw_bids = (
             s.query(Bid).filter(pending_column == ApprovalStatus.pending_approval).all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_specified_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with pending_approval
+    state in teller_cash_state collumn for teller cash with tg_id.
+    """
+    with session.begin() as s:
+        department_id = (
+            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+        )
+        raw_bids = (
+            s.query(Bid)
+            .filter(
+                and_(
+                    Bid.teller_cash_state == ApprovalStatus.pending_approval,
+                    Bid.paying_department_id == department_id,
+                )
+            )
+            .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
@@ -329,7 +353,33 @@ def get_specified_history_bids(pending_column) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def update_bid(bid: BidSchema):
+def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
+    """
+    Returns all bids in database with approval or
+    denied state in teller_cash_state collumn.
+    """
+
+    with session.begin() as s:
+        department_id = (
+            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+        )
+        raw_bids = (
+            s.query(Bid)
+            .filter(
+                and_(
+                    or_(
+                        Bid.teller_cash_state == ApprovalStatus.denied,
+                        Bid.teller_cash_state == ApprovalStatus.approved,
+                    ),
+                    Bid.paying_department_id == department_id,
+                )
+            )
+            .all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
     """Updates bid by it id."""
     with session.begin() as s:
         cur_bid = s.query(Bid).filter(Bid.id == bid.id).first()
@@ -360,6 +410,18 @@ def update_bid(bid: BidSchema):
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
+        if paying_department_name is None:
+            cur_bid.paying_department = cur_bid.paying_department
+            cur_bid.paying_department_id = cur_bid.paying_department_id
+        else:
+            department = (
+                s.query(Department)
+                .filter(Department.name == paying_department_name)
+                .first()
+            )
+            cur_bid.paying_department = department
+            cur_bid.paying_department_id = department.id
+
         cur_bid.worker = new_worker
         cur_bid.expenditure = new_expenditure
         # TODO: Update documents
@@ -374,8 +436,9 @@ def update_bid(bid: BidSchema):
         cur_bid.teller_cash_state = bid.teller_cash_state
         cur_bid.fac_state = bid.fac_state
         cur_bid.cc_state = bid.cc_state
-        cur_bid.cc_supervisor_state = bid.cc_supervisor_state
+        cur_bid.paralegal_state = bid.paralegal_state
         cur_bid.need_edm = bid.need_edm
+        cur_bid.activity_type = bid.activity_type
 
 
 def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchema]:
@@ -414,6 +477,24 @@ def get_workers_with_scope(scope: FujiScope) -> list[WorkerSchema]:
             .join(Worker.post)
             .join(Post.scopes)
             .filter(PostScope.scope == scope)
+        ).all()
+        return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
+
+
+def get_workers_in_department_with_scope(
+    scope: FujiScope, department_id: int
+) -> list[WorkerSchema]:
+    """
+    Returns all `Worker` as `WorkerSchema` from the specified department with the given scope.
+    """
+    with session.begin() as s:
+        raw_models = (
+            s.query(Worker)
+            .join(Worker.post)
+            .join(Post.scopes)
+            .filter(
+                and_(PostScope.scope == scope, Worker.department_id == department_id)
+            )
         ).all()
         return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
@@ -577,12 +658,12 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
     with session.begin() as s:
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        cc_supervisor = (
-            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        paralegal = (
+            s.query(Worker).filter(Worker.id == expenditure.paralegal.id).first()
         )
         creator = s.query(Worker).filter(Worker.id == expenditure.creator.id).first()
 
-        if not cc or not fac or not cc_supervisor or not creator:
+        if not cc or not fac or not paralegal or not creator:
             return False
 
         expenditure_model = Expenditure(
@@ -591,7 +672,7 @@ def create_expenditure(expenditure: ExpenditureSchema) -> bool:
             create_date=expenditure.create_date,
             fac=fac,
             cc=cc,
-            cc_supervisor=cc_supervisor,
+            paralegal=paralegal,
             creator=creator,
         )
 
@@ -617,11 +698,11 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
 
         fac = s.query(Worker).filter(Worker.id == expenditure.fac.id).first()
         cc = s.query(Worker).filter(Worker.id == expenditure.cc.id).first()
-        cc_supervisor = (
-            s.query(Worker).filter(Worker.id == expenditure.cc_supervisor.id).first()
+        paralegal = (
+            s.query(Worker).filter(Worker.id == expenditure.paralegal.id).first()
         )
 
-        if not old or not cc or not fac or not cc_supervisor:
+        if not old or not cc or not fac or not paralegal:
             return False
 
         old.name = expenditure.name
@@ -629,7 +710,7 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
         old.create_date = expenditure.create_date
         old.fac = fac
         old.cc = cc
-        old.cc_supervisor = cc_supervisor
+        old.paralegal = paralegal
 
     return True
 
@@ -1732,13 +1813,17 @@ def get_material_value_by_inventory_number(
         return MaterialValuesSchema.model_validate(material_value)
 
 
-def get_subordination_id_by_worker(worker_id: int) -> Optional[WorkerSchema]:
+def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
+    """Change department for worker"""
     with session.begin() as s:
-        subordination = (
-            s.query(Subordination)
-            .filter(Subordination.employee_id == worker_id)
-            .first()
+        worker = s.query(Worker).filter(Worker.telegram_id == telegram_id).first()
+        department = (
+            s.query(Department).filter(Department.name == department_name).first()
         )
-        if subordination is None:
-            return None
-        return SubordinationSchema.model_validate(subordination)
+
+        if department:
+            worker.department = department
+            worker.department_id = department.id
+            return True
+        else:
+            return False

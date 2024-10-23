@@ -32,7 +32,7 @@ class FujiScope(enum.Enum):
     crm_expenditure = 4
     crm_fac_bid = 18
     crm_cc_bid = 19
-    crm_cc_supervisor_bid = 20
+    crm_paralegal_bid = 20
     crm_my_bid = 26
     crm_archive_bid = 27
     crm_my_file = 28
@@ -180,7 +180,17 @@ class Department(Base):
     workers: Mapped[List["Worker"]] = relationship(
         "Worker", back_populates="department", foreign_keys="Worker.department_id"
     )
-    bids: Mapped[List["Bid"]] = relationship("Bid", back_populates="department")
+    bids: Mapped[List["Bid"]] = relationship(
+        "Bid",
+        back_populates="department",
+        foreign_keys="Bid.department_id",
+    )
+    bids_paying: Mapped[List["Bid"]] = relationship(
+        "Bid",
+        back_populates="paying_department",
+        foreign_keys="Bid.paying_department_id",
+    )
+
     workers_bids: Mapped[List["WorkerBid"]] = relationship(
         "WorkerBid", back_populates="department"
     )
@@ -334,10 +344,10 @@ class Worker(Base):
     ccs: Mapped[List["Expenditure"]] = relationship(
         "Expenditure", back_populates="cc", foreign_keys="Expenditure.cc_id"
     )
-    cc_supervisors: Mapped[List["Expenditure"]] = relationship(
+    paralegals: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
-        back_populates="cc_supervisor",
-        foreign_keys="Expenditure.cc_supervisor_id",
+        back_populates="paralegal",
+        foreign_keys="Expenditure.paralegal_id",
     )
     expenditures: Mapped[List["Expenditure"]] = relationship(
         "Expenditure",
@@ -441,9 +451,24 @@ class Bid(Base):
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     # Electronic document management
     need_edm: Mapped[bool] = mapped_column(nullable=True)
+    activity_type: Mapped[str] = mapped_column(nullable=False)
 
-    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
-    department: Mapped["Department"] = relationship("Department", back_populates="bids")
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id", name="department_id")
+    )
+    department: Mapped["Department"] = relationship(
+        "Department",
+        back_populates="bids",
+        foreign_keys=[department_id],
+    )
+    paying_department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id", name="paying_department_id"), nullable=True
+    )
+    paying_department: Mapped["Department"] = relationship(
+        "Department",
+        back_populates="bids_paying",
+        foreign_keys=[paying_department_id],
+    )
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     worker: Mapped["Worker"] = relationship("Worker", back_populates="bids")
@@ -460,7 +485,7 @@ class Bid(Base):
     # States
     fac_state: Mapped[approvalstatus]
     cc_state: Mapped[approvalstatus]
-    cc_supervisor_state: Mapped[approvalstatus]
+    paralegal_state: Mapped[approvalstatus]
     kru_state: Mapped[approvalstatus]
     owner_state: Mapped[approvalstatus]
     accountant_cash_state: Mapped[approvalstatus]
@@ -609,9 +634,9 @@ class Expenditure(Base):
     )
 
     # cost center supervisor
-    cc_supervisor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
-    cc_supervisor: Mapped["Worker"] = relationship(
-        "Worker", back_populates="cc_supervisors", foreign_keys=[cc_supervisor_id]
+    paralegal_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    paralegal: Mapped["Worker"] = relationship(
+        "Worker", back_populates="paralegals", foreign_keys=[paralegal_id]
     )
 
     creator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
@@ -952,75 +977,23 @@ class Subordination(Base):
         "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
     )
 
-    dismissal = relationship("Dismissal", back_populates="subordination")
+
+class File(Base):
+    """Класс для хранения файлов"""
+
+    __tablename__ = "files"
+
+    file: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    description: Mapped[str] = mapped_column(nullable=True)
 
 
-# region Dismissal blank
+class PostFile(Base):
+    """Промежуточный класс для создания связи между файлами и должностями"""
 
+    __tablename__ = "post_files"
 
-class DismissalDocument(Base):
-    """Документы заявлений об увольнении"""
+    file_id: Mapped[int] = mapped_column(ForeignKey("files.id"), nullable=False)
+    file: Mapped[File] = relationship("File")
 
-    __tablename__ = "dismissal_documents"
-
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
-    dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
-    dismissal: Mapped["Dismissal"] = relationship(
-        "Dismissal", back_populates="documents"
-    )
-
-
-class Dismissal(Base):
-    """Заявление об увольнении"""
-
-    __tablename__ = "dismissals"
-
-    documents: Mapped[List["DismissalDocument"]] = relationship(
-        "DismissalDocument",
-        cascade="all,delete",
-        back_populates="dismissal",
-    )
-
-    subordination_id: Mapped[int] = mapped_column(
-        ForeignKey("subordinations.id"), nullable=False
-    )
-    subordination: Mapped[Subordination] = relationship(
-        "Subordination", back_populates="dismissal"
-    )
-
-    # States
-    chief_state: Mapped[approvalstatus]
-    tech_state: Mapped[approvalstatus]
-    accountant_state: Mapped[approvalstatus]
-    access_state: Mapped[approvalstatus]
-    kru_state: Mapped[approvalstatus]
-
-    # Comments
-    chief_comment: Mapped[str] = mapped_column(nullable=True)
-    tech_comment: Mapped[str] = mapped_column(nullable=True)
-    accountant_comment: Mapped[str] = mapped_column(nullable=True)
-    access_comment: Mapped[str] = mapped_column(nullable=True)
-    kru_comment: Mapped[str] = mapped_column(nullable=True)
-
-    # Dates
-    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
-    chief_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    kru_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    accountant_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
-    # Others
-    dismissal_reason: Mapped[str] = mapped_column(nullable=False)
-
-    has_material_values: Mapped[bool] = mapped_column(nullable=False)
-    has_debt: Mapped[bool] = mapped_column(nullable=True)
-    has_med_debt: Mapped[bool] = mapped_column(nullable=False)
-
-    fines: Mapped[int] = mapped_column(nullable=False)
-    worked_minutes: Mapped[float] = mapped_column(nullable=False)
-
-
-# endregion
+    post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
+    post: Mapped[Post] = relationship("Post")

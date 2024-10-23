@@ -2477,3 +2477,4 @@ def get_material_value_by_inventory_number(
         inventory_number=inventory_number
     )
     return material_value
+

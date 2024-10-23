@@ -54,7 +54,7 @@ const panels: Array<PanelData> = [
 	{
 		id: 6,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки РЦЗ",
+		label: "Заявки ЮК",
 		isActive: false,
 		panel: shallowRef(CCSupervisorBidPanel),
 		access: Access.CCSupervisorBid,

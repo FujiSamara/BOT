@@ -20,10 +20,12 @@ class BidCreating(StatesGroup):
     comment = State()
     documents = State()
     edm = State()
+    activity_type = State()
 
 
 class BidCoordination(StatesGroup):
     comment = State()
+    department = State()
 
 
 class WorkerBidCreating(StatesGroup):
@@ -105,17 +107,6 @@ class DepartmentDirectorRequestForm(StatesGroup):
     description = State()
 
 
-# Dismissal request
-
-
-class DismissalRequest(StatesGroup):
-    blank = State()
-    dismissal_reason = State()
-
-
-class DismissalCoordination(StatesGroup):
-    comment = State()
-
-
-class DismissalChief(StatesGroup):
-    comment = State()
+# Persconal Cabinet form
+class PersconalCabinet(StatesGroup):
+    department = State()

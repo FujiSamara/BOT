@@ -5,10 +5,7 @@
 			placeholder="По статьям"
 			class="input"
 			v-model:value="field.formattedField.value"
-			@focusin="
-				inputFocused = true;
-				selectListVisible = false;
-			"
+			@focusin="onFocusIn"
 			@focusout="inputFocused = false"
 		></border-input>
 		<div class="list-wrapper">
@@ -113,6 +110,16 @@ const onClick = (index: number) => {
 	if (selectList.value.length === 0) {
 		selectListVisible.value = false;
 	}
+};
+const onFocusIn = () => {
+	if (
+		field.formattedField.value.length === 0 &&
+		field.selectList.value.length === 0
+	) {
+		field.formattedField.value = "";
+	}
+	inputFocused.value = true;
+	selectListVisible.value = false;
 };
 </script>
 <style scoped>

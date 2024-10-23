@@ -665,9 +665,11 @@ export class Table<T extends BaseSchema> {
 
 	//#region CRUD
 	public async create(model: T): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
+			)
+			.catch((_) => {});
 
 		this.forceRefresh();
 	}
@@ -675,23 +677,27 @@ export class Table<T extends BaseSchema> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
-			await this._network.withAuthChecking(
-				axios.patch(
-					`${this._endpoint}${this._updateEndpoint}/`,
-					this._loadedRows.value[index],
-				),
-			);
+			await this._network
+				.withAuthChecking(
+					axios.patch(
+						`${this._endpoint}${this._updateEndpoint}/`,
+						this._loadedRows.value[index],
+					),
+				)
+				.catch((_) => {});
 		}
 	}
 	public async delete(
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.delete(
-				`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.delete(
+					`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
@@ -706,11 +712,13 @@ export class Table<T extends BaseSchema> {
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.patch(
-				`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
@@ -726,11 +734,13 @@ export class Table<T extends BaseSchema> {
 		needRefresh: boolean = false,
 		reason: string,
 	): Promise<void> {
-		await this._network.withAuthChecking(
-			axios.patch(
-				`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
-			),
-		);
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
+				),
+			)
+			.catch((_) => {});
 
 		if (needRefresh) {
 			this.forceRefresh();
@@ -750,7 +760,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		super("expenditure");
 		this._formatters.set("fac", parser.formatWorker);
 		this._formatters.set("cc", parser.formatWorker);
-		this._formatters.set("cc_supervisor", parser.formatWorker);
+		this._formatters.set("paralegal", parser.formatWorker);
 		this._formatters.set("creator", parser.formatWorker);
 		this._formatters.set("create_date", parser.formatDateTime);
 
@@ -760,7 +770,7 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("create_date", "Дата создания");
 		this._aliases.set("fac", "ЦФО");
 		this._aliases.set("cc", "ЦЗ");
-		this._aliases.set("cc_supervisor", "Руководитель ЦЗ");
+		this._aliases.set("paralegal", "Юрисконсульт");
 		this._aliases.set("creator", "Создал");
 	}
 }
@@ -824,6 +834,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("documents", "Документы");
 		this._aliases.set("expenditure", "Статья");
 		this._aliases.set("need_edm", "Счет в ЭДО");
+		this._aliases.set("activity_type", "Тип деятельности");
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("worker", 1);
@@ -839,6 +850,7 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("denying_reason", 11);
 		this._columsOrder.set("create_date", 12);
 		this._columsOrder.set("close_date", 13);
+		this._columsOrder.set("activity_type", 14);
 	}
 
 	protected color(model: BidSchema): string {
@@ -900,11 +912,11 @@ export class CCBidTable extends BidTable {
 export class CCSupervisorBidTable extends BidTable {
 	constructor() {
 		super({
-			getEndpoint: "/cc_supervisor",
-			infoEndpoint: "/cc_supervisor",
-			exportEndpoint: "/cc_supervisor",
-			approveEndpoint: "/cc_supervisor",
-			rejectEndpoint: "/cc_supervisor",
+			getEndpoint: "/paralegal",
+			infoEndpoint: "/paralegal",
+			exportEndpoint: "/paralegal",
+			approveEndpoint: "/paralegal",
+			rejectEndpoint: "/paralegal",
 		});
 	}
 }

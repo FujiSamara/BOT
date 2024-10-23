@@ -7,6 +7,8 @@ from fastapi import UploadFile
 from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
 from io import BytesIO
 
+from settings import get_settings
+
 
 # region Shemas for models
 class BaseSchema(BaseModel):
@@ -107,6 +109,7 @@ class BidSchema(BaseModel):
     amount: int
     payment_type: str
     department: DepartmentSchema
+    paying_department: Optional[DepartmentSchema] = None
     worker: WorkerSchema
     purpose: str
     create_date: datetime.datetime
@@ -118,11 +121,12 @@ class BidSchema(BaseModel):
 
     expenditure: "ExpenditureSchema"
     need_edm: Optional[bool]
+    activity_type: str
 
     # States
     fac_state: ApprovalStatus
     cc_state: ApprovalStatus
-    cc_supervisor_state: ApprovalStatus
+    paralegal_state: ApprovalStatus
     kru_state: ApprovalStatus
     owner_state: ApprovalStatus
     accountant_card_state: ApprovalStatus
@@ -143,7 +147,7 @@ class WorkTimeSchema(BaseModel):
 
     work_begin: Optional[datetime.datetime] = None
     work_end: Optional[datetime.datetime] = None
-    day: datetime.date
+    day: Optional[datetime.date] = None
     work_duration: Optional[float] = None
 
     rating: Optional[int] = None
@@ -190,7 +194,7 @@ class ExpenditureSchema(BaseModel):
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
     fac: WorkerSchema
     cc: WorkerSchema
-    cc_supervisor: WorkerSchema
+    paralegal: WorkerSchema
     creator: Optional[WorkerSchema] = None
 
 
@@ -321,57 +325,58 @@ class SubordinationSchema(BaseSchema):
     employee: WorkerSchema
 
 
-class DismissalSchema(BaseModel):
+class FileSchema(BaseModel):
     class Config:
         arbitrary_types_allowed = True
         from_attributes = True
 
     id: Optional[int] = -1
-    subordination: SubordinationSchema
-    documents: list[DocumentSchema]
 
-    # States
-    chief_state: ApprovalStatus
-    tech_state: ApprovalStatus
-    accountant_state: ApprovalStatus
-    access_state: ApprovalStatus
-    kru_state: ApprovalStatus
+    file: UploadFile
 
-    # Comments
-    chief_comment: Optional[str] = None
-    tech_comment: Optional[str] = None
-    accountant_comment: Optional[str] = None
-    access_comment: Optional[str] = None
-    kru_comment: Optional[str] = None
+    @field_validator("file", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
+        return val
 
-    # Dates
-    create_date: datetime.datetime
-    close_date: Optional[datetime.datetime] = None
+    def to_out(self, mode="api") -> "FileOutSchema":
+        """Converted `FileSchema` to `FileOutSchema`"""
+        proto = "http"
 
-    chief_approval_date: Optional[datetime.datetime] = None
-    kru_approval_date: Optional[datetime.datetime] = None
-    accountant_approval_date: Optional[datetime.datetime] = None
-    access_approval_date: Optional[datetime.datetime] = None
-    tech_approval_date: Optional[datetime.datetime] = None
+        host = get_settings().domain
+        port = get_settings().port
+        if get_settings().ssl_certfile:
+            proto = "https"
 
-    # Others
-    dismissal_reason: Optional[str]
+        source: str = ""
 
-    has_material_values: Optional[bool]
-    has_debt: Optional[bool]
-    has_med_debt: Optional[bool]
+        if mode == "sqladmin":
+            source = "/admin"
+        elif mode == "api":
+            source = "/api"
 
-    fines: Optional[int]
-    worked_minutes: Optional[float]
+        return FileOutSchema(
+            name=self.file.filename,
+            href=f"{proto}://{host}:{port}{source}/download?name={self.file.filename}",
+            description=self.description,
+        )
+
+    description: Optional[str] = None
 
 
 # endregion
 
 
 # region Extended schemas for api
-class FileSchema(BaseModel):
+class FileOutSchema(BaseModel):
     name: str
     href: str
+    description: Optional[str] = None
 
 
 class BudgetRecordWithChapter(BudgetRecordSchema):
@@ -388,12 +393,13 @@ class BidOutSchema(BaseSchema):
     purpose: str
     create_date: datetime.datetime
     close_date: Optional[datetime.datetime]
-    documents: list[FileSchema]
+    documents: list[FileOutSchema]
     status: str
     comment: Optional[str]
     denying_reason: Optional[str]
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
     @field_validator("documents", mode="before")
     @classmethod
@@ -427,6 +433,7 @@ class BidInSchema(BaseModel):
     comment: Optional[str] = ""
     expenditure: ExpenditureSchema
     need_edm: Optional[bool]
+    activity_type: str
 
 
 class TalbeInfoSchema(BaseModel):
@@ -547,7 +554,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "create_date": "Дата создания",
         "fac": "ЦФО",
         "cc": "ЦЗ",
-        "cc_supervisor": "Руководитель ЦЗ",
+        "paralegal": "Юрисконсульт",
         "creator": "Создал",
     },
     WorkTimeSchema: {

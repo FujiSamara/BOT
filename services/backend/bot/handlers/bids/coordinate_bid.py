@@ -17,15 +17,19 @@ from bot.kb import (
     teller_card_menu_button,
     teller_cash_menu_button,
 )
+from bot import text
 
 from db.models import Bid
 from db.schemas import ApprovalStatus, BidSchema
 from db.service import (
     get_pending_bids_by_column,
+    get_pending_bids_for_teller_cash,
     get_history_bids_by_column,
+    get_history_bids_for_teller_cash,
     get_bid_by_id,
     update_bid_state,
     update_bid,
+    get_departments_names,
 )
 from bot.handlers.bids.schemas import (
     BidCallbackData,
@@ -36,7 +40,12 @@ from bot.handlers.bids.schemas import (
 )
 from bot.states import BidCoordination
 from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
-from bot.handlers.utils import try_delete_message, try_edit_message
+from bot.handlers.utils import (
+    try_delete_message,
+    try_edit_message,
+    try_edit_or_answer,
+    create_reply_keyboard,
+)
 
 router = Router(name="bid_coordination")
 
@@ -80,11 +89,18 @@ class CoordinationFactory:
             BidCallbackData.filter(F.type == BidViewType.coordination),
             BidCallbackData.filter(F.endpoint_name == self.documents_endpoint_name),
         )
-        router.callback_query.register(
-            self.approve_bid,
-            BidActionData.filter(F.action == ActionType.approving),
-            BidActionData.filter(F.endpoint_name == self.approving_endpoint_name),
-        )
+        if state_column == Bid.accountant_cash_state:
+            router.callback_query.register(
+                self.approve_bid_accountant_cash,
+                BidActionData.filter(F.action == ActionType.approving),
+                BidActionData.filter(F.endpoint_name == self.approving_endpoint_name),
+            )
+        else:
+            router.callback_query.register(
+                self.approve_bid,
+                BidActionData.filter(F.action == ActionType.approving),
+                BidActionData.filter(F.endpoint_name == self.approving_endpoint_name),
+            )
         if not without_decline:
             self.declining_endpoint_name = f"{name}_declining"
             router.callback_query.register(
@@ -124,6 +140,36 @@ class CoordinationFactory:
         await asyncio.sleep(1)
         await msg.delete()
         await self.get_pendings(callback)
+
+    async def approve_bid_accountant_cash(
+        self,
+        callback: CallbackQuery,
+        callback_data: BidActionData,
+        state: FSMContext,
+    ):
+        bid = get_bid_by_id(callback_data.bid_id)
+        await state.update_data(
+            generator=self.get_pendings,
+            callback=callback,
+            bid=bid,
+            column_name=self.state_column.name,
+        )
+        await state.set_state(BidCoordination.department)
+        await try_delete_message(callback.message)
+        msg = await callback.message.answer(
+            message=callback.message,
+            text=hbold(
+                f"Выберите производство на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+            ),
+            reply_markup=create_reply_keyboard(
+                text.back,
+                *[
+                    department_name
+                    for department_name in sorted(get_departments_names())
+                ],
+            ),
+        )
+        await state.update_data(msg=msg)
 
     async def get_documents(
         self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
@@ -206,19 +252,27 @@ class CoordinationFactory:
                         ).pack(),
                     )
                 )
-        await try_edit_message(
+        await try_edit_or_answer(
             message=callback.message,
             text=caption,
             reply_markup=create_inline_keyboard(*buttons),
         )
 
-    def get_specified_bids_keyboard(self, type: str) -> InlineKeyboardMarkup:
+    def get_specified_bids_keyboard(
+        self, type: str, tg_id: int
+    ) -> InlineKeyboardMarkup:
         bids = []
         if type == "pending":
-            bids = get_pending_bids_by_column(self.state_column)
+            if self.state_column == Bid.teller_cash_state:
+                bids = get_pending_bids_for_teller_cash(tg_id)
+            else:
+                bids = get_pending_bids_by_column(self.state_column)
         else:
-            bids = get_history_bids_by_column(self.state_column)
-        bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+            if self.state_column == Bid.teller_cash_state:
+                bids = get_history_bids_for_teller_cash(tg_id)
+            else:
+                bids = get_history_bids_by_column(self.state_column)
+        bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
         return create_inline_keyboard(
             *(
                 InlineKeyboardButton(
@@ -238,13 +292,13 @@ class CoordinationFactory:
         )
 
     async def get_pendings(self, callback: CallbackQuery):
-        keyboard = self.get_specified_bids_keyboard("pending")
+        keyboard = self.get_specified_bids_keyboard("pending", callback.message.chat.id)
         await try_delete_message(callback.message)
 
         await callback.message.answer("Ожидающие согласования:", reply_markup=keyboard)
 
     async def get_history(self, callback: CallbackQuery):
-        keyboard = self.get_specified_bids_keyboard("history")
+        keyboard = self.get_specified_bids_keyboard("history", callback.message.chat.id)
         await try_delete_message(callback.message)
 
         await callback.message.answer("История согласования:", reply_markup=keyboard)
@@ -272,6 +326,85 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
 
     await try_delete_message(message)
     await generator(callback)
+
+
+@router.message(BidCoordination.department)
+async def set_department(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_delete_message(data["msg"])
+
+    if "generator" not in data:
+        raise KeyError("Pending generator not exist")
+    if "callback" not in data:
+        raise KeyError("Callback not exist")
+    if "bid" not in data:
+        raise KeyError("Bid not exist")
+    if "column_name" not in data:
+        raise KeyError("Column name not exist")
+
+    generator: Callable = data["generator"]
+    callback: CallbackQuery = data["callback"]
+    bid: BidSchema = data["bid"]
+    column_name = data["column_name"]
+
+    if message.text == text.back:
+        await try_delete_message(message)
+        await CoordinationFactory(
+            router=router,
+            coordinator_menu_button=accountant_cash_menu_button,
+            state_column=Bid.accountant_cash_state,
+            name="accountant_cash",
+        ).get_bid(
+            callback=callback,
+            callback_data=BidCallbackData(
+                id=bid.id,
+                mode=BidViewMode.full_with_approve,
+                type=BidViewType.coordination,
+                endpoint_name="accountant_cash",
+            ),
+            state=state,
+        )
+    elif message.text in get_departments_names():
+        update_bid(bid, paying_department_name=message.text)
+        bid = get_bid_by_id(bid.id)
+        await update_bid_state(bid, column_name, ApprovalStatus.approved)
+
+        await try_delete_message(message)
+
+        msg = await message.answer(hbold("Успешно"))
+        await asyncio.sleep(1)
+        await try_delete_message(msg)
+
+        await generator(callback)
+    else:
+        await try_delete_message(message)
+
+        msg = await message.answer(hbold(text.format_err[:-1] + "."))
+        await asyncio.sleep(3)
+        await msg.delete()
+
+        await state.update_data(
+            generator=generator,
+            callback=callback,
+            bid=bid,
+            column_name=column_name,
+        )
+        await state.set_state(BidCoordination.department)
+
+        msg = await message.answer(
+            text=hbold(
+                f"\nВыберите производство на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+            ),
+            reply_markup=create_reply_keyboard(
+                text.back,
+                *[
+                    department_name
+                    for department_name in sorted(get_departments_names())
+                ],
+            ),
+        )
+
+        await state.update_data(msg=msg)
 
 
 def build_coordinations():
