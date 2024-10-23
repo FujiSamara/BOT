@@ -361,8 +361,8 @@ class DismissalSchema(BaseModel):
     has_debt: Optional[bool]
     has_med_debt: Optional[bool]
 
-    fines: Optional[float]
-    worked_hours: Optional[datetime.datetime]
+    fines: Optional[int]
+    worked_minutes: Optional[float]
 
 
 # endregion

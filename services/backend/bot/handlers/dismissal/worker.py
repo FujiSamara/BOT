@@ -17,6 +17,7 @@ from bot.states import (
 
 from bot.handlers.utils import (
     send_menu_by_scopes,
+    try_delete_message,
     try_edit_message,
     download_file,
     handle_documents,
@@ -65,10 +66,29 @@ async def handle_dismissal_blank(message: Message, state: FSMContext):
     )
 
 
+@router.callback_query(F.data == "get_dismissal_reason")
+async def get_dismissal_reason(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(DismissalRequest.dismissal_reason)
+    await try_delete_message(callback.message)
+    msg = await callback.message.answer(hbold("Введите причину увольнения:"))
+    await state.update_data(msg=msg)
+
+
+@router.message(DismissalRequest.dismissal_reason)
+async def handle_dismissal_reason(message: Message, state: FSMContext):
+    data = await state.get_data()
+    msg = data.get("msg")
+    await state.update_data(dismissal_reason=message.text)
+    await try_delete_message(message)
+    await try_delete_message(msg)
+    await clear_state_with_success_employee(message, state)
+
+
 @router.callback_query(F.data == "send_dismissal_blank")
 async def send_dismissal_blank(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     blank = data.get("blank")
+    dismissal_reason = data.get("dismissal_reason")
     document_files: list[UploadFile] = []
 
     for doc in blank:
@@ -76,6 +96,7 @@ async def send_dismissal_blank(callback: CallbackQuery, state: FSMContext):
 
     ans = await create_dismissal_blank(
         files=document_files,
+        dismissal_reason=dismissal_reason,
         telegram_id=callback.message.chat.id,
     )
     if not ans:
@@ -85,5 +106,4 @@ async def send_dismissal_blank(callback: CallbackQuery, state: FSMContext):
     await asyncio.sleep(1)
     await state.clear()
     await state.set_state(Base.none)
-    # await state.clear()
     await send_menu_by_scopes(callback.message, edit=True)

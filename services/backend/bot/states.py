@@ -110,6 +110,7 @@ class DepartmentDirectorRequestForm(StatesGroup):
 
 class DismissalRequest(StatesGroup):
     blank = State()
+    dismissal_reason = State()
 
 
 class DismissalCoordination(StatesGroup):

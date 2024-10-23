@@ -55,12 +55,12 @@ class FujiScope(enum.Enum):
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
     bot_personal_cabinet = 25
-    bot_dismissal = 26
-    bot_dismissal_kru = 27
-    bot_dismissal_accountant = 28
-    bot_dismissal_access = 29
-    bot_dismissal_tech = 30
-    bot_dismissal_chief = 31
+    bot_dismissal_tech = 29
+    bot_dismissal_chief = 30
+    bot_dismissal = 31
+    bot_dismissal_kru = 32
+    bot_dismissal_accountant = 33
+    bot_dismissal_access = 34
 
 
 class DepartmentType(enum.Enum):
@@ -1016,13 +1016,11 @@ class Dismissal(Base):
     dismissal_reason: Mapped[str] = mapped_column(nullable=False)
 
     has_material_values: Mapped[bool] = mapped_column(nullable=False)
-    has_debt: Mapped[bool] = mapped_column(nullable=False)
+    has_debt: Mapped[bool] = mapped_column(nullable=True)
     has_med_debt: Mapped[bool] = mapped_column(nullable=False)
 
-    fines: Mapped[float] = mapped_column(nullable=False)
-    worked_hours: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    
-
+    fines: Mapped[int] = mapped_column(nullable=False)
+    worked_minutes: Mapped[float] = mapped_column(nullable=False)
 
 
 # endregion

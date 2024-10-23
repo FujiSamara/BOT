@@ -476,11 +476,19 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
     upload_blank_text = "Приложить заявление"
     all_field_exist = True
 
+    dismissal_reason = data.get("dismissal_reason")
+
     if not blank or len(blank) == 0:
         all_field_exist = False
         upload_blank_text += " 0"
     else:
         upload_blank_text += f" {len(blank)} ✅"
+
+    if not dismissal_reason or dismissal_reason == 0:
+        dismissal_reason = "..."
+        all_field_exist = False
+    else:
+        dismissal_reason = f"✅ {dismissal_reason}"
 
     send_dismissal_callback_data = "dummy"
     if all_field_exist:
@@ -498,14 +506,22 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
                 text=upload_blank_text, callback_data="upload_dismissal_blank"
             )
         ],
-    ]
-    keyboard.append(
         [
+            InlineKeyboardButton(text="Причина увольнения", callback_data="dummy"),
             InlineKeyboardButton(
-                text="Отправить заявление", callback_data=send_dismissal_callback_data
-            )
-        ]
-    )
+                text=dismissal_reason, callback_data="get_dismissal_reason"
+            ),
+        ],
+    ]
+    if all_field_exist:
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить заявление",
+                    callback_data=send_dismissal_callback_data,
+                )
+            ]
+        )
     keyboard.append([main_menu_button])
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

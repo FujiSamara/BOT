@@ -1629,6 +1629,10 @@ def add_dismissal(dismissal: DismissalSchema):
             access_state=dismissal.access_state,
             kru_state=dismissal.kru_state,
             create_date=dismissal.create_date,
+            fines=dismissal.fines,
+            worked_minutes=dismissal.worked_minutes,
+            has_material_values=dismissal.has_material_values,
+            dismissal_reason=dismissal.dismissal_reason,
         )
         s.add(dismissal_model)
 

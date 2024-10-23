@@ -2168,7 +2168,9 @@ def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
     ]
 
 
-async def create_dismissal_blank(files: list[UploadFile], telegram_id: str) -> bool:
+async def create_dismissal_blank(
+    files: list[UploadFile], dismissal_reason: str, telegram_id: str
+) -> bool:
     """
     Creates an dismissal blank wrapped in `DismissalSchema` and adds it to database.
     """
@@ -2201,13 +2203,21 @@ async def create_dismissal_blank(files: list[UploadFile], telegram_id: str) -> b
         documents.append(DocumentSchema(document=file))
 
     work_times = orm.get_worker_times(worker.id)
-    duration: float = float()
+    worked_minutes: float = float()
     fines: int = int()
     for work_time in work_times:
         if work_time.work_duration:
-            duration += work_time.work_duration
+            worked_minutes += work_time.work_duration
         if work_time.fine:
             fines += work_time.fine
+
+    material_values = orm.get_material_values(worker.id)
+    has_material_values = False
+    if len(material_values) > 0:
+        for v in material_values:
+            if not v.return_date:
+                has_material_values = True
+                break
 
     dismissal = DismissalSchema(
         subordination=sub,
@@ -2218,6 +2228,10 @@ async def create_dismissal_blank(files: list[UploadFile], telegram_id: str) -> b
         access_state=ApprovalStatus.pending,
         accountant_state=ApprovalStatus.pending,
         tech_state=ApprovalStatus.pending,
+        fines=fines,
+        worked_minutes=worked_minutes,
+        has_material_values=has_material_values,
+        dismissal_reason=dismissal_reason,
     )
 
     orm.add_dismissal(dismissal)
