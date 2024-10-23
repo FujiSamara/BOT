@@ -48,7 +48,8 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
             worker.telegram_id,
             f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
         )
-    await send_menu_by_scopes(msg)
+    if msg is not None:
+        await send_menu_by_scopes(msg)
 
 
 def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
