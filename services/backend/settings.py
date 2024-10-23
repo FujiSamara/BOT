@@ -100,3 +100,6 @@ def get_settings() -> Settings:
     except Exception as e:
         logging.critical(f"Settings generated with error: {e}")
         sys.exit()
+
+
+logger = logging.getLogger("uvicorn.error")

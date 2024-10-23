@@ -7,6 +7,8 @@ from db.models import (
     Bid,
     BidDocument,
     BudgetRecord,
+    EquipmentIncident,
+    EquipmentStatus,
     Executor,
     Expenditure,
     FujiScope,
@@ -39,6 +41,7 @@ from db.schemas import (
     BudgetRecordSchema,
     DepartmentSchema,
     DocumentSchema,
+    EquipmentStatusSchema,
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
@@ -55,7 +58,7 @@ from db.schemas import (
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
-from sqlalchemy import null, or_, and_, desc
+from sqlalchemy import null, or_, and_, desc, select
 
 
 def create_tables():
@@ -108,7 +111,7 @@ def find_posts_by_name(name: str) -> list[PostSchema]:
         return [PostSchema.model_validate(raw_post) for raw_post in raw_posts]
 
 
-def find_department_by_column(column: any, value: any) -> DepartmentSchema:
+def find_department_by_column(column: any, value: any) -> Optional[DepartmentSchema]:
     """
     Returns department in database by `column` with `value`.
     If department not exist return `None`.
@@ -1691,3 +1694,72 @@ def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
             return True
         else:
             return False
+
+
+def update_equipment_status(equipment_status: EquipmentStatusSchema):
+    with session.begin() as s:
+        raw_status = (
+            s.execute(
+                select(EquipmentStatus).filter(
+                    and_(
+                        EquipmentStatus.equipment_name
+                        == equipment_status.equipment_name,
+                        EquipmentStatus.department_id == equipment_status.department.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        department = (
+            s.execute(
+                select(Department).filter(
+                    Department.id == equipment_status.department.id
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if not raw_status:
+            new_raw_status = EquipmentStatus(
+                equipment_name=equipment_status.equipment_name,
+                status=equipment_status.status,
+                last_update=equipment_status.last_update,
+                department=department,
+            )
+            s.add(new_raw_status)
+        else:
+            raw_status.last_update = equipment_status.last_update
+            raw_status.status = equipment_status.status
+            raw_status.equipment_name = equipment_status.equipment_name
+            raw_status.department = department
+
+
+def add_equipment_incident(equipment_status: EquipmentStatusSchema):
+    with session.begin() as s:
+        raw_status = (
+            s.execute(
+                select(EquipmentStatus).filter(
+                    and_(
+                        EquipmentStatus.equipment_name
+                        == equipment_status.equipment_name,
+                        EquipmentStatus.department_id == equipment_status.department.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if raw_status is None:
+            return
+
+        incident = EquipmentIncident(
+            equipment_status=raw_status,
+            incident_time=equipment_status.last_update,
+            status=equipment_status.status,
+        )
+
+        s.add(incident)

@@ -369,6 +369,31 @@ class FileSchema(BaseModel):
     description: Optional[str] = None
 
 
+class EquipmentStatusSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    asterisk_id: str
+    status: str
+    ip_address: str
+    latency: float
+    department: Optional[DepartmentSchema] = None
+    last_update: datetime.datetime
+    equipment_name: str
+
+
+class EquipmentStatusSchemaIn(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    status: str
+    ip_address: str
+    latency: float
+
+
 # endregion
 
 

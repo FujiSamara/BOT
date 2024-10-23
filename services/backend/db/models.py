@@ -274,6 +274,9 @@ class Department(Base):
     )
     bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
 
+    # Для сервиса мониторинга
+    asterisk_id: Mapped[str] = mapped_column(nullable=True)
+
 
 class Group(Base):
     """Отделы"""
@@ -991,3 +994,24 @@ class PostFile(Base):
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped[Post] = relationship("Post")
+
+
+class EquipmentStatus(Base):
+    __tablename__ = "equipment_statuses"
+
+    equipment_name: Mapped[str] = mapped_column()
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
+    department: Mapped[Department] = relationship("Department")
+    status: Mapped[str] = mapped_column()
+    last_update: Mapped[datetime.datetime] = mapped_column()
+
+
+class EquipmentIncident(Base):
+    __tablename__ = "equipment_incidents"
+
+    equipment_status: Mapped[EquipmentStatus] = relationship("EquipmentStatus")
+    equipment_status_id: Mapped[int] = mapped_column(
+        ForeignKey("equipment_statuses.id")
+    )
+    incident_time: Mapped[datetime.datetime] = mapped_column()
+    status: Mapped[str] = mapped_column()
