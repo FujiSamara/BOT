@@ -1633,13 +1633,22 @@ def find_repairman_it_by_department(department_name: str) -> WorkerSchema:
 
 # region Dismissal
 
+
+def get_subordination_id_by_worker(worker_id: int) -> Optional[WorkerSchema]:
+    with session.begin() as s:
+        subordination = (
+            s.query(Subordination)
+            .filter(Subordination.employee_id == worker_id)
+            .first()
+        )
+        if subordination is None:
+            return None
+        return SubordinationSchema.model_validate(subordination)
+
+
 def get_worker_times(id: int) -> list[WorkTimeSchema]:
     with session.begin() as s:
-        raws = (
-            s.query(WorkTime)
-            .filter(id == WorkTime.worker_id)
-            .all()
-        )
+        raws = s.query(WorkTime).filter(id == WorkTime.worker_id).all()
         return [WorkTimeSchema.model_validate(raw) for raw in raws]
 
 

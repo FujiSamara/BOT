@@ -110,3 +110,17 @@ class DepartmentDirectorRequestForm(StatesGroup):
 # Persconal Cabinet form
 class PersconalCabinet(StatesGroup):
     department = State()
+
+
+# Dismissal request
+class DismissalRequest(StatesGroup):
+    blank = State()
+    dismissal_reason = State()
+
+
+class DismissalCoordination(StatesGroup):
+    comment = State()
+
+
+class DismissalChief(StatesGroup):
+    comment = State()
