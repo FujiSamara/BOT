@@ -10,4 +10,6 @@ router = APIRouter()
 async def update_equipment_status(
     asterisk_id: str, equipment_status: EquipmentStatusSchemaIn
 ):
-    equipment_status_service.update_equipment_status(asterisk_id, equipment_status)
+    await equipment_status_service.update_equipment_status(
+        asterisk_id, equipment_status
+    )

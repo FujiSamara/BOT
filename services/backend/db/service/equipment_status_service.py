@@ -3,13 +3,13 @@ from datetime import datetime
 from settings import logger
 
 from db.schemas import EquipmentStatusSchemaIn, EquipmentStatusSchema
-from db.models import Department
+from db.models import Department, FujiScope
 from db import orm
 
 bad_statuses = ["Не доступна"]
 
 
-def update_equipment_status(
+async def update_equipment_status(
     asterisk_id: str, equipment_status_in: EquipmentStatusSchemaIn
 ) -> bool:
     """Updates equipment status, adds incident if `equipment_status_in.status` is bad.
@@ -35,8 +35,19 @@ def update_equipment_status(
     orm.update_equipment_status(equipment_status)
 
     if equipment_status.status in bad_statuses:
-        add_equipment_incident(equipment_status)
+        await add_equipment_incident(equipment_status)
 
 
-def add_equipment_incident(equipment_status: EquipmentStatusSchema):
+async def add_equipment_incident(equipment_status: EquipmentStatusSchema):
     orm.add_equipment_incident(equipment_status)
+
+    from bot.handlers.utils import (
+        notify_workers_by_scope,
+    )
+
+    await notify_workers_by_scope(
+        FujiScope.bot_incident_monitoring,
+        f"""Оборудование с айди астериска: {equipment_status.asterisk_id} - не доступно!
+Предприятие: {equipment_status.department.name}
+Тип оборудования: {equipment_status.equipment_name}""",
+    )
