@@ -1,6 +1,6 @@
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Type, TypeVar
 from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
@@ -13,6 +13,7 @@ from db.models import (
     Expenditure,
     FujiScope,
     Group,
+    IncidentStage,
     Post,
     PostScope,
     TechnicalProblem,
@@ -36,11 +37,11 @@ from db.models import (
     MaterialValues,
 )
 from db.schemas import (
-    BaseSchema,
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
     DocumentSchema,
+    EquipmentIncidentSchema,
     EquipmentStatusSchema,
     ExpenditureSchema,
     GroupSchema,
@@ -58,7 +59,8 @@ from db.schemas import (
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
-from sqlalchemy import null, or_, and_, desc, select
+from sqlalchemy.orm import selectinload
+from sqlalchemy import Select, null, or_, and_, desc, select, inspect
 
 
 def create_tables():
@@ -1298,6 +1300,10 @@ def close_request(
 
 
 # region Model general
+
+SchemaT = TypeVar("SchemaT", bound=BaseModel)
+
+
 def get_model_count(
     model_type: Type[Base],
     query_schema: QuerySchema,
@@ -1312,11 +1318,11 @@ def get_model_count(
 
 def get_models(
     model_type: Type[Base],
-    schema_type: Type[BaseModel],
+    schema_type: Type[SchemaT],
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[BaseSchema]:
+) -> list[SchemaT]:
     """Returns `model_type` schemas with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
@@ -1728,6 +1734,8 @@ def update_equipment_status(equipment_status: EquipmentStatusSchema):
                 status=equipment_status.status,
                 last_update=equipment_status.last_update,
                 department=department,
+                ip_address=equipment_status.ip_address,
+                latency=equipment_status.latency,
             )
             s.add(new_raw_status)
         else:
@@ -1763,3 +1771,56 @@ def add_equipment_incident(equipment_status: EquipmentStatusSchema):
         )
 
         s.add(incident)
+
+
+def selectinload_all(model: Type[Base]):
+    return [selectinload(relationship) for relationship in inspect(model).relationships]
+
+
+def get_equipment_statuses() -> list[EquipmentStatusSchema]:
+    with session.begin() as s:
+        rows = (
+            s.execute(
+                select(EquipmentStatus).options(*selectinload_all(EquipmentStatus))
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            EquipmentStatusSchema(
+                asterisk_id=raw_status.department.asterisk_id,
+                id=raw_status.id,
+                department=DepartmentSchema.model_validate(raw_status.department),
+                equipment_name=raw_status.equipment_name,
+                ip_address=raw_status.ip_address,
+                last_update=raw_status.last_update,
+                latency=raw_status.latency,
+                status=raw_status.status,
+            )
+            for raw_status in rows
+        ]
+
+
+def _get_equipment_incidents_by_select(select: Select) -> list[EquipmentIncidentSchema]:
+    with session.begin() as s:
+        rows = s.execute(select).scalars().all()
+        return [
+            EquipmentIncidentSchema.model_validate(raw_incident)
+            for raw_incident in rows
+        ]
+
+
+def get_unresolved_equipment_incidents() -> list[EquipmentIncidentSchema]:
+    return _get_equipment_incidents_by_select(
+        select(EquipmentIncident).filter(
+            EquipmentIncident.stage != IncidentStage.solved
+        )
+    )
+
+
+def get_resolved_equipment_incidents() -> list[EquipmentIncidentSchema]:
+    return _get_equipment_incidents_by_select(
+        select(EquipmentIncident).filter(
+            EquipmentIncident.stage == IncidentStage.solved
+        )
+    )

@@ -2,7 +2,11 @@ from datetime import datetime
 
 from settings import logger
 
-from db.schemas import EquipmentStatusSchemaIn, EquipmentStatusSchema
+from db.schemas import (
+    EquipmentIncidentSchema,
+    EquipmentStatusSchemaIn,
+    EquipmentStatusSchema,
+)
 from db.models import Department, FujiScope
 from db import orm
 
@@ -51,3 +55,11 @@ async def add_equipment_incident(equipment_status: EquipmentStatusSchema):
 Предприятие: {equipment_status.department.name}
 Тип оборудования: {equipment_status.equipment_name}""",
     )
+
+
+def get_equipment_statuses() -> list[EquipmentStatusSchema]:
+    return orm.get_equipment_statuses()
+
+
+def get_equipment_incidents() -> list[EquipmentIncidentSchema]:
+    return orm.get_unresolved_equipment_incidents()

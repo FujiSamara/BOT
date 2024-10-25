@@ -4,7 +4,14 @@ from pydantic import BaseModel, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import ApprovalStatus, FujiScope, Gender, PostScope, Executor
+from db.models import (
+    ApprovalStatus,
+    FujiScope,
+    Gender,
+    IncidentStage,
+    PostScope,
+    Executor,
+)
 from io import BytesIO
 
 from settings import get_settings
@@ -392,6 +399,18 @@ class EquipmentStatusSchemaIn(BaseModel):
     status: str
     ip_address: str
     latency: float
+
+
+class EquipmentIncidentSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    equipment_status: EquipmentStatusSchema
+    incident_time: datetime.datetime
+    status: str
+    stage: IncidentStage
 
 
 # endregion
