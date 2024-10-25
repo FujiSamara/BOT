@@ -312,7 +312,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             case "cc_state":
                 stage = "Ваша заявка согласована ЦЗ!"
             case "paralegal_state":
-                stage = "Ваша заявка согласована руководителем ЦЗ!"
+                stage = "Ваша заявка согласована ЮК!"
             case "kru_state":
                 stage = "Ваша заявка согласована КРУ!"
             case "owner_state":
