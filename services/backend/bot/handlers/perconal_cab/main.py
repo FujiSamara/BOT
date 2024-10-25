@@ -16,7 +16,6 @@ from bot.kb import (
     get_per_cab_mat_vals_button,
     set_per_cab_department_button,
     get_per_cab_dismissal_button,
-    get_per_cab_monitoring_list_btn,
     main_menu_button,
     create_reply_keyboard,
 )
@@ -56,11 +55,6 @@ async def get_personal_data(message: CallbackQuery | Message):
         or FujiScope.admin in worker.post.scopes
     ):
         buttons.append([set_per_cab_department_button])
-    if (
-        FujiScope.bot_incident_monitoring in worker.post.scopes
-        or FujiScope.admin in worker.post.scopes
-    ):
-        buttons.append([get_per_cab_monitoring_list_btn])
 
     buttons.append([main_menu_button])
 
