@@ -48,8 +48,6 @@ async def get_personal_data(callback: CallbackQuery):
 
     text = utils.menu_text(worker)
 
-    del worker
-
     await try_edit_or_answer(
         text=text,
         reply_markup=reply_markup,
@@ -69,8 +67,6 @@ async def get_personal_data_ms(message: Message):
         reply_markup = personal_cabinet_menu
 
     text = utils.menu_text(worker)
-
-    del worker
 
     await try_edit_or_answer(
         text=text,
