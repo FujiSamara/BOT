@@ -9,6 +9,7 @@ from aiogram.types import (
     PhotoSize,
     File,
 )
+from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
@@ -32,6 +33,7 @@ from bot.kb import (
     get_it_repairman_menu,
     get_it_tm_menu,
     get_personal_cabinet,
+    get_monitoring_menu,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -65,6 +67,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
         FujiScope.bot_bid_it_tm: get_it_tm_menu,
         FujiScope.bot_personal_cabinet: get_personal_cabinet,
+        FujiScope.bot_incident_monitoring: get_monitoring_menu,
     }
 
 
@@ -138,7 +141,7 @@ async def try_answer(message: Message, text: str, reply_markup: Any = None) -> b
     try:
         await message.answer(text=text, reply_markup=reply_markup)
         return True
-    except Exception:
+    except TelegramAPIError:
         return False
 
 

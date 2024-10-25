@@ -492,22 +492,11 @@ set_per_cab_department = InlineKeyboardButton(
     callback_data="set_per_cab_department",
 )
 
-
-personal_cabinet_menu = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [get_per_cab_logins],
-        [get_per_cab_mat_vals],
-        [get_per_cab_dismissal],
-        [main_menu_button],
-    ]
+get_monitoring_menu = InlineKeyboardButton(
+    text="Мониторинг точек", callback_data="get_monitoring_menu"
 )
 
-personal_cabinet_menu_teller_cash = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [get_per_cab_logins],
-        [get_per_cab_mat_vals],
-        [get_per_cab_dismissal],
-        [set_per_cab_department],
-        [main_menu_button],
-    ]
+get_per_cab_monitoring_list = InlineKeyboardButton(
+    text="Мониторинг точек",
+    callback_data="get_per_cab_monitoring_list",
 )
