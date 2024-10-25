@@ -1,17 +1,23 @@
 import asyncio
 from typing import Optional
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
+from aiogram.types import (
+    CallbackQuery,
+    Message,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton,
+)
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 
 from bot.kb import (
     get_personal_cabinet,
-    personal_cabinet_menu,
-    personal_cabinet_menu_teller_cash,
     get_per_cab_logins,
     get_per_cab_mat_vals,
     set_per_cab_department,
+    get_per_cab_dismissal,
+    get_per_cab_monitoring_list,
+    main_menu_button,
     create_reply_keyboard,
 )
 from bot import text
@@ -35,46 +41,34 @@ router = Router(name="personal_cabinet")
 
 
 @router.callback_query(F.data == get_personal_cabinet.callback_data)
-async def get_personal_data(callback: CallbackQuery):
-    worker: Optional[WorkerSchema] = get_worker_by_telegram_id(callback.message.chat.id)
+async def get_personal_data(message: CallbackQuery | Message):
+    message = message.message if isinstance(message, CallbackQuery) else message
 
-    if (
-        FujiScope.bot_bid_teller_cash in worker.post.scopes
-        or FujiScope.admin in worker.post.scopes
-    ):
-        reply_markup = personal_cabinet_menu_teller_cash
-    else:
-        reply_markup = personal_cabinet_menu
-
-    text = utils.menu_text(worker)
-
-    del worker
-
-    await try_edit_or_answer(
-        text=text,
-        reply_markup=reply_markup,
-        message=callback.message,
-    )
-
-
-async def get_personal_data_ms(message: Message):
     worker: Optional[WorkerSchema] = get_worker_by_telegram_id(message.chat.id)
 
+    buttons: list[list[InlineKeyboardButton]] = [
+        [get_per_cab_logins],
+        [get_per_cab_mat_vals],
+        [get_per_cab_dismissal],
+    ]
     if (
         FujiScope.bot_bid_teller_cash in worker.post.scopes
         or FujiScope.admin in worker.post.scopes
     ):
-        reply_markup = personal_cabinet_menu_teller_cash
-    else:
-        reply_markup = personal_cabinet_menu
+        buttons.append([set_per_cab_department])
+    if (
+        FujiScope.bot_incident_monitoring in worker.post.scopes
+        or FujiScope.admin in worker.post.scopes
+    ):
+        buttons.append([get_per_cab_monitoring_list])
+
+    buttons.append([main_menu_button])
 
     text = utils.menu_text(worker)
 
-    del worker
-
     await try_edit_or_answer(
         text=text,
-        reply_markup=reply_markup,
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=buttons),
         message=message,
     )
 
@@ -152,7 +146,7 @@ async def set_department(message: Message, state: FSMContext):
 
     if message.text == text.back:
         await state.set_state(Base.none)
-        await get_personal_data_ms(message=message)
+        await get_personal_data(message)
     else:
         if message.text not in departments_names:
             departments_names.sort()
