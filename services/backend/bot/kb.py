@@ -456,47 +456,47 @@ create_bid_it_menu_button = InlineKeyboardButton(
     text="Заявка в IT отдел", callback_data="get_create_bid_it_menu"
 )
 
-get_it_repairman_menu = InlineKeyboardButton(
+get_it_repairman_menu_btn = InlineKeyboardButton(
     text="IT заявки", callback_data="get_it_repairman_menu"
 )
 
-get_it_tm_menu = InlineKeyboardButton(
+get_it_tm_menu_btn = InlineKeyboardButton(
     text="IT заявки ТУ", callback_data="get_it_tm_menu"
 )
 
 
 # Personal cabinet
 
-get_personal_cabinet = InlineKeyboardButton(
+get_personal_cabinet_button = InlineKeyboardButton(
     text="Личный кабинет",
     callback_data="get_per_cab",
 )
 
-get_per_cab_logins = InlineKeyboardButton(
+get_per_cab_logins_button = InlineKeyboardButton(
     text="Доступы",
     callback_data="get_per_cab_logins",
 )
 
-get_per_cab_mat_vals = InlineKeyboardButton(
+get_per_cab_mat_vals_button = InlineKeyboardButton(
     text="Материальные ценности",
     callback_data="get_per_cab_mat_vals",
 )
 
-get_per_cab_dismissal = InlineKeyboardButton(  # issues 176
+get_per_cab_dismissal_button = InlineKeyboardButton(  # issues 176
     text="Заявление на увольнение",
     callback_data="get_per_cab_dismissal",
 )
 
-set_per_cab_department = InlineKeyboardButton(
+set_per_cab_department_button = InlineKeyboardButton(
     text="Сменить предприятие",
     callback_data="set_per_cab_department",
 )
 
-get_monitoring_menu = InlineKeyboardButton(
+get_monitoring_menu_btn = InlineKeyboardButton(
     text="Мониторинг точек", callback_data="get_monitoring_menu"
 )
 
-get_per_cab_monitoring_list = InlineKeyboardButton(
+get_per_cab_monitoring_list_btn = InlineKeyboardButton(
     text="Мониторинг точек",
     callback_data="get_per_cab_monitoring_list",
 )

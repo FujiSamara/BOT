@@ -4,7 +4,11 @@ from aiogram.types import (
     InlineKeyboardMarkup,
 )
 
-from bot.kb import get_per_cab_monitoring_list, main_menu_button, get_monitoring_menu
+from bot.kb import (
+    get_per_cab_monitoring_list_btn,
+    main_menu_button,
+    get_monitoring_menu_btn,
+)
 from bot.handlers.utils import (
     try_edit_or_answer,
 )
@@ -14,12 +18,12 @@ from bot.handlers.perconal_cab import utils
 router = Router(name="personal_cabinet")
 
 
-@router.callback_query(F.data == get_monitoring_menu.callback_data)
-async def get_monitoring_menu(cal):
+@router.callback_query(F.data == get_monitoring_menu_btn.callback_data)
+async def get_monitoring_menu_btn(callback: CallbackQuery):
     pass
 
 
-@router.callback_query(F.data == get_per_cab_monitoring_list.callback_data)
+@router.callback_query(F.data == get_per_cab_monitoring_list_btn.callback_data)
 async def get_monitoring_list(callback: CallbackQuery):
     await try_edit_or_answer(
         text=utils.get_monitoring_list(),

@@ -11,12 +11,12 @@ from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 
 from bot.kb import (
-    get_personal_cabinet,
-    get_per_cab_logins,
-    get_per_cab_mat_vals,
-    set_per_cab_department,
-    get_per_cab_dismissal,
-    get_per_cab_monitoring_list,
+    get_personal_cabinet_button,
+    get_per_cab_logins_button,
+    get_per_cab_mat_vals_button,
+    set_per_cab_department_button,
+    get_per_cab_dismissal_button,
+    get_per_cab_monitoring_list_btn,
     main_menu_button,
     create_reply_keyboard,
 )
@@ -40,27 +40,27 @@ from db.models import FujiScope
 router = Router(name="personal_cabinet")
 
 
-@router.callback_query(F.data == get_personal_cabinet.callback_data)
+@router.callback_query(F.data == get_personal_cabinet_button.callback_data)
 async def get_personal_data(message: CallbackQuery | Message):
     message = message.message if isinstance(message, CallbackQuery) else message
 
     worker: Optional[WorkerSchema] = get_worker_by_telegram_id(message.chat.id)
 
     buttons: list[list[InlineKeyboardButton]] = [
-        [get_per_cab_logins],
-        [get_per_cab_mat_vals],
-        [get_per_cab_dismissal],
+        [get_per_cab_logins_button],
+        [get_per_cab_mat_vals_button],
+        [get_per_cab_dismissal_button],
     ]
     if (
         FujiScope.bot_bid_teller_cash in worker.post.scopes
         or FujiScope.admin in worker.post.scopes
     ):
-        buttons.append([set_per_cab_department])
+        buttons.append([set_per_cab_department_button])
     if (
         FujiScope.bot_incident_monitoring in worker.post.scopes
         or FujiScope.admin in worker.post.scopes
     ):
-        buttons.append([get_per_cab_monitoring_list])
+        buttons.append([get_per_cab_monitoring_list_btn])
 
     buttons.append([main_menu_button])
 
@@ -73,7 +73,7 @@ async def get_personal_data(message: CallbackQuery | Message):
     )
 
 
-@router.callback_query(F.data == get_per_cab_logins.callback_data)
+@router.callback_query(F.data == get_per_cab_logins_button.callback_data)
 async def get_logins_pers_cab(callback: CallbackQuery):
     await try_edit_or_answer(
         text=hbold("Доступы"),
@@ -95,15 +95,15 @@ async def show_login(callback: CallbackQuery, callback_data: ShowLoginCallbackDa
     await get_logins_pers_cab(callback)
 
 
-@router.callback_query(F.data == get_per_cab_mat_vals.callback_data)
+@router.callback_query(F.data == get_per_cab_mat_vals_button.callback_data)
 async def get_mat_vals(callback: CallbackQuery):
     await try_edit_or_answer(
-        text=hbold(get_per_cab_mat_vals.text),
+        text=hbold(get_per_cab_mat_vals_button.text),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 *utils.get_mat_vals_bts(callback.message.chat.id),
-                [get_personal_cabinet],
+                [get_personal_cabinet_button],
             ]
         ),
     )
@@ -116,11 +116,13 @@ async def get_mat_val(callback: CallbackQuery, callback_data: ShowLoginCallbackD
     await try_edit_or_answer(
         text=utils.get_material_values_text(callback_data=callback_data),
         message=callback.message,
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[get_per_cab_mat_vals]]),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[[get_per_cab_mat_vals_button]]
+        ),
     )
 
 
-@router.callback_query(F.data == set_per_cab_department.callback_data)
+@router.callback_query(F.data == set_per_cab_department_button.callback_data)
 async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(PersconalCabinet.department)
 
@@ -163,14 +165,14 @@ async def set_department(message: Message, state: FSMContext):
                 await message.answer(
                     text=hbold(f"Предприятие изменено на {message.text}"),
                     reply_markup=InlineKeyboardMarkup(
-                        inline_keyboard=[[get_personal_cabinet]]
+                        inline_keyboard=[[get_personal_cabinet_button]]
                     ),
                 )
             else:
                 await message.answer(
                     text=hbold("Ошибка, не удалось изменить предприятие."),
                     reply_markup=InlineKeyboardMarkup(
-                        inline_keyboard=[[get_personal_cabinet]]
+                        inline_keyboard=[[get_personal_cabinet_button]]
                     ),
                 )
             await state.set_state(Base.none)

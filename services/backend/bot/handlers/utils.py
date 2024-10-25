@@ -30,10 +30,10 @@ from bot.kb import (
     rating_menu_button,
     worker_bid_menu_button,
     create_reply_keyboard,
-    get_it_repairman_menu,
-    get_it_tm_menu,
-    get_personal_cabinet,
-    get_monitoring_menu,
+    get_it_repairman_menu_btn,
+    get_it_tm_menu_btn,
+    get_personal_cabinet_button,
+    get_monitoring_menu_btn,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -64,10 +64,10 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_territorial_manager: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
-        FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
-        FujiScope.bot_bid_it_tm: get_it_tm_menu,
-        FujiScope.bot_personal_cabinet: get_personal_cabinet,
-        FujiScope.bot_incident_monitoring: get_monitoring_menu,
+        FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
+        FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
+        FujiScope.bot_personal_cabinet: get_personal_cabinet_button,
+        FujiScope.bot_incident_monitoring: get_monitoring_menu_btn,
     }
 
 
