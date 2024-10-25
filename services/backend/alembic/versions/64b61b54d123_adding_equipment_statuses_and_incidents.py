@@ -25,6 +25,13 @@ def upgrade() -> None:
         sa.Column("equipment_name", sa.String(), nullable=False),
         sa.Column("department_id", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(), nullable=False),
+        sa.Column("ip_address", sa.String(), nullable=False),
+        sa.Column(
+            "stage",
+            sa.Enum("created", "processed", "solved", name="incidentstage"),
+            nullable=False,
+        ),
+        sa.Column("latency", sa.Float(), nullable=False),
         sa.Column("last_update", sa.DateTime(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
         sa.ForeignKeyConstraint(

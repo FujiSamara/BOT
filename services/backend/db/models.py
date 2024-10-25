@@ -70,6 +70,12 @@ class Executor(enum.Enum):
     electrician = (3,)
 
 
+class IncidentStage(enum.Enum):
+    created = 1
+    processed = 2
+    solved = 3
+
+
 approvalstatus = Annotated[
     ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
 ]
@@ -1003,6 +1009,8 @@ class EquipmentStatus(Base):
     equipment_name: Mapped[str] = mapped_column()
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department: Mapped[Department] = relationship("Department")
+    ip_address: Mapped[str] = mapped_column()
+    latency: Mapped[float] = mapped_column()
     status: Mapped[str] = mapped_column()
     last_update: Mapped[datetime.datetime] = mapped_column()
 
@@ -1016,3 +1024,9 @@ class EquipmentIncident(Base):
     )
     incident_time: Mapped[datetime.datetime] = mapped_column()
     status: Mapped[str] = mapped_column()
+    stage: Mapped[
+        Annotated[
+            IncidentStage,
+            mapped_column(Enum(IncidentStage)),
+        ]
+    ]
