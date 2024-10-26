@@ -507,5 +507,5 @@ def build_coordinations():
         state_column=Bid.teller_cash_state,
         name="teller_cash",
         without_decline=True,
-        approve_button_text="Выдать",
+        approve_button_text="Оплатить",
     )
