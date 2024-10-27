@@ -192,7 +192,7 @@ class CoordinationFactory:
         )
         await try_delete_message(callback.message)
         msg = await callback.message.answer(
-            text="Введите комментарий",
+            text=hbold("Введите комментарий:"),
             reply_markup=create_reply_keyboard(text.back),
         )
 
