@@ -312,7 +312,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             case "cc_state":
                 stage = "Ваша заявка согласована ЦЗ!"
             case "paralegal_state":
-                stage = "Ваша заявка согласована руководителем ЦЗ!"
+                stage = "Ваша заявка согласована ЮК!"
             case "kru_state":
                 stage = "Ваша заявка согласована КРУ!"
             case "owner_state":
@@ -320,7 +320,10 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
             case "accountant_card_state":
                 stage = "Ваша заявка согласована бухгалтерией!"
             case "accountant_cash_state":
-                stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа производстве {bid.paying_department.name}."
+                if bid.paying_department is not None:
+                    stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа производстве {bid.paying_department.name}."
+                else:
+                    stage = "Денежные средства по вашей заявке готовы к выдачи!"
             case "teller_card_state":
                 stage = "Денежные средства выданы."
             case "teller_cash_state":
@@ -369,33 +372,63 @@ async def notify_next_coordinator(bid: BidSchema):
     from bot.handlers.utils import (
         notify_workers_by_scope,
         notify_workers_in_department_by_scope,
+        notify_worker_by_telegram_id,
     )
 
-    if bid.kru_state == ApprovalStatus.pending_approval:
+    if (
+        bid.fac_state == ApprovalStatus.pending_approval
+        and bid.expenditure.fac.telegram_id is not None
+    ):
+        await notify_worker_by_telegram_id(
+            bid.expenditure.fac.telegram_id,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
+        )
+    elif (
+        bid.cc_state == ApprovalStatus.pending_approval
+        and bid.expenditure.cc.telegram_id is not None
+    ):
+        await notify_worker_by_telegram_id(
+            bid.expenditure.cc.telegram_id,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
+        )
+    elif (
+        bid.paralegal_state == ApprovalStatus.pending_approval
+        and bid.expenditure.paralegal.telegram_id is not None
+    ):
+        await notify_worker_by_telegram_id(
+            bid.expenditure.paralegal.telegram_id,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
+        )
+    elif bid.kru_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_kru, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_kru,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
     elif bid.owner_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_owner, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_owner,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_card, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_accountant_card,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_cash, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_accountant_cash,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_card, message="У вас новая заявка!"
+            scope=FujiScope.bot_bid_teller_card,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_in_department_by_scope(
             scope=FujiScope.bot_bid_teller_cash,
-            department_id=bid.department.id,
-            message="У вас новая заявка!",
+            department_id=bid.paying_department.id,
+            message=f"У вас новая заявка!\nЗаявитель {bid.worker.l_name}",
         )
 
 
