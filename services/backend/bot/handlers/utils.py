@@ -9,6 +9,7 @@ from aiogram.types import (
     PhotoSize,
     File,
 )
+from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
@@ -29,9 +30,10 @@ from bot.kb import (
     rating_menu_button,
     worker_bid_menu_button,
     create_reply_keyboard,
-    get_it_repairman_menu,
-    get_it_tm_menu,
-    get_personal_cabinet,
+    get_it_repairman_menu_btn,
+    get_it_tm_menu_btn,
+    get_personal_cabinet_button,
+    get_monitoring_menu_btn,
 )
 from bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -62,9 +64,10 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_territorial_manager: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
-        FujiScope.bot_bid_it_repairman: get_it_repairman_menu,
-        FujiScope.bot_bid_it_tm: get_it_tm_menu,
-        FujiScope.bot_personal_cabinet: get_personal_cabinet,
+        FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
+        FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
+        FujiScope.bot_personal_cabinet: get_personal_cabinet_button,
+        FujiScope.bot_incident_monitoring: get_monitoring_menu_btn,
     }
 
 
@@ -138,7 +141,7 @@ async def try_answer(message: Message, text: str, reply_markup: Any = None) -> b
     try:
         await message.answer(text=text, reply_markup=reply_markup)
         return True
-    except Exception:
+    except TelegramAPIError:
         return False
 
 
@@ -165,15 +168,17 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     """
     Sends notify `message` to workers by their `scope`.
     """
-    workers: list[WorkerSchema] = [
-        *service.get_workers_by_scope(scope),
-        *service.get_workers_by_scope(FujiScope.admin),
-    ]
+    telegram_ids: set[int] = {
+        worker.telegram_id
+        for worker in (
+            *service.get_workers_by_scope(scope),
+            *service.get_workers_by_scope(FujiScope.admin),
+        )
+        if worker.telegram_id is not None
+    }
 
-    for worker in workers:
-        if not worker.telegram_id:
-            continue
-        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+    for id in telegram_ids:
+        msg = await notify_worker_by_telegram_id(id=id, message=message)
         if not msg:
             continue
         await send_menu_by_scopes(message=msg)

@@ -1,12 +1,8 @@
 from aiogram import Router
+import bot.handlers as handlers
 from bot.handlers import (
     auth_handler,
     main_handler,
-    bid_handler,
-    rate_handler,
-    bid_it_handler,
-    tech_req_handler,
-    personal_cab_handler,
 )
 
 
@@ -16,9 +12,10 @@ router = Router(name="main")
 router.include_routers(
     main_handler.router,
     auth_handler.router,
-    bid_handler.router,
-    rate_handler.router,
-    bid_it_handler.router,
-    tech_req_handler.router,
-    personal_cab_handler.router,
+    handlers.bid_router,
+    handlers.rate_router,
+    handlers.bids_it_router,
+    handlers.tech_request_router,
+    handlers.personal_cabinet_router,
+    handlers.monitoring_router,
 )

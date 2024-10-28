@@ -1,16 +1,19 @@
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Callable, Optional, Type
+from typing import Any, Callable, Optional, Type, TypeVar
 from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
     Bid,
     BidDocument,
     BudgetRecord,
+    EquipmentIncident,
+    EquipmentStatus,
     Executor,
     Expenditure,
     FujiScope,
     Group,
+    IncidentStage,
     Post,
     PostScope,
     TechnicalProblem,
@@ -34,11 +37,13 @@ from db.models import (
     MaterialValues,
 )
 from db.schemas import (
-    BaseSchema,
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
+    DepartmentSchemaFull,
     DocumentSchema,
+    EquipmentIncidentSchema,
+    EquipmentStatusSchema,
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
@@ -55,7 +60,8 @@ from db.schemas import (
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
-from sqlalchemy import null, or_, and_, desc
+from sqlalchemy.orm import selectinload
+from sqlalchemy import Select, null, or_, and_, desc, select, inspect
 
 
 def create_tables():
@@ -108,7 +114,14 @@ def find_posts_by_name(name: str) -> list[PostSchema]:
         return [PostSchema.model_validate(raw_post) for raw_post in raw_posts]
 
 
-def find_department_by_column(column: any, value: any) -> DepartmentSchema:
+DepartmentSchemaT = TypeVar("DepartmentSchemaT", bound=DepartmentSchema)
+
+
+def find_department_by_column(
+    column: any,
+    value: any,
+    department_schema: Type[DepartmentSchemaT] = DepartmentSchema,
+) -> Optional[DepartmentSchemaT]:
     """
     Returns department in database by `column` with `value`.
     If department not exist return `None`.
@@ -117,7 +130,7 @@ def find_department_by_column(column: any, value: any) -> DepartmentSchema:
         raw_department = s.query(Department).filter(column == value).first()
         if not raw_department:
             return None
-        return DepartmentSchema.model_validate(raw_department)
+        return department_schema.model_validate(raw_department)
 
 
 def find_post_by_column(column: any, value: any) -> PostSchema:
@@ -1296,6 +1309,10 @@ def close_request(
 
 
 # region Model general
+
+SchemaT = TypeVar("SchemaT", bound=BaseModel)
+
+
 def get_model_count(
     model_type: Type[Base],
     query_schema: QuerySchema,
@@ -1310,11 +1327,11 @@ def get_model_count(
 
 def get_models(
     model_type: Type[Base],
-    schema_type: Type[BaseModel],
+    schema_type: Type[SchemaT],
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[BaseSchema]:
+) -> list[SchemaT]:
     """Returns `model_type` schemas with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
@@ -1692,3 +1709,232 @@ def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
             return True
         else:
             return False
+
+
+# region Equipment statuses and incidents
+
+
+def update_equipment_status(equipment_status: EquipmentStatusSchema) -> int:
+    """:return: id of updated equipment_status"""
+    with session.begin() as s:
+        raw_status = (
+            s.execute(
+                select(EquipmentStatus).filter(
+                    and_(
+                        EquipmentStatus.equipment_name
+                        == equipment_status.equipment_name,
+                        EquipmentStatus.department_id == equipment_status.department.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        department = (
+            s.execute(
+                select(Department).filter(
+                    Department.id == equipment_status.department.id
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if not raw_status:
+            new_raw_status = EquipmentStatus(
+                equipment_name=equipment_status.equipment_name,
+                status=equipment_status.status,
+                last_update=equipment_status.last_update,
+                department=department,
+                ip_address=equipment_status.ip_address,
+                latency=equipment_status.latency,
+            )
+            s.add(new_raw_status)
+            s.flush()
+            s.refresh(new_raw_status)
+            return new_raw_status.id
+        else:
+            raw_status.last_update = equipment_status.last_update
+            raw_status.status = equipment_status.status
+            raw_status.equipment_name = equipment_status.equipment_name
+            raw_status.department = department
+
+        return raw_status.id
+
+
+def add_equipment_incident(incident: EquipmentIncidentSchema):
+    with session.begin() as s:
+        raw_status = (
+            s.execute(
+                select(EquipmentStatus).filter(
+                    EquipmentStatus.id == incident.equipment_status.id,
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if raw_status is None:
+            return
+
+        raw_incident = EquipmentIncident(
+            equipment_status=raw_status,
+            incident_time=incident.incident_time,
+            status=incident.status,
+            stage=incident.stage,
+        )
+
+        s.add(raw_incident)
+
+
+def update_equipment_incident_stage(incident: EquipmentIncidentSchema):
+    with session.begin() as s:
+        raw_status = (
+            s.execute(
+                select(EquipmentStatus).filter(
+                    and_(
+                        EquipmentStatus.id == incident.equipment_status.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        raw_incident = (
+            s.execute(
+                select(EquipmentIncident).filter(
+                    and_(
+                        EquipmentIncident.id == incident.id,
+                    )
+                )
+            )
+            .scalars()
+            .first()
+        )
+
+        if raw_status is None or raw_incident is None:
+            return
+
+        raw_incident.stage = incident.stage
+
+
+def selectinload_all(model: Type[Base]):
+    return [selectinload(relationship) for relationship in inspect(model).relationships]
+
+
+def get_equipment_statuses() -> list[EquipmentStatusSchema]:
+    with session.begin() as s:
+        rows = (
+            s.execute(
+                select(EquipmentStatus).options(*selectinload_all(EquipmentStatus))
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            EquipmentStatusSchema(
+                asterisk_id=raw_status.department.asterisk_id,
+                id=raw_status.id,
+                department=DepartmentSchemaFull.model_validate(raw_status.department),
+                equipment_name=raw_status.equipment_name,
+                ip_address=raw_status.ip_address,
+                last_update=raw_status.last_update,
+                latency=raw_status.latency,
+                status=raw_status.status,
+            )
+            for raw_status in rows
+        ]
+
+
+def _get_equipment_incidents_by_select(select: Select) -> list[EquipmentIncidentSchema]:
+    with session.begin() as s:
+        rows: list[EquipmentIncident] = s.execute(select).scalars().all()
+        return [
+            EquipmentIncidentSchema(
+                equipment_status=EquipmentStatusSchema(
+                    asterisk_id=raw_incident.equipment_status.department.asterisk_id,
+                    id=raw_incident.equipment_status.id,
+                    department=DepartmentSchemaFull.model_validate(
+                        raw_incident.equipment_status.department
+                    ),
+                    equipment_name=raw_incident.equipment_status.equipment_name,
+                    ip_address=raw_incident.equipment_status.ip_address,
+                    last_update=raw_incident.equipment_status.last_update,
+                    latency=raw_incident.equipment_status.latency,
+                    status=raw_incident.equipment_status.status,
+                ),
+                incident_time=raw_incident.incident_time,
+                stage=raw_incident.stage,
+                status=raw_incident.status,
+                id=raw_incident.id,
+            )
+            for raw_incident in rows
+        ]
+
+
+def get_unresolved_equipment_incidents() -> list[EquipmentIncidentSchema]:
+    return _get_equipment_incidents_by_select(
+        select(EquipmentIncident).filter(
+            EquipmentIncident.stage != IncidentStage.solved
+        )
+    )
+
+
+def get_resolved_equipment_incidents() -> list[EquipmentIncidentSchema]:
+    return _get_equipment_incidents_by_select(
+        select(EquipmentIncident).filter(
+            EquipmentIncident.stage == IncidentStage.solved
+        )
+    )
+
+
+def get_equipment_incident_by_id(id: int) -> EquipmentIncidentSchema | None:
+    incident = _get_equipment_incidents_by_select(
+        select(EquipmentIncident).filter(EquipmentIncident.id == id)
+    )
+
+    return incident[0] if len(incident) > 0 else None
+
+
+def find_last_unresolved_equipment_incident(
+    equipment_status: EquipmentStatusSchema,
+) -> EquipmentIncidentSchema | None:
+    """Finds last incident for `equipment_status`."""
+    incident = _get_equipment_incidents_by_select(
+        select(EquipmentIncident)
+        .filter(
+            and_(
+                EquipmentIncident.equipment_status_id == equipment_status.id,
+                EquipmentIncident.stage != IncidentStage.solved,
+            )
+        )
+        .order_by(desc(EquipmentIncident.id))
+    )
+
+    return incident[0] if len(incident) > 0 else None
+
+
+# endregion
+
+
+def get_tellers_cash_in_department(department_id) -> list[WorkerSchema]:
+    with session.begin() as s:
+        post_with_teller_post = select(PostScope.post_id).filter(
+            PostScope.scope == FujiScope.bot_bid_teller_cash
+        )
+        raw_tellers = (
+            s.execute(
+                select(Worker).filter(
+                    and_(
+                        Worker.post_id.in_(post_with_teller_post),
+                        Worker.department_id == department_id,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        return [WorkerSchema.model_validate(raw_teller) for raw_teller in raw_tellers]
