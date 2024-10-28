@@ -1319,10 +1319,10 @@ def get_model_count(
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(s.query(model_type), s)
         query_builder.apply(query_schema)
 
-        return query_builder.query.count()
+        return query_builder.count()
 
 
 def get_models(
@@ -1337,16 +1337,15 @@ def get_models(
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(
-            s.query(model_type).options(*selectinload_all(model_type))
-        )
+        query_builder = QueryBuilder(s.query(model_type), s)
         query_builder.apply(query_schema)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
 
-        raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
-            records_per_page
-        )
-
-        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
+        return [
+            schema_type.model_validate(raw_model) for raw_model in query_builder.all()
+        ]
 
 
 def export_models(
@@ -1361,7 +1360,7 @@ def export_models(
         query_builder = QueryBuilder(s.query(model_type))
         query_builder.apply(query_schema)
         exporter = XLSXExporter(
-            query_builder.query, formatters, exclude_columns, aliases
+            query_builder.select, s, formatters, exclude_columns, aliases
         )
 
         return exporter.export()
