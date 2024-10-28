@@ -1916,3 +1916,24 @@ def find_last_unresolved_equipment_incident(
 
 
 # endregion
+
+
+def get_tellers_cash_in_department(department_id) -> list[WorkerSchema]:
+    with session.begin() as s:
+        post_with_teller_post = select(PostScope.post_id).filter(
+            PostScope.scope == FujiScope.bot_bid_teller_cash
+        )
+        raw_tellers = (
+            s.execute(
+                select(Worker).filter(
+                    and_(
+                        Worker.post_id.in_(post_with_teller_post),
+                        Worker.department_id == department_id,
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+        return [WorkerSchema.model_validate(raw_teller) for raw_teller in raw_tellers]
