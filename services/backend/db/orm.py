@@ -1337,7 +1337,9 @@ def get_models(
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(
+            s.query(model_type).options(*selectinload_all(model_type))
+        )
         query_builder.apply(query_schema)
 
         raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
