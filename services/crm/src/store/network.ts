@@ -111,19 +111,25 @@ export const useNetworkStore = defineStore("network", {
 			});
 		},
 		async getFile(filename: string): Promise<Uint8Array> {
+			return this.getFileByURL(
+				`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
+			);
+		},
+		async getFileByURL(href: string): Promise<Uint8Array> {
 			const resp = await this.withAuthChecking(
-				axios.get(
-					`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
-					{
-						responseType: "blob",
-					},
-				),
+				axios.get(href, {
+					responseType: "blob",
+				}),
 			);
 
 			return resp.data as Uint8Array;
 		},
-		async downloadFile(filename: string) {
-			this.saveFile(filename, await this.getFile(filename));
+		async downloadFile(filename: string, href?: string) {
+			if (href) {
+				this.saveFile(filename, await this.getFileByURL(href));
+			} else {
+				this.saveFile(filename, await this.getFile(filename));
+			}
 		},
 		saveFile(filename: string, file: Uint8Array) {
 			const fileBlob = new Blob([file], {
