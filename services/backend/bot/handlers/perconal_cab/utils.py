@@ -3,7 +3,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.markdown import hbold
 
 from settings import get_settings
-from bot.kb import get_personal_cabinet
+from bot.kb import get_personal_cabinet_button
 from bot.text import personal_cabinet_logins_dict
 from db.service import (
     get_worker_chief,
@@ -83,7 +83,7 @@ def get_logins_bts(telegram_id: int) -> list[InlineKeyboardButton]:
     except Exception:
         buttons: list[InlineKeyboardButton] = []
 
-    buttons.append([get_personal_cabinet])
+    buttons.append([get_personal_cabinet_button])
     return buttons
 
 

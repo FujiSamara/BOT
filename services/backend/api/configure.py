@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from api import crm
 from api import auth
+from api import external
 
 from api.route import register_base_routes
 
@@ -12,3 +13,4 @@ def configure(api: FastAPI):
 
     crm.create(api)
     auth.create(api)
+    external.create(api)
