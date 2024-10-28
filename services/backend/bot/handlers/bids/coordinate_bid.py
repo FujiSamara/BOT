@@ -38,7 +38,7 @@ from bot.handlers.bids.schemas import (
     BidActionData,
     ActionType,
 )
-from bot.states import BidCoordination
+from bot.states import BidCoordination, Base
 from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
 from bot.handlers.utils import (
     try_delete_message,
@@ -375,6 +375,7 @@ async def set_department(message: Message, state: FSMContext):
     bid: BidSchema = data["bid"]
     column_name = data["column_name"]
 
+    await state.set_state(Base.none)
     if message.text == text.back:
         await try_delete_message(message)
         await CoordinationFactory(
@@ -449,6 +450,8 @@ async def set_paying_comment(message: Message, state: FSMContext):
     if "column_name" not in data:
         raise KeyError("Column name not exist")
 
+    await state.set_state(Base.none)
+
     generator: Callable = data["generator"]
     callback: CallbackQuery = data["callback"]
     bid: BidSchema = data["bid"]
@@ -456,6 +459,7 @@ async def set_paying_comment(message: Message, state: FSMContext):
 
     if message.text == text.back:
         await generator(callback)
+        await state.set_state()
     else:
         bid.paying_comment = message.text
         update_bid(bid)
@@ -499,7 +503,7 @@ def build_coordinations():
         state_column=Bid.teller_card_state,
         name="teller_card",
         without_decline=True,
-        approve_button_text="Выдать",
+        approve_button_text="Оплатить",
     )
     CoordinationFactory(
         router=router,
@@ -507,5 +511,5 @@ def build_coordinations():
         state_column=Bid.teller_cash_state,
         name="teller_cash",
         without_decline=True,
-        approve_button_text="Оплатить",
+        approve_button_text="Выдать",
     )

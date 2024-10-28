@@ -17,6 +17,8 @@ def get_full_bid_info(bid: BidSchema) -> str:
             bid_info += f"""\n{hbold("Предприятие плательщик")}: {bid.paying_department.name}\n"""
         else:
             bid_info += f"""\n{hbold("Предприятие плательщик")}: Определяется\n"""
+    elif bid.paying_comment is not None:
+        bid_info += f"""{hbold("Комментарий бухгалтера:")}: {bid.paying_comment}\n"""
     bid_info += f"""{hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}

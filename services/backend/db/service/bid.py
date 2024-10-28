@@ -326,9 +326,9 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 else:
                     stage = "Денежные средства по вашей заявке готовы к выдачи!"
             case "teller_card_state":
-                stage = "Денежные средства выплачены."
+                stage = "Ваш счёт оплачен."
                 if bid.paying_comment is not None:
-                    stage += f"\nКомментарий бухгалтера: {bid.paying_comment}"
+                    stage += f"\nКомментарий: {bid.paying_comment}"
             case "teller_cash_state":
                 stage = "Денежные средства выданы."
             case _:
