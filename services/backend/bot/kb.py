@@ -496,7 +496,24 @@ get_monitoring_menu_btn = InlineKeyboardButton(
     text="Мониторинг точек", callback_data="get_monitoring_menu"
 )
 
-get_per_cab_monitoring_list_btn = InlineKeyboardButton(
-    text="Мониторинг точек",
-    callback_data="get_per_cab_monitoring_list",
+get_monitoring_list_btn = InlineKeyboardButton(
+    text="Статус оборудования",
+    callback_data="get_monitoring_list",
+)
+
+get_incident_history_btn = InlineKeyboardButton(
+    text="История инцидентов",
+    callback_data="get_incident_history",
+)
+
+get_incidents_btn = InlineKeyboardButton(
+    text="Инциденты",
+    callback_data="get_incidents",
+)
+
+monitoring_menu = create_inline_keyboard(
+    get_monitoring_list_btn,
+    get_incident_history_btn,
+    get_incidents_btn,
+    main_menu_button,
 )

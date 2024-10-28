@@ -54,6 +54,10 @@ class DepartmentSchema(BaseSchema):
     company: CompanySchema
 
 
+class DepartmentSchemaFull(DepartmentSchema):
+    territorial_manager: Optional["WorkerSchema"]
+
+
 class GroupSchema(BaseSchema):
     name: str
 
@@ -386,7 +390,7 @@ class EquipmentStatusSchema(BaseModel):
     status: str
     ip_address: str
     latency: float
-    department: Optional[DepartmentSchema] = None
+    department: DepartmentSchemaFull
     last_update: datetime.datetime
     equipment_name: str
 

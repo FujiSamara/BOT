@@ -1,6 +1,10 @@
 from aiogram.utils.markdown import hbold, hcode
 
+from db.models import IncidentStage
+from settings import get_settings
+
 import db.service.equipment_status_service as es_service
+import db.schemas as schemas
 
 
 def get_monitoring_list() -> str:
@@ -17,10 +21,38 @@ def get_monitoring_list() -> str:
 """
 
 
+def get_incident_short_info(incident: schemas.EquipmentIncidentSchema) -> str:
+    department_name = incident.equipment_status.department.name
+    date_time = incident.incident_time.strftime(get_settings().date_time_format)
+    prefix = " ✅" if incident.stage == IncidentStage.processed else ""
+    return f"{department_name} {date_time}{prefix}"
+
+
+def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
+    department_name = incident.equipment_status.department.name
+    date_time = incident.incident_time.strftime(get_settings().date_time_format)
+    territorial_manager = incident.equipment_status.department.territorial_manager
+    territorial_manager_text = "Отсутствует"
+    if territorial_manager is not None:
+        territorial_manager_text = (
+            f"{territorial_manager.l_name} {territorial_manager.f_name}"
+        )
+    teller_cash = None
+    status = incident.status
+    equipment_name = incident.equipment_status.equipment_name
+    return f"""Производство: {hcode(department_name)}
+Время инцидента: {hcode(date_time)}
+Территориальный: {hcode(territorial_manager_text)}
+Кассир: {hcode(teller_cash)}
+Статус: {hcode(status)}
+Оборудование: {hcode(equipment_name)}
+"""
+
+
 def get_incidents_history_list() -> str:
     """Returns incidents history list."""
     incidents = sorted(
-        es_service.get_equipment_incidents(), key=lambda incident: incident.id
+        es_service.get_incidents_history(), key=lambda incident: incident.id
     )[:10]
 
     sep = "\n"

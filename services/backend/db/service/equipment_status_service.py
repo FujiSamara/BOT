@@ -3,11 +3,12 @@ from datetime import datetime
 from settings import logger
 
 from db.schemas import (
+    DepartmentSchemaFull,
     EquipmentIncidentSchema,
     EquipmentStatusSchemaIn,
     EquipmentStatusSchema,
 )
-from db.models import Department, FujiScope
+from db.models import Department, FujiScope, IncidentStage
 from db import orm
 
 bad_statuses = ["Не доступна"]
@@ -21,7 +22,9 @@ async def update_equipment_status(
     If status not exist in db creates it.s
     """
     if (
-        department := orm.find_department_by_column(Department.asterisk_id, asterisk_id)
+        department := orm.find_department_by_column(
+            Department.asterisk_id, asterisk_id, DepartmentSchemaFull
+        )
     ) is None:
         logger.warning(f"Department with asterisk id: {asterisk_id} not found.")
         return
@@ -36,14 +39,29 @@ async def update_equipment_status(
         equipment_name="Предприятие",
     )
 
-    orm.update_equipment_status(equipment_status)
+    id = orm.update_equipment_status(equipment_status)
+    equipment_status.id = id
+
+    last_incident = orm.find_last_unresolved_equipment_incident(equipment_status)
 
     if equipment_status.status in bad_statuses:
-        await add_equipment_incident(equipment_status)
+        if last_incident is None:
+            await add_equipment_incident(equipment_status)
+    else:
+        if last_incident is not None:
+            last_incident.stage = IncidentStage.solved
+            orm.update_equipment_incident_stage(last_incident)
 
 
 async def add_equipment_incident(equipment_status: EquipmentStatusSchema):
-    orm.add_equipment_incident(equipment_status)
+    orm.add_equipment_incident(
+        EquipmentIncidentSchema(
+            equipment_status=equipment_status,
+            incident_time=equipment_status.last_update,
+            status=equipment_status.status,
+            stage=IncidentStage.created,
+        )
+    )
 
     from bot.handlers.utils import (
         notify_workers_by_scope,
@@ -61,5 +79,19 @@ def get_equipment_statuses() -> list[EquipmentStatusSchema]:
     return orm.get_equipment_statuses()
 
 
-def get_equipment_incidents() -> list[EquipmentIncidentSchema]:
+def get_incidents_history() -> list[EquipmentIncidentSchema]:
+    return orm.get_resolved_equipment_incidents()
+
+
+def get_pending_incidents() -> list[EquipmentIncidentSchema]:
     return orm.get_unresolved_equipment_incidents()
+
+
+def get_incident_by_id(id: int) -> EquipmentIncidentSchema | None:
+    return orm.get_equipment_incident_by_id(id)
+
+
+def confirm_incident_by_id(id: int) -> None:
+    incident = get_incident_by_id(id)
+    incident.stage = IncidentStage.processed
+    orm.update_equipment_incident_stage(incident)
