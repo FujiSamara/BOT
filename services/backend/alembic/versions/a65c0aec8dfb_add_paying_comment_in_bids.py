@@ -1,7 +1,7 @@
 """Add paying_comment in bids
 
 Revision ID: a65c0aec8dfb
-Revises: f921aa0af420
+Revises: 5797fcce91fa
 Create Date: 2024-10-26 19:48:09.134938
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "a65c0aec8dfb"
-down_revision: Union[str, None] = "f921aa0af420"
+down_revision: Union[str, None] = "5797fcce91fa"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
