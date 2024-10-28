@@ -180,6 +180,7 @@ async def create_bid(
         close_date=None,
         comment=comment,
         denying_reason=None,
+        paying_comment=None,
         documents=documents,
         fac_state=fac_state,
         cc_state=cc_state,
@@ -325,7 +326,9 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
                 else:
                     stage = "Денежные средства по вашей заявке готовы к выдачи!"
             case "teller_card_state":
-                stage = "Денежные средства выданы."
+                stage = "Ваш счёт оплачен."
+                if bid.paying_comment is not None:
+                    stage += f"\nКомментарий: {bid.paying_comment}"
             case "teller_cash_state":
                 stage = "Денежные средства выданы."
             case _:

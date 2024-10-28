@@ -38,7 +38,7 @@ from bot.handlers.bids.schemas import (
     BidActionData,
     ActionType,
 )
-from bot.states import BidCoordination
+from bot.states import BidCoordination, Base
 from bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
 from bot.handlers.utils import (
     try_delete_message,
@@ -92,6 +92,12 @@ class CoordinationFactory:
         if state_column == Bid.accountant_cash_state:
             router.callback_query.register(
                 self.approve_bid_accountant_cash,
+                BidActionData.filter(F.action == ActionType.approving),
+                BidActionData.filter(F.endpoint_name == self.approving_endpoint_name),
+            )
+        elif state_column == Bid.teller_card_state:
+            router.callback_query.register(
+                self.approve_bid_teller_card,
                 BidActionData.filter(F.action == ActionType.approving),
                 BidActionData.filter(F.endpoint_name == self.approving_endpoint_name),
             )
@@ -170,6 +176,28 @@ class CoordinationFactory:
             ),
         )
         await state.update_data(msg=msg)
+
+    async def approve_bid_teller_card(
+        self,
+        callback: CallbackQuery,
+        callback_data: BidCallbackData,
+        state: FSMContext,
+    ):
+        bid = get_bid_by_id(callback_data.bid_id)
+        await state.update_data(
+            generator=self.get_pendings,
+            callback=callback,
+            bid=bid,
+            column_name=self.state_column.name,
+        )
+        await try_delete_message(callback.message)
+        msg = await callback.message.answer(
+            text=hbold("Введите комментарий:"),
+            reply_markup=create_reply_keyboard(text.back),
+        )
+
+        await state.update_data(msg=msg)
+        await state.set_state(BidCoordination.paying_comment)
 
     async def get_documents(
         self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
@@ -347,6 +375,7 @@ async def set_department(message: Message, state: FSMContext):
     bid: BidSchema = data["bid"]
     column_name = data["column_name"]
 
+    await state.set_state(Base.none)
     if message.text == text.back:
         await try_delete_message(message)
         await CoordinationFactory(
@@ -407,6 +436,42 @@ async def set_department(message: Message, state: FSMContext):
         await state.update_data(msg=msg)
 
 
+@router.message(BidCoordination.paying_comment)
+async def set_paying_comment(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_delete_message(data["msg"])
+
+    if "generator" not in data:
+        raise KeyError("Pending generator not exist")
+    if "callback" not in data:
+        raise KeyError("Callback not exist")
+    if "bid" not in data:
+        raise KeyError("Bid not exist")
+    if "column_name" not in data:
+        raise KeyError("Column name not exist")
+
+    await state.set_state(Base.none)
+
+    generator: Callable = data["generator"]
+    callback: CallbackQuery = data["callback"]
+    bid: BidSchema = data["bid"]
+    column_name = data["column_name"]
+
+    if message.text == text.back:
+        await generator(callback)
+        await state.set_state()
+    else:
+        bid.paying_comment = message.text
+        update_bid(bid)
+        bid = get_bid_by_id(bid.id)
+        await update_bid_state(bid, column_name, ApprovalStatus.approved)
+
+        msg = await message.answer(hbold("Успешно"))
+        await asyncio.sleep(1)
+        await try_delete_message(msg)
+        await generator(callback)
+
+
 def build_coordinations():
     CoordinationFactory(
         router=router,
@@ -438,7 +503,7 @@ def build_coordinations():
         state_column=Bid.teller_card_state,
         name="teller_card",
         without_decline=True,
-        approve_button_text="Выдать",
+        approve_button_text="Оплатить",
     )
     CoordinationFactory(
         router=router,
@@ -446,5 +511,5 @@ def build_coordinations():
         state_column=Bid.teller_cash_state,
         name="teller_cash",
         without_decline=True,
-        approve_button_text="Оплатить",
+        approve_button_text="Выдать",
     )

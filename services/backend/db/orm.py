@@ -416,6 +416,7 @@ def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
         cur_bid.purpose = bid.purpose
         cur_bid.comment = bid.comment
         cur_bid.denying_reason = bid.denying_reason
+        cur_bid.paying_comment = bid.paying_comment
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department

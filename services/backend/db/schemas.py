@@ -129,6 +129,7 @@ class BidSchema(BaseModel):
 
     comment: Optional[str]
     denying_reason: Optional[str]
+    paying_comment: Optional[str]
 
     expenditure: "ExpenditureSchema"
     need_edm: Optional[bool]
