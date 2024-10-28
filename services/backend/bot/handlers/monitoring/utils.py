@@ -4,6 +4,7 @@ from db.models import IncidentStage
 from settings import get_settings
 
 import db.service.equipment_status_service as es_service
+import db.service.extra as ex_service
 import db.schemas as schemas
 
 
@@ -37,13 +38,28 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
         territorial_manager_text = (
             f"{territorial_manager.l_name} {territorial_manager.f_name}"
         )
-    teller_cash = None
+    tellers_cash = ex_service.get_tellers_cash_for_department(
+        incident.equipment_status.department.id
+    )
     status = incident.status
     equipment_name = incident.equipment_status.equipment_name
+    sep = "\n"
+
+    teller_cash_text = str.join(
+        sep,
+        (
+            hcode(f"{teller_cash.l_name} {teller_cash.f_name} id: {teller_cash.id}")
+            for teller_cash in tellers_cash
+        ),
+    )
+
+    if len(tellers_cash) != 0:
+        teller_cash_text = sep + teller_cash_text
+
     return f"""Производство: {hcode(department_name)}
 Время инцидента: {hcode(date_time)}
 Территориальный: {hcode(territorial_manager_text)}
-Кассир: {hcode(teller_cash)}
+Кассиры: {teller_cash_text}
 Статус: {hcode(status)}
 Оборудование: {hcode(equipment_name)}
 """

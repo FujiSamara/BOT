@@ -217,3 +217,8 @@ def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
         f"The employee's department could not be changed. TG id: {telegram_id}. Department_name: {department_name}"
     )
     return False
+
+
+def get_tellers_cash_for_department(department_id: int) -> list[Worker]:
+    """:return: all tellers cash in department with id `department_id`."""
+    return orm.get_tellers_cash_in_department(department_id)
