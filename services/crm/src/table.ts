@@ -57,6 +57,7 @@ export class CellLine {
 		public value: string = "Не указано",
 		public href: string = "",
 		public color: string = "",
+		public forceHref: boolean = false,
 	) {
 		if (
 			href.length !== 0 &&
@@ -953,6 +954,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._formatters.set("work_begin", parser.formatDateTime);
 		this._formatters.set("work_end", parser.formatDateTime);
 		this._formatters.set("day", parser.formatDateTime);
+		this._formatters.set("photo_b64", parser.formatPhotoBase64);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
@@ -964,6 +966,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._aliases.set("work_duration", "Длительность");
 		this._aliases.set("rating", "Оценка");
 		this._aliases.set("fine", "Штраф");
+		this._aliases.set("photo_b64", "Фото");
 	}
 }
 //#endregion

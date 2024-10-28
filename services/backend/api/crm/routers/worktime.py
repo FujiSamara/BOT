@@ -66,7 +66,7 @@ async def update_worktime(
 
 
 @router.post("/export")
-async def export_bids(
+async def export_worktimes(
     query: QuerySchema, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> Response:
     file = service.export_worktimes(query)

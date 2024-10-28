@@ -60,7 +60,14 @@ export function formatDepartment(department: DepartmentSchema): Cell {
 }
 
 export function formatDocument(document: DocumentSchema): Cell {
-	return new Cell(new CellLine(document.name, document.href));
+	return new Cell(
+		new CellLine(
+			document.name,
+			document.href,
+			undefined,
+			Boolean(document.forceHref),
+		),
+	);
 }
 
 export function formatDocuments(documents: Array<DocumentSchema>): Cell {
@@ -101,4 +108,36 @@ export function formatCheck(check: boolean) {
 
 export function formatPost(post: PostSchema) {
 	return new Cell(new CellLine(post.name));
+}
+
+export function formatPhotoBase64(photoStr: string): Cell {
+	if (!photoStr) {
+		return new Cell(new CellLine("Отсутствует"));
+	}
+
+	const byteCharacters = atob(photoStr);
+	const byteArrays = [];
+	const sliceSize = 512;
+
+	for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+		const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+		const byteNumbers = new Array(slice.length);
+		for (let i = 0; i < slice.length; i++) {
+			byteNumbers[i] = slice.charCodeAt(i);
+		}
+
+		const byteArray = new Uint8Array(byteNumbers);
+		byteArrays.push(byteArray);
+	}
+
+	const blob = new Blob(byteArrays, { type: "application/octet-stream" });
+	const url = window.URL.createObjectURL(blob);
+	const document: DocumentSchema = {
+		href: url,
+		name: "worktime_photo.jpg",
+		forceHref: true,
+	};
+
+	return formatDocument(document);
 }
