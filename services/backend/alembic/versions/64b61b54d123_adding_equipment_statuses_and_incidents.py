@@ -10,6 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+import alembic_custom.enum as c_enum
 
 
 # revision identifiers, used by Alembic.
@@ -26,11 +27,6 @@ def upgrade() -> None:
         sa.Column("department_id", sa.Integer(), nullable=False),
         sa.Column("status", sa.String(), nullable=False),
         sa.Column("ip_address", sa.String(), nullable=False),
-        sa.Column(
-            "stage",
-            sa.Enum("created", "processed", "solved", name="incidentstage"),
-            nullable=False,
-        ),
         sa.Column("latency", sa.Float(), nullable=False),
         sa.Column("last_update", sa.DateTime(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -46,6 +42,11 @@ def upgrade() -> None:
         sa.Column("incident_time", sa.DateTime(), nullable=False),
         sa.Column("status", sa.String(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column(
+            "stage",
+            sa.Enum("created", "processed", "solved", name="incidentstage"),
+            nullable=False,
+        ),
         sa.ForeignKeyConstraint(
             ["equipment_status_id"],
             ["equipment_statuses.id"],
@@ -59,3 +60,4 @@ def downgrade() -> None:
     op.drop_column("departments", "asterisk_id")
     op.drop_table("equipment_incidents")
     op.drop_table("equipment_statuses")
+    c_enum.delete_enum("incidentstage")
