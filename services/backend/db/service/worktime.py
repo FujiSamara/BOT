@@ -1,3 +1,4 @@
+from datetime import date
 from io import BytesIO
 import base64
 
@@ -17,13 +18,12 @@ from fastapi import HTTPException
 
 
 def get_work_time_records_by_day_and_department(
-    department_id: int, day: str
+    department_id: int, day: date
 ) -> list[WorkTimeSchema]:
     """
     Returns all work times records in database by `department_id`
     and `day`.
     """
-
     return orm.get_work_time_records_by_columns(
         [WorkTime.department_id, WorkTime.day],
         [department_id, day],
