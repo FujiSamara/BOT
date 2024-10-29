@@ -10,6 +10,7 @@ from db.models import (
 from db.schemas import (
     QuerySchema,
     WorkTimeSchema,
+    WorkTimeSchemaFull,
     aliases,
 )
 from fastapi import HTTPException
@@ -60,7 +61,7 @@ def get_worktimes_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[WorkTimeSchema]:
+) -> list[WorkTimeSchemaFull]:
     """Return budget records with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
@@ -155,6 +156,6 @@ def export_worktimes(
 
 
 def get_worktime_photo_by_id(id: int) -> BytesIO:
-    row = get_work_time_record_by_id(id)
-    decoded_photo = base64.b64decode(row.photo_b64)
+    photo_b64 = orm.get_worktime_photo(id)
+    decoded_photo = base64.b64decode(photo_b64)
     return BytesIO(decoded_photo)

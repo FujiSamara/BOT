@@ -49,6 +49,7 @@ from db.schemas import (
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
+    WorkTimeSchemaFull,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -1373,20 +1374,21 @@ def get_worktimes_without_photo(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> WorkTimeSchema:
+) -> list[WorkTimeSchemaFull]:
     with session.begin() as s:
-        columns = [col for col in inspect(WorkTime).c if col.name != "photo_b64"]
+        initial_select = select(
+            WorkTime,
+        ).add_columns(
+            case(
+                (
+                    WorkTime.photo_b64.isnot(None),
+                    "exist",
+                ),
+                else_="",
+            ).label("photo_b64")
+        )
         query_builder = QueryBuilder(
-            select(
-                *columns,
-                case(
-                    (
-                        WorkTime.photo_b64.isnot(None),
-                        "exist",
-                    ),
-                    else_="",
-                ).label("photo_b64"),
-            ),
+            initial_select,
             s,
         )
         query_builder.apply(query_schema)
@@ -1396,17 +1398,22 @@ def get_worktimes_without_photo(
 
         rows = s.execute(query_builder.select).all()
 
-        handled_rows: list[dict] = []
+        result: list[WorkTimeSchemaFull] = []
 
-        for row in rows:
-            attrs = {}
-            for index, column in enumerate(columns):
-                attrs[column.name] = row[index]
+        for worktime_raw, photo in rows:
+            worktime = WorkTimeSchema.model_validate(worktime_raw)
+            worktime_full = WorkTimeSchemaFull.model_validate(worktime)
+            worktime_full.photo_b64 = photo
+            result.append(worktime_full)
 
-            attrs["photo_b64"] = row[-1]
-            handled_rows.append(attrs)
+        return result
 
-        return [WorkTimeSchema.model_validate(row) for row in handled_rows]
+
+def get_worktime_photo(id: int) -> str:
+    with session.begin() as s:
+        return s.execute(
+            select(WorkTime.photo_b64).filter(WorkTime.id == id)
+        ).scalar_one()
 
 
 # endregion
