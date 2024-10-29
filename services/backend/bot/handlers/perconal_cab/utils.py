@@ -38,7 +38,7 @@ def menu_text(worker: WorkerSchema) -> str:
         )
     else:
         text += "Не найден"
-    text += f"\nДата приема на работу: {worker.employment_date}\n"
+    text += f"\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}\n"
 
     return text
 

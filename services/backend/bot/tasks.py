@@ -2,11 +2,16 @@ from fastapi_utils.tasks import repeat_every
 import logging
 from datetime import datetime, timedelta
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import InlineKeyboardMarkup
 
 from bot.handlers.rate.utils import shift_closed
 from bot.text import unclosed_shift_notify, unclosed_shift_request
 from bot.handlers.utils import notify_worker_by_telegram_id
-from bot.kb import rating_menu_button, create_inline_keyboard
+from bot.kb import (
+    rating_menu_button,
+    create_inline_keyboard,
+    get_personal_cabinet_button,
+)
 import db.service as service
 
 
@@ -42,3 +47,28 @@ async def notify_with_unclosed_shift() -> None:
                     )
 
     logger.info("Notifying owners completed.")
+
+
+@repeat_every(
+    seconds=60 * 60 * 24,
+    logger=logging.getLogger("uvicorn.error"),
+    wait_first=abs(
+        datetime.now().hour * 60 * 60
+        + datetime.now().minute * 60
+        - 8 * 60 * 60
+    ),
+)
+async def notify_and_droped_departments_teller_cash() -> None:
+    """Notify all teller cash to change department"""
+    logger = logging.getLogger("uvicorn.error")
+    logger.info("Notifying all tellers cash to change department.")
+    tellers = service.set_tellers_cash_department()
+    for teller in tellers:
+        await notify_worker_by_telegram_id(
+            message="Актуализируйте производтсво",
+            id=teller.telegram_id,
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[get_personal_cabinet_button]]
+            ),
+        )
+    logger.info("Notifying tellers cash completed")

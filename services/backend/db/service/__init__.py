@@ -72,6 +72,8 @@ from db.service.extra import (
     get_workers_in_department_by_scope,
     update_worker_tg_id_by_number,
     set_department_for_worker,
+    get_companies_names,
+    set_tellers_cash_department,
 )
 from db.service.it_problem import (
     create_bid_it,
@@ -231,6 +233,8 @@ __all__ = [
     "get_worker_by_phone_number",
     "get_worker_by_telegram_id",
     "get_worker_chief",
+    "get_companies_names",
+    "set_tellers_cash_department",
     "get_worker_department_by_telegram_id",
     "get_workers_bids_by_sender_telegram_id",
     "get_workers_by_scope",

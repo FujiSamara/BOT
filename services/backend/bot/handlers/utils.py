@@ -204,14 +204,18 @@ async def notify_workers_in_department_by_scope(
         await send_menu_by_scopes(message=msg)
 
 
-async def notify_worker_by_telegram_id(id: int, message: str) -> Optional[Message]:
+async def notify_worker_by_telegram_id(
+    id: int, message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+) -> Optional[Message]:
     """
     Tries to sends notify `message` to worker by their `id`.
 
     Returns sended `Message`.
     """
     try:
-        await get_bot().send_message(chat_id=id, text=message)
+        await get_bot().send_message(
+            chat_id=id, text=message, reply_markup=reply_markup
+        )
     except Exception:
         return None
 
