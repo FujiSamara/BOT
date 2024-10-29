@@ -1358,7 +1358,7 @@ def export_models(
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
-        query_builder = QueryBuilder(select(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
         exporter = XLSXExporter(
             query_builder.select, s, formatters, exclude_columns, aliases
