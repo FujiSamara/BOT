@@ -39,9 +39,7 @@ async def get_rating_list(callback: CallbackQuery):
         buttons.append(
             InlineKeyboardButton(
                 text=day.strftime(get_settings().date_format) + f" {label}",
-                callback_data=RateShiftCallbackData(
-                    day=day.strftime(get_settings().date_format), record_id=-1
-                ).pack(),
+                callback_data=RateShiftCallbackData(day=day, record_id=-1).pack(),
             )
         )
 
@@ -67,7 +65,7 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
         if not record.work_begin or not record.work_end:
             continue
 
-        time = record.work_begin.split()[1]
+        time = record.work_begin.strftime(get_settings().date_time_format)
         label = ""
 
         if record.fine or record.rating:
@@ -117,7 +115,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
 async def generate_worker_menu(message: Message, record_id: int) -> None:
     # Settings data
     record = service.get_work_time_record_by_id(record_id)
-    time_begin = record.work_begin.split()[1]
+    time_begin = record.work_begin.strftime(get_settings().date_time_format)
     fine = record.fine or 0
     rating = record.rating or 0
 
