@@ -120,7 +120,7 @@ class BidSchema(BaseModel):
     amount: int
     payment_type: str
     department: DepartmentSchema
-    paying_department: Optional[DepartmentSchema] = None
+    paying_department: DepartmentSchema | None = None
     worker: WorkerSchema
     purpose: str
     create_date: datetime.datetime
@@ -129,7 +129,7 @@ class BidSchema(BaseModel):
 
     comment: Optional[str]
     denying_reason: Optional[str]
-    paying_comment: Optional[str]
+    paying_comment: str | None = None
 
     expenditure: "ExpenditureSchema"
     need_edm: Optional[bool]
