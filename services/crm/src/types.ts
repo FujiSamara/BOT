@@ -78,6 +78,7 @@ export interface DepartmentSchema extends BaseSchema {
 export interface DocumentSchema {
 	name: string;
 	href: string;
+	forceHref?: boolean;
 	file?: Blob;
 }
 

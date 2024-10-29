@@ -11,12 +11,14 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Создатель")}: {bid.worker.l_name} {bid.worker.f_name}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
-{hbold("Предприятие заявителя")}: {bid.department.name}"""
+{hbold("Предприятие заявителя")}: {bid.department.name}\n"""
     if bid.teller_cash_state != ApprovalStatus.skipped:
         if bid.paying_department is not None:
             bid_info += f"""\n{hbold("Предприятие плательщик")}: {bid.paying_department.name}\n"""
         else:
             bid_info += f"""\n{hbold("Предприятие плательщик")}: Определяется\n"""
+    elif bid.paying_comment is not None:
+        bid_info += f"""{hbold("Комментарий бухгалтера:")}: {bid.paying_comment}\n"""
     bid_info += f"""{hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}

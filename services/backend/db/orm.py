@@ -50,6 +50,7 @@ from db.schemas import (
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
+    WorkTimeSchemaFull,
     WorkerBidSchema,
     WorkerSchema,
     WorkTimeSchema,
@@ -63,7 +64,7 @@ from db.schemas import (
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload
-from sqlalchemy import Select, null, or_, and_, desc, select, inspect
+from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
 
 def create_tables():
@@ -418,6 +419,7 @@ def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
         cur_bid.purpose = bid.purpose
         cur_bid.comment = bid.comment
         cur_bid.denying_reason = bid.denying_reason
+        cur_bid.paying_comment = bid.paying_comment
         cur_bid.create_date = bid.create_date
         cur_bid.close_date = bid.close_date
         cur_bid.department = new_department
@@ -1320,10 +1322,10 @@ def get_model_count(
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
 
-        return query_builder.query.count()
+        return query_builder.count()
 
 
 def get_models(
@@ -1338,14 +1340,16 @@ def get_models(
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
 
-        raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
-            records_per_page
-        )
-
-        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
+        return [
+            schema_type.model_validate(raw_model)
+            for raw_model in s.execute(query_builder.select).scalars().all()
+        ]
 
 
 def export_models(
@@ -1357,13 +1361,61 @@ def export_models(
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
         exporter = XLSXExporter(
-            query_builder.query, formatters, exclude_columns, aliases
+            query_builder.select, s, formatters, exclude_columns, aliases
         )
 
         return exporter.export()
+
+
+# endregion
+# region WorkTimes
+def get_worktimes_without_photo(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[WorkTimeSchemaFull]:
+    with session.begin() as s:
+        initial_select = select(
+            WorkTime,
+        ).add_columns(
+            case(
+                (
+                    WorkTime.photo_b64.isnot(None),
+                    "exist",
+                ),
+                else_="",
+            ).label("photo_b64")
+        )
+        query_builder = QueryBuilder(
+            initial_select,
+            s,
+        )
+        query_builder.apply(query_schema)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
+
+        rows = s.execute(query_builder.select).all()
+
+        result: list[WorkTimeSchemaFull] = []
+
+        for worktime_raw, photo in rows:
+            worktime = WorkTimeSchema.model_validate(worktime_raw)
+            worktime_full = WorkTimeSchemaFull.model_validate(worktime)
+            worktime_full.photo_b64 = photo
+            result.append(worktime_full)
+
+        return result
+
+
+def get_worktime_photo(id: int) -> str:
+    with session.begin() as s:
+        return s.execute(
+            select(WorkTime.photo_b64).filter(WorkTime.id == id)
+        ).scalar_one()
 
 
 # endregion

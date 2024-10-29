@@ -48,7 +48,9 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
     teller_cash_text = str.join(
         sep,
         (
-            hcode(f"{teller_cash.l_name} {teller_cash.f_name} id: {teller_cash.id}")
+            hcode(
+                f"{teller_cash.l_name} {teller_cash.f_name} {teller_cash.phone_number}"
+            )
             for teller_cash in tellers_cash
         ),
     )

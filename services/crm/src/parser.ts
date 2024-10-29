@@ -5,6 +5,7 @@ import {
 	PostSchema,
 	WorkerSchema,
 } from "@/types";
+import * as config from "@/config";
 import { Cell, CellLine } from "@/table";
 
 export function formatWorker(worker: WorkerSchema): Cell {
@@ -60,7 +61,14 @@ export function formatDepartment(department: DepartmentSchema): Cell {
 }
 
 export function formatDocument(document: DocumentSchema): Cell {
-	return new Cell(new CellLine(document.name, document.href));
+	return new Cell(
+		new CellLine(
+			document.name,
+			document.href,
+			undefined,
+			Boolean(document.forceHref),
+		),
+	);
 }
 
 export function formatDocuments(documents: Array<DocumentSchema>): Cell {
@@ -100,5 +108,17 @@ export function formatCheck(check: boolean) {
 }
 
 export function formatPost(post: PostSchema) {
+	if (!post) {
+		return new Cell(new CellLine("Отсутствует"));
+	}
 	return new Cell(new CellLine(post.name));
+}
+
+export function formatWorkTimePhoto(photoID: string): Cell {
+	if (!photoID) {
+		return new Cell(new CellLine("Отсутствует"));
+	}
+	const href = `${config.fullBackendURL}/${config.crmEndpoint}/worktime/download_photo/${photoID}`;
+
+	return new Cell(new CellLine(`photo_${photoID}.jpg`, href, undefined, true));
 }

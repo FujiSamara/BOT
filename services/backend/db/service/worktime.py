@@ -1,4 +1,6 @@
+from datetime import date
 from io import BytesIO
+import base64
 
 import aiohttp
 from settings import get_settings
@@ -9,19 +11,19 @@ from db.models import (
 from db.schemas import (
     QuerySchema,
     WorkTimeSchema,
+    WorkTimeSchemaFull,
     aliases,
 )
 from fastapi import HTTPException
 
 
 def get_work_time_records_by_day_and_department(
-    department_id: int, day: str
+    department_id: int, day: date
 ) -> list[WorkTimeSchema]:
     """
     Returns all work times records in database by `department_id`
     and `day`.
     """
-
     return orm.get_work_time_records_by_columns(
         [WorkTime.department_id, WorkTime.day],
         [department_id, day],
@@ -59,14 +61,18 @@ def get_worktimes_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[WorkTimeSchema]:
+) -> list[WorkTimeSchemaFull]:
     """Return budget records with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    return orm.get_models(
-        WorkTime, WorkTimeSchema, page, records_per_page, query_schema
-    )
+    rows = orm.get_worktimes_without_photo(page, records_per_page, query_schema)
+
+    for row in rows:
+        if len(row.photo_b64) > 0:
+            row.photo_b64 = f"{row.id}"
+
+    return rows
 
 
 def dump_worktime(record: WorkTimeSchema) -> dict:
@@ -145,4 +151,11 @@ def export_worktimes(
         WorkTime,
         query_schema,
         aliases=aliases[WorkTimeSchema],
+        exclude_columns=["photo_b64"],
     )
+
+
+def get_worktime_photo_by_id(id: int) -> BytesIO:
+    photo_b64 = orm.get_worktime_photo(id)
+    decoded_photo = base64.b64decode(photo_b64)
+    return BytesIO(decoded_photo)

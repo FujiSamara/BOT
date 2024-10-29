@@ -25,6 +25,7 @@ class BidCreating(StatesGroup):
 
 class BidCoordination(StatesGroup):
     comment = State()
+    paying_comment = State()
     department = State()
 
 

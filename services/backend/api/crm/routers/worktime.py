@@ -2,11 +2,12 @@ from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
-from db import service
+import db.service.worktime as service
 from db.schemas import (
     WorkTimeSchema,
     QuerySchema,
     TalbeInfoSchema,
+    WorkTimeSchemaFull,
 )
 
 from api.auth import User, get_user
@@ -38,7 +39,7 @@ async def get_worktimes(
     query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_worktime"]),
-) -> list[WorkTimeSchema]:
+) -> list[WorkTimeSchemaFull]:
     return service.get_worktimes_at_page(page, records_per_page, query)
 
 
@@ -66,7 +67,7 @@ async def update_worktime(
 
 
 @router.post("/export")
-async def export_bids(
+async def export_worktimes(
     query: QuerySchema, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> Response:
     file = service.export_worktimes(query)
@@ -75,6 +76,20 @@ async def export_bids(
         content=file,
         headers={
             "Content-Disposition": "filename=worktimes.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.get("/download_photo/{photo_id}")
+async def get_worktime_photo(
+    photo_id: int, _: User = Security(get_user, scopes=["crm_worktime"])
+) -> Response:
+    photo = service.get_worktime_photo_by_id(photo_id)
+    return StreamingResponse(
+        content=photo,
+        headers={
+            "Content-Disposition": f"filename=photo_{photo_id}.jpg",
         },
         media_type="application/octet-stream",
     )

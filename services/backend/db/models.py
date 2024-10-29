@@ -451,6 +451,7 @@ class Bid(Base):
     purpose: Mapped[str] = mapped_column(nullable=False)
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     denying_reason: Mapped[str] = mapped_column(nullable=True, default="")
+    paying_comment: Mapped[str] = mapped_column(nullable=True, default="")
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     # Electronic document management
@@ -614,6 +615,7 @@ class WorkTime(Base):
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
     salary: Mapped[int] = mapped_column(nullable=True)
+    photo_b64: Mapped[str] = mapped_column(nullable=True, deferred=True)
 
 
 class Expenditure(Base):
