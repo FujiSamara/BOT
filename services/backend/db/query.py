@@ -32,10 +32,17 @@ class Builder(ABC):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         """
-        entities = [item["entity"] for item in initial_select.column_descriptions]
+        entities = [
+            item["entity"]
+            for item in initial_select.column_descriptions
+            if item["entity"] is not None and issubclass(item["entity"], Base)
+        ]
 
         if not len(entities) == 1:
-            self._warning(" Requested query building with not one entity")
+            for entity in entities:
+                if entities[0] != entity:
+                    self._warning("Requested query building with not one entity")
+                    break
 
         self.select = initial_select
         self.session = session
