@@ -7,6 +7,7 @@ from db.schemas import (
     WorkTimeSchema,
     QuerySchema,
     TalbeInfoSchema,
+    WorkTimeSchemaFull,
 )
 
 from api.auth import User, get_user
@@ -38,7 +39,7 @@ async def get_worktimes(
     query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_worktime"]),
-) -> list[WorkTimeSchema]:
+) -> list[WorkTimeSchemaFull]:
     return service.get_worktimes_at_page(page, records_per_page, query)
 
 

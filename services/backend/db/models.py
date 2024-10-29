@@ -615,8 +615,7 @@ class WorkTime(Base):
     rating: Mapped[int] = mapped_column(nullable=True)
     fine: Mapped[int] = mapped_column(nullable=True)
     salary: Mapped[int] = mapped_column(nullable=True)
-
-    photo_b64: Mapped[str] = mapped_column(nullable=True)
+    photo_b64: Mapped[str] = mapped_column(nullable=True, deferred=True)
 
 
 class Expenditure(Base):

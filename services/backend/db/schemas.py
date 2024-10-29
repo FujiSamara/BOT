@@ -164,6 +164,9 @@ class WorkTimeSchema(BaseModel):
 
     rating: Optional[int] = None
     fine: Optional[int] = None
+
+
+class WorkTimeSchemaFull(WorkTimeSchema):
     photo_b64: str | None = None
 
 
