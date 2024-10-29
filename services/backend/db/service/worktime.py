@@ -150,6 +150,7 @@ def export_worktimes(
         WorkTime,
         query_schema,
         aliases=aliases[WorkTimeSchema],
+        exclude_columns=["photo_b64"],
     )
 
 
