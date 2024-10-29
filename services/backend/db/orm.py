@@ -61,7 +61,7 @@ from db.schemas import (
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload
-from sqlalchemy import Select, null, or_, and_, desc, select, inspect
+from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
 
 def create_tables():
@@ -1319,10 +1319,10 @@ def get_model_count(
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
 
-        return query_builder.query.count()
+        return query_builder.count()
 
 
 def get_models(
@@ -1337,16 +1337,16 @@ def get_models(
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(
-            s.query(model_type).options(*selectinload_all(model_type))
-        )
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
 
-        raw_models = query_builder.query.offset((page - 1) * records_per_page).limit(
-            records_per_page
-        )
-
-        return [schema_type.model_validate(raw_model) for raw_model in raw_models]
+        return [
+            schema_type.model_validate(raw_model)
+            for raw_model in s.execute(query_builder.select).scalars().all()
+        ]
 
 
 def export_models(
@@ -1358,13 +1358,55 @@ def export_models(
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
-        query_builder = QueryBuilder(s.query(model_type))
+        query_builder = QueryBuilder(select(model_type), s)
         query_builder.apply(query_schema)
         exporter = XLSXExporter(
-            query_builder.query, formatters, exclude_columns, aliases
+            query_builder.select, s, formatters, exclude_columns, aliases
         )
 
         return exporter.export()
+
+
+# endregion
+# region WorkTimes
+def get_worktimes_without_photo(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> WorkTimeSchema:
+    with session.begin() as s:
+        columns = [col for col in inspect(WorkTime).c if col.name != "photo_b64"]
+        query_builder = QueryBuilder(
+            select(
+                *columns,
+                case(
+                    (
+                        WorkTime.photo_b64.isnot(None),
+                        "exist",
+                    ),
+                    else_="",
+                ).label("photo_b64"),
+            ),
+            s,
+        )
+        query_builder.apply(query_schema)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
+
+        rows = s.execute(query_builder.select).all()
+
+        handled_rows: list[dict] = []
+
+        for row in rows:
+            attrs = {}
+            for index, column in enumerate(columns):
+                attrs[column.name] = row[index]
+
+            attrs["photo_b64"] = row[-1]
+            handled_rows.append(attrs)
+
+        return [WorkTimeSchema.model_validate(row) for row in handled_rows]
 
 
 # endregion

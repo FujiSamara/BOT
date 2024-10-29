@@ -1,4 +1,5 @@
 from io import BytesIO
+import base64
 
 import aiohttp
 from settings import get_settings
@@ -64,9 +65,13 @@ def get_worktimes_at_page(
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    return orm.get_models(
-        WorkTime, WorkTimeSchema, page, records_per_page, query_schema
-    )
+    rows = orm.get_worktimes_without_photo(page, records_per_page, query_schema)
+
+    for row in rows:
+        if len(row.photo_b64) > 0:
+            row.photo_b64 = f"{row.id}"
+
+    return rows
 
 
 def dump_worktime(record: WorkTimeSchema) -> dict:
@@ -145,4 +150,11 @@ def export_worktimes(
         WorkTime,
         query_schema,
         aliases=aliases[WorkTimeSchema],
+        exclude_columns=["photo_b64"],
     )
+
+
+def get_worktime_photo_by_id(id: int) -> BytesIO:
+    row = get_work_time_record_by_id(id)
+    decoded_photo = base64.b64decode(row.photo_b64)
+    return BytesIO(decoded_photo)

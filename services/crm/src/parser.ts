@@ -5,6 +5,7 @@ import {
 	PostSchema,
 	WorkerSchema,
 } from "@/types";
+import * as config from "@/config";
 import { Cell, CellLine } from "@/table";
 
 export function formatWorker(worker: WorkerSchema): Cell {
@@ -107,37 +108,17 @@ export function formatCheck(check: boolean) {
 }
 
 export function formatPost(post: PostSchema) {
+	if (!post) {
+		return new Cell(new CellLine("Отсутствует"));
+	}
 	return new Cell(new CellLine(post.name));
 }
 
-export function formatPhotoBase64(photoStr: string): Cell {
-	if (!photoStr) {
+export function formatWorkTimePhoto(photoID: string): Cell {
+	if (!photoID) {
 		return new Cell(new CellLine("Отсутствует"));
 	}
+	const href = `${config.fullBackendURL}/${config.crmEndpoint}/worktime/download_photo/${photoID}`;
 
-	const byteCharacters = atob(photoStr);
-	const byteArrays = [];
-	const sliceSize = 512;
-
-	for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-		const slice = byteCharacters.slice(offset, offset + sliceSize);
-
-		const byteNumbers = new Array(slice.length);
-		for (let i = 0; i < slice.length; i++) {
-			byteNumbers[i] = slice.charCodeAt(i);
-		}
-
-		const byteArray = new Uint8Array(byteNumbers);
-		byteArrays.push(byteArray);
-	}
-
-	const blob = new Blob(byteArrays, { type: "application/octet-stream" });
-	const url = window.URL.createObjectURL(blob);
-	const document: DocumentSchema = {
-		href: url,
-		name: "worktime_photo.jpg",
-		forceHref: true,
-	};
-
-	return formatDocument(document);
+	return new Cell(new CellLine(`photo_${photoID}.jpg`, href, undefined, true));
 }

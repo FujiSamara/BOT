@@ -2,7 +2,7 @@ from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
-from db import service
+import db.service.worktime as service
 from db.schemas import (
     WorkTimeSchema,
     QuerySchema,
@@ -75,6 +75,20 @@ async def export_worktimes(
         content=file,
         headers={
             "Content-Disposition": "filename=worktimes.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.get("/download_photo/{photo_id}")
+async def get_worktime_photo(
+    photo_id: int, _: User = Security(get_user, scopes=["crm_worktime"])
+) -> Response:
+    photo = service.get_worktime_photo_by_id(photo_id)
+    return StreamingResponse(
+        content=photo,
+        headers={
+            "Content-Disposition": f"filename=photo_{photo_id}.jpg",
         },
         media_type="application/octet-stream",
     )

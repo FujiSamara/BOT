@@ -1,19 +1,20 @@
 from io import BytesIO
 from datetime import datetime
 import logging
-from typing import Callable, Optional, Type
+from typing import Callable, Type
 import typing
 from abc import ABC
-from sqlalchemy import BinaryExpression, Select, and_, or_, desc, select
-from sqlalchemy.orm.query import Query
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy import BinaryExpression, Result, Select, and_, or_, desc, select, func
+from sqlalchemy.orm import InstrumentedAttribute, Session
 from pydantic import BaseModel
+from xlsxwriter import Workbook
+
+from settings import get_settings
+from bot.kb import approval_status_dict
+
 import db.schemas as schemas
 import db.models as models
 from db.database import Base
-from xlsxwriter import Workbook
-from settings import get_settings
-from bot.kb import approval_status_dict
 
 
 class Builder(ABC):
@@ -27,16 +28,24 @@ class Builder(ABC):
 
     logger = logging.getLogger("uvicorn.error")
 
-    def __init__(self, initial_query: Query):
+    def __init__(self, initial_select: Select, session: Session):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         """
-        entities = [item["entity"] for item in initial_query.column_descriptions]
+        entities = [
+            item["entity"]
+            for item in initial_select.column_descriptions
+            if item["entity"] is not None and issubclass(item["entity"], Base)
+        ]
 
         if not len(entities) == 1:
-            self._warning(" Requested query building with not one entity")
+            for entity in entities:
+                if entities[0] != entity:
+                    self._warning("Requested query building with not one entity")
+                    break
 
-        self.query = initial_query
+        self.select = initial_select
+        self.session = session
         self._model_type = entities[0]
 
         # Schema to model dict
@@ -58,7 +67,15 @@ class Builder(ABC):
     def all(self) -> BaseModel:
         """Returns all entries in db with `self.query`."""
         schema_type = self._model_to_schema[self._model_type]
-        return [schema_type.model_validate(model) for model in self.query.all()]
+        rows = self.session.execute(self.select).scalars().all()
+        return [schema_type.model_validate(model) for model in rows]
+
+    def count(self) -> int:
+        """Returns count of all entries in db with `self.query`."""
+        res: Result = self.session.execute(
+            select(func.count()).select_from(self.select)
+        )
+        return res.scalar()
 
     def _warning(self, msg: str):
         """Logs `msg`."""
@@ -84,15 +101,15 @@ class QueryBuilder(Builder):
 
     name = "|QUERYBUILDER|"
 
-    def __init__(self, initial_query: Query):
+    def __init__(self, initial_select: Select, session: Session):
         """
         :param initial_query: Initially generated query for table `model_type` by `Session`.
         """
-        super().__init__(initial_query)
+        super().__init__(initial_select, session)
 
         # Order by builders.
         self._order_by_builders: dict[
-            BaseModel, Callable[[InstrumentedAttribute[any], bool], Query]
+            BaseModel, Callable[[InstrumentedAttribute[any], bool], Select]
         ] = {
             schemas.WorkerSchema: self._order_by_worker,
             schemas.DepartmentSchema: self._order_by_department,
@@ -158,12 +175,12 @@ class QueryBuilder(Builder):
         # If column is pydantic schema.
         if column_type in self._order_by_builders:
             builder = self._order_by_builders[column_type]
-            self.query = builder(column, is_desc)
+            self.select = builder(column, is_desc)
         # If column is simple type.
         elif not issubclass(column_type, BaseModel):
             if is_desc:
                 column = desc(column)
-            self.query = self.query.order_by(column)
+            self.select = self.select.order_by(column)
         # If column is schema with non implemented order by.
         else:
             self._warning(
@@ -172,27 +189,27 @@ class QueryBuilder(Builder):
 
     def _order_by_worker(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
-    ) -> Query:
+    ) -> Select:
         columns = [models.Worker.l_name, models.Worker.f_name, models.Worker.o_name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
-        return self.query.join(column).order_by(*columns)
+        return self.select.join(column).order_by(*columns)
 
     def _order_by_department(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
-    ) -> Query:
+    ) -> Select:
         columns = [models.Department.name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
-        return self.query.join(column).order_by(*columns)
+        return self.select.join(column).order_by(*columns)
 
     def _order_by_expenditure(
         self, column: InstrumentedAttribute[any], is_desc: bool = False
-    ) -> Query:
+    ) -> Select:
         columns = [models.Expenditure.name, models.Expenditure.chapter]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
-        return self.query.join(column).order_by(*columns)
+        return self.select.join(column).order_by(*columns)
 
     # endregion
 
@@ -206,13 +223,13 @@ class QueryBuilder(Builder):
         """
         search_clause = self._get_search_clause(self._model_type, search_query)
         if search_clause is not None:
-            self.query = self.query.filter(search_clause)
+            self.select = self.select.filter(search_clause)
 
     def _get_search_clause(
         self,
         model_type: Type[Base],
         search_schemas: list[schemas.SearchSchema],
-    ) -> Optional[BinaryExpression[bool]]:
+    ) -> BinaryExpression[bool] | None:
         """Generates recursive search clause."""
         schema_type = self._model_to_schema[model_type]
 
@@ -343,7 +360,7 @@ class QueryBuilder(Builder):
 
         column = getattr(model_type, column_name)
 
-        self.query = self.query.filter(and_(column <= end, column >= start))
+        self.select = self.select.filter(and_(column <= end, column >= start))
 
     # endregion
 
@@ -357,7 +374,7 @@ class QueryBuilder(Builder):
         """
         filter_clause = self._get_filter_clause(self._model_type, filter_query)
         if filter_clause is not None:
-            self.query = self.query.filter(filter_clause)
+            self.select = self.select.filter(filter_clause)
 
     def _get_filter_clause(
         self,
@@ -454,7 +471,8 @@ class XLSXExporter(Builder):
 
     def __init__(
         self,
-        initial_query: Query,
+        initial_select: Select,
+        session: Session,
         field_formatters: dict[str, Callable[[any], str]] = {},
         exclude_columns: list[str] = [],
         aliases: dict[str, str] = {},
@@ -467,7 +485,7 @@ class XLSXExporter(Builder):
         :param exclude_columns: Column names for exclude from worksheet.
         :param aliases: Aliases for column headers (**column_name**=**alias**).
         """
-        super().__init__(initial_query)
+        super().__init__(initial_select, session)
 
         self._field_formatters: dict[str, Callable[[any], str]] = field_formatters
         self._aliases: dict[str, str] = aliases

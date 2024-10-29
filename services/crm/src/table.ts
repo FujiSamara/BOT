@@ -954,7 +954,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._formatters.set("work_begin", parser.formatDateTime);
 		this._formatters.set("work_end", parser.formatDateTime);
 		this._formatters.set("day", parser.formatDateTime);
-		this._formatters.set("photo_b64", parser.formatPhotoBase64);
+		this._formatters.set("photo_b64", parser.formatWorkTimePhoto);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");

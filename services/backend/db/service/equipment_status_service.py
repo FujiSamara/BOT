@@ -36,7 +36,7 @@ async def update_equipment_status(
         latency=equipment_status_in.latency,
         department=department,
         last_update=datetime.now(),
-        equipment_name="Предприятие",
+        equipment_name="Главная касса",
     )
 
     id = orm.update_equipment_status(equipment_status)
@@ -69,7 +69,7 @@ async def add_equipment_incident(equipment_status: EquipmentStatusSchema):
 
     await notify_workers_by_scope(
         FujiScope.bot_incident_monitoring,
-        f"""Оборудование с айди астериска: {equipment_status.asterisk_id} - не доступно!
+        f"""Оборудование не доступно!
 Предприятие: {equipment_status.department.name}
 Тип оборудования: {equipment_status.equipment_name}""",
     )
