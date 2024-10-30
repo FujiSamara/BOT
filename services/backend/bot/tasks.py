@@ -1,5 +1,7 @@
 from fastapi_utils.tasks import repeat_every
 import logging
+import asyncio
+from typing import Callable, NamedTuple
 from datetime import datetime, timedelta
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup
@@ -13,6 +15,64 @@ from bot.kb import (
     get_personal_cabinet_button,
 )
 import db.service as service
+
+
+class _Task(NamedTuple):
+    task: Callable
+    time: datetime
+    name: str
+
+
+class TaskScheduler:
+    def __init__(self):
+        self.tasks: list[dict] = []
+        self.logger = logging.getLogger("uvicorn.error")
+
+    def register_task(self, task: Callable, time: datetime, name: str):
+        try:
+            self.logger.info(f"Register task: {name}")
+            self.tasks.append(
+                _Task(
+                    task=task,
+                    time=time,
+                    name=name,
+                )
+            )
+            self.runned_tasks: list[asyncio.Task]
+        except Exception as e:
+            self.logger.error(f"Register task {name} except error: {e}")
+
+    async def run_tasks(self):
+        self.logger.info("Running tasks.")
+        for task_data in self.tasks:
+            asyncio.create_task(self._run_task(task_data))
+
+        self.logger.info("Running tasks are completed.")
+
+    async def _run_task(self, task_data):
+        await asyncio.sleep(
+            abs(
+                (
+                    (datetime.now().hour - task_data.time.hour) * 60
+                    + (datetime.now().minute - task_data.time.minute)
+                )
+                * 60
+                + (datetime.now().second - task_data.time.second)
+            )
+        )
+        try:
+            self.task = asyncio.create_task(task_data.task())
+        except Exception as e:
+            self.logger.error(f"Task {task_data.name} didn't runned: {e}")
+
+    def stop_tasks(self):
+        self.logger.info("Termination tasks.")
+        for runned_task in self.runned_tasks:
+            try:
+                runned_task.cancel()
+            except Exception as e:
+                self.logger.error(f"Task didn't stopped: {e}")
+        self.logger.info("Termination tasks are completed.")
 
 
 @repeat_every(seconds=60 * 60 * 24, logger=logging.getLogger("uvicorn.error"))
@@ -52,9 +112,6 @@ async def notify_with_unclosed_shift() -> None:
 @repeat_every(
     seconds=60 * 60 * 24,
     logger=logging.getLogger("uvicorn.error"),
-    wait_first=abs(
-        datetime.now().hour * 60 * 60 + datetime.now().minute * 60 - 8 * 60 * 60
-    ),
 )
 async def notify_and_droped_departments_teller_cash() -> None:
     """Notify all teller cash to change department"""
