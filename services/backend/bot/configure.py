@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import FastAPI
 from typing import AsyncGenerator
 from aiogram import Dispatcher
