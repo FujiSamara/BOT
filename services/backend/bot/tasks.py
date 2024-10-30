@@ -53,9 +53,7 @@ async def notify_with_unclosed_shift() -> None:
     seconds=60 * 60 * 24,
     logger=logging.getLogger("uvicorn.error"),
     wait_first=abs(
-        datetime.now().hour * 60 * 60
-        + datetime.now().minute * 60
-        - 8 * 60 * 60
+        datetime.now().hour * 60 * 60 + datetime.now().minute * 60 - 8 * 60 * 60
     ),
 )
 async def notify_and_droped_departments_teller_cash() -> None:
