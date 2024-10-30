@@ -61,7 +61,7 @@ class TaskScheduler:
             )
         )
         try:
-            self.task = asyncio.create_task(task_data.task())
+            self.runned_tasks.append(asyncio.create_task(task_data.task()))
         except Exception as e:
             self.logger.error(f"Task {task_data.name} didn't runned: {e}")
 
