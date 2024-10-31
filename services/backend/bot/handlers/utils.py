@@ -205,7 +205,7 @@ async def notify_workers_in_department_by_scope(
 
 
 async def notify_worker_by_telegram_id(
-    id: int, message: str, reply_markup: Optional[InlineKeyboardMarkup] = None
+    id: int, message: str, reply_markup: InlineKeyboardMarkup | None = None
 ) -> Optional[Message]:
     """
     Tries to sends notify `message` to worker by their `id`.

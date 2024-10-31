@@ -47,12 +47,12 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     tasks = TaskScheduler()
     YMD = {"year": 1, "month": 1, "day": 1}
     tasks.register_task(
-        task=notify_with_unclosed_shift,
+        callback=notify_with_unclosed_shift,
         time=datetime(**YMD, hour=2, minute=0, second=0),
         name="notify_with_unclosed_shift",
     )
     tasks.register_task(
-        task=notify_and_droped_departments_teller_cash,
+        callback=notify_and_droped_departments_teller_cash,
         time=datetime(**YMD, hour=8, minute=0, second=0),
         name="notify_and_droped_departments_teller_cash",
     )
