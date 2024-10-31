@@ -1,4 +1,3 @@
-import asyncio
 from fastapi import FastAPI
 from typing import AsyncGenerator
 from aiogram import Dispatcher
@@ -8,7 +7,12 @@ from bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
 import logging
 from aiogram.loggers import dispatcher, event, middlewares, scene, webhook
 from aiogram.types import BotCommand
-from bot.tasks import notify_with_unclosed_shift
+from bot.tasks import (
+    TaskScheduler,
+    notify_with_unclosed_shift,
+    notify_and_droped_departments_teller_cash,
+)
+from datetime import datetime
 
 
 def configure(bot_api: FastAPI):
@@ -40,13 +44,23 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         "Webhook info: " + str(await _check_webhook()).split()[0]
     )
     # Tasks
-    tasks: list[asyncio.Task] = []
-    tasks.append(asyncio.create_task(notify_with_unclosed_shift()))
+    tasks = TaskScheduler()
+    YMD = {"year": 1, "month": 1, "day": 1}
+    tasks.register_task(
+        task=notify_with_unclosed_shift,
+        time=datetime(**YMD, hour=2, minute=0, second=0),
+        name="notify_with_unclosed_shift",
+    )
+    tasks.register_task(
+        task=notify_and_droped_departments_teller_cash,
+        time=datetime(**YMD, hour=8, minute=0, second=0),
+        name="notify_and_droped_departments_teller_cash",
+    )
+    await tasks.run_tasks()
 
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
-    for task in tasks:
-        task.cancel()
+    await tasks.stop_tasks()
     yield
 
 

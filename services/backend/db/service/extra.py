@@ -5,6 +5,7 @@ from db.models import (
     FujiScope,
     Post,
     Worker,
+    Company,
 )
 from db.schemas import (
     PostSchema,
@@ -76,12 +77,15 @@ def update_worker_tg_id_by_number(number: str, tg_id: int) -> bool:
     return True
 
 
-def get_departments_names() -> list[str]:
+def get_departments_names(_all: bool = False) -> list[str]:
     """
     Returns all existed departments names.
     """
     departments_raw = orm.get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
+
+    if not _all:
+        result.remove("Нет производства")
     return result
 
 
@@ -222,3 +226,28 @@ def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
 def get_tellers_cash_for_department(department_id: int) -> list[Worker]:
     """:return: all tellers cash in department with id `department_id`."""
     return orm.get_tellers_cash_in_department(department_id)
+
+
+def get_companies_names():
+    return orm.get_companies_names()
+
+
+def set_tellers_cash_department() -> list[WorkerSchema]:
+    """"""
+    company_name = "Нет компании"
+    department_name = "Нет производства"
+    if company_name not in get_companies_names():
+        orm.create_company(company_name=company_name)
+        if department_name in get_departments_names(_all=True):
+            orm.update_company_for_department(
+                company_name=company_name,
+                department_name=department_name,
+            )
+        else:
+            company = orm.get_companys({Company.name: company_name})[0]
+            orm.create_department(name=department_name, address=None, company=company)
+    elif department_name not in get_departments_names(_all=True):
+        company = orm.get_companys({Company.name: company_name})[0]
+        orm.create_department(name=department_name, address=None, company=company)
+
+    return orm.set_tellers_cash_department()
