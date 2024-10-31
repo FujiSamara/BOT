@@ -559,15 +559,16 @@ def get_coordinator_bid_count(
 
 
 def apply_bid_status_filter(
-    query_schema: QuerySchema, status_field: str, status: ApprovalStatus
+    query_schema: QuerySchema,
+    status_field: str,
+    *statuses: ApprovalStatus,
+    group: int = 0,
 ) -> QuerySchema:
     """Apply filter query by bid status to bid query. Return query with applied filter."""
-    query_schema.filter_query.append(
-        FilterSchema(
-            column=status_field,
-            value=status,
-        ),
-    )
+    for status in statuses:
+        query_schema.filter_query.append(
+            FilterSchema(column=status_field, value=status, groups=[group]),
+        )
     return query_schema
 
 
