@@ -11,6 +11,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Создатель")}: {bid.worker.l_name} {bid.worker.f_name}
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
+{hbold("Статья")}: {bid.expenditure.name}
 {hbold("Предприятие заявителя")}: {bid.department.name}\n"""
     if bid.teller_cash_state != ApprovalStatus.skipped:
         if bid.paying_department is not None:
