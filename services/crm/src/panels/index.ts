@@ -1,6 +1,6 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
-import BidPanelLimited from "@/panels/BidPanelLimited.vue";
+import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACBidPanel from "@/panels/FACBidPanel.vue";
 import CCBidPanel from "@/panels/CCBidPanel.vue";
 import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
@@ -41,8 +41,8 @@ const panels: Array<PanelData> = [
 		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки пр.",
 		isActive: false,
-		panel: shallowRef(BidPanelLimited),
-		access: Access.Bid,
+		panel: shallowRef(BidPanelReadOnly),
+		access: Access.BidReadOnly,
 	},
 	{
 		id: 5,
