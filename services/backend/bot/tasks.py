@@ -1,7 +1,8 @@
 from fastapi_utils.tasks import repeat_every
 import logging
 import asyncio
-from typing import Callable, TypedDict
+from typing import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup
@@ -17,11 +18,12 @@ from bot.kb import (
 import db.service as service
 
 
-class _Task(TypedDict):
-    task: asyncio.Task | None = None
+@dataclass
+class _Task:
     callback: Callable
     time: datetime
     name: str
+    task: asyncio.Task | None = None
 
 
 class TaskScheduler:
@@ -29,12 +31,12 @@ class TaskScheduler:
         self.tasks: list[_Task] = []
         self.logger = logging.getLogger("uvicorn.error")
 
-    def register_task(self, callback: Callable, time: datetime, name: str):
+    def register_task(self, task: Callable, time: datetime, name: str):
         try:
             self.logger.info(f"Register task: {name}")
             self.tasks.append(
                 _Task(
-                    callback=callback,
+                    callback=task,
                     time=time,
                     name=name,
                 )
@@ -52,24 +54,24 @@ class TaskScheduler:
         await asyncio.sleep(
             abs(
                 (
-                    (datetime.now().hour - task_data["time"].hour) * 60
-                    + (datetime.now().minute - task_data["time"].minute)
+                    (datetime.now().hour - task_data.time.hour) * 60
+                    + (datetime.now().minute - task_data.time.minute)
                 )
                 * 60
-                + (datetime.now().second - task_data["time"].second)
+                + (datetime.now().second - task_data.time.second)
             )
         )
         try:
-            task_data["task"] = asyncio.create_task(task_data["callback"]())
+            task_data.task = asyncio.create_task(task_data.callback())
         except Exception as e:
-            self.logger.error(f"Task {task_data['name']} didn't runned: {e}")
+            self.logger.error(f"Task {task_data.name} didn't runned: {e}")
 
     async def stop_tasks(self):
         self.logger.info("Termination tasks.")
         for runned_task in self.tasks:
             try:
-                runned_task["task"].cancel()
-                await runned_task["task"]()
+                runned_task.task.cancel()
+                await runned_task.task
             except Exception as e:
                 self.logger.error(f"Task didn't stopped: {e}")
         self.logger.info("Termination tasks are completed.")
