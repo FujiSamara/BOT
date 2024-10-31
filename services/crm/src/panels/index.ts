@@ -1,5 +1,6 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
+import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACBidPanel from "@/panels/FACBidPanel.vue";
 import CCBidPanel from "@/panels/CCBidPanel.vue";
 import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
@@ -38,13 +39,21 @@ const panels: Array<PanelData> = [
 	{
 		id: 4,
 		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки пр.",
+		isActive: false,
+		panel: shallowRef(BidPanelReadOnly),
+		access: Access.BidReadOnly,
+	},
+	{
+		id: 5,
+		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки ЦФО",
 		isActive: false,
 		panel: shallowRef(FACBidPanel),
 		access: Access.FACBid,
 	},
 	{
-		id: 5,
+		id: 6,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки ЦЗ",
 		isActive: false,
@@ -52,7 +61,7 @@ const panels: Array<PanelData> = [
 		access: Access.CCBid,
 	},
 	{
-		id: 6,
+		id: 7,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки ЮК",
 		isActive: false,
@@ -60,7 +69,7 @@ const panels: Array<PanelData> = [
 		access: Access.CCSupervisorBid,
 	},
 	{
-		id: 7,
+		id: 8,
 		imageSrc: "/img/worktime.svg",
 		label: "Явки",
 		isActive: false,
@@ -68,7 +77,7 @@ const panels: Array<PanelData> = [
 		access: Access.Worktime,
 	},
 	{
-		id: 8,
+		id: 9,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Мои заявки",
 		isActive: false,
@@ -76,7 +85,7 @@ const panels: Array<PanelData> = [
 		access: Access.MyBid,
 	},
 	{
-		id: 9,
+		id: 10,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Архив заявок",
 		isActive: false,

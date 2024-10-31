@@ -15,6 +15,7 @@ export interface Token {
 
 export enum Access {
 	Bid,
+	BidReadOnly,
 	Expenditure,
 	Budget,
 	Admin,
@@ -40,6 +41,7 @@ export const accessesDict: any = {
 	crm_my_bid: Access.MyBid,
 	crm_archive_bid: Access.ArchiveBid,
 	crm_my_file: Access.MyFile,
+	crm_bid_readonly: Access.BidReadOnly,
 };
 
 export interface PanelData extends NavigationData {
