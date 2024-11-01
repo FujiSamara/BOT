@@ -12,15 +12,17 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Сумма")}: {bid.amount}
 {hbold("Тип оплаты")}: {payment_type_dict[bid.payment_type]}
 {hbold("Статья")}: {bid.expenditure.name}
-{hbold("Предприятие заявителя")}: {bid.department.name}\n"""
+{hbold("Предприятие заявителя")}: {bid.department.name}"""
     if bid.teller_cash_state != ApprovalStatus.skipped:
         if bid.paying_department is not None:
-            bid_info += f"""\n{hbold("Предприятие плательщик")}: {bid.paying_department.name}\n"""
+            bid_info += (
+                f"""\n{hbold("Предприятие плательщик")}: {bid.paying_department.name}"""
+            )
         else:
-            bid_info += f"""\n{hbold("Предприятие плательщик")}: Определяется\n"""
+            bid_info += f"""\n{hbold("Предприятие плательщик")}: Определяется"""
     elif bid.paying_comment is not None:
-        bid_info += f"""{hbold("Комментарий бухгалтера:")}: {bid.paying_comment}\n"""
-    bid_info += f"""{hbold("Документы")}: Прикреплены к сообщению.
+        bid_info += f"""\n{hbold("Комментарий бухгалтера:")}: {bid.paying_comment}"""
+    bid_info += f"""\n{hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Цель платежа")}: {bid.purpose}
 {hbold("Комментарий")}: {bid.comment}
 {hbold("Текущий этап")}: {bid_state}

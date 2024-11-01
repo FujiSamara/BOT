@@ -126,6 +126,7 @@ async def send_bid(callback: CallbackQuery, state: FSMContext):
     else:
         accountant_card_state = ApprovalStatus.skipped
         teller_card_state = ApprovalStatus.skipped
+        paralegal_state = ApprovalStatus.skipped
 
     await create_bid(
         amount=amount,
