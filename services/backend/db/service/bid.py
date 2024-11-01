@@ -16,6 +16,7 @@ from db.schemas import (
     FilterSchema,
     QuerySchema,
     DocumentSchema,
+    WorkerSchema,
     aliases,
     BidInSchema,
 )
@@ -675,3 +676,8 @@ def export_coordintator_bid_records(
         )
     )
     return export_bid_records(query_schema)
+
+
+def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    """Returns coordinators for specified `bid_id`"""
+    return orm.get_bid_coordinators(bid_id)

@@ -1994,10 +1994,32 @@ def get_tellers_cash_in_department(department_id) -> list[WorkerSchema]:
 
 def add_coordinator_to_bid(bid_id, coordinator_id: int):
     with session.begin() as s:
-        bid = s.query(Bid).filter(Bid.id == bid_id).first()
-        worker = s.query(Worker).filter(Worker.id == coordinator_id)
+        bid = s.execute(select(Bid).filter(Bid.id == bid_id)).scalars().first()
+        worker = (
+            s.execute(select(Worker).filter(Worker.id == coordinator_id))
+            .scalars()
+            .first()
+        )
 
         if bid is None or Worker is None:
             return
 
-        s.add(BidCoordinator(bid=bid, worker=worker))
+        s.add(BidCoordinator(bid=bid, coordinator=worker))
+
+
+def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    with session.begin() as s:
+        coordinators = (
+            s.execute(
+                select(BidCoordinator)
+                .filter(BidCoordinator.bid_id == bid_id)
+                .order_by(BidCoordinator.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        return [
+            WorkerSchema.model_validate(coordinator.coordinator)
+            for coordinator in coordinators
+        ]
