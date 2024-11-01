@@ -8,6 +8,7 @@ from aiogram.types import (
     Document,
     PhotoSize,
     File,
+    CallbackQuery,
 )
 from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.context import FSMContext
@@ -304,3 +305,11 @@ async def download_file(file: Document | PhotoSize) -> UploadFile:
     raw_file: File = await get_bot().get_file(file.file_id)
     byte_file = await get_bot().download_file(raw_file.file_path)
     return UploadFile(file=byte_file, filename=raw_file.file_path.split("/")[-1])
+
+
+def get_worker_my_message(message: Message | CallbackQuery) -> WorkerSchema | None:
+    """:return: `message` owner if he exist in DB."""
+    if isinstance(message, CallbackQuery):
+        message = message.message
+
+    return service.get_worker_by_telegram_id(message.chat.id)
