@@ -86,7 +86,7 @@ def get_departments_names(_all: bool = False) -> list[str]:
     try:
         if not _all:
             result.remove("Нет производства")
-    except Exception as e:
+    except Exception:
         logging.getLogger("uvicorn.error").error(
             "Department with name 'Нет производства' wasn't found"
         )
