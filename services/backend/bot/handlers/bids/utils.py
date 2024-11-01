@@ -3,6 +3,8 @@ from db.models import ApprovalStatus
 from db.schemas import BidSchema, WorkerBidSchema
 from bot.kb import payment_type_dict
 
+import db.service.bid as bid_service
+
 
 def get_full_bid_info(bid: BidSchema) -> str:
     bid_state = get_bid_state_info(bid)
@@ -91,6 +93,18 @@ def get_bid_state_info(bid: BidSchema) -> str:
         stage = "Отказано"
     else:
         stage = "Выплачено"
+
+    coordinators = bid_service.get_bid_coordinators(bid.id)
+
+    if len(coordinators) > 0:
+        stage += "\n"
+        stage += str.join(
+            "\n",
+            [
+                f"{coordinator.l_name} {coordinator.f_name}"
+                for coordinator in coordinators
+            ],
+        )
 
     return stage
 
