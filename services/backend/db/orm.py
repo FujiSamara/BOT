@@ -5,6 +5,7 @@ from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    BidCoordinator,
     BidDocument,
     BudgetRecord,
     EquipmentIncident,
@@ -208,7 +209,7 @@ def get_last_worker_bid_id() -> int:
         return s.query(func.max(WorkerBid.id)).first()[0]
 
 
-def add_documents_to_bid(id, documents: DocumentSchema):
+def add_documents_to_bid(id, documents: list[DocumentSchema]):
     with session.begin() as s:
         bid = s.query(Bid).filter(Bid.id == id).first()
 
@@ -1989,3 +1990,14 @@ def get_tellers_cash_in_department(department_id) -> list[WorkerSchema]:
         )
 
         return [WorkerSchema.model_validate(raw_teller) for raw_teller in raw_tellers]
+
+
+def add_coordinator_to_bid(bid_id, coordinator_id: int):
+    with session.begin() as s:
+        bid = s.query(Bid).filter(Bid.id == bid_id).first()
+        worker = s.query(Worker).filter(Worker.id == coordinator_id)
+
+        if bid is None or Worker is None:
+            return
+
+        s.add(BidCoordinator(bid=bid, worker=worker))
