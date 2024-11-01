@@ -1,6 +1,6 @@
 from typing import Any, Optional, Type
 from fastapi_storages import StorageFile
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
@@ -19,10 +19,9 @@ from settings import get_settings
 
 # region Shemas for models
 class BaseSchema(BaseModel):
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
-    id: int
+    id: int | None = -1
 
 
 class PostSchema(BaseSchema):
@@ -91,12 +90,7 @@ class WorkerSchema(BaseSchema):
         return val
 
 
-class DocumentSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class DocumentSchema(BaseSchema):
     document: UploadFile
 
     @field_validator("document", mode="before")
@@ -110,13 +104,7 @@ class DocumentSchema(BaseModel):
         return val
 
 
-class BidSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-
+class BidSchema(BaseSchema):
     amount: int
     payment_type: str
     department: DepartmentSchema
@@ -147,12 +135,7 @@ class BidSchema(BaseModel):
     teller_cash_state: ApprovalStatus
 
 
-class WorkTimeSchema(BaseModel):
-    class Config:
-        from_attributes = True
-
-    id: Optional[int] = -1
-
+class WorkTimeSchema(BaseSchema):
     worker: Optional[WorkerSchema] = None
     department: Optional[DepartmentSchema] = None
     post: Optional[PostSchema] = None
@@ -170,13 +153,7 @@ class WorkTimeSchemaFull(WorkTimeSchema):
     photo_b64: str | None = None
 
 
-class WorkerBidSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-
+class WorkerBidSchema(BaseSchema):
     f_name: str
     l_name: str
     o_name: Optional[str]
@@ -199,12 +176,7 @@ class WorkerBidSchema(BaseModel):
     comment: Optional[str]
 
 
-class ExpenditureSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class ExpenditureSchema(BaseSchema):
     name: str
     chapter: str
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
@@ -214,12 +186,7 @@ class ExpenditureSchema(BaseModel):
     creator: Optional[WorkerSchema] = None
 
 
-class BudgetRecordSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class BudgetRecordSchema(BaseSchema):
     expenditure: ExpenditureSchema
     limit: Optional[float] = None
     last_update: Optional[datetime.datetime] = None
@@ -232,12 +199,7 @@ class ProblemITSchema(BaseSchema):
     sla: float
 
 
-class BidITSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class BidITSchema(BaseSchema):
     problem: ProblemITSchema
     problem_comment: str
     problem_photos: list[DocumentSchema]
@@ -261,19 +223,12 @@ class BidITSchema(BaseModel):
 
 # Technical request
 class TechnicalProblemSchema(BaseSchema):
-    id: Optional[int] = -1
     problem_name: str
     executor: Executor
     sla: float
 
 
 class TechnicalRequestSchema(BaseSchema):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-
     # Данные при создание
     problem: TechnicalProblemSchema
     description: str
@@ -307,8 +262,6 @@ class TechnicalRequestSchema(BaseSchema):
 
 
 class AccountLoginsSchema(BaseSchema):
-    id: Optional[int] = -1
-
     worker: WorkerSchema
 
     cop_mail_login: Optional[str] = None
@@ -325,7 +278,6 @@ class AccountLoginsSchema(BaseSchema):
 
 
 class MaterialValuesSchema(BaseSchema):
-    id: Optional[int] = -1
     worker: WorkerSchema
     item: str
     quanity: int
@@ -336,18 +288,11 @@ class MaterialValuesSchema(BaseSchema):
 
 
 class SubordinationSchema(BaseSchema):
-    id: Optional[int] = -1
     chief: WorkerSchema
     employee: WorkerSchema
 
 
-class FileSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
-
+class FileSchema(BaseSchema):
     file: UploadFile
 
     @field_validator("file", mode="before")
@@ -385,12 +330,7 @@ class FileSchema(BaseModel):
     description: Optional[str] = None
 
 
-class EquipmentStatusSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class EquipmentStatusSchema(BaseSchema):
     asterisk_id: str
     status: str
     ip_address: str
@@ -400,22 +340,13 @@ class EquipmentStatusSchema(BaseModel):
     equipment_name: str
 
 
-class EquipmentStatusSchemaIn(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
+class EquipmentStatusSchemaIn(BaseSchema):
     status: str
     ip_address: str
     latency: float
 
 
-class EquipmentIncidentSchema(BaseModel):
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
+class EquipmentIncidentSchema(BaseSchema):
     equipment_status: EquipmentStatusSchema
     incident_time: datetime.datetime
     status: str
@@ -469,14 +400,8 @@ class BidOutSchema(BaseSchema):
         return val
 
 
-class BidInSchema(BaseModel):
+class BidInSchema(BaseSchema):
     """In version of `BidSchema` for crm api"""
-
-    class Config:
-        arbitrary_types_allowed = True
-        from_attributes = True
-
-    id: Optional[int] = -1
 
     amount: float
     payment_type: str
