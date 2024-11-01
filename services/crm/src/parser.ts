@@ -122,3 +122,9 @@ export function formatWorkTimePhoto(photoID: string): Cell {
 
 	return new Cell(new CellLine(`photo_${photoID}.jpg`, href, undefined, true));
 }
+
+export function formatMultilineString(multilineString: string): Cell {
+	return new Cell(
+		...multilineString.split("\n").map((val) => new CellLine(val)),
+	);
+}
