@@ -43,25 +43,37 @@ async def get_bids(
 
 
 @router.patch("/approve/{id}")
-async def approve_bid(id: int, _: User = Security(get_user, scopes=["crm_bid"])):
+async def approve_bid(id: int, user: User = Security(get_user, scopes=["crm_bid"])):
     """Approves bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
+        coordinator = service.get_worker_by_phone_number(user.username)
+        if coordinator is None:
+            raise HTTPException(status_code=400, detail="Coordinator not found")
         await service.update_bid_state(
-            bid, get_current_coordinator_field(bid), ApprovalStatus.approved
+            bid,
+            get_current_coordinator_field(bid),
+            ApprovalStatus.approved,
+            coordinator.id,
         )
 
 
 @router.patch("/reject/{id}")
 async def reject_bid(
-    id: int, reason: str, _: User = Security(get_user, scopes=["crm_bid"])
+    id: int, reason: str, user: User = Security(get_user, scopes=["crm_bid"])
 ):
     """Rejects bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
         bid.denying_reason = reason
+        coordinator = service.get_worker_by_phone_number(user.username)
+        if coordinator is None:
+            raise HTTPException(status_code=400, detail="Coordinator not found")
         await service.update_bid_state(
-            bid, get_current_coordinator_field(bid), ApprovalStatus.denied
+            bid,
+            get_current_coordinator_field(bid),
+            ApprovalStatus.denied,
+            coordinator.id,
         )
 
 
