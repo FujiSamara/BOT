@@ -94,7 +94,7 @@ def get_departments_ids() -> list[int]:
     return result
 
 
-def get_worker_by_phone_number(number: str) -> WorkerSchema:
+def get_worker_by_phone_number(number: str) -> WorkerSchema | None:
     """
     Finds worker by his phone number.
     """

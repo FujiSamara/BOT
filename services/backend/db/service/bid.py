@@ -290,7 +290,9 @@ def get_history_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
     return orm.get_specified_history_bids_in_department(tg_id)
 
 
-async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatus):
+async def update_bid_state(
+    bid: BidSchema, state_name: str, state: ApprovalStatus, coordinator_id: int
+):
     """
     Updates bid state with `state_name` by specified `state`.
     """
@@ -345,6 +347,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.close_date = datetime.now()
 
     orm.update_bid(bid)
+    orm.add_coordinator_to_bid(bid.id, coordinator_id)
 
 
 def increment_bid_state(bid: BidSchema, state: ApprovalStatus):
