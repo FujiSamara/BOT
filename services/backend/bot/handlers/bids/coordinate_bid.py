@@ -4,6 +4,7 @@ from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 import asyncio
 from typing import Any, Callable
+import bot.handlers.utils as utils
 
 from bot.kb import (
     main_menu_button,
@@ -141,7 +142,11 @@ class CoordinationFactory:
 
     async def approve_bid(self, callback: CallbackQuery, callback_data: BidActionData):
         bid = get_bid_by_id(callback_data.bid_id)
-        await update_bid_state(bid, self.state_column.name, ApprovalStatus.approved)
+        worker = utils.get_worker_my_message(callback)
+        if worker is not None:
+            await update_bid_state(
+                bid, self.state_column.name, ApprovalStatus.approved, worker.id
+            )
         msg = await callback.message.answer(text="Успешно!")
         await asyncio.sleep(1)
         await msg.delete()
@@ -350,7 +355,9 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
     column_name = data["column_name"]
     bid.denying_reason = message.text
     update_bid(bid)
-    await update_bid_state(bid, column_name, ApprovalStatus.denied)
+    worker = utils.get_worker_my_message(callback)
+    if worker is not None:
+        await update_bid_state(bid, column_name, ApprovalStatus.denied, worker.id)
 
     await try_delete_message(message)
     await generator(callback)
@@ -396,7 +403,9 @@ async def set_department(message: Message, state: FSMContext):
     elif message.text in get_departments_names():
         update_bid(bid, paying_department_name=message.text)
         bid = get_bid_by_id(bid.id)
-        await update_bid_state(bid, column_name, ApprovalStatus.approved)
+        worker = utils.get_worker_my_message(callback)
+        if worker is not None:
+            await update_bid_state(bid, column_name, ApprovalStatus.approved, worker.id)
 
         await try_delete_message(message)
 
@@ -464,7 +473,9 @@ async def set_paying_comment(message: Message, state: FSMContext):
         bid.paying_comment = message.text
         update_bid(bid)
         bid = get_bid_by_id(bid.id)
-        await update_bid_state(bid, column_name, ApprovalStatus.approved)
+        worker = utils.get_worker_my_message(callback)
+        if worker is not None:
+            await update_bid_state(bid, column_name, ApprovalStatus.approved, worker.id)
 
         msg = await message.answer(hbold("Успешно"))
         await asyncio.sleep(1)

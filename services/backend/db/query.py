@@ -152,7 +152,8 @@ class QueryBuilder(Builder):
         column_model_hint = typing.get_type_hints(schema_type)[column_name]
 
         column_model_type = None
-        if typing.get_origin(column_model_hint) == typing.Union:
+        type_args = typing.get_args(column_model_hint)
+        if len(type_args) > 0:
             column_model_type = typing.get_args(column_model_hint)[0]
         else:
             column_model_type = column_model_hint

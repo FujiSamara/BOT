@@ -122,3 +122,23 @@ export function formatWorkTimePhoto(photoID: string): Cell {
 
 	return new Cell(new CellLine(`photo_${photoID}.jpg`, href, undefined, true));
 }
+
+export function formatMultilineString(multilineString: string): Cell {
+	const multilines: Array<string> = multilineString.split("/next/");
+	const cellLines: Array<CellLine> = [];
+
+	const colors = [undefined, "#1a11d1", "#d1c111"];
+	let currentColorIndex = 0;
+
+	for (const multiline of multilines) {
+		cellLines.push(
+			...multiline
+				.split("\n")
+				.map((val) => new CellLine(val, undefined, colors[currentColorIndex])),
+		);
+		currentColorIndex++;
+		currentColorIndex %= colors.length;
+	}
+
+	return new Cell(...cellLines);
+}

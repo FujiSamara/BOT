@@ -1,5 +1,6 @@
 from fastapi import Response, Security, UploadFile
 from fastapi.responses import StreamingResponse
+from fastapi.exceptions import HTTPException
 from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
@@ -42,25 +43,37 @@ async def get_bids(
 
 
 @router.patch("/approve/{id}")
-async def approve_bid(id: int, _: User = Security(get_user, scopes=["crm_bid"])):
+async def approve_bid(id: int, user: User = Security(get_user, scopes=["crm_bid"])):
     """Approves bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
+        coordinator = service.get_worker_by_phone_number(user.username)
+        if coordinator is None:
+            raise HTTPException(status_code=400, detail="Coordinator not found")
         await service.update_bid_state(
-            bid, get_current_coordinator_field(bid), ApprovalStatus.approved
+            bid,
+            get_current_coordinator_field(bid),
+            ApprovalStatus.approved,
+            coordinator.id,
         )
 
 
 @router.patch("/reject/{id}")
 async def reject_bid(
-    id: int, reason: str, _: User = Security(get_user, scopes=["crm_bid"])
+    id: int, reason: str, user: User = Security(get_user, scopes=["crm_bid"])
 ):
     """Rejects bid by `id`"""
     bid = service.get_bid_by_id(id)
     if bid:
         bid.denying_reason = reason
+        coordinator = service.get_worker_by_phone_number(user.username)
+        if coordinator is None:
+            raise HTTPException(status_code=400, detail="Coordinator not found")
         await service.update_bid_state(
-            bid, get_current_coordinator_field(bid), ApprovalStatus.denied
+            bid,
+            get_current_coordinator_field(bid),
+            ApprovalStatus.denied,
+            coordinator.id,
         )
 
 
@@ -176,20 +189,26 @@ async def export_fac_bids(
 
 @router.patch("/fac/approve/{id}")
 async def approve_fac_bid(
-    id: int, _: User = Security(get_user, scopes=["crm_fac_bid"])
+    id: int, user: User = Security(get_user, scopes=["crm_fac_bid"])
 ):
     """Approves bid by `id`"""
-    await approve_coordinator_bid(id, "fac_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await approve_coordinator_bid(id, "fac_state", coordinator.id)
 
 
 @router.patch("/fac/reject/{id}")
 async def reject_fac_bid(
     id: int,
     reason: str,
-    _: User = Security(get_user, scopes=["crm_fac_bid"]),
+    user: User = Security(get_user, scopes=["crm_fac_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "fac_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await reject_coordinator_bid(id, reason, "fac_state", coordinator.id)
 
 
 # endregion
@@ -265,19 +284,27 @@ async def export_cc_bids(
 
 
 @router.patch("/cc/approve/{id}")
-async def approve_cc_bid(id: int, _: User = Security(get_user, scopes=["crm_cc_bid"])):
+async def approve_cc_bid(
+    id: int, user: User = Security(get_user, scopes=["crm_cc_bid"])
+):
     """Approves bid by `id`"""
-    await approve_coordinator_bid(id, "cc_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await approve_coordinator_bid(id, "cc_state", coordinator.id)
 
 
 @router.patch("/cc/reject/{id}")
 async def reject_cc_bid(
     id: int,
     reason: str,
-    _: User = Security(get_user, scopes=["crm_cc_bid"]),
+    user: User = Security(get_user, scopes=["crm_cc_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "cc_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await reject_coordinator_bid(id, reason, "cc_state", coordinator.id)
 
 
 # endregion
@@ -355,23 +382,29 @@ async def export_paralegal_bids(
 
 @router.patch("/paralegal/approve/{id}")
 async def approve_paralegal_bid(
-    id: int, _: User = Security(get_user, scopes=["crm_paralegal_bid"])
+    id: int, user: User = Security(get_user, scopes=["crm_paralegal_bid"])
 ):
     """Approves bid by `id`"""
-    await approve_coordinator_bid(id, "paralegal_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await approve_coordinator_bid(id, "paralegal_state", coordinator.id)
 
 
 @router.patch("/paralegal/reject/{id}")
 async def reject_paralegal_bid(
     id: int,
     reason: str,
-    _: User = Security(get_user, scopes=["crm_paralegal_bid"]),
+    user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "paralegal_state")
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await reject_coordinator_bid(id, reason, "paralegal_state", coordinator.id)
 
 
-# endregion cc supervisor bids
+# endregion
 
 
 # region my bids
@@ -483,7 +516,7 @@ async def export_archive_bids(
 # endregion
 
 
-async def approve_coordinator_bid(id: int, coordinator_field: str):
+async def approve_coordinator_bid(id: int, coordinator_field: str, coordinator_id: int):
     """Approves bid by `id` if coordinator is current coordinator."""
     bid = service.get_bid_by_id(id)
 
@@ -491,11 +524,13 @@ async def approve_coordinator_bid(id: int, coordinator_field: str):
 
     if bid and coordinator_field == current_coordinator_field:
         await service.update_bid_state(
-            bid, current_coordinator_field, ApprovalStatus.approved
+            bid, current_coordinator_field, ApprovalStatus.approved, coordinator_id
         )
 
 
-async def reject_coordinator_bid(id: int, reason: str, coordinator_field: str):
+async def reject_coordinator_bid(
+    id: int, reason: str, coordinator_field: str, coordinator_id: int
+):
     """Rejects bid by `id` if coordinator is current coordinator."""
     bid = service.get_bid_by_id(id)
 
@@ -504,5 +539,5 @@ async def reject_coordinator_bid(id: int, reason: str, coordinator_field: str):
     if bid and coordinator_field == current_coordinator_field:
         bid.denying_reason = reason
         await service.update_bid_state(
-            bid, current_coordinator_field, ApprovalStatus.denied
+            bid, current_coordinator_field, ApprovalStatus.denied, coordinator_id
         )

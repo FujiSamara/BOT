@@ -5,6 +5,7 @@ from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
     Bid,
+    BidCoordinator,
     BidDocument,
     BudgetRecord,
     EquipmentIncident,
@@ -210,7 +211,7 @@ def get_last_worker_bid_id() -> int:
         return s.query(func.max(WorkerBid.id)).first()[0]
 
 
-def add_documents_to_bid(id, documents: DocumentSchema):
+def add_documents_to_bid(id, documents: list[DocumentSchema]):
     with session.begin() as s:
         bid = s.query(Bid).filter(Bid.id == id).first()
 
@@ -2095,3 +2096,36 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
             teller_schemas.append(WorkerSchema.model_validate(teller))
 
         return teller_schemas
+
+
+def add_coordinator_to_bid(bid_id, coordinator_id: int):
+    with session.begin() as s:
+        bid = s.execute(select(Bid).filter(Bid.id == bid_id)).scalars().first()
+        worker = (
+            s.execute(select(Worker).filter(Worker.id == coordinator_id))
+            .scalars()
+            .first()
+        )
+
+        if bid is None or Worker is None:
+            return
+
+        s.add(BidCoordinator(bid=bid, coordinator=worker))
+
+
+def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    with session.begin() as s:
+        coordinators = (
+            s.execute(
+                select(BidCoordinator)
+                .filter(BidCoordinator.bid_id == bid_id)
+                .order_by(BidCoordinator.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        return [
+            WorkerSchema.model_validate(coordinator.coordinator)
+            for coordinator in coordinators
+        ]

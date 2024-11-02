@@ -70,7 +70,9 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
 def get_incidents_history_list() -> str:
     """Returns incidents history list."""
     incidents = sorted(
-        es_service.get_incidents_history(), key=lambda incident: incident.id
+        es_service.get_incidents_history(),
+        key=lambda incident: incident.id,
+        reverse=True,
     )[:10]
 
     sep = "\n"
