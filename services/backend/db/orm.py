@@ -36,6 +36,7 @@ from db.models import (
     AccountLogins,
     Subordination,
     MaterialValues,
+    Company,
 )
 from db.schemas import (
     BidSchema,
@@ -59,6 +60,7 @@ from db.schemas import (
     BidITSchema,
     AccountLoginsSchema,
     MaterialValuesSchema,
+    CompanySchema,
 )
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
@@ -1990,6 +1992,110 @@ def get_tellers_cash_in_department(department_id) -> list[WorkerSchema]:
         )
 
         return [WorkerSchema.model_validate(raw_teller) for raw_teller in raw_tellers]
+
+
+def get_companies_names() -> list[str]:
+    """Retutn CompanySchemas"""
+    with session.begin() as s:
+        companies_names = s.execute(select(Company.name)).scalars().all()
+        return companies_names
+
+
+def get_companys(cols_vals: dict[Any, Any]) -> list[CompanySchema]:
+    """Retun CompanySchema by columns and values, comprasion type '='
+
+    :cols_vals: keys - Columns, values - values of columns
+    """
+    with session.begin() as s:
+        q = select(Company)
+        for col, val in cols_vals.items():
+            print(col, val)
+            q = q.filter(col == val)
+        companys = s.execute(q).scalars().all()
+        return [CompanySchema.model_validate(company) for company in companys]
+
+
+def create_company(company_name: str) -> bool | Exception:
+    with session.begin() as s:
+        try:
+            company_model = Company(
+                name=company_name,
+            )
+            s.add(company_model)
+        except Exception as e:
+            return e
+        else:
+            return True
+
+
+def create_department(name: str, address: str, company: Company) -> bool | Exception:
+    with session.begin() as s:
+        try:
+            department_model = Department(
+                name=name,
+                company_id=company.id,
+                address=address,
+            )
+            s.add(department_model)
+        except Exception as e:
+            return e
+        else:
+            return True
+
+
+def update_company_for_department(
+    department_name: str, company_name: str
+) -> bool | Exception:
+    with session.begin() as s:
+        try:
+            department_model = (
+                s.execute(select(Department).filter(Department.name == department_name))
+                .scalars()
+                .first()
+            )
+            company_model = (
+                s.execute(select(Company).filter(Company.name == company_name))
+                .scalars()
+                .first()
+            )
+            department_model.company = company_model
+        except Exception as e:
+            return e
+        else:
+            return True
+
+
+def set_tellers_cash_department() -> list[WorkerSchema]:
+    """Set department 'Нет производства' for teller cash.
+    Return true if all done, false if department wasn't found"""
+    with session.begin() as s:
+        post_id = (
+            s.execute(
+                select(PostScope).filter(
+                    PostScope.scope == FujiScope.bot_bid_teller_cash
+                )
+            )
+            .scalars()
+            .first()
+            .post_id
+        )
+        tellers: list[Worker] = (
+            s.execute(select(Worker).filter(Worker.post_id == post_id)).scalars().all()
+        )
+
+        department: Optional[Department] = (
+            s.execute(select(Department).filter(Department.name == "Нет производства"))
+            .scalars()
+            .first()
+        )
+
+        teller_schemas: list[WorkerSchema] = []
+        for teller in tellers:
+            teller.department_id = department.id
+            teller.department = department
+            teller_schemas.append(WorkerSchema.model_validate(teller))
+
+        return teller_schemas
 
 
 def add_coordinator_to_bid(bid_id, coordinator_id: int):

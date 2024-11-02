@@ -401,7 +401,7 @@ async def reject_paralegal_bid(
     coordinator = service.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
-    await reject_coordinator_bid(id, reason, "paralegal", coordinator.id)
+    await reject_coordinator_bid(id, reason, "paralegal_state", coordinator.id)
 
 
 # endregion
