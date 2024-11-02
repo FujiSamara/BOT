@@ -368,7 +368,7 @@ async def reject_paralegal_bid(
     _: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ):
     """Rejects bid by `id`"""
-    await reject_coordinator_bid(id, reason, "paralegal")
+    await reject_coordinator_bid(id, reason, "paralegal_state")
 
 
 # endregion cc supervisor bids
