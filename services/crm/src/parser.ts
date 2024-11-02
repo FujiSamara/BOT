@@ -124,7 +124,21 @@ export function formatWorkTimePhoto(photoID: string): Cell {
 }
 
 export function formatMultilineString(multilineString: string): Cell {
-	return new Cell(
-		...multilineString.split("\n").map((val) => new CellLine(val)),
-	);
+	const multilines: Array<string> = multilineString.split("/next/");
+	const cellLines: Array<CellLine> = [];
+
+	const colors = [undefined, "#1a11d1", "#d1c111"];
+	let currentColorIndex = 0;
+
+	for (const multiline of multilines) {
+		cellLines.push(
+			...multiline
+				.split("\n")
+				.map((val) => new CellLine(val, undefined, colors[currentColorIndex])),
+		);
+		currentColorIndex++;
+		currentColorIndex %= colors.length;
+	}
+
+	return new Cell(...cellLines);
 }
