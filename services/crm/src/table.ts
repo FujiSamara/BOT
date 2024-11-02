@@ -856,15 +856,13 @@ export class BidTable extends Table<BidSchema> {
 	}
 
 	protected color(model: BidSchema): string {
-		switch (model.status) {
-			case "Выплачено":
-				return "#c8fac9";
-			case "Отказано":
-				return "#fac8ca";
-
-			default:
-				return "#ffffff";
+		if (model.status.indexOf("Выплачено") !== -1) {
+			return "#c8fac9";
 		}
+		if (model.status.indexOf("Отказано") !== -1) {
+			return "#fac8ca";
+		}
+		return "#ffffff";
 	}
 
 	public async create(model: BidSchema): Promise<void> {

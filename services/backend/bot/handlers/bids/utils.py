@@ -31,7 +31,7 @@ def get_full_bid_info(bid: BidSchema) -> str:
 {hbold("Тип деятельности")}: {bid.activity_type}
 """
 
-    if bid_state == "Отказано":
+    if "Отказано" in bid_state:
         bid_info += f"\n{hbold('Причина отказа')}: {bid.denying_reason}"
 
     return bid_info
@@ -131,6 +131,26 @@ def get_bid_state_info(bid: BidSchema, separator: str = "-----") -> str:
         )
         separator = "\n" + separator
         stage = str.join(separator, (stage, current_stage))
+
+    if (
+        bid.fac_state == ApprovalStatus.denied
+        or bid.cc_state == ApprovalStatus.denied
+        or bid.paralegal_state == ApprovalStatus.denied
+        or bid.kru_state == ApprovalStatus.denied
+        or bid.owner_state == ApprovalStatus.denied
+        or bid.accountant_card_state == ApprovalStatus.denied
+        or bid.accountant_cash_state == ApprovalStatus.denied
+        or bid.teller_card_state == ApprovalStatus.denied
+        or bid.teller_cash_state == ApprovalStatus.denied
+    ):
+        separator = separator + "\n"
+        stage = str.join(separator, (stage, "Отказано"))
+    elif (
+        bid.teller_card_state == ApprovalStatus.approved
+        or bid.teller_cash_state == ApprovalStatus.approved
+    ):
+        separator = separator + "\n"
+        stage = str.join(separator, (stage, "Выплачено"))
 
     return stage
 
