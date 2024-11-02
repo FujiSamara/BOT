@@ -502,7 +502,7 @@ def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:
         create_date=bid.create_date,
         documents=[doc.document for doc in bid.documents],
         purpose=bid.purpose,
-        status=get_bid_state_info(bid),
+        status=get_bid_state_info(bid, "/next/"),
         denying_reason=bid.denying_reason,
         expenditure=bid.expenditure,
         activity_type=bid.activity_type,
