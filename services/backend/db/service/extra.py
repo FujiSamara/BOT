@@ -83,15 +83,9 @@ def get_departments_names(_all: bool = False) -> list[str]:
     """
     departments_raw = orm.get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
-    try:
-        if not _all:
-            result.remove("Нет производства")
-    except Exception:
-        logging.getLogger("uvicorn.error").error(
-            "Department with name 'Нет производства' wasn't found"
-        )
-    finally:
-        return result
+    if not _all and "Нет производства" in result:
+        result.remove("Нет производства")
+    return result
 
 
 def get_departments_ids() -> list[int]:
