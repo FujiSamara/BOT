@@ -1,7 +1,10 @@
 from aiogram.utils.markdown import hbold
-from db.models import ApprovalStatus
-from db.schemas import BidSchema, WorkerBidSchema
+from db.models import ApprovalStatus, FujiScope
+from db.schemas import BidSchema, WorkerBidSchema, WorkerSchema
 from bot.kb import payment_type_dict
+
+import db.service.bid as bid_service
+import db.service.extra as extra_service
 
 
 def get_full_bid_info(bid: BidSchema) -> str:
@@ -59,41 +62,77 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
     return bid_info
 
 
-def get_bid_state_info(bid: BidSchema) -> str:
-    stage = "На согласовании у "
+def get_bid_state_info(bid: BidSchema, separator: str = "-----") -> str:
+    """Adds previous coordinators and
+    current coordinators to multiline string.
+    Separetes previous coordinators substring and current coordinators
+    by `separator`.
+    """
 
-    if bid.fac_state == ApprovalStatus.pending_approval:
-        stage += "ЦФО"
-    elif bid.cc_state == ApprovalStatus.pending_approval:
-        stage += "ЦЗ"
-    elif bid.paralegal_state == ApprovalStatus.pending_approval:
-        stage += "Юрисконсульт"
-    elif bid.kru_state == ApprovalStatus.pending_approval:
-        stage += "КРУ"
-    elif bid.owner_state == ApprovalStatus.pending_approval:
-        stage += "Собственник"
-    elif bid.accountant_card_state == ApprovalStatus.pending_approval:
-        stage += "Бухгалтер безнал."
-    elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
-        stage += "Бухгалтер нал."
-    elif bid.teller_card_state == ApprovalStatus.pending_approval:
-        stage += "Бухгалтер безналичная оплата"
-    elif bid.teller_cash_state == ApprovalStatus.pending_approval:
-        stage += "Кассир нал."
-    elif (
-        bid.fac_state == ApprovalStatus.denied
-        or bid.cc_state == ApprovalStatus.denied
-        or bid.paralegal_state == ApprovalStatus.denied
-        or bid.kru_state == ApprovalStatus.denied
-        or bid.owner_state == ApprovalStatus.denied
-        or bid.accountant_card_state == ApprovalStatus.denied
-        or bid.accountant_cash_state == ApprovalStatus.denied
-        or bid.teller_card_state == ApprovalStatus.denied
-        or bid.teller_cash_state == ApprovalStatus.denied
-    ):
-        stage = "Отказано"
-    else:
-        stage = "Выплачено"
+    coordinator_field = get_current_coordinator_field(bid)
+    pending_coordintators: list[WorkerSchema] = []
+
+    match coordinator_field:
+        case "fac_state":
+            pending_coordintators.append(bid.expenditure.fac)
+        case "cc_state":
+            pending_coordintators.append(bid.expenditure.cc)
+        case "paralegal_state":
+            pending_coordintators.append(bid.expenditure.paralegal)
+        case "kru_state":
+            krus = extra_service.get_workers_in_department_by_scope(
+                FujiScope.bot_bid_kru, bid.department.id
+            )
+            pending_coordintators.extend(krus)
+        case "owner_state":
+            owners = extra_service.get_workers_in_department_by_scope(
+                FujiScope.bot_bid_owner, bid.department.id
+            )
+            pending_coordintators.extend(owners)
+        case "accountant_card_state":
+            accountants = extra_service.get_workers_in_department_by_scope(
+                FujiScope.bot_bid_accountant_card, bid.department.id
+            )
+            pending_coordintators.extend(accountants)
+        case "accountant_cash_state":
+            accountants = extra_service.get_workers_in_department_by_scope(
+                FujiScope.bot_bid_accountant_cash, bid.department.id
+            )
+            pending_coordintators.extend(accountants)
+        case "teller_card_state":
+            tellers = extra_service.get_workers_in_department_by_scope(
+                FujiScope.bot_bid_teller_card, bid.department.id
+            )
+            pending_coordintators.extend(tellers)
+        case "teller_card_state":
+            tellers = extra_service.get_tellers_cash_for_department(bid.department.id)
+            pending_coordintators.extend(tellers)
+        case _:
+            pass
+
+    previous_coordinators: list[WorkerSchema] = bid_service.get_bid_coordinators(bid.id)
+
+    stage = ""
+    if len(previous_coordinators) > 0:
+        stage += "\n"
+        stage += str.join(
+            "\n",
+            [
+                f"{coordinator.l_name} {coordinator.f_name}"
+                for coordinator in previous_coordinators
+            ],
+        )
+    if len(pending_coordintators) > 0:
+        current_stage = "\n"
+        current_stage += str.join(
+            "\n",
+            [
+                f"{coordinator.l_name} {coordinator.f_name}"
+                for coordinator in pending_coordintators
+            ],
+        )
+        separator = "\n" + separator
+        stage = str.join(separator, (stage, current_stage))
 
     return stage
 

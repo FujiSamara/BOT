@@ -487,6 +487,9 @@ class Bid(Base):
     documents: Mapped[List["BidDocument"]] = relationship(
         "BidDocument", cascade="all,delete"
     )
+    coordinators: Mapped[List["BidCoordinator"]] = relationship(
+        "BidCoordinator", cascade="all,delete"
+    )
 
     # States
     fac_state: Mapped[approvalstatus]
@@ -498,6 +501,18 @@ class Bid(Base):
     accountant_card_state: Mapped[approvalstatus]
     teller_cash_state: Mapped[approvalstatus]
     teller_card_state: Mapped[approvalstatus]
+
+
+class BidCoordinator(Base):
+    """Таблица, покащывающая - кто согласовывал заявки."""
+
+    __tablename__ = "bid_coordinators"
+
+    bid_id: Mapped[int] = mapped_column(ForeignKey("bids.id"))
+    bid: Mapped[Bid] = relationship("Bid", back_populates="coordinators")
+
+    coordinator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    coordinator: Mapped["Worker"] = relationship("Worker")
 
 
 class BidDocument(Base):

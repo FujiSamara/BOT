@@ -16,6 +16,7 @@ from db.schemas import (
     FilterSchema,
     QuerySchema,
     DocumentSchema,
+    WorkerSchema,
     aliases,
     BidInSchema,
 )
@@ -290,7 +291,9 @@ def get_history_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
     return orm.get_specified_history_bids_in_department(tg_id)
 
 
-async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatus):
+async def update_bid_state(
+    bid: BidSchema, state_name: str, state: ApprovalStatus, coordinator_id: int
+):
     """
     Updates bid state with `state_name` by specified `state`.
     """
@@ -345,6 +348,7 @@ async def update_bid_state(bid: BidSchema, state_name: str, state: ApprovalStatu
         bid.close_date = datetime.now()
 
     orm.update_bid(bid)
+    orm.add_coordinator_to_bid(bid.id, coordinator_id)
 
 
 def increment_bid_state(bid: BidSchema, state: ApprovalStatus):
@@ -498,7 +502,7 @@ def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:
         create_date=bid.create_date,
         documents=[doc.document for doc in bid.documents],
         purpose=bid.purpose,
-        status=get_bid_state_info(bid),
+        status=get_bid_state_info(bid, "/next/"),
         denying_reason=bid.denying_reason,
         expenditure=bid.expenditure,
         activity_type=bid.activity_type,
@@ -672,3 +676,8 @@ def export_coordintator_bid_records(
         )
     )
     return export_bid_records(query_schema)
+
+
+def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    """Returns coordinators for specified `bid_id`"""
+    return orm.get_bid_coordinators(bid_id)
