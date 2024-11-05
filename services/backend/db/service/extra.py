@@ -83,8 +83,7 @@ def get_departments_names(_all: bool = False) -> list[str]:
     """
     departments_raw = orm.get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
-
-    if not _all:
+    if not _all and "Нет производства" in result:
         result.remove("Нет производства")
     return result
 
