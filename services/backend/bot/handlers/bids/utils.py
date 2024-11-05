@@ -78,23 +78,19 @@ def get_bid_state_info(bid: BidSchema, separator: str = "-----") -> str:
         case "paralegal_state":
             pending_coordintators.append(bid.expenditure.paralegal)
         case "kru_state":
-            krus = extra_service.get_workers_in_department_by_scope(
-                FujiScope.bot_bid_kru, bid.department.id
-            )
+            krus = extra_service.get_workers_by_scope(FujiScope.bot_bid_kru)
             pending_coordintators.extend(krus)
         case "owner_state":
-            owners = extra_service.get_workers_in_department_by_scope(
-                FujiScope.bot_bid_owner, bid.department.id
-            )
+            owners = extra_service.get_workers_by_scope(FujiScope.bot_bid_owner)
             pending_coordintators.extend(owners)
         case "accountant_card_state":
-            accountants = extra_service.get_workers_in_department_by_scope(
-                FujiScope.bot_bid_accountant_card, bid.department.id
+            accountants = extra_service.get_workers_by_scope(
+                FujiScope.bot_bid_accountant_card
             )
             pending_coordintators.extend(accountants)
         case "accountant_cash_state":
-            accountants = extra_service.get_workers_in_department_by_scope(
-                FujiScope.bot_bid_accountant_cash, bid.department.id
+            accountants = extra_service.get_workers_by_scope(
+                FujiScope.bot_bid_accountant_cash
             )
             pending_coordintators.extend(accountants)
         case "teller_card_state":
