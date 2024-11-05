@@ -49,7 +49,10 @@
 								class="table-cell-line"
 								v-for="(cellLine, cellLineIndex) in field.cellLines"
 							>
-								<p v-if="cellLine.href.length > 0">
+								<p
+									:style="{ color: cellLine.color }"
+									v-if="cellLine.href.length > 0"
+								>
 									<a
 										@click.stop="
 											async () => await onHrefClicked(cellLine.value)
@@ -63,7 +66,12 @@
 										class="expand"
 									></span>
 								</p>
-								<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+								<p
+									:style="{ color: cellLine.color }"
+									v-if="cellLine.href.length === 0"
+								>
+									{{ cellLine.value }}
+								</p>
 							</li>
 						</ul>
 					</th>
