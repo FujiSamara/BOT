@@ -11,6 +11,8 @@ from bot.kb import (
     create_inline_keyboard,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    fac_menu_button,
+    cc_menu_button,
     kru_menu_button,
     owner_menu_button,
     accountant_card_menu_button,
@@ -484,6 +486,18 @@ async def set_paying_comment(message: Message, state: FSMContext):
 
 
 def build_coordinations():
+    CoordinationFactory(
+        router=router,
+        coordinator_menu_button=fac_menu_button,
+        state_column=Bid.fac_state,
+        name="fac",
+    )
+    CoordinationFactory(
+        router=router,
+        coordinator_menu_button=cc_menu_button,
+        state_column=Bid.cc_state,
+        name="cc",
+    )
     CoordinationFactory(
         router=router,
         coordinator_menu_button=kru_menu_button,
