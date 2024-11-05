@@ -29,8 +29,8 @@ from typing import Any, Optional
 states = [
     "fac_state",
     "cc_state",
-    "kru_state",
     "paralegal_state",
+    "kru_state",
     "owner_state",
     "accountant_card_state",
     "accountant_cash_state",
