@@ -45,7 +45,7 @@
 			@approve="onApprove"
 			@reject="onReject"
 			:canApprove="true"
-			:can-delete="true"
+			:can-delete="false"
 			:canReject="true"
 			:viewer="viewer!"
 			class="view-page"

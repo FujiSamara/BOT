@@ -34,7 +34,7 @@
 		<PanelTable
 			v-show="!elementViewing && !editingElement"
 			:table="table"
-			:can-delete="true"
+			:can-delete="false"
 			:can-create="true"
 			:can-approve="false"
 			:can-reject="false"
@@ -48,7 +48,7 @@
 			@delete="onDelete"
 			:canApprove="false"
 			:canReject="false"
-			:can-delete="true"
+			:can-delete="false"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
