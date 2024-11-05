@@ -71,6 +71,7 @@ export class BidViewer extends Viewer<BidSchema> {
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);
 		this._formatters.set("need_edm", parser.formatCheck);
+		this._formatters.set("status", parser.formatMultilineString);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
