@@ -42,6 +42,7 @@ export const accessesDict: any = {
 	crm_archive_bid: Access.ArchiveBid,
 	crm_my_file: Access.MyFile,
 	crm_bid_readonly: Access.BidReadOnly,
+	crm_worktime: Access.Worktime,
 };
 
 export interface PanelData extends NavigationData {
