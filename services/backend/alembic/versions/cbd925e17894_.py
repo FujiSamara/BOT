@@ -5,6 +5,7 @@ Revises: 92d5acaccad0
 Create Date: 2024-11-07 15:32:55.591573
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,8 +13,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'cbd925e17894'
-down_revision: Union[str, None] = '92d5acaccad0'
+revision: str = "cbd925e17894"
+down_revision: Union[str, None] = "92d5acaccad0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -29,7 +30,8 @@ def upgrade() -> None:
     op.drop_column("departments", "bs_import_error_text")
 
     op.add_column(
-        "departments", sa.Column("fingerprint_device_hex", sa.VARCHAR(length=8), nullable=True)
+        "departments",
+        sa.Column("fingerprint_device_hex", sa.VARCHAR(length=8), nullable=True),
     )
     op.create_table(
         "workers_fingerprint",
