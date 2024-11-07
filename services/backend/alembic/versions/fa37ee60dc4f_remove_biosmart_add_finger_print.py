@@ -27,9 +27,33 @@ def upgrade() -> None:
     op.drop_column("departments", "bs_import_error")
     op.drop_column("departments", "bs_import_error_text")
 
-    op.add_column("workers", sa.Column("fingerprint_card", sa.VARCHAR(16), nullable=True))
-    op.add_column("workers", sa.Column("fingerprint_finger_cell", sa.INTEGER, nullable=True))
-    op.add_column("departments", sa.Column("fingerprint_device_id", sa.INTEGER, nullable=True))
+    op.add_column(
+        "departments", sa.Column("fingerprint_device_hex", sa.VARCHAR(length=8), nullable=True)
+    )
+    op.create_table(
+        "workers_fingerprint",
+        sa.Column("worker_id", sa.Integer(), nullable=False),
+        sa.Column("department_id", sa.Integer(), nullable=False),
+        sa.Column("department_hex", sa.VARCHAR(length=8), nullable=False),
+        sa.Column("cell_number", sa.Integer(), nullable=False),
+        sa.Column("rfid_card", sa.VARCHAR(length=8), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["worker_id"],
+            ["workers.id"],
+        ),
+        sa.ForeignKeyConstraint(
+            ["department_id"],
+            ["departments.id"],
+        ),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    op.create_table(
+        "fingerprint_attempt",
+        sa.Column("worker_finger_or_card", sa.VARCHAR(length=12), nullable=False),
+        sa.Column("department", sa.VARCHAR(length=8), nullable=False),
+        sa.Column("event_dttm", sa.DATETIME, nullable=False),
+        sa.PrimaryKeyConstraint("id"),
+    )
 
 
 def downgrade() -> None:
@@ -40,8 +64,8 @@ def downgrade() -> None:
     op.add_column("departments", sa.Column("biosmart_strid", sa.TEXT, nullable=True))
     op.add_column("departments", sa.Column("bs_import", sa.BOOLEAN, nullable=True))
     op.add_column("departments", sa.Column("bs_import_error", sa.TEXT, nullable=True))
-    op.add_column("departments", sa.Column("bs_import_error_text", sa.TEXT, nullable=True))
-
-    op.drop_column("workers", "fingerprint_card")
-    op.drop_column("workers", "fingerprint_finger_cell")
+    op.add_column(
+        "departments", sa.Column("bs_import_error_text", sa.TEXT, nullable=True)
+    )
     op.drop_column("departments", "fingerprint_device_id")
+    op.drop_table("workers_fingerprint")

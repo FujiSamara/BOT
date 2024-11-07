@@ -184,7 +184,7 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
-    fingerprint_device_id: Mapped[str] = mapped_column(nullable=True)
+    fingerprint_device_hex: Mapped[str] = mapped_column(nullable=True)
 
     # Данные из iiko для связи с таблицей orders
     uuid: Mapped[UUID] = mapped_column(nullable=True)
@@ -330,9 +330,6 @@ class Worker(Base):
         back_populates="creator",
         foreign_keys="Expenditure.creator_id",
     )
-
-    fingerprint_card: Mapped[str] = mapped_column(nullable=True)
-    fingerprint_finger_cell: Mapped[str] = mapped_column(nullable=True)
 
     gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
     employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
@@ -965,3 +962,17 @@ class PostFile(Base):
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped[Post] = relationship("Post")
+
+
+class WorkerFingerprints(Base):
+    worker_id: Mapped[int] = mapped_column(nullable=False)
+    department_id: Mapped[int] = mapped_column(nullable=False)
+    department_hex: Mapped[str] = mapped_column(nullable=False)
+    cell_number: Mapped[int] = mapped_column(nullable=True)
+    rfid_card: Mapped[str] = mapped_column(nullable=True)
+
+
+class FingerprintAttemps(Base):
+    worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
+    department: Mapped[str] = mapped_column(nullable=False)
+    event_dttm: Mapped[datetime] = mapped_column(nullable=False)
