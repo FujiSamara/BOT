@@ -62,11 +62,12 @@ class CoordinationFactory:
         state_column: Any,
         without_decline: bool = False,
         approve_button_text: str = "Согласовать",
+        pending_text: str = "Ожидающие заявки",
     ):
         self.name = name
         self.coordinator_menu_button = coordinator_menu_button
         self.pending_button = InlineKeyboardButton(
-            text="Ожидающие заявки", callback_data=f"{name}_pending"
+            text=pending_text, callback_data=f"{name}_pending"
         )
         self.history_button = InlineKeyboardButton(
             text="История заявок", callback_data=f"{name}_history"
@@ -491,12 +492,14 @@ def build_coordinations():
         coordinator_menu_button=fac_menu_button,
         state_column=Bid.fac_state,
         name="fac",
+        pending_text="На согласование",
     )
     CoordinationFactory(
         router=router,
         coordinator_menu_button=cc_menu_button,
         state_column=Bid.cc_state,
         name="cc",
+        pending_text="На согласование",
     )
     CoordinationFactory(
         router=router,
