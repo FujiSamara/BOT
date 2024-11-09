@@ -1,7 +1,7 @@
-"""Add fac and cc bid scope
+"""Add fac and cc bid bot scope
 
 Revision ID: 442e2772d9cd
-Revises: 5d23f201dfea
+Revises: 92d5acaccad0
 Create Date: 2024-11-05 10:53:56.240835
 
 """
@@ -48,7 +48,7 @@ table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "442e2772d9cd"
-down_revision: Union[str, None] = "5d23f201dfea"
+down_revision: Union[str, None] = "92d5acaccad0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
