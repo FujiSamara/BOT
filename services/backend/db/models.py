@@ -37,6 +37,7 @@ class FujiScope(enum.Enum):
     crm_archive_bid = 27
     crm_my_file = 28
     crm_bid_readonly = 30
+    crm_worktime = 31
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6
