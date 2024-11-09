@@ -494,7 +494,7 @@ async def set_paying_comment(message: Message, state: FSMContext):
 def build_coordinations():
     CoordinationFactory(
         router=router,
-        coordinator_menu_button=fac_menu_button,
+        coordinator_menu_button=fac_cc_menu_button,
         state_column=Bid.fac_state,
         name="fac",
         pending_text="На согласование",
