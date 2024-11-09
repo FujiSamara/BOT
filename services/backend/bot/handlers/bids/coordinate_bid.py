@@ -303,14 +303,14 @@ class CoordinationFactory:
             if self.state_column == Bid.teller_cash_state:
                 bids = get_pending_bids_for_teller_cash(tg_id)
             elif self.state_column == Bid.fac_state:
-                bids = get_pending_bids_for_cc_fac(self.state_column)
+                bids = get_pending_bids_for_cc_fac(tg_id)
             else:
                 bids = get_pending_bids_by_column(self.state_column)
         else:
             if self.state_column == Bid.teller_cash_state:
                 bids = get_history_bids_for_teller_cash(tg_id)
             elif self.state_column == Bid.fac_state:
-                bids = get_history_bids_for_cc_fac(self.state_column)
+                bids = get_history_bids_for_cc_fac(tg_id)
             else:
                 bids = get_history_bids_by_column(self.state_column)
         bids = sorted(bids, key=lambda bid: bid.create_date)[:10]

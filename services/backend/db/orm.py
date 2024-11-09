@@ -349,13 +349,16 @@ def get_specified_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
 
 def get_pending_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
     with session.begin() as s:
+        worker_id = s.execute(
+            select(Worker.id).filter(Worker.telegram_id == tg_id)
+        ).scalar_one()
         fac_expenditures_ids = (
-            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == tg_id))
+            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == worker_id))
             .scalars()
             .all()
         )
         cc_expenditures_ids = (
-            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == tg_id))
+            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == worker_id))
             .scalars()
             .all()
         )
@@ -427,13 +430,16 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
 
 def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
     with session.begin() as s:
+        worker_id = s.execute(
+            select(Worker.id).filter(Worker.telegram_id == tg_id)
+        ).scalar_one()
         fac_expenditures_ids = (
-            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == tg_id))
+            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == worker_id))
             .scalars()
             .all()
         )
         cc_expenditures_ids = (
-            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == tg_id))
+            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == worker_id))
             .scalars()
             .all()
         )
