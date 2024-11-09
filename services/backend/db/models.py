@@ -38,8 +38,6 @@ class FujiScope(enum.Enum):
     crm_my_file = 28
     crm_bid_readonly = 30
     # BOT
-    bot_bid_fac = 31
-    bot_bid_cc = 32
     bot_bid_create = 5
     bot_bid_kru = 6
     bot_bid_owner = 7
@@ -59,6 +57,7 @@ class FujiScope(enum.Enum):
     bot_bid_it_tm = 24
     bot_personal_cabinet = 25
     bot_incident_monitoring = 29
+    bot_bid_fac_cc = 31
 
 
 class DepartmentType(enum.Enum):

@@ -277,6 +277,9 @@ def get_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
     return orm.get_specified_pending_bids_for_teller_cash(tg_id)
 
 
+def get_pending_bids_for_cc_fac(tg_id) -> list[BidSchema]:
+    return orm.get_pending_bids_for_cc_fac(tg_id)
+
 def get_history_bids_by_column(column: Any) -> list[BidSchema]:
     """
     Returns all bids in database past through worker with `column`.
@@ -290,6 +293,9 @@ def get_history_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
     """
     return orm.get_specified_history_bids_in_department(tg_id)
 
+
+def get_history_bids_for_cc_fac(tg_id) -> list[BidSchema]:
+    return orm.get_history_bids_for_cc_fac(tg_id)
 
 async def update_bid_state(
     bid: BidSchema, state_name: str, state: ApprovalStatus, coordinator_id: int

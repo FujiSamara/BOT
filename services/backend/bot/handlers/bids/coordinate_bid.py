@@ -27,8 +27,10 @@ from db.schemas import ApprovalStatus, BidSchema
 from db.service import (
     get_pending_bids_by_column,
     get_pending_bids_for_teller_cash,
+    get_pending_bids_for_cc_fac,
     get_history_bids_by_column,
     get_history_bids_for_teller_cash,
+    get_history_bids_for_cc_fac,
     get_bid_by_id,
     update_bid_state,
     update_bid,
@@ -301,11 +303,15 @@ class CoordinationFactory:
         if type == "pending":
             if self.state_column == Bid.teller_cash_state:
                 bids = get_pending_bids_for_teller_cash(tg_id)
+            elif self.state_column == Bid.fac_state:
+                bids = get_pending_bids_for_cc_fac(self.state_column)
             else:
                 bids = get_pending_bids_by_column(self.state_column)
         else:
             if self.state_column == Bid.teller_cash_state:
                 bids = get_history_bids_for_teller_cash(tg_id)
+            elif self.state_column == Bid.fac_state:
+                bids = get_history_bids_for_cc_fac(self.state_column)
             else:
                 bids = get_history_bids_by_column(self.state_column)
         bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
@@ -492,13 +498,6 @@ def build_coordinations():
         coordinator_menu_button=fac_menu_button,
         state_column=Bid.fac_state,
         name="fac",
-        pending_text="На согласование",
-    )
-    CoordinationFactory(
-        router=router,
-        coordinator_menu_button=cc_menu_button,
-        state_column=Bid.cc_state,
-        name="cc",
         pending_text="На согласование",
     )
     CoordinationFactory(

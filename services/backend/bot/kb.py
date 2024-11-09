@@ -30,11 +30,8 @@ bid_create_pending_button = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_create_pending_bid"
 )
 
-fac_menu_button = InlineKeyboardButton(
+fac_cc_menu_button = InlineKeyboardButton(
     text="Согласование платежей", callback_data="get_fac_menu"
-)
-cc_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_cc_menu"
 )
 kru_menu_button = InlineKeyboardButton(
     text="Согласование платежей", callback_data="get_kru_menu"

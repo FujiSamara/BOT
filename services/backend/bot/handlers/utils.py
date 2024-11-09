@@ -20,8 +20,7 @@ from db.schemas import WorkerSchema
 import db.service as service
 from bot.bot import get_bot
 from bot.kb import (
-    fac_menu_button,
-    cc_menu_button,
+    fac_cc_menu_button,
     create_bid_menu_button,
     create_bid_it_menu_button,
     teller_card_menu_button,
@@ -52,8 +51,7 @@ import asyncio
 def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
     """Returns cached scope-menu dict"""
     return {
-        FujiScope.bot_bid_fac: fac_menu_button,
-        FujiScope.bot_bid_cc: cc_menu_button,
+        FujiScope.bot_bid_fac_cc: fac_cc_menu_button,
         FujiScope.bot_bid_kru: kru_menu_button,
         FujiScope.bot_bid_owner: owner_menu_button,
         FujiScope.bot_bid_accountant_card: accountant_card_menu_button,

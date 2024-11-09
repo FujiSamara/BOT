@@ -347,6 +347,39 @@ def get_specified_pending_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
+def get_pending_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
+    with session.begin() as s:
+        fac_expenditures_ids = (
+            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == tg_id))
+            .scalars()
+            .all()
+        )
+        cc_expenditures_ids = (
+            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == tg_id))
+            .scalars()
+            .all()
+        )
+        raw_bids = (
+            s.execute(
+                select(Bid).filter(
+                    or_(
+                        and_(
+                            Bid.expenditure_id.in_(cc_expenditures_ids),
+                            Bid.cc_state == ApprovalStatus.pending_approval,
+                        ),
+                        and_(
+                            Bid.expenditure_id.in_(fac_expenditures_ids),
+                            Bid.fac_state == ApprovalStatus.pending_approval,
+                        ),
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
 def get_specified_history_bids(pending_column) -> list[BidSchema]:
     """
     Returns all bids in database with approval or
@@ -387,6 +420,45 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
                     Bid.paying_department_id == department_id,
                 )
             )
+            .all()
+        )
+        return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
+    with session.begin() as s:
+        fac_expenditures_ids = (
+            s.execute(select(Expenditure.id).filter(Expenditure.fac_id == tg_id))
+            .scalars()
+            .all()
+        )
+        cc_expenditures_ids = (
+            s.execute(select(Expenditure.id).filter(Expenditure.cc_id == tg_id))
+            .scalars()
+            .all()
+        )
+        raw_bids = (
+            s.execute(
+                select(Bid).filter(
+                    or_(
+                        and_(
+                            Bid.expenditure_id.in_(cc_expenditures_ids),
+                            or_(
+                                Bid.cc_state == ApprovalStatus.approved,
+                                Bid.cc_state == ApprovalStatus.denied,
+                            ),
+                        ),
+                        and_(
+                            Bid.expenditure_id.in_(fac_expenditures_ids),
+                            or_(
+                                Bid.fac_state == ApprovalStatus.approved,
+                                Bid.fac_state == ApprovalStatus.denied,
+                            ),
+                        ),
+                    )
+                )
+            )
+            .scalars()
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
