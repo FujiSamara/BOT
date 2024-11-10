@@ -151,6 +151,15 @@ class Company(Base):
         "WorkTime", back_populates="company"
     )
 
+    # айдишник из биосмарта для определения компании
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+
 
 class Department(Base):
     """Подразделения (рестораны)"""
@@ -193,7 +202,16 @@ class Department(Base):
         "WorkTime", back_populates="department"
     )
 
-    fingerprint_device_hex: Mapped[str] = mapped_column(nullable=True)
+    # айдишник из биосмарта для определения конкретного подразделения
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+    # Если прошлый флаг true, здесь будет описание ошибки
+    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
 
     # Данные из iiko для связи с таблицей orders
     uuid: Mapped[UUID] = mapped_column(nullable=True)
@@ -342,6 +360,17 @@ class Worker(Base):
         back_populates="creator",
         foreign_keys="Expenditure.creator_id",
     )
+
+    # айдишник из биосмарта для определения конкретного рабочего
+    # При заведении через админку может быть пустым до первой выгрузки табеля, после не должен быть пустым
+    biosmart_strid: Mapped[str] = mapped_column(nullable=True)
+    # Флаг выгрузки из биосмарта. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    bs_import: Mapped[bool] = mapped_column(nullable=True)
+    # Флаг расхождения данных в биосмарте и админке. При нормальной работе всегда должен быть false. Если true - чтото пошло не так
+    # Показывать в админке, чтобы админы видели ошибку, пока не сделаем уведомления
+    bs_import_error: Mapped[bool] = mapped_column(nullable=True)
+    # Если прошлый флаг true, здесь будет описание ошибки
+    bs_import_error_text: Mapped[str] = mapped_column(nullable=True)
 
     gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
     employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
@@ -1020,17 +1049,3 @@ class EquipmentIncident(Base):
             mapped_column(Enum(IncidentStage)),
         ]
     ]
-
-
-class WorkerFingerprints(Base):
-    worker_id: Mapped[int] = mapped_column(nullable=False)
-    department_id: Mapped[int] = mapped_column(nullable=False)
-    department_hex: Mapped[str] = mapped_column(nullable=False)
-    cell_number: Mapped[int] = mapped_column(nullable=True)
-    rfid_card: Mapped[str] = mapped_column(nullable=True)
-
-
-class FingerprintAttemps(Base):
-    worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
-    department: Mapped[str] = mapped_column(nullable=False)
-    event_dttm: Mapped[datetime] = mapped_column(nullable=False)
