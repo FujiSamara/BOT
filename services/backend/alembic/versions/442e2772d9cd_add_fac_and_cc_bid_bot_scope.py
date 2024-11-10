@@ -37,13 +37,14 @@ old_options = (
     "bot_bid_it_tm",
     "bot_personal_cabinet",
     "crm_my_bid",
+    "crm_worktime",
     "crm_archive_bid",
     "crm_my_file",
     "bot_incident_monitoring",
     "crm_bid_readonly",
 )
 
-new_options = sorted((*old_options, "bot_bid_fac", "bot_bid_cc"))
+new_options = sorted((*old_options, "bot_bid_fac_cc"))
 table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
