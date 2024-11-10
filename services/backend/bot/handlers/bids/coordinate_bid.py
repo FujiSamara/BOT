@@ -11,6 +11,7 @@ from bot.kb import (
     create_inline_keyboard,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    fac_cc_menu_button,
     kru_menu_button,
     owner_menu_button,
     accountant_card_menu_button,
@@ -25,8 +26,10 @@ from db.schemas import ApprovalStatus, BidSchema
 from db.service import (
     get_pending_bids_by_column,
     get_pending_bids_for_teller_cash,
+    get_pending_bids_for_cc_fac,
     get_history_bids_by_column,
     get_history_bids_for_teller_cash,
+    get_history_bids_for_cc_fac,
     get_bid_by_id,
     update_bid_state,
     update_bid,
@@ -60,11 +63,12 @@ class CoordinationFactory:
         state_column: Any,
         without_decline: bool = False,
         approve_button_text: str = "Согласовать",
+        pending_text: str = "Ожидающие заявки",
     ):
         self.name = name
         self.coordinator_menu_button = coordinator_menu_button
         self.pending_button = InlineKeyboardButton(
-            text="Ожидающие заявки", callback_data=f"{name}_pending"
+            text=pending_text, callback_data=f"{name}_pending"
         )
         self.history_button = InlineKeyboardButton(
             text="История заявок", callback_data=f"{name}_history"
@@ -298,11 +302,15 @@ class CoordinationFactory:
         if type == "pending":
             if self.state_column == Bid.teller_cash_state:
                 bids = get_pending_bids_for_teller_cash(tg_id)
+            elif self.state_column == Bid.fac_state:
+                bids = get_pending_bids_for_cc_fac(tg_id)
             else:
                 bids = get_pending_bids_by_column(self.state_column)
         else:
             if self.state_column == Bid.teller_cash_state:
                 bids = get_history_bids_for_teller_cash(tg_id)
+            elif self.state_column == Bid.fac_state:
+                bids = get_history_bids_for_cc_fac(tg_id)
             else:
                 bids = get_history_bids_by_column(self.state_column)
         bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
@@ -484,6 +492,13 @@ async def set_paying_comment(message: Message, state: FSMContext):
 
 
 def build_coordinations():
+    CoordinationFactory(
+        router=router,
+        coordinator_menu_button=fac_cc_menu_button,
+        state_column=Bid.fac_state,
+        name="fac",
+        pending_text="На согласование",
+    )
     CoordinationFactory(
         router=router,
         coordinator_menu_button=kru_menu_button,
