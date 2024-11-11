@@ -27,6 +27,7 @@ export enum Access {
 	MyBid,
 	ArchiveBid,
 	MyFile,
+	AccountantCardBid,
 }
 
 export const accessesDict: any = {
@@ -43,6 +44,7 @@ export const accessesDict: any = {
 	crm_my_file: Access.MyFile,
 	crm_bid_readonly: Access.BidReadOnly,
 	crm_worktime: Access.Worktime,
+	crm_accountant_card_bid: Access.AccountantCardBid,
 };
 
 export interface PanelData extends NavigationData {

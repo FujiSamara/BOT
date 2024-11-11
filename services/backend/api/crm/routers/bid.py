@@ -407,6 +407,99 @@ async def reject_paralegal_bid(
 # endregion
 
 
+# region accountant card bids
+@router.post("/accountant_card/page/info")
+async def get_accountant_card_bid_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
+) -> TalbeInfoSchema:
+    service.apply_bid_status_filter(
+        query, "accountant_card_state", ApprovalStatus.pending_approval
+    )
+    record_count = service.get_bid_count(query)
+    all_record_count = service.get_bid_count(
+        service.apply_bid_status_filter(
+            QuerySchema(),
+            "accountant_card_state",
+            ApprovalStatus.pending_approval,
+            ApprovalStatus.approved,
+        ),
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/accountant_card/page/{page}")
+async def get_accountant_card_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
+    _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
+) -> list[BidOutSchema]:
+    service.apply_bid_status_filter(
+        query,
+        "accountant_card_state",
+        ApprovalStatus.pending_approval,
+        ApprovalStatus.approved,
+    )
+    return service.get_bid_record_at_page(page, records_per_page, query)
+
+
+@router.post("/accountant_card/export")
+async def export_accountant_card_bids(
+    query: QuerySchema,
+    _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
+) -> Response:
+    service.apply_bid_status_filter(
+        query,
+        "accountant_card_state",
+        ApprovalStatus.pending_approval,
+        ApprovalStatus.approved,
+    )
+    file = service.export_bid_records(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=fac_bids.xlsx",
+        },
+        media_type="application/octet-stream",
+    )
+
+
+@router.patch("/accountant_card/approve/{id}")
+async def approve_accountant_card_bid(
+    id: int, user: User = Security(get_user, scopes=["crm_accountant_card_bid"])
+):
+    """Approves bid by `id`"""
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await approve_coordinator_bid(id, "accountant_card_state", coordinator.id)
+
+
+@router.patch("/accountant_card/reject/{id}")
+async def reject_accountant_card_bid(
+    id: int,
+    reason: str,
+    user: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
+):
+    """Rejects bid by `id`"""
+    coordinator = service.get_worker_by_phone_number(user.username)
+    if coordinator is None:
+        raise HTTPException(status_code=400, detail="Coordinator not found")
+    await reject_coordinator_bid(id, reason, "accountant_card_state", coordinator.id)
+
+
+# endregion
+
+
 # region my bids
 @router.post("/my/page/info")
 async def get_my_bid_pages_info(
