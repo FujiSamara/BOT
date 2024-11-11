@@ -148,9 +148,26 @@ class CoordinationFactory:
         bid = get_bid_by_id(callback_data.bid_id)
         worker = utils.get_worker_my_message(callback)
         if worker is not None:
-            await update_bid_state(
-                bid, self.state_column.name, ApprovalStatus.approved, worker.id
-            )
+            if self.state_column == Bid.fac_state:
+                match ApprovalStatus.pending_approval:
+                    case bid.fac_state:
+                        await update_bid_state(
+                            bid,
+                            Bid.fac_state.name,
+                            ApprovalStatus.approved,
+                            worker.id,
+                        )
+                    case bid.cc_state:
+                        await update_bid_state(
+                            bid,
+                            Bid.cc_state.name,
+                            ApprovalStatus.approved,
+                            worker.id,
+                        )
+            else:
+                await update_bid_state(
+                    bid, self.state_column.name, ApprovalStatus.approved, worker.id
+                )
         msg = await callback.message.answer(text="Успешно!")
         await asyncio.sleep(1)
         await msg.delete()
