@@ -1,4 +1,5 @@
 import asyncio
+import pathlib
 from typing import Optional
 from aiogram import F, Router
 from aiogram.types import (
@@ -6,9 +7,22 @@ from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
+    Document,
+    PhotoSize,
 )
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
+from fastapi import UploadFile
+
+from settings import get_settings
+
+from db.service import (
+    get_worker_by_telegram_id,
+    get_departments_names,
+    set_department_for_worker,
+)
+from db.schemas import WorkerSchema
+from db.models import FujiScope
 
 from bot.kb import (
     get_personal_cabinet_button,
@@ -16,6 +30,7 @@ from bot.kb import (
     get_per_cab_mat_vals_button,
     set_per_cab_department_button,
     get_per_cab_dismissal_button,
+    get_menu_changing_form_buttom,
     main_menu_button,
     create_reply_keyboard,
 )
@@ -24,16 +39,12 @@ from bot.states import PersconalCabinet, Base
 from bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
+    handle_documents_form,
+    handle_documents,
+    download_file,
 )
 from bot.handlers.perconal_cab import utils
 from bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
-from db.service import (
-    get_worker_by_telegram_id,
-    get_departments_names,
-    set_department_for_worker,
-)
-from db.schemas import WorkerSchema
-from db.models import FujiScope
 
 
 router = Router(name="personal_cabinet")
@@ -55,6 +66,9 @@ async def get_personal_data(message: CallbackQuery | Message):
         or FujiScope.admin in worker.post.scopes
     ):
         buttons.append([set_per_cab_department_button])
+
+    if FujiScope.admin in worker.post.scopes:
+        buttons.append([get_menu_changing_form_buttom])
 
     buttons.append([main_menu_button])
 
@@ -170,3 +184,40 @@ async def set_department(message: Message, state: FSMContext):
                     ),
                 )
             await state.set_state(Base.none)
+
+
+# Documents
+@router.callback_query(F.data == get_menu_changing_form_buttom.callback_data)
+async def get_menu_changing_form(callback: CallbackQuery, state: FSMContext):
+    await handle_documents_form(callback.message, state, PersconalCabinet.menu)
+
+
+@router.message(PersconalCabinet.menu)
+async def set_documents(message: Message, state: FSMContext):
+    def condition(documents: list[Document | PhotoSize]) -> str | None:
+        if len(documents) > 1:
+            return "Меню должно быть одно!"
+
+    async def clear_state_with_success_caller(message: Message, state: FSMContext):
+        data = await state.get_data()
+        documents: list[Document | PhotoSize] = data["menu_document"]
+
+        if len(documents) == 0:
+            await state.clear()
+            await get_personal_data(message)
+            return
+
+        document: UploadFile = await download_file(documents[0])
+
+        path = pathlib.Path(get_settings().storage_path) / "menu.pdf"
+        data = await document.read()
+
+        with open(path, "wb") as f:
+            f.write(data)
+
+        await state.clear()
+        await get_personal_data(message)
+
+    await handle_documents(
+        message, state, "menu_document", clear_state_with_success_caller, condition
+    )

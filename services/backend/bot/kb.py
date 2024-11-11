@@ -468,7 +468,7 @@ get_it_tm_menu_btn = InlineKeyboardButton(
 )
 
 
-# Personal cabinet
+# region personal cabinet
 
 get_personal_cabinet_button = InlineKeyboardButton(
     text="Личный кабинет",
@@ -495,6 +495,13 @@ set_per_cab_department_button = InlineKeyboardButton(
     callback_data="set_per_cab_department",
 )
 
+get_menu_changing_form_buttom = InlineKeyboardButton(
+    text="Сменить меню",
+    callback_data="get_menu_changing_form_buttom",
+)
+# endregion
+
+# region monitoring
 get_monitoring_menu_btn = InlineKeyboardButton(
     text="Мониторинг точек", callback_data="get_monitoring_menu"
 )
@@ -520,3 +527,4 @@ monitoring_menu = create_inline_keyboard(
     get_incidents_btn,
     main_menu_button,
 )
+# endregion
