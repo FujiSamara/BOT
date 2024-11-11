@@ -127,7 +127,7 @@ class CoordinationFactory:
 
         await try_edit_message(
             message=callback.message,
-            text="Согласование платежей",
+            text=hbold(accountant_cash_menu_button.text),
             reply_markup=keyboard,
         )
 

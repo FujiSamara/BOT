@@ -24,7 +24,7 @@ router = Router(name="bid_main")
 async def get_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await callback.message.edit_text(
-        hbold("Согласование платежей"), reply_markup=bid_menu
+        hbold("Заявки на оплату платежей"), reply_markup=bid_menu
     )
 
 
