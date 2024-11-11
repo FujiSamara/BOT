@@ -71,6 +71,14 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 8,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки бух.",
+		isActive: false,
+		panel: shallowRef(AccountantCardBidPanel),
+		access: Access.FACBid,
+	},
+	{
+		id: 9,
 		imageSrc: "/img/worktime.svg",
 		label: "Явки",
 		isActive: false,
@@ -78,7 +86,7 @@ const panels: Array<PanelData> = [
 		access: Access.Worktime,
 	},
 	{
-		id: 9,
+		id: 10,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Мои заявки",
 		isActive: false,
@@ -86,20 +94,12 @@ const panels: Array<PanelData> = [
 		access: Access.MyBid,
 	},
 	{
-		id: 10,
+		id: 11,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Архив заявок",
 		isActive: false,
 		panel: shallowRef(ArchiveBidPanel),
 		access: Access.ArchiveBid,
-	},
-	{
-		id: 11,
-		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки бух.",
-		isActive: false,
-		panel: shallowRef(AccountantCardBidPanel),
-		access: Access.FACBid,
 	},
 ];
 
