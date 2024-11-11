@@ -19,7 +19,7 @@ router = APIRouter()
 async def get_bid_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_user, scopes=["crm_bid"]),
+    _: User = Security(get_user, scopes=["crm_bid|crm_bid_readonly"]),
 ) -> TalbeInfoSchema:
     record_count = service.get_bid_count(query)
     all_record_count = service.get_bid_count(QuerySchema())
@@ -37,7 +37,7 @@ async def get_bids(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_user, scopes=["crm_bid"]),
+    _: User = Security(get_user, scopes=["crm_bid|crm_bid_readonly"]),
 ) -> list[BidOutSchema]:
     return service.get_bid_record_at_page(page, records_per_page, query)
 
