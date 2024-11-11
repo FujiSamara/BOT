@@ -4,6 +4,7 @@ import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACBidPanel from "@/panels/FACBidPanel.vue";
 import CCBidPanel from "@/panels/CCBidPanel.vue";
 import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
+import AccountantCardBidPanel from "@/panels/AccountantCardBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
 import WorkTimePanel from "@/panels/WorkTimePanel.vue";
@@ -91,6 +92,14 @@ const panels: Array<PanelData> = [
 		isActive: false,
 		panel: shallowRef(ArchiveBidPanel),
 		access: Access.ArchiveBid,
+	},
+	{
+		id: 11,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки бух.",
+		isActive: false,
+		panel: shallowRef(AccountantCardBidPanel),
+		access: Access.FACBid,
 	},
 ];
 
