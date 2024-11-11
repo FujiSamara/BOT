@@ -681,3 +681,19 @@ def export_coordintator_bid_records(
 def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
     """Returns coordinators for specified `bid_id`"""
     return orm.get_bid_coordinators(bid_id)
+
+
+def get_accountant_card_bid_records_at_page(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[BidOutSchema]:
+    """Returns all bid records in database with `query_schema`."""
+    return get_bid_record_at_page(page, records_per_page, query_schema)
+
+
+def get_accountant_card_bid_count(
+    query_schema: QuerySchema,
+) -> int:
+    """Returns all bid records in database with `query_schema`."""
+    return get_bid_count(query_schema)
