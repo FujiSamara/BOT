@@ -921,6 +921,18 @@ export class CCSupervisorBidTable extends BidTable {
 	}
 }
 
+export class AccountantCardBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/accountant_card",
+			infoEndpoint: "/accountant_card",
+			exportEndpoint: "/accountant_card",
+			approveEndpoint: "/accountant_card",
+			rejectEndpoint: "/accountant_card",
+		});
+	}
+}
+
 export class MyBidTable extends BidTable {
 	constructor() {
 		super({

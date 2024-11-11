@@ -38,6 +38,7 @@ class FujiScope(enum.Enum):
     crm_my_file = 28
     crm_bid_readonly = 30
     crm_worktime = 31
+    crm_accountant_card_bid = 33
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6
