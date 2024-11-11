@@ -228,6 +228,7 @@ async def handle_documents(
     state: FSMContext,
     document_name: str,
     on_complete: Callable[[Any, Any], Awaitable[Any]],
+    condition: Callable[[list[Document | PhotoSize]], str | None] | None = None,
 ):
     if message.content_type == ContentType.TEXT:
         if message.text == "Готово":
@@ -285,7 +286,16 @@ async def handle_documents(
             documents.append(message.document)
         if not msgs:
             msgs = []
-        msgs.append(message)
+
+        if condition is not None:
+            error = condition(documents)
+            if error is not None:
+                await try_delete_message(message)
+                msg = await message.answer(error)
+                await asyncio.sleep(1)
+                await try_delete_message(msg)
+                return
+
         await state.update_data(msgs=msgs, documents=documents)
     else:
         await try_delete_message(message)

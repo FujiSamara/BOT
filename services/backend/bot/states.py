@@ -111,3 +111,4 @@ class DepartmentDirectorRequestForm(StatesGroup):
 # Persconal Cabinet form
 class PersconalCabinet(StatesGroup):
     department = State()
+    menu = State()
