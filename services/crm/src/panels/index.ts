@@ -75,7 +75,7 @@ const panels: Array<PanelData> = [
 		label: "Заявки бух.",
 		isActive: false,
 		panel: shallowRef(AccountantCardBidPanel),
-		access: Access.FACBid,
+		access: Access.AccountantCardBid,
 	},
 	{
 		id: 9,
