@@ -81,7 +81,9 @@ async def create_bid_by_in_schema(bid_in: BidInSchema):
         documents=[],
         fac_state=ApprovalStatus.pending_approval,
         cc_state=ApprovalStatus.pending,
-        paralegal_state=ApprovalStatus.pending,
+        paralegal_state=ApprovalStatus.pending
+        if bid_in.payment_type == "card"
+        else ApprovalStatus.skipped,
         kru_state=ApprovalStatus.pending,
         owner_state=ApprovalStatus.skipped
         if int(bid_in.amount) <= 30000
