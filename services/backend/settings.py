@@ -85,6 +85,7 @@ class Settings(BaseSettings):
 
     date_format: str = "%d.%m.%Y"
     date_time_format: str = "%d.%m.%Y %H:%M:%S"
+    time_format: str = "%H:%M:%S"
 
 
 @lru_cache

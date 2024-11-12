@@ -8,3 +8,8 @@ class ShowLoginCallbackData(CallbackData, prefix="pers_cab"):
     service: Optional[str] = None
     inventory_number: Optional[str] = None
     department: Optional[str] = None
+
+
+class ShowWorkTimeCallbackData(CallbackData, prefix="pers_cab"):
+    end_point: str
+    id: int

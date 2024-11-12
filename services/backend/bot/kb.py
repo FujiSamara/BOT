@@ -495,9 +495,13 @@ set_per_cab_department_button = InlineKeyboardButton(
     callback_data="set_per_cab_department",
 )
 
-get_menu_changing_form_buttom = InlineKeyboardButton(
+get_menu_changing_form_button = InlineKeyboardButton(
     text="Сменить меню",
-    callback_data="get_menu_changing_form_buttom",
+    callback_data="get_menu_changing_form_button",
+)
+
+get_per_cab_worktimes_button = InlineKeyboardButton(
+    text="Смены", callback_data="get_per_cab_worktimes_button"
 )
 # endregion
 
