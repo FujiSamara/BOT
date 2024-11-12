@@ -19,7 +19,7 @@ settings_bid_menu_button = InlineKeyboardButton(
 )
 
 create_bid_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_create_bid_menu"
+    text="Заявки на оплату платежей", callback_data="get_create_bid_menu"
 )
 
 
@@ -31,25 +31,25 @@ bid_create_pending_button = InlineKeyboardButton(
 )
 
 fac_cc_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_fac_menu"
+    text="Заявки на согласования платежей", callback_data="get_fac_menu"
 )
 kru_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_kru_menu"
+    text="Заявки на согласования платежей", callback_data="get_kru_menu"
 )
 owner_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_owner_menu"
+    text="Заявки на согласования платежей", callback_data="get_owner_menu"
 )
 accountant_card_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_accountant_card_menu"
+    text="Заявки на согласования платежей", callback_data="get_accountant_card_menu"
 )
 accountant_cash_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_accountant_cash_menu"
+    text="Заявки на согласования платежей", callback_data="get_accountant_cash_menu"
 )
 teller_card_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_teller_card_menu"
+    text="Заявки на согласования платежей", callback_data="get_teller_card_menu"
 )
 teller_cash_menu_button = InlineKeyboardButton(
-    text="Согласование платежей", callback_data="get_teller_cash_menu"
+    text="Заявки на согласования платежей", callback_data="get_teller_cash_menu"
 )
 
 

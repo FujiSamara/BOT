@@ -89,6 +89,13 @@ async def get_user(
     """Validates user permissions.
     Returns instance of `User` if user has enough permissions for `security scopes`,
     throw `HTTPException` with `401` status code otherwise."""
+    required_all_scopes: list[str] = [
+        scope for scope in security_scopes.scopes if "|" not in scope
+    ]
+    required_any_scopes_groups: list[list[str]] = [
+        scope.split("|") for scope in security_scopes.scopes if "|" in scope
+    ]
+
     if security_scopes.scopes:
         authenticate_value = f"Bearer scope='{security_scopes.scope_str}'"
     else:
@@ -134,8 +141,24 @@ async def get_user(
             scopes=token_data.scopes,
         )
 
-    for scope in security_scopes.scopes:
-        if scope not in token_data.scopes and "admin" not in token_data.scopes:
+    # For & scopes.
+    if (
+        required_all_scopes
+        and not all(scope in token_data.scopes for scope in required_all_scopes)
+        and "admin" not in token_data.scopes
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": authenticate_value},
+        )
+
+    # For | scopes.
+    for any_group in required_any_scopes_groups:
+        if (
+            not any(scope in token_data.scopes for scope in any_group)
+            and "admin" not in token_data.scopes
+        ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not enough permissions",
