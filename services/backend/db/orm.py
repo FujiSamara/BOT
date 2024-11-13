@@ -1388,7 +1388,7 @@ def close_request(
 
 
 def get_count_req_in_departments(condition) -> list[str]:
-    """"""
+    """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
         raw_tech_reqs = (
             s.execute(
