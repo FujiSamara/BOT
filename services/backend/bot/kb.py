@@ -486,12 +486,12 @@ get_per_cab_mat_vals_button = InlineKeyboardButton(
 )
 
 get_per_cab_dismissal_button = InlineKeyboardButton(  # issues 176
-    text="Заявление на увольнение",
+    text="Заявления",
     callback_data="get_per_cab_dismissal",
 )
 
 set_per_cab_department_button = InlineKeyboardButton(
-    text="Сменить предприятие",
+    text="Смена предприятия",
     callback_data="set_per_cab_department",
 )
 
