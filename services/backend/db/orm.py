@@ -1387,26 +1387,32 @@ def close_request(
         return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
-def get_count_req_in_departments(condition) -> list[str]:
+def get_count_req_in_departments(
+    state: ApprovalStatus, worker_id: int
+) -> tuple[str, int]:
     """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        raw_tech_reqs = (
-            s.execute(
-                select(
-                    TechnicalRequest,
+        match state:
+            case ApprovalStatus.pending:
+                condition = and_(
+                    TechnicalRequest.repairman_id == worker_id,
+                    TechnicalRequest.state == state,
                 )
-                .filter(
-                    condition,
+            case ApprovalStatus.pending_approval:
+                condition = and_(
+                    TechnicalRequest.territorial_manager_id == worker_id,
+                    TechnicalRequest.state == state,
                 )
-                .order_by(TechnicalRequest.department_id)
+        departments_ids_counts = s.execute(
+            select(Department.name, func.count(TechnicalRequest.id))
+            .join(Department)
+            .filter(
+                condition,
             )
-            .scalars()
-            .all()
-        )
-        return [
-            TechnicalRequestSchema.model_validate(raw_tech_req).department.name
-            for raw_tech_req in raw_tech_reqs
-        ]
+            .group_by(Department.name)
+            .order_by(Department.name)
+        ).all()
+        return departments_ids_counts
 
 
 # endregion

@@ -239,12 +239,14 @@ async def handle_department(
 def department_names_with_count(
     state: ApprovalStatus, tg_id: int, department_names: list[str]
 ):
-    count_reqs = get_count_req_in_departments(state=ApprovalStatus.pending, tg_id=tg_id)
-    for key, department_name in enumerate(department_names):
-        if department_name in count_reqs.keys():
-            department_names[key] = f"{count_reqs[department_name]} {department_name}"
-        else:
-            department_names[key] = f"0 {department_name}"
+    request_count = get_count_req_in_departments(state=state, tg_id=tg_id)
+    out_department_names = []
 
-    department_names.sort(reverse=True)
-    return department_names
+    for department_name, count in request_count:
+        out_department_names.append(f"{count} {department_name}")
+        department_names.remove(department_name)
+    for department_name in department_names:
+        out_department_names.append(f"0 {department_name}")
+
+    out_department_names.sort(reverse=True)
+    return out_department_names

@@ -650,7 +650,7 @@ def close_request(
     return tg_id
 
 
-def get_count_req_in_departments(state: ApprovalStatus, tg_id: int) -> dict[str, int]:
+def get_count_req_in_departments(state: ApprovalStatus, tg_id: int) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
         logging.getLogger("uvicorn.error").error(
@@ -658,20 +658,5 @@ def get_count_req_in_departments(state: ApprovalStatus, tg_id: int) -> dict[str,
         )
     else:
         worker_id = worker_id[0].id
-    match state:
-        case ApprovalStatus.pending:
-            condition = and_(
-                TechnicalRequest.repairman_id == worker_id,
-                TechnicalRequest.state == state,
-            )
-        case ApprovalStatus.pending_approval:
-            condition = and_(
-                TechnicalRequest.territorial_manager_id == worker_id,
-                TechnicalRequest.state == state,
-            )
 
-    department_names = orm.get_count_req_in_departments(condition)
-    department_counts = {}
-    for department_name in set(department_names):
-        department_counts[department_name] = department_names.count(department_name)
-    return department_counts
+    return orm.get_count_req_in_departments(state, worker_id)
