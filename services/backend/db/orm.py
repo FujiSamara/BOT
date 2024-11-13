@@ -1497,27 +1497,22 @@ def get_worktime_photo(id: int) -> str:
         ).scalar_one()
 
 
-def get_open_today_worktimes(worker_id: int) -> list[WorkTimeSchema]:
+def get_open_today_worktimes(worker_id: int) -> WorkTimeSchema | None:
     with session.begin() as s:
-        raw_worktimes = (
-            s.execute(
-                select(WorkTime)
-                .filter(
-                    and_(
-                        WorkTime.worker_id == worker_id,
-                        WorkTime.work_end == null(),
-                        WorkTime.work_begin != null(),
-                    )
+        raw_worktime = s.execute(
+            select(WorkTime)
+            .filter(
+                and_(
+                    WorkTime.worker_id == worker_id,
+                    WorkTime.work_end == null(),
+                    WorkTime.day == datetime.now().date(),
                 )
-                .order_by(WorkTime.id.desc())
             )
-            .scalars()
-            .all()
-        )
-        return [
-            WorkTimeSchema.model_validate(raw_worktime)
-            for raw_worktime in raw_worktimes
-        ]
+            .order_by(WorkTime.id.desc())
+        ).scalar_one_or_none()
+        if raw_worktime is not None:
+            return WorkTimeSchema.model_validate(raw_worktime)
+        return None
 
 
 def get_worktime_for_worker_per_month_with_duration(
@@ -1571,7 +1566,7 @@ def get_last_completed_worktimes_by_tg_id(
                         WorkTime.day != null(),
                     )
                 )
-                .order_by(WorkTime.id.desc())
+                .order_by(WorkTime.day.desc())
             )
             .scalars()
             .all()

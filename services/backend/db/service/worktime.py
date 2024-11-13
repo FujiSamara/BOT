@@ -163,10 +163,7 @@ def get_worktime_photo_by_id(id: int) -> BytesIO:
 
 def get_open_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     """Return last open WorkTimeSchema | None by worker id"""
-    worktimes = orm.get_open_today_worktimes(worker_id=worker_id)
-    if len(worktimes) > 0:
-        return worktimes[0]
-    return None
+    return orm.get_open_today_worktimes(worker_id=worker_id)
 
 
 def get_sum_hours_in_month(worker_id) -> int:
