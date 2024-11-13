@@ -121,6 +121,8 @@ from db.service.technical_request import (
     update_technical_request_from_repairman,
     update_technical_request_from_territorial_manager,
     update_technical_request_problem,
+    get_departments_names_for_chief_technician,
+    get_count_req_in_departments,
 )
 from db.service.worker_bid import (
     create_worker_bid,
@@ -230,6 +232,8 @@ __all__ = [
     "get_technical_problem_names",
     "get_technical_problems",
     "get_technical_request_by_id",
+    "get_departments_names_for_chief_technician",
+    "get_count_req_in_departments",
     "get_work_time_record_by_id",
     "get_work_time_records_by_day_and_department",
     "get_worker_bid_by_id",

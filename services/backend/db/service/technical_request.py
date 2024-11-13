@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import null
+from sqlalchemy import null, or_, and_
 import db.orm as orm
 from db.models import (
     Department,
@@ -577,6 +577,14 @@ def get_departments_names_for_territorial_manager(
     )
 
 
+def get_departments_names_for_chief_technician(
+    telegram_id: int,
+) -> list[str]:
+    return _get_departments_names_for_employee(
+        telegram_id=telegram_id, worker_column=Department.chief_technician_id
+    )
+
+
 def get_all_active_requests_in_department_for_chief_technician(
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
@@ -640,3 +648,30 @@ def close_request(
         )
 
     return tg_id
+
+
+def get_count_req_in_departments(state: ApprovalStatus, tg_id: int) -> dict[str, int]:
+    worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if len(worker_id) == 0:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id: {tg_id} was"
+        )
+    else:
+        worker_id = worker_id[0].id
+    match state:
+        case ApprovalStatus.pending:
+            condition = and_(
+                TechnicalRequest.repairman_id == worker_id,
+                TechnicalRequest.state == state,
+            )
+        case ApprovalStatus.pending_approval:
+            condition = and_(
+                TechnicalRequest.territorial_manager_id == worker_id,
+                TechnicalRequest.state == state,
+            )
+
+    department_names = orm.get_count_req_in_departments(condition)
+    department_counts = {}
+    for department_name in set(department_names):
+        department_counts[department_name] = department_names.count(department_name)
+    return department_counts

@@ -1387,6 +1387,28 @@ def close_request(
         return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
+def get_count_req_in_departments(condition) -> list[str]:
+    """"""
+    with session.begin() as s:
+        raw_tech_reqs = (
+            s.execute(
+                select(
+                    TechnicalRequest,
+                )
+                .filter(
+                    condition,
+                )
+                .order_by(TechnicalRequest.department_id)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            TechnicalRequestSchema.model_validate(raw_tech_req).department.name
+            for raw_tech_req in raw_tech_reqs
+        ]
+
+
 # endregion
 
 
@@ -2087,7 +2109,6 @@ def get_companys(cols_vals: dict[Any, Any]) -> list[CompanySchema]:
     with session.begin() as s:
         q = select(Company)
         for col, val in cols_vals.items():
-            print(col, val)
             q = q.filter(col == val)
         companys = s.execute(q).scalars().all()
         return [CompanySchema.model_validate(company) for company in companys]

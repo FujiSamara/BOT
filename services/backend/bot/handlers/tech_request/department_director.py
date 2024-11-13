@@ -35,7 +35,11 @@ from db.service import (
     get_technical_problem_names,
     update_tech_request_executor,
     update_technical_request_problem,
+    get_count_req_in_departments,
 )
+
+from db.models import ApprovalStatus
+
 
 router = Router(name="technical_request_department_director")
 
@@ -61,6 +65,13 @@ async def show_tech_req_menu_ms(message: Message):
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
     department_names = get_departments_names()
+
+    count_reqs = get_count_req_in_departments(
+        state=ApprovalStatus.pending_approval, tg_id=callback.message.chat.id
+    )
+    for key, department_name in enumerate(department_names):
+        if department_name in count_reqs.keys():
+            department_names[key] = f"{count_reqs[department_name]} {department_name}"
     department_names.sort()
 
     await try_delete_message(callback.message)
@@ -73,10 +84,19 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
 @router.message(DepartmentDirectorRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
+    department_names = get_departments_names()
+
+    count_reqs = get_count_req_in_departments(
+        state=ApprovalStatus.pending_approval, tg_id=message.chat.id
+    )
+    for key, department_name in enumerate(department_names):
+        if department_name in count_reqs.keys():
+            department_names[key] = f"{count_reqs[department_name]} {department_name}"
+
     if await handle_department(
         message=message,
         state=state,
-        departments_names=get_departments_names(),
+        departments_names=department_names,
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
