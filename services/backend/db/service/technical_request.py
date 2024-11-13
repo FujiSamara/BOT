@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlalchemy import null, and_
+from sqlalchemy import null
 import db.orm as orm
 from db.models import (
     Department,
