@@ -91,7 +91,7 @@ async def get_personal_data(message: CallbackQuery | Message):
 @router.callback_query(F.data == get_per_cab_logins_button.callback_data)
 async def get_logins_pers_cab(callback: CallbackQuery):
     await try_edit_or_answer(
-        text=hbold("Доступы"),
+        text=hbold(get_per_cab_logins_button.text),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=utils.get_logins_btns(callback.message.chat.id)
