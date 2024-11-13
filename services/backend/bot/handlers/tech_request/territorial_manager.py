@@ -14,7 +14,11 @@ from bot.states import (
     TerritorialManagerRequestForm,
 )
 
-from bot.handlers.tech_request.utils import handle_department, show_form
+from bot.handlers.tech_request.utils import (
+    handle_department,
+    show_form,
+    department_names_with_count,
+)
 from bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from bot.handlers.tech_request import kb as tech_kb
 from bot.handlers.utils import (
@@ -29,7 +33,6 @@ from db.service import (
     get_all_waiting_technical_requests_for_territorial_manager,
     get_departments_names_for_territorial_manager,
     update_technical_request_from_territorial_manager,
-    get_count_req_in_departments,
 )
 from db.models import ApprovalStatus
 
@@ -56,16 +59,13 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.tm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TerritorialManagerRequestForm.department)
-    department_names = get_departments_names_for_territorial_manager(
-        callback.message.chat.id
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=callback.message.chat.id,
+        department_names=get_departments_names_for_territorial_manager(
+            callback.message.chat.id
+        ),
     )
-    count_reqs = get_count_req_in_departments(
-        state=ApprovalStatus.pending_approval, tg_id=callback.message.chat.id
-    )
-    for key, department_name in enumerate(department_names):
-        if department_name in count_reqs.keys():
-            department_names[key] = f"{count_reqs[department_name]} {department_name}"
-    department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -77,13 +77,12 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
 @router.message(TerritorialManagerRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
-    department_names = get_departments_names_for_territorial_manager(message.chat.id)
-    count_reqs = get_count_req_in_departments(
-        state=ApprovalStatus.pending_approval, tg_id=message.chat.id
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=message.chat.id,
+        department_names=get_departments_names_for_territorial_manager(message.chat.id),
     )
-    for key, department_name in enumerate(department_names):
-        if department_name in count_reqs.keys():
-            department_names[key] = f"{count_reqs[department_name]} {department_name}"
+
     if await handle_department(
         message=message,
         state=state,
