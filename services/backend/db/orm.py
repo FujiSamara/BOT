@@ -1566,7 +1566,10 @@ def get_sum_duration_for_worker_in_month(
                 WorkTime.worker_id == worker_id,
             )
         ).scalar()
-        return round(hours, 1)
+        if hours is not None:
+            return round(hours, 1)
+        else:
+            return 0
 
 
 def get_last_closed_worktimes_by_tg_id(
