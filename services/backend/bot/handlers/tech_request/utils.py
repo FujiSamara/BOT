@@ -15,7 +15,7 @@ from aiogram.utils.markdown import hbold
 from bot import text
 
 from db.models import ApprovalStatus
-from db.service import get_technical_request_by_id
+from db.service import get_technical_request_by_id, get_request_count_in_departments
 
 from bot.handlers.utils import (
     try_delete_message,
@@ -221,17 +221,32 @@ async def handle_department(
         return True
     else:
         if message.text not in departments_names:
-            departments_names.sort()
             msg = await message.answer(
                 text=text.format_err,
                 reply_markup=create_reply_keyboard(text.back, *departments_names),
             )
             await state.update_data(msg=msg)
             return
-
-        await state.update_data(department_name=message.text)
+        department_name = " ".join(message.text.split(" ")[1:])
+        await state.update_data(department_name=department_name)
         await message.answer(
-            text=hbold(f"Производство: {message.text}"),
+            text=hbold(f"Производство: {department_name}"),
             reply_markup=reply_markup,
         )
         await state.set_state(Base.none)
+
+
+def department_names_with_count(
+    state: ApprovalStatus, tg_id: int, department_names: list[str]
+):
+    request_count = get_request_count_in_departments(state=state, tg_id=tg_id)
+    out_department_names = []
+
+    for department_name, count in request_count:
+        out_department_names.append(f"{count} {department_name}")
+        department_names.remove(department_name)
+    for department_name in department_names:
+        out_department_names.append(f"0 {department_name}")
+
+    out_department_names.sort(reverse=True)
+    return out_department_names

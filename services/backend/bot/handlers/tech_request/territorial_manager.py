@@ -8,14 +8,17 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from db.models import ApprovalStatus
 from bot import text, kb
 from bot.states import (
     Base,
     TerritorialManagerRequestForm,
 )
 
-from bot.handlers.tech_request.utils import handle_department, show_form
+from bot.handlers.tech_request.utils import (
+    handle_department,
+    show_form,
+    department_names_with_count,
+)
 from bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from bot.handlers.tech_request import kb as tech_kb
 from bot.handlers.utils import (
@@ -31,6 +34,7 @@ from db.service import (
     get_departments_names_for_territorial_manager,
     update_technical_request_from_territorial_manager,
 )
+from db.models import ApprovalStatus
 
 router = Router(name="technical_request_territorial_manager")
 
@@ -55,10 +59,13 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.tm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TerritorialManagerRequestForm.department)
-    department_names = get_departments_names_for_territorial_manager(
-        callback.message.chat.id
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=callback.message.chat.id,
+        department_names=get_departments_names_for_territorial_manager(
+            callback.message.chat.id
+        ),
     )
-    department_names.sort()
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -70,12 +77,16 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
 @router.message(TerritorialManagerRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=message.chat.id,
+        department_names=get_departments_names_for_territorial_manager(message.chat.id),
+    )
+
     if await handle_department(
         message=message,
         state=state,
-        departments_names=get_departments_names_for_territorial_manager(
-            message.chat.id
-        ),
+        departments_names=department_names,
         reply_markup=tech_kb.tm_menu_markup,
     ):
         await show_tech_req_menu_ms(message)

@@ -14,7 +14,11 @@ from bot.states import (
     DepartmentDirectorRequestForm,
 )
 
-from bot.handlers.tech_request.utils import handle_department, show_form
+from bot.handlers.tech_request.utils import (
+    handle_department,
+    show_form,
+    department_names_with_count,
+)
 from bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from bot.handlers.tech_request import kb as tech_kb
 from bot.handlers.utils import (
@@ -36,6 +40,9 @@ from db.service import (
     update_tech_request_executor,
     update_technical_request_problem,
 )
+
+from db.models import ApprovalStatus
+
 
 router = Router(name="technical_request_department_director")
 
@@ -60,8 +67,11 @@ async def show_tech_req_menu_ms(message: Message):
 @router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
-    department_names = get_departments_names()
-    department_names.sort()
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=callback.message.chat.id,
+        department_names=get_departments_names(callback.message.chat.id),
+    )
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -73,10 +83,16 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
 @router.message(DepartmentDirectorRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending_approval,
+        tg_id=message.chat.id,
+        department_names=get_departments_names(message.chat.id),
+    )
+
     if await handle_department(
         message=message,
         state=state,
-        departments_names=get_departments_names(),
+        departments_names=department_names,
         reply_markup=tech_kb.dd_menu_markup,
     ):
         await show_tech_req_menu_ms(message)

@@ -577,6 +577,14 @@ def get_departments_names_for_territorial_manager(
     )
 
 
+def get_departments_names_for_chief_technician(
+    telegram_id: int,
+) -> list[str]:
+    return _get_departments_names_for_employee(
+        telegram_id=telegram_id, worker_column=Department.chief_technician_id
+    )
+
+
 def get_all_active_requests_in_department_for_chief_technician(
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
@@ -640,3 +648,17 @@ def close_request(
         )
 
     return tg_id
+
+
+def get_request_count_in_departments(
+    state: ApprovalStatus, tg_id: int
+) -> tuple[str, int]:
+    worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if len(worker_id) == 0:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id: {tg_id} not found"
+        )
+    else:
+        worker_id = worker_id[0].id
+
+    return orm.get_count_req_in_departments(state, worker_id)

@@ -24,6 +24,7 @@ from bot.handlers.utils import (
 from bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
+    department_names_with_count,
 )
 
 from db.service import (
@@ -33,13 +34,13 @@ from db.service import (
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,
     get_all_active_requests_in_department_for_chief_technician,
-    get_departments_names_for_repairman,
+    get_departments_names_for_chief_technician,
     get_groups_names,
     get_technical_request_by_id,
     update_tech_request_executor,
     update_technical_request_from_repairman,
 )
-
+from db.models import ApprovalStatus
 
 router = Router(name="technical_request_chief_technician")
 
@@ -64,8 +65,13 @@ async def show_tech_req_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.ct_change_department_button.callback_data)
 async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(ChiefTechnicianTechnicalRequestForm.department)
-    department_names = get_departments_names_for_repairman(callback.message.chat.id)
-    department_names.sort()
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending,
+        tg_id=callback.message.chat.id,
+        department_names=get_departments_names_for_chief_technician(
+            callback.message.chat.id
+        ),
+    )
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите производство:"),
@@ -79,7 +85,13 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments_names=get_departments_names_for_repairman(message.chat.id),
+        departments_names=department_names_with_count(
+            state=ApprovalStatus.pending,
+            tg_id=message.chat.id,
+            department_names=get_departments_names_for_chief_technician(
+                message.chat.id
+            ),
+        ),
         reply_markup=tech_kb.ct_menu_markup,
     ):
         await show_tech_req_format_ms(message)
