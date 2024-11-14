@@ -20,8 +20,8 @@ from db.models import (
     AccountLogins,
     Subordination,
     MaterialValues,
-    WorkerFingerprints,
-    FingerprintAttempts,
+    WorkerFingerprint,
+    FingerprintAttempt,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileOutSchema
@@ -767,7 +767,7 @@ class SubordinationView(ModelView, model=Subordination):
     }
 
 
-class WorkerFingerprintsView(ModelView, model=WorkerFingerprints):
+class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     name = "Отпечатки рабочих"
     name_plural = "Отпечатки рабочих"
 
@@ -776,29 +776,29 @@ class WorkerFingerprintsView(ModelView, model=WorkerFingerprints):
     can_export = False
 
     column_list = [
-        WorkerFingerprints.id,
-        WorkerFingerprints.worker_id,
-        WorkerFingerprints.department_id,
-        WorkerFingerprints.department_hex,
-        WorkerFingerprints.cell_number,
-        WorkerFingerprints.rfid_card,
+        WorkerFingerprint.id,
+        WorkerFingerprint.worker_id,
+        WorkerFingerprint.department_id,
+        WorkerFingerprint.department_hex,
+        WorkerFingerprint.cell_number,
+        WorkerFingerprint.rfid_card,
     ]
 
     column_sortable_list = [
-        WorkerFingerprints.id,
-        WorkerFingerprints.worker_id,
+        WorkerFingerprint.id,
+        WorkerFingerprint.worker_id,
     ]
 
     column_labels = {
-        WorkerFingerprints.worker_id: "Работник",
-        WorkerFingerprints.department_id: "Департамент",
-        WorkerFingerprints.department_hex: "Номер СУКД устройства",
-        WorkerFingerprints.cell_number: "Номер ячейки",
-        WorkerFingerprints.rfid_card: "РФИД карты",
+        WorkerFingerprint.worker_id: "Работник",
+        WorkerFingerprint.department_id: "Департамент",
+        WorkerFingerprint.department_hex: "Номер СУКД устройства",
+        WorkerFingerprint.cell_number: "Номер ячейки",
+        WorkerFingerprint.rfid_card: "РФИД карты",
     }
 
 
-class FingerprintAttemptsView(ModelView, model=FingerprintAttempts):
+class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
     name = "Попытки авторизаций на СКУДЕ"
     name_plural = "Попытки авторизаций на СКУДЕ"
 
@@ -807,19 +807,19 @@ class FingerprintAttemptsView(ModelView, model=FingerprintAttempts):
     can_export = False
 
     column_list = [
-        FingerprintAttempts.id,
-        FingerprintAttempts.worker_finger_or_card,
-        FingerprintAttempts.department,
-        FingerprintAttempts.event_dttm,
+        FingerprintAttempt.id,
+        FingerprintAttempt.worker_finger_or_card,
+        FingerprintAttempt.department,
+        FingerprintAttempt.event_dttm,
     ]
 
     column_sortable_list = [
-        FingerprintAttempts.id,
-        FingerprintAttempts.event_dttm,
+        FingerprintAttempt.id,
+        FingerprintAttempt.event_dttm,
     ]
 
     column_labels = {
-        FingerprintAttempts.worker_finger_or_card: "Карта или номер ячейки",
-        FingerprintAttempts.department: "Номер устройства СКУД",
-        FingerprintAttempts.event_dttm: "Время авторизации",
+        FingerprintAttempt.worker_finger_or_card: "Карта или номер ячейки",
+        FingerprintAttempt.department: "Номер устройства СКУД",
+        FingerprintAttempt.event_dttm: "Время авторизации",
     }

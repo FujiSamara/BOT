@@ -1024,8 +1024,8 @@ class EquipmentIncident(Base):
     ]
 
 
-class WorkerFingerprints(Base):
-    __tablename__ = "workers_fingerprint"
+class WorkerFingerprint(Base):
+    __tablename__ = "workers_fingerprints"
 
     worker_id: Mapped[int] = mapped_column(nullable=False)
     department_id: Mapped[int] = mapped_column(nullable=False)
@@ -1034,8 +1034,8 @@ class WorkerFingerprints(Base):
     rfid_card: Mapped[str] = mapped_column(nullable=True)
 
 
-class FingerprintAttempts(Base):
-    __tablename__ = "fingerprint_attempt"
+class FingerprintAttempt(Base):
+    __tablename__ = "fingerprint_attempts"
 
     worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
     department: Mapped[str] = mapped_column(nullable=False)
