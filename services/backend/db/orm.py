@@ -1558,18 +1558,14 @@ def get_sum_duration_for_worker_in_month(
             month=begin_date.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=1)
 
-        hours = (
-            s.execute(
-                select(func.sum(WorkTime.work_duration)).filter(
-                    WorkTime.work_duration != null(),
-                    WorkTime.work_begin >= begin_date,
-                    WorkTime.work_begin <= end_date,
-                    WorkTime.worker_id == worker_id,
-                )
+        hours = s.execute(
+            select(func.sum(WorkTime.work_duration)).filter(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin >= begin_date,
+                WorkTime.work_begin <= end_date,
+                WorkTime.worker_id == worker_id,
             )
-            .scalar()
-            .first()
-        )
+        ).scalar()
         return round(hours, 1)
 
 
