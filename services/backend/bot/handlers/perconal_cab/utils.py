@@ -11,6 +11,8 @@ from db.service import (
     get_worker_by_telegram_id,
     get_material_values,
     get_logins,
+    get_openned_today_worktime,
+    get_sum_hours_in_month,
 )
 from db.schemas import WorkerSchema
 from bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
@@ -38,8 +40,11 @@ def menu_text(worker: WorkerSchema) -> str:
         )
     else:
         text += "Не найден"
-    text += f"\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}\n"
+    worktime = get_openned_today_worktime(worker.id)
+    text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}
 
+Открытая смена: {worktime.work_begin.strftime(get_settings().time_format) if worktime is not None else 'Отсутствует'}
+Отработанно за месяц: {get_sum_hours_in_month(worker_id=worker.id)} ч."""
     return text
 
 
@@ -58,7 +63,7 @@ def get_material_values_text(callback_data: ShowLoginCallbackData) -> str:
     return text
 
 
-def get_logins_bts(telegram_id: int) -> list[InlineKeyboardButton]:
+def get_logins_btns(telegram_id: int) -> list[InlineKeyboardButton]:
     try:
         logins = [
             data
@@ -87,7 +92,7 @@ def get_logins_bts(telegram_id: int) -> list[InlineKeyboardButton]:
     return buttons
 
 
-def get_mat_vals_bts(telegram_id: int) -> list[InlineKeyboardButton]:
+def get_mat_vals_btns(telegram_id: int) -> list[InlineKeyboardButton]:
     material_values = get_material_values(telegram_id=telegram_id)
     buttons: list[InlineKeyboardButton] = []
     for material_value in material_values:

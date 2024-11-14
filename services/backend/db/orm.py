@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from db.query import QueryBuilder, XLSXExporter
@@ -1523,6 +1523,84 @@ def get_worktime_photo(id: int) -> str:
         return s.execute(
             select(WorkTime.photo_b64).filter(WorkTime.id == id)
         ).scalar_one()
+
+
+def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
+    with session.begin() as s:
+        raw_worktime = (
+            s.execute(
+                select(WorkTime)
+                .filter(
+                    and_(
+                        WorkTime.worker_id == worker_id,
+                        WorkTime.work_end == null(),
+                        WorkTime.day == datetime.now().date(),
+                    )
+                )
+                .order_by(WorkTime.id.desc())
+            )
+            .scalars()
+            .first()
+        )
+        if raw_worktime is not None:
+            return WorkTimeSchema.model_validate(raw_worktime)
+        return None
+
+
+def get_sum_duration_for_worker_in_month(
+    worker_id: int,
+) -> float:
+    with session.begin() as s:
+        begin_date = datetime.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
+        end_date = begin_date.replace(
+            month=begin_date.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
+        ) - timedelta(days=1)
+
+        hours = s.execute(
+            select(func.sum(WorkTime.work_duration)).filter(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin >= begin_date,
+                WorkTime.work_begin <= end_date,
+                WorkTime.worker_id == worker_id,
+            )
+        ).scalar()
+        return round(hours, 1)
+
+
+def get_last_closed_worktimes_by_tg_id(
+    tg_id: int, limit: int = 10
+) -> list[WorkTimeSchema] | None:
+    with session.begin() as s:
+        worker_id = get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
+        if worker_id is None:
+            return None
+        worker_id = worker_id.id
+
+        raw_worktimes = (
+            s.execute(
+                select(WorkTime)
+                .filter(
+                    and_(
+                        WorkTime.worker_id == worker_id,
+                        WorkTime.work_end != null(),
+                        WorkTime.work_begin != null(),
+                        WorkTime.work_duration != null(),
+                        WorkTime.day != null(),
+                    )
+                )
+                .order_by(WorkTime.day.desc())
+                .limit(limit)
+            )
+            .scalars()
+            .all()
+        )
+
+        return [
+            WorkTimeSchema.model_validate(raw_worktime)
+            for raw_worktime in raw_worktimes
+        ]
 
 
 # endregion

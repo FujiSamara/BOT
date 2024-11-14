@@ -20,6 +20,8 @@ from db.service import (
     get_worker_by_telegram_id,
     get_departments_names,
     set_department_for_worker,
+    get_last_completed_worktimes_by_tg_id,
+    get_work_time_record_by_id,
 )
 from db.schemas import WorkerSchema
 from db.models import FujiScope
@@ -30,11 +32,12 @@ from bot.kb import (
     get_per_cab_mat_vals_button,
     set_per_cab_department_button,
     get_per_cab_dismissal_button,
-    get_menu_changing_form_buttom,
+    get_menu_changing_form_button,
+    get_per_cab_worktimes_button,
     main_menu_button,
     create_reply_keyboard,
 )
-from bot import text
+from bot import text as text_imp
 from bot.states import PersconalCabinet, Base
 from bot.handlers.utils import (
     try_edit_or_answer,
@@ -44,7 +47,10 @@ from bot.handlers.utils import (
     download_file,
 )
 from bot.handlers.perconal_cab import utils
-from bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
+from bot.handlers.perconal_cab.schemas import (
+    ShowLoginCallbackData,
+    ShowWorkTimeCallbackData,
+)
 
 
 router = Router(name="personal_cabinet")
@@ -60,6 +66,7 @@ async def get_personal_data(message: CallbackQuery | Message):
         [get_per_cab_logins_button],
         [get_per_cab_mat_vals_button],
         [get_per_cab_dismissal_button],
+        [get_per_cab_worktimes_button],
     ]
     if (
         FujiScope.bot_bid_teller_cash in worker.post.scopes
@@ -68,7 +75,7 @@ async def get_personal_data(message: CallbackQuery | Message):
         buttons.append([set_per_cab_department_button])
 
     if FujiScope.admin in worker.post.scopes:
-        buttons.append([get_menu_changing_form_buttom])
+        buttons.append([get_menu_changing_form_button])
 
     buttons.append([main_menu_button])
 
@@ -84,10 +91,10 @@ async def get_personal_data(message: CallbackQuery | Message):
 @router.callback_query(F.data == get_per_cab_logins_button.callback_data)
 async def get_logins_pers_cab(callback: CallbackQuery):
     await try_edit_or_answer(
-        text=hbold("Доступы"),
+        text=hbold(get_per_cab_logins_button.text),
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
-            inline_keyboard=utils.get_logins_bts(callback.message.chat.id)
+            inline_keyboard=utils.get_logins_btns(callback.message.chat.id)
         ),
     )
 
@@ -95,7 +102,7 @@ async def get_logins_pers_cab(callback: CallbackQuery):
 @router.callback_query(ShowLoginCallbackData.filter(F.end_point == "get_per_cab_login"))
 async def show_login(callback: CallbackQuery, callback_data: ShowLoginCallbackData):
     await try_edit_or_answer(
-        text=hbold(text.personal_cabinet_logins_dict[callback_data.service])
+        text=hbold(text_imp.personal_cabinet_logins_dict[callback_data.service])
         + f"\n{callback_data.login}",
         message=callback.message,
     )
@@ -110,7 +117,7 @@ async def get_mat_vals(callback: CallbackQuery):
         message=callback.message,
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
-                *utils.get_mat_vals_bts(callback.message.chat.id),
+                *utils.get_mat_vals_btns(callback.message.chat.id),
                 [get_personal_cabinet_button],
             ]
         ),
@@ -140,7 +147,7 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите предприятие:"),
-        reply_markup=create_reply_keyboard(text.back, *department_names),
+        reply_markup=create_reply_keyboard(text_imp.back, *department_names),
     )
     await state.update_data(msg=msg)
 
@@ -154,15 +161,15 @@ async def set_department(message: Message, state: FSMContext):
         await try_delete_message(msg)
     await try_delete_message(message)
 
-    if message.text == text.back:
+    if message.text == text_imp.back:
         await state.set_state(Base.none)
         await get_personal_data(message)
     else:
         if message.text not in departments_names:
             departments_names.sort()
             msg = await message.answer(
-                text=text.format_err,
-                reply_markup=create_reply_keyboard(text.back, *departments_names),
+                text=text_imp.format_err,
+                reply_markup=create_reply_keyboard(text_imp.back, *departments_names),
             )
             await state.update_data(msg=msg)
 
@@ -187,7 +194,7 @@ async def set_department(message: Message, state: FSMContext):
 
 
 # Documents
-@router.callback_query(F.data == get_menu_changing_form_buttom.callback_data)
+@router.callback_query(F.data == get_menu_changing_form_button.callback_data)
 async def get_menu_changing_form(callback: CallbackQuery, state: FSMContext):
     await handle_documents_form(callback.message, state, PersconalCabinet.menu)
 
@@ -220,4 +227,71 @@ async def set_documents(message: Message, state: FSMContext):
 
     await handle_documents(
         message, state, "menu_document", clear_state_with_success_caller, condition
+    )
+
+
+# Worktimes
+
+
+@router.callback_query(F.data == get_per_cab_worktimes_button.callback_data)
+async def get_per_cab_worktimes(callback: CallbackQuery):
+    worktimes = get_last_completed_worktimes_by_tg_id(callback.message.chat.id)
+    buttons: list[list[InlineKeyboardButton]] = []
+    for worktime in worktimes:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=f"{worktime.day.strftime(get_settings().date_format)} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}",
+                    callback_data=ShowWorkTimeCallbackData(
+                        end_point="per_cab_worktime",
+                        id=worktime.id,
+                    ).pack(),
+                )
+            ]
+        )
+    worker = get_worker_by_telegram_id(callback.message.chat.id)
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold(get_per_cab_worktimes_button.text)
+        + f"\n{worker.l_name} {worker.f_name}",
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                *buttons,
+                [get_personal_cabinet_button],
+            ]
+        ),
+    )
+
+
+@router.callback_query(
+    ShowWorkTimeCallbackData.filter(F.end_point == "per_cab_worktime")
+)
+async def show_worktime(
+    callback: CallbackQuery, callback_data: ShowWorkTimeCallbackData
+):
+    worktime = get_work_time_record_by_id(callback_data.id)
+    text = f"{hbold('Смена от: ', worktime.day.strftime(get_settings().date_format))}\n"
+    text += (
+        f"{hbold('Сотрудник: ')} {worktime.worker.l_name} {worktime.worker.f_name}\n"
+    )
+    text += f"{hbold('Производство:')} {worktime.department.name if worktime.department is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Начало смены:')} {worktime.work_begin.strftime(get_settings().time_format) if worktime.work_begin is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Конец смены:')} {worktime.work_end.strftime(get_settings().time_format) if worktime.work_end is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Отработанно часов:')} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}\n"
+    text += f"{hbold('Оценка:')} {worktime.rating if worktime.rating is not None else 'Отсутствует'}\n"
+    if worktime.fine is not None:
+        text += f"{hbold('Штраф:')} {worktime.fine} р."
+    await try_edit_or_answer(
+        message=callback.message,
+        text=text,
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text=text_imp.back,
+                        callback_data=get_per_cab_worktimes_button.callback_data,
+                    )
+                ]
+            ]
+        ),
     )
