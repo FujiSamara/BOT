@@ -1051,3 +1051,21 @@ class EquipmentIncident(Base):
             mapped_column(Enum(IncidentStage)),
         ]
     ]
+
+
+class WorkerFingerprints(Base):
+    __tablename__ = "workers_fingerprint"
+
+    worker_id: Mapped[int] = mapped_column(nullable=False)
+    department_id: Mapped[int] = mapped_column(nullable=False)
+    department_hex: Mapped[str] = mapped_column(nullable=False)
+    cell_number: Mapped[int] = mapped_column(nullable=True)
+    rfid_card: Mapped[str] = mapped_column(nullable=True)
+
+
+class FingerprintAttemps(Base):
+    __tablename__ = "fingerprint_attempt"
+
+    worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
+    department: Mapped[str] = mapped_column(nullable=False)
+    event_dttm: Mapped[datetime.datetime] = mapped_column(nullable=False)
