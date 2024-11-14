@@ -1521,7 +1521,7 @@ def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
 
 def get_sum_duration_for_worker_in_month(
     worker_id: int,
-) -> int:
+) -> float:
     with session.begin() as s:
         begin_date = datetime.now().replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
@@ -1539,7 +1539,7 @@ def get_sum_duration_for_worker_in_month(
                     WorkTime.worker_id == worker_id,
                 )
             )
-            .scalars()
+            .scalar()
             .first()
         )
         return round(hours, 1)

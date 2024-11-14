@@ -166,7 +166,7 @@ def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     return orm.get_openned_today_worktime(worker_id=worker_id)
 
 
-def get_sum_hours_in_month(worker_id) -> int:
+def get_sum_hours_in_month(worker_id) -> float:
     """Return sum of work_durration in current month"""
     return orm.get_sum_duration_for_worker_in_month(worker_id=worker_id)
 
