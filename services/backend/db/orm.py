@@ -1387,6 +1387,34 @@ def close_request(
         return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
 
 
+def get_count_req_in_departments(
+    state: ApprovalStatus, worker_id: int
+) -> tuple[str, int]:
+    """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
+    with session.begin() as s:
+        match state:
+            case ApprovalStatus.pending:
+                condition = and_(
+                    TechnicalRequest.repairman_id == worker_id,
+                    TechnicalRequest.state == state,
+                )
+            case ApprovalStatus.pending_approval:
+                condition = and_(
+                    TechnicalRequest.territorial_manager_id == worker_id,
+                    TechnicalRequest.state == state,
+                )
+        departments_ids_counts = s.execute(
+            select(Department.name, func.count(TechnicalRequest.id))
+            .join(Department)
+            .filter(
+                condition,
+            )
+            .group_by(Department.name)
+            .order_by(Department.name)
+        ).all()
+        return departments_ids_counts
+
+
 # endregion
 
 
@@ -2087,7 +2115,6 @@ def get_companys(cols_vals: dict[Any, Any]) -> list[CompanySchema]:
     with session.begin() as s:
         q = select(Company)
         for col, val in cols_vals.items():
-            print(col, val)
             q = q.filter(col == val)
         companys = s.execute(q).scalars().all()
         return [CompanySchema.model_validate(company) for company in companys]

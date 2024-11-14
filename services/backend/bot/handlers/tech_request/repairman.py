@@ -28,6 +28,7 @@ from bot.handlers.utils import (
 from bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
+    department_names_with_count,
 )
 
 
@@ -38,7 +39,7 @@ from db.service import (
     get_departments_names_for_repairman,
     update_technical_request_from_repairman,
 )
-
+from db.models import ApprovalStatus
 
 router = Router(name="technical_request_repairman")
 
@@ -62,8 +63,11 @@ async def show_tech_rec_format_ms(message: Message):
 @router.callback_query(F.data == tech_kb.rm_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(RepairmanTechnicalRequestForm.department)
-    department_names = get_departments_names_for_repairman(callback.message.chat.id)
-    department_names.sort()
+    department_names = department_names_with_count(
+        state=ApprovalStatus.pending,
+        tg_id=callback.message.chat.id,
+        department_names=get_departments_names_for_repairman(callback.message.chat.id),
+    )
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -78,7 +82,11 @@ async def set_department(message: Message, state: FSMContext):
     if await handle_department(
         message=message,
         state=state,
-        departments_names=get_departments_names_for_repairman(message.chat.id),
+        departments_names=department_names_with_count(
+            state=ApprovalStatus.pending,
+            tg_id=message.chat.id,
+            department_names=get_departments_names_for_repairman(message.chat.id),
+        ),
         reply_markup=tech_kb.rm_menu_markup,
     ):
         await show_tech_rec_format_ms(message)
