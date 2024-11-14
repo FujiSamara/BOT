@@ -161,22 +161,18 @@ def get_worktime_photo_by_id(id: int) -> BytesIO:
     return BytesIO(decoded_photo)
 
 
-def get_open_today_worktime(worker_id: int) -> WorkTimeSchema | None:
+def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     """Return last open WorkTimeSchema | None by worker id"""
-    return orm.get_open_today_worktimes(worker_id=worker_id)
+    return orm.get_openned_today_worktime(worker_id=worker_id)
 
 
 def get_sum_hours_in_month(worker_id) -> int:
     """Return sum of work_durration in current month"""
-    worktimes = orm.get_worktime_for_worker_per_month_with_duration(worker_id=worker_id)
-    hours = 0
-    for worktime in worktimes:
-        hours += worktime.work_duration
-    return round(hours, 1)
+    return orm.get_sum_duration_for_worker_in_month(worker_id=worker_id)
 
 
 def get_last_completed_worktimes_by_tg_id(
     tg_id: int, limit: int = 10
 ) -> list[WorkTimeSchema] | None:
     """Return closed WorkTimeSchema's | None"""
-    return orm.get_last_completed_worktimes_by_tg_id(tg_id=tg_id, limit=limit)
+    return orm.get_last_closed_worktimes_by_tg_id(tg_id=tg_id, limit=limit)

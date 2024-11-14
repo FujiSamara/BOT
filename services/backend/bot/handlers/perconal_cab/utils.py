@@ -11,7 +11,7 @@ from db.service import (
     get_worker_by_telegram_id,
     get_material_values,
     get_logins,
-    get_open_today_worktime,
+    get_openned_today_worktime,
     get_sum_hours_in_month,
 )
 from db.schemas import WorkerSchema
@@ -40,7 +40,7 @@ def menu_text(worker: WorkerSchema) -> str:
         )
     else:
         text += "Не найден"
-    worktime = get_open_today_worktime(worker.id)
+    worktime = get_openned_today_worktime(worker.id)
     text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}
 
 Открытая смена: {worktime.work_begin.strftime(get_settings().time_format) if worktime is not None else 'Отсутствует'}

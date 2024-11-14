@@ -1497,27 +1497,31 @@ def get_worktime_photo(id: int) -> str:
         ).scalar_one()
 
 
-def get_open_today_worktimes(worker_id: int) -> WorkTimeSchema | None:
+def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     with session.begin() as s:
-        raw_worktime = s.execute(
-            select(WorkTime)
-            .filter(
-                and_(
-                    WorkTime.worker_id == worker_id,
-                    WorkTime.work_end == null(),
-                    WorkTime.day == datetime.now().date(),
+        raw_worktime = (
+            s.execute(
+                select(WorkTime)
+                .filter(
+                    and_(
+                        WorkTime.worker_id == worker_id,
+                        WorkTime.work_end == null(),
+                        WorkTime.day == datetime.now().date(),
+                    )
                 )
+                .order_by(WorkTime.id.desc())
             )
-            .order_by(WorkTime.id.desc())
-        ).scalar_one_or_none()
+            .scalars()
+            .first()
+        )
         if raw_worktime is not None:
             return WorkTimeSchema.model_validate(raw_worktime)
         return None
 
 
-def get_worktime_for_worker_per_month_with_duration(
+def get_sum_duration_for_worker_in_month(
     worker_id: int,
-) -> list[WorkTimeSchema]:
+) -> int:
     with session.begin() as s:
         begin_date = datetime.now().replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
@@ -1526,26 +1530,22 @@ def get_worktime_for_worker_per_month_with_duration(
             month=begin_date.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
         ) - timedelta(days=1)
 
-        raw_worktimes = (
+        hours = (
             s.execute(
-                select(WorkTime).filter(
-                    and_(
-                        WorkTime.work_duration != null(),
-                        WorkTime.work_begin >= begin_date,
-                        WorkTime.work_begin <= end_date,
-                    )
+                select(func.sum(WorkTime.work_duration)).filter(
+                    WorkTime.work_duration != null(),
+                    WorkTime.work_begin >= begin_date,
+                    WorkTime.work_begin <= end_date,
+                    WorkTime.worker_id == worker_id,
                 )
             )
             .scalars()
-            .all()
+            .first()
         )
-        return [
-            WorkTimeSchema.model_validate(raw_worktime)
-            for raw_worktime in raw_worktimes
-        ]
+        return round(hours, 1)
 
 
-def get_last_completed_worktimes_by_tg_id(
+def get_last_closed_worktimes_by_tg_id(
     tg_id: int, limit: int = 10
 ) -> list[WorkTimeSchema] | None:
     with session.begin() as s:
@@ -1567,10 +1567,11 @@ def get_last_completed_worktimes_by_tg_id(
                     )
                 )
                 .order_by(WorkTime.day.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
-        )[:limit]
+        )
 
         return [
             WorkTimeSchema.model_validate(raw_worktime)
