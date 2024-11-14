@@ -21,7 +21,7 @@ from db.models import (
     Subordination,
     MaterialValues,
     WorkerFingerprints,
-    FingerprintAttempts
+    FingerprintAttempts,
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileOutSchema
@@ -132,7 +132,7 @@ class DepartmentView(ModelView, model=Department):
         Department.technician: "Техник",
         Department.electrician: "Электрик",
         Department.it_repairman: "IT ремотник",
-        Department.fingerprint_device_hex: "Номер СКУД устройства"
+        Department.fingerprint_device_hex: "Номер СКУД устройства",
     }
 
     form_ajax_refs = {

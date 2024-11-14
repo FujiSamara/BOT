@@ -12,7 +12,7 @@ from admin.schemas import (
     MaterialValuesView,
     SubordinationView,
     WorkerFingerprintsView,
-    FingerprintAttemptsView
+    FingerprintAttemptsView,
 )
 
 
