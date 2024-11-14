@@ -20,6 +20,8 @@ from db.models import (
     AccountLogins,
     Subordination,
     MaterialValues,
+    WorkerFingerprints,
+    FingerprintAttempts
 )
 from bot.kb import payment_type_dict, approval_status_dict
 from db.schemas import FileOutSchema
@@ -64,8 +66,6 @@ class PostView(ModelView, model=Post):
 class CompanyView(ModelView, model=Company):
     column_list = [Company.id, Company.name]
     column_details_exclude_list = [
-        Company.biosmart_strid,
-        Company.bs_import,
         Company.work_times,
     ]
     column_searchable_list = [Company.name]
@@ -78,7 +78,6 @@ class CompanyView(ModelView, model=Company):
         Company.name: "Название",
         Company.departments: "Производства",
         Company.workers: "Работники",
-        Company.bs_import_error: "Ошибка импорта из биосмарт",
     }
 
 
@@ -87,10 +86,7 @@ class DepartmentView(ModelView, model=Department):
     column_searchable_list = [Department.name]
     column_details_exclude_list = [
         Department.company_id,
-        Department.bs_import,
-        Department.bs_import_error_text,
         Department.work_times,
-        Department.biosmart_strid,
         Department.workers_bids,
         Department.bids,
         Department.delivery_manager_id,
@@ -108,11 +104,7 @@ class DepartmentView(ModelView, model=Department):
     form_excluded_columns = [
         Department.workers,
         Department.bids,
-        Department.bs_import,
-        Department.bs_import_error_text,
         Department.work_times,
-        Department.bs_import_error,
-        Department.biosmart_strid,
         Department.workers_bids,
         Department.technical_requests,
         Department.budget_records,
@@ -127,7 +119,6 @@ class DepartmentView(ModelView, model=Department):
         Department.workers: "Работники",
         Department.bids: "Заявки",
         Department.company: "Компания",
-        Department.bs_import_error: "Ошибка импорта из биосмарт",
         Department.type: "Формат",
         Department.city: "Город",
         Department.opening_date: "Дата открытия",
@@ -141,6 +132,7 @@ class DepartmentView(ModelView, model=Department):
         Department.technician: "Техник",
         Department.electrician: "Электрик",
         Department.it_repairman: "IT ремотник",
+        Department.fingerprint_device_hex: "Номер СКУД устройства"
     }
 
     form_ajax_refs = {
@@ -250,7 +242,6 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number: "Номер телефона",
         Worker.company: "Компания",
         Worker.telegram_id: "ID телеграмм",
-        Worker.bs_import_error: "Ошибка импорта из биосмарт",
         Worker.employment_date: "Дата приема",
         Worker.dismissal_date: "Дата увольнения",
         Worker.medical_records_availability: "Наличие медицинской книжки",
@@ -773,4 +764,62 @@ class SubordinationView(ModelView, model=Subordination):
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },
+    }
+
+
+class WorkerFingerprintsView(ModelView, model=WorkerFingerprints):
+    name = "Отпечатки рабочих"
+    name_plural = "Отпечатки рабочих"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerFingerprints.id,
+        WorkerFingerprints.worker_id,
+        WorkerFingerprints.department_id,
+        WorkerFingerprints.department_hex,
+        WorkerFingerprints.cell_number,
+        WorkerFingerprints.rfid_card,
+    ]
+
+    column_sortable_list = [
+        WorkerFingerprints.id,
+        WorkerFingerprints.worker_id,
+    ]
+
+    column_labels = {
+        WorkerFingerprints.worker_id: "Работник",
+        WorkerFingerprints.department_id: "Департамент",
+        WorkerFingerprints.department_hex: "Номер СУКД устройства",
+        WorkerFingerprints.cell_number: "Номер ячейки",
+        WorkerFingerprints.rfid_card: "РФИД карты",
+    }
+
+
+class FingerprintAttemptsView(ModelView, model=FingerprintAttempts):
+    name = "Попытки авторизаций на СКУДЕ"
+    name_plural = "Попытки авторизаций на СКУДЕ"
+
+    can_create = False
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        FingerprintAttempts.id,
+        FingerprintAttempts.worker_finger_or_card,
+        FingerprintAttempts.department,
+        FingerprintAttempts.event_dttm,
+    ]
+
+    column_sortable_list = [
+        FingerprintAttempts.id,
+        FingerprintAttempts.event_dttm,
+    ]
+
+    column_labels = {
+        FingerprintAttempts.worker_finger_or_card: "Карта или номер ячейки",
+        FingerprintAttempts.department: "Номер устройства СКУД",
+        FingerprintAttempts.event_dttm: "Время авторизации",
     }

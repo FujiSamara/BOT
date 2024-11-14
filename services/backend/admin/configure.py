@@ -11,6 +11,8 @@ from admin.schemas import (
     AccountLoginsView,
     MaterialValuesView,
     SubordinationView,
+    WorkerFingerprintsView,
+    FingerprintAttemptsView
 )
 
 
@@ -32,3 +34,5 @@ def configure(admin: FujiAdmin):
     admin.add_view(AccountLoginsView)
     admin.add_view(MaterialValuesView)
     admin.add_view(SubordinationView)
+    admin.add_view(WorkerFingerprintsView)
+    admin.add_view(FingerprintAttemptsView)

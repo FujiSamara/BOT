@@ -33,6 +33,7 @@ def upgrade() -> None:
     )
     op.create_table(
         "workers_fingerprint",
+        sa.Column("id", sa.Integer()),
         sa.Column("worker_id", sa.Integer(), nullable=False),
         sa.Column("department_id", sa.Integer(), nullable=False),
         sa.Column("department_hex", sa.VARCHAR(length=8), nullable=False),
@@ -50,9 +51,10 @@ def upgrade() -> None:
     )
     op.create_table(
         "fingerprint_attempt",
+        sa.Column("id", sa.Integer()),
         sa.Column("worker_finger_or_card", sa.VARCHAR(length=12), nullable=False),
         sa.Column("department", sa.VARCHAR(length=8), nullable=False),
-        sa.Column("event_dttm", sa.DATETIME, nullable=False),
+        sa.Column("event_dttm", sa.TIMESTAMP, nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
 
