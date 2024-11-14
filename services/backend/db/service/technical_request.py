@@ -650,11 +650,13 @@ def close_request(
     return tg_id
 
 
-def get_count_req_in_departments(state: ApprovalStatus, tg_id: int) -> tuple[str, int]:
+def get_request_count_in_departments(
+    state: ApprovalStatus, tg_id: int
+) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
         logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {tg_id} was"
+            f"Worker with telegram id: {tg_id} not found"
         )
     else:
         worker_id = worker_id[0].id

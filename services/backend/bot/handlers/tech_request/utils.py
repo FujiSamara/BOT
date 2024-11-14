@@ -15,7 +15,7 @@ from aiogram.utils.markdown import hbold
 from bot import text
 
 from db.models import ApprovalStatus
-from db.service import get_technical_request_by_id, get_count_req_in_departments
+from db.service import get_technical_request_by_id, get_request_count_in_departments
 
 from bot.handlers.utils import (
     try_delete_message,
@@ -239,7 +239,7 @@ async def handle_department(
 def department_names_with_count(
     state: ApprovalStatus, tg_id: int, department_names: list[str]
 ):
-    request_count = get_count_req_in_departments(state=state, tg_id=tg_id)
+    request_count = get_request_count_in_departments(state=state, tg_id=tg_id)
     out_department_names = []
 
     for department_name, count in request_count:
