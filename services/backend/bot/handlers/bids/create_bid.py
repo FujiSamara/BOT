@@ -43,6 +43,7 @@ from bot.handlers.bids.utils import (
 )
 from bot.handlers.utils import (
     try_delete_message,
+    try_edit_or_answer,
     try_edit_message,
     download_file,
     handle_documents_form,
@@ -420,8 +421,10 @@ async def get_documents(
     BidCallbackData.filter(F.endpoint_name == "create_bid_info"),
 )
 async def get_bid(
-    callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+    message: CallbackQuery | Message, callback_data: BidCallbackData, state: FSMContext
 ):
+    if isinstance(message, CallbackQuery):
+        message = message.message
     bid_id = callback_data.id
     bid = get_bid_by_id(bid_id)
     data = await state.get_data()
@@ -433,7 +436,7 @@ async def get_bid(
     caption = get_full_bid_info(bid)
 
     await try_edit_message(
-        message=callback.message,
+        message=message,
         text=caption,
         reply_markup=create_inline_keyboard(
             bid_create_history_button,
@@ -516,26 +519,31 @@ async def get_bids_pending(callback: CallbackQuery):
 
 # Search bid
 @router.callback_query(F.data == bid_create_search_button.callback_data)
-async def get_bid_id(callback: CallbackQuery, state: FSMContext):
+async def get_bid_id(message: CallbackQuery | Message, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
     await state.set_state(BidCreating.search)
-    msg = await callback.message.answer(
+    await try_delete_message(message)
+
+    msg = await message.answer(
         text=hbold("Введите номер заявки:"),
         reply_markup=create_reply_keyboard(back),
     )
-    await state.update_data(msg=msg, callback=callback)
+    await state.update_data(msg=msg)
 
 
 @router.message(BidCreating.search)
 async def find_bid(message: Message, state: FSMContext):
+    from bot.handlers.bids.main import get_menu
+
     data = await state.get_data()
     await try_delete_message(data["msg"])
     await try_delete_message(message)
 
     await state.set_state(Base.none)
-    callback: CallbackQuery = data["callback"]
 
     if message.text == back:
-        await get_settings_form(callback, state)
+        await get_menu(message, state)
     else:
         try:
             msg_text = int(message.text)
@@ -544,20 +552,20 @@ async def find_bid(message: Message, state: FSMContext):
             if bid is None:
                 msg = await message.answer(text=hbold("Заявка не найдена!"))
                 await asyncio.sleep(2)
-                await get_bid_id(callback, state)
+                await get_bid_id(message, state)
 
             elif not bid:
                 msg = await message.answer(
                     text=hbold("У Вас нет доступа к этой заявке!")
                 )
                 await asyncio.sleep(2)
-                await get_bid_id(callback, state)
+                await get_bid_id(message, state)
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)
 
                 await get_bid(
-                    callback,
+                    message,
                     BidCallbackData(
                         id=bid.id,
                         mode=BidViewMode.state_only,
@@ -571,6 +579,6 @@ async def find_bid(message: Message, state: FSMContext):
             msg = await message.answer(hbold(format_err))
 
             await asyncio.sleep(2)
-            await get_bid_id(callback, state)
+            await get_bid_id(message, state)
         finally:
             await msg.delete()

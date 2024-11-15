@@ -125,18 +125,24 @@ class CoordinationFactory:
             )
         router.callback_query.register(self.search_bid, F.data == f"{name}_search")
 
-    async def get_menu(self, callback: CallbackQuery):
+    async def get_menu(self, message: CallbackQuery | Message, state: FSMContext):
+        if isinstance(message, CallbackQuery):
+            message = message.message
         keyboard = create_inline_keyboard(
             self.pending_button,
             self.history_button,
             self.find_bid_button,
             main_menu_button,
         )
-        await try_edit_or_answer(
-            message=callback.message,
-            text=hbold(accountant_cash_menu_button.text),
+
+        message = await try_edit_or_answer(
+            message=message,
+            text=hbold("Заявки на согласования платежей"),
             reply_markup=keyboard,
+            return_message=True,
         )
+
+        await state.update_data(msg=message)
 
     async def decline_bid(
         self, callback: CallbackQuery, callback_data: BidActionData, state: FSMContext
@@ -266,8 +272,13 @@ class CoordinationFactory:
         )
 
     async def get_bid(
-        self, callback: CallbackQuery, callback_data: BidCallbackData, state: FSMContext
+        self,
+        message: CallbackQuery | Message,
+        callback_data: BidCallbackData,
+        state: FSMContext,
     ):
+        if isinstance(message, CallbackQuery):
+            message = message.message
         bid = get_bid_by_id(callback_data.id)
         data = await state.get_data()
         if "msgs_for_delete" in data:
@@ -314,7 +325,7 @@ class CoordinationFactory:
                     )
                 )
         await try_edit_or_answer(
-            message=callback.message,
+            message=message,
             text=caption,
             reply_markup=create_inline_keyboard(*buttons),
         )
@@ -368,17 +379,23 @@ class CoordinationFactory:
 
         await callback.message.answer("История согласования:", reply_markup=keyboard)
 
-    async def search_bid(self, callback: CallbackQuery, state: FSMContext):
+    async def search_bid(self, message: CallbackQuery | Message, state: FSMContext):
+        if isinstance(message, CallbackQuery):
+            message = message.message
         await state.set_state(BidCoordination.search)
         await state.update_data(
             get_bid=self.get_bid,
             get_menu=self.get_menu,
             search_bid=self.search_bid,
             state_column=self.state_column,
-            callback=callback,
+            message=message,
         )
 
-        msg = await callback.message.answer(
+        data = await state.get_data()
+        await try_delete_message(data["msg"])
+
+        msg = await message.answer(
+            message=message,
             text=hbold("Введите номер заявки:"),
             reply_markup=create_reply_keyboard(text.back),
         )
@@ -534,15 +551,14 @@ async def set_paying_comment(message: Message, state: FSMContext):
 @router.message(BidCoordination.search)
 async def set_bid(message: Message, state: FSMContext):
     data = await state.get_data()
-    await try_delete_message(data["msg"])
     await try_delete_message(message)
+    await try_delete_message(data["msg"])
 
     await state.set_state(Base.none)
-    callback: CallbackQuery = data["callback"]
     get_menu: Callable = data["get_menu"]
 
     if message.text == text.back:
-        await get_menu(callback)
+        await get_menu(message, state)
     else:
         try:
             msg_text = int(message.text)
@@ -552,21 +568,23 @@ async def set_bid(message: Message, state: FSMContext):
             if bid is None:
                 msg = await message.answer(text=hbold("Заявка не найдена!"))
                 await asyncio.sleep(2)
-                await get_menu(callback)
+                await get_menu(message, state)
+                await msg.delete()
 
             elif not bid:
                 msg = await message.answer(
                     text=hbold("У Вас нет доступа к этой заявке!")
                 )
                 await asyncio.sleep(2)
-                await get_menu(callback)
+                await get_menu(message, state)
+                await msg.delete()
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)
 
                 get_bid: Callable = data["get_bid"]
                 await get_bid(
-                    callback,
+                    message,
                     BidCallbackData(
                         id=bid.id,
                         mode=BidViewMode.full_with_approve
@@ -577,14 +595,15 @@ async def set_bid(message: Message, state: FSMContext):
                     ),
                     state,
                 )
+                await msg.delete()
+
         except ValueError:
             await try_delete_message(message)
             msg = await message.answer(hbold(text.format_err))
 
             search_bid: Callable = data["search_bid"]
             await asyncio.sleep(2)
-            await search_bid(callback, state)
-        finally:
+            await search_bid(message, state)
             await msg.delete()
 
 

@@ -24,6 +24,7 @@ import logging
 from datetime import datetime
 from fastapi import UploadFile
 from typing import Any, Optional
+from sqlalchemy.exc import DataError
 
 # In right order
 states = [
@@ -700,4 +701,7 @@ def get_accountant_card_bid_count(
 
 
 def find_bid_for_worker(bid_id: int, tg_id: int) -> BidSchema | bool | None:
-    return orm.find_bid_for_worker(bid_id, tg_id)
+    try:
+        return orm.find_bid_for_worker(bid_id, tg_id)
+    except DataError:
+        return None

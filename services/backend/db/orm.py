@@ -2340,17 +2340,16 @@ def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
         if (
             FujiScope.bot_bid_fac_cc in worker.post.scopes
         ):  #    FujiScope.bot_bid_fac_cc
-            for state in [["fac_state", "fac_id"], ["cc_state", "cc_id"]]:
-                if getattr(
-                    bid, state[0]
-                ) != ApprovalStatus.skipped and worker.id == getattr(
-                    bid.expenditure, state[1]
+            for state in [["fac_state", "fac"], ["cc_state", "cc"]]:
+                if (
+                    getattr(bid, state[0]) != ApprovalStatus.skipped
+                    and worker.id == getattr(bid.expenditure, state[1]).id
                 ):
                     return bid
 
-        for scope, state in states:
+        for scope, state in states.items():
             if (
-                getattr(BidSchema, state) != ApprovalStatus.skipped
+                getattr(bid, state) != ApprovalStatus.skipped
                 and scope in worker.post.scopes
             ):
                 return bid
