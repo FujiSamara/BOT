@@ -43,7 +43,6 @@ from bot.handlers.bids.utils import (
 )
 from bot.handlers.utils import (
     try_delete_message,
-    try_edit_or_answer,
     try_edit_message,
     download_file,
     handle_documents_form,
