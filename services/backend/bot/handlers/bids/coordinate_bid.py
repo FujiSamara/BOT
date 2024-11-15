@@ -34,6 +34,7 @@ from db.service import (
     update_bid_state,
     update_bid,
     get_departments_names,
+    find_bid_for_worker,
 )
 from bot.handlers.bids.schemas import (
     BidCallbackData,
@@ -72,6 +73,9 @@ class CoordinationFactory:
         )
         self.history_button = InlineKeyboardButton(
             text="История заявок", callback_data=f"{name}_history"
+        )
+        self.find_bid_button = InlineKeyboardButton(
+            text="Найти заявку", callback_data=f"{name}_search"
         )
         self.approving_endpoint_name = f"{name}_approving"
         self.documents_endpoint_name = f"{name}_documents"
@@ -119,13 +123,16 @@ class CoordinationFactory:
                 BidActionData.filter(F.action == ActionType.declining),
                 BidActionData.filter(F.endpoint_name == self.declining_endpoint_name),
             )
+        router.callback_query.register(self.search_bid, F.data == f"{name}_search")
 
     async def get_menu(self, callback: CallbackQuery):
         keyboard = create_inline_keyboard(
-            self.pending_button, self.history_button, main_menu_button
+            self.pending_button,
+            self.history_button,
+            self.find_bid_button,
+            main_menu_button,
         )
-
-        await try_edit_message(
+        await try_edit_or_answer(
             message=callback.message,
             text=hbold(accountant_cash_menu_button.text),
             reply_markup=keyboard,
@@ -361,6 +368,22 @@ class CoordinationFactory:
 
         await callback.message.answer("История согласования:", reply_markup=keyboard)
 
+    async def search_bid(self, callback: CallbackQuery, state: FSMContext):
+        await state.set_state(BidCoordination.search)
+        await state.update_data(
+            get_bid=self.get_bid,
+            get_menu=self.get_menu,
+            search_bid=self.search_bid,
+            state_column=self.state_column,
+            callback=callback,
+        )
+
+        msg = await callback.message.answer(
+            text=hbold("Введите номер заявки:"),
+            reply_markup=create_reply_keyboard(text.back),
+        )
+        await state.update_data(msg=msg)
+
 
 @router.message(BidCoordination.comment)
 async def set_comment_after_decline(message: Message, state: FSMContext):
@@ -506,6 +529,63 @@ async def set_paying_comment(message: Message, state: FSMContext):
         await asyncio.sleep(1)
         await try_delete_message(msg)
         await generator(callback)
+
+
+@router.message(BidCoordination.search)
+async def set_bid(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_delete_message(data["msg"])
+    await try_delete_message(message)
+
+    await state.set_state(Base.none)
+    callback: CallbackQuery = data["callback"]
+    get_menu: Callable = data["get_menu"]
+
+    if message.text == text.back:
+        await get_menu(callback)
+    else:
+        try:
+            msg_text = int(message.text)
+            state_column = data["state_column"].name
+            bid = find_bid_for_worker(msg_text, message.chat.id)
+
+            if bid is None:
+                msg = await message.answer(text=hbold("Заявка не найдена!"))
+                await asyncio.sleep(2)
+                await get_menu(callback)
+
+            elif not bid:
+                msg = await message.answer(
+                    text=hbold("У Вас нет доступа к этой заявке!")
+                )
+                await asyncio.sleep(2)
+                await get_menu(callback)
+            else:
+                msg = await message.answer("Успешно!")
+                await asyncio.sleep(1)
+                
+                get_bid: Callable = data["get_bid"]
+                await get_bid(
+                    callback,
+                    BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full_with_approve
+                        if getattr(bid, state_column) == ApprovalStatus.pending_approval
+                        else BidViewMode.full,
+                        type=BidViewType.coordination,
+                        endpoint_name=state_column.split("_state")[0],
+                    ),
+                    state,
+                )
+        except ValueError:
+            await try_delete_message(message)
+            msg = await message.answer(hbold(text.format_err))
+
+            search_bid: Callable = data["search_bid"]
+            await asyncio.sleep(2)
+            await search_bid(callback, state)
+        finally:
+            await msg.delete()
 
 
 def build_coordinations():

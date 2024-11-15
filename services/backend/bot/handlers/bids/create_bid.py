@@ -24,9 +24,10 @@ from bot.kb import (
     InlineKeyboardButton,
     bid_create_history_button,
     bid_create_pending_button,
+    bid_create_search_button,
 )
 
-from bot.text import format_err, payment_types, bid_create_greet
+from bot.text import format_err, payment_types, bid_create_greet, back
 
 from bot.states import BidCreating, Base
 from bot.handlers.bids.schemas import (
@@ -57,6 +58,7 @@ from db.service import (
     get_pending_bids_by_worker_telegram_id,
     get_chapters,
     get_expenditures_names_by_chapter,
+    find_bid_for_worker,
 )
 from db.models import ApprovalStatus
 
@@ -510,3 +512,65 @@ async def get_bids_pending(callback: CallbackQuery):
     )
     await try_delete_message(callback.message)
     await callback.message.answer("Ожидающие заявки:", reply_markup=keyboard)
+
+
+# Search bid
+@router.callback_query(F.data == bid_create_search_button.callback_data)
+async def get_bid_id(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(BidCreating.search)
+    msg = await callback.message.answer(
+        text=hbold("Введите номер заявки:"),
+        reply_markup=create_reply_keyboard(back),
+    )
+    await state.update_data(msg=msg, callback=callback)
+
+
+@router.message(BidCreating.search)
+async def find_bid(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await try_delete_message(data["msg"])
+    await try_delete_message(message)
+
+    await state.set_state(Base.none)
+    callback: CallbackQuery = data["callback"]
+
+    if message.text == back:
+        await get_settings_form(callback, state)
+    else:
+        try:
+            msg_text = int(message.text)
+            bid = find_bid_for_worker(msg_text, message.chat.id)
+
+            if bid is None:
+                msg = await message.answer(text=hbold("Заявка не найдена!"))
+                await asyncio.sleep(2)
+                await get_bid_id(callback, state)
+
+            elif not bid:
+                msg = await message.answer(
+                    text=hbold("У Вас нет доступа к этой заявке!")
+                )
+                await asyncio.sleep(2)
+                await get_bid_id(callback, state)
+            else:
+                msg = await message.answer("Успешно!")
+                await asyncio.sleep(1)
+
+                await get_bid(
+                    callback,
+                    BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.state_only,
+                        type=BidViewType.creation,
+                        endpoint_name="create_bid_info",
+                    ),
+                    state,
+                )
+        except ValueError:
+            await try_delete_message(message)
+            msg = await message.answer(hbold(format_err))
+
+            await asyncio.sleep(2)
+            await get_bid_id(callback, state)
+        finally:
+            await msg.delete()

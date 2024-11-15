@@ -29,6 +29,9 @@ bid_create_history_button = InlineKeyboardButton(
 bid_create_pending_button = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_create_pending_bid"
 )
+bid_create_search_button = InlineKeyboardButton(
+    text="Найти заявку", callback_data="get_create_search_bid"
+)
 
 fac_cc_menu_button = InlineKeyboardButton(
     text="Заявки на согласования платежей", callback_data="get_fac_menu"
@@ -81,6 +84,7 @@ bid_menu = InlineKeyboardMarkup(
         [settings_bid_menu_button],
         [bid_create_pending_button],
         [bid_create_history_button],
+        [bid_create_search_button],
         [main_menu_button],
     ]
 )

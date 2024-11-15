@@ -707,3 +707,7 @@ def get_accountant_card_bid_count(
 ) -> int:
     """Returns all bid records in database with `query_schema`."""
     return get_bid_count(query_schema)
+
+
+def find_bid_for_worker(bid_id: int, tg_id: int) -> BidSchema | bool | None:
+    return orm.find_bid_for_worker(bid_id, tg_id)

@@ -397,6 +397,7 @@ def get_specified_history_bids(pending_column) -> list[BidSchema]:
                     pending_column == ApprovalStatus.approved,
                 )
             )
+            .order_by(Bid.id.desc())
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
@@ -423,6 +424,7 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
                     Bid.paying_department_id == department_id,
                 )
             )
+            .order_by(Bid.id.desc())
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
@@ -2315,3 +2317,52 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(coordinator.coordinator)
             for coordinator in coordinators
         ]
+
+
+def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
+    states = {
+        FujiScope.bot_bid_kru: "kru_state",
+        FujiScope.bot_bid_owner: "owner_state",
+        FujiScope.bot_bid_accountant_card: "accountant_card_state",
+        FujiScope.bot_bid_accountant_cash: "accountant_cash_state",
+        FujiScope.bot_bid_teller_card: "teller_card_state",
+    }
+    with session.begin() as s:
+        worker = get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
+        raw_bid = s.execute(select(Bid).where(Bid.id == bid_id)).scalar()
+        if raw_bid is None:
+            return None
+        bid = BidSchema.model_validate(raw_bid)
+
+        if FujiScope.admin in worker.post.scopes:
+            return bid
+
+        if (
+            FujiScope.bot_bid_fac_cc in worker.post.scopes
+        ):  #    FujiScope.bot_bid_fac_cc
+            for state in [["fac_state", "fac_id"], ["cc_state", "cc_id"]]:
+                if getattr(
+                    bid, state[0]
+                ) != ApprovalStatus.skipped and worker.id == getattr(
+                    bid.expenditure, state[1]
+                ):
+                    return bid
+
+        for scope, state in states:
+            if (
+                getattr(BidSchema, state) != ApprovalStatus.skipped
+                and scope in worker.post.scopes
+            ):
+                return bid
+
+        if (
+            FujiScope.bot_bid_teller_cash in worker.post.scopes
+            and bid.paying_department.id == worker.department.id
+            and bid.teller_cash_state != ApprovalStatus.skipped
+        ):  #        FujiScope.bot_bid_teller_cash
+            return bid
+
+        if worker.id == bid.worker.id:  #    FujiScope.bot_bid_create
+            return bid
+
+        return False
