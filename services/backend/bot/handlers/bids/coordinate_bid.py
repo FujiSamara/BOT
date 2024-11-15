@@ -563,7 +563,7 @@ async def set_bid(message: Message, state: FSMContext):
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)
-                
+
                 get_bid: Callable = data["get_bid"]
                 await get_bid(
                     callback,
