@@ -172,7 +172,9 @@ def get_sum_hours_in_month(worker_id) -> float:
 
 
 def get_last_completed_worktimes_by_tg_id(
-    tg_id: int, limit: int = 10
+    tg_id: int, limit: int = 10, offset: int = 0
 ) -> list[WorkTimeSchema] | None:
     """Return closed WorkTimeSchema's | None"""
-    return orm.get_last_closed_worktimes_by_tg_id(tg_id=tg_id, limit=limit)
+    return orm.get_last_completed_worktimes_by_tg_id(
+        tg_id=tg_id, limit=limit, offset=offset
+    )

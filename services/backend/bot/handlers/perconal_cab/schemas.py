@@ -12,4 +12,5 @@ class ShowLoginCallbackData(CallbackData, prefix="pers_cab"):
 
 class ShowWorkTimeCallbackData(CallbackData, prefix="pers_cab"):
     end_point: str
-    id: int
+    id: int | None = None
+    page: int | None = None
