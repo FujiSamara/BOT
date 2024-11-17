@@ -514,50 +514,48 @@ def get_bid_records() -> list[BidOutSchema]:
     return [bid_to_out_bid(bid) for bid in orm.get_bids()]
 
 
+def apply_coordinator_filter(
+    query_schema: QuerySchema, phone: int, coordinator: str | list[str], group: int = 0
+) -> None:
+    if isinstance(coordinator, str):
+        coordinator = [coordinator]
+
+    for val in coordinator:
+        query_schema.filter_query.append(
+            FilterSchema(
+                column="expenditure",
+                value="",
+                dependencies=[
+                    FilterSchema(
+                        column=val,
+                        value="",
+                        dependencies=[FilterSchema(column="phone_number", value=phone)],
+                    )
+                ],
+                groups=[group],
+            ),
+        )
+
+
 def get_coordinator_bid_records_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
     phone: int,
-    coordinator: str,
+    coordinator: str | list[str],
+    group: int = 0,
 ) -> list[BidOutSchema]:
     """Returns all coordinator bid records in database."""
-    query_schema.filter_query.append(
-        FilterSchema(
-            column="expenditure",
-            value="",
-            dependencies=[
-                FilterSchema(
-                    column=coordinator,
-                    value="",
-                    dependencies=[FilterSchema(column="phone_number", value=phone)],
-                )
-            ],
-        )
-    )
+    apply_coordinator_filter(query_schema, phone, coordinator, group)
 
     return get_bid_record_at_page(page, records_per_page, query_schema)
 
 
 def get_coordinator_bid_count(
-    query_schema: QuerySchema,
-    phone: int,
-    coordinator: str,
+    query_schema: QuerySchema, phone: int, coordinator: str | list[str], group: int = 0
 ) -> int:
     """Returns all coordinator bid records in database."""
-    query_schema.filter_query.append(
-        FilterSchema(
-            column="expenditure",
-            value="",
-            dependencies=[
-                FilterSchema(
-                    column=coordinator,
-                    value="",
-                    dependencies=[FilterSchema(column="phone_number", value=phone)],
-                )
-            ],
-        ),
-    )
+    apply_coordinator_filter(query_schema, phone, coordinator, group)
 
     return get_bid_count(query_schema)
 
@@ -658,23 +656,13 @@ def export_bid_records(
 def export_coordintator_bid_records(
     query_schema: QuerySchema,
     phone: int,
-    coordinator: str,
+    coordinator: str | list[str],
+    group: int = 0,
 ) -> BytesIO:
     """Returns xlsx file with bids records filtered by `query_schema`
     for specified `coordinator`."""
-    query_schema.filter_query.append(
-        FilterSchema(
-            column="expenditure",
-            value="",
-            dependencies=[
-                FilterSchema(
-                    column=coordinator,
-                    value="",
-                    dependencies=[FilterSchema(column="phone_number", value=phone)],
-                )
-            ],
-        )
-    )
+    apply_coordinator_filter(query_schema, phone, coordinator, group)
+
     return export_bid_records(query_schema)
 
 
