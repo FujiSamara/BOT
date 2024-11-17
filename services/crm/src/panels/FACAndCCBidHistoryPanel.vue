@@ -1,7 +1,7 @@
 <template>
 	<div class="bid-content">
 		<div v-show="!editingElement" class="header-content">
-			<h1>Заявки ЦЗ</h1>
+			<h1>Заявки ЦФО</h1>
 			<PanelTools class="top-tools">
 				<BidExpenditureTool
 					v-model:filters="expenditureFilters"
@@ -34,8 +34,8 @@
 		<PanelTable
 			v-show="!elementViewing"
 			:table="table"
-			:can-delete="false"
 			:can-approve="true"
+			:can-delete="false"
 			:can-reject="true"
 			@click="onRowClicked"
 		></PanelTable>
@@ -72,7 +72,7 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { CCBidTable } from "@/table";
+import { FACAndCCBidHistoryTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -88,7 +88,7 @@ const emit = defineEmits<{
 
 const editingElement = ref(false);
 
-const table = new CCBidTable();
+const table = new FACAndCCBidHistoryTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 

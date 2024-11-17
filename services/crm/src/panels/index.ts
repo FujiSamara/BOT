@@ -1,8 +1,8 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
 import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
-import FACBidPanel from "@/panels/FACBidPanel.vue";
-import CCBidPanel from "@/panels/CCBidPanel.vue";
+import FACAndCCBidPanel from "@/panels/FACAndCCBidPanel.vue";
+import FACAndCCBidHistoryPanel from "@/panels/FACAndCCBidHistoryPanel.vue";
 import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
 import AccountantCardBidPanel from "@/panels/AccountantCardBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
@@ -48,18 +48,18 @@ const panels: Array<PanelData> = [
 	{
 		id: 5,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЦФО",
+		label: "Заявки ЦЗ/ЦФО",
 		isActive: false,
-		panel: shallowRef(FACBidPanel),
-		access: Access.FACBid,
+		panel: shallowRef(FACAndCCBidPanel),
+		access: Access.FAC_CCbid,
 	},
 	{
 		id: 6,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЦЗ",
+		label: "История ЦЗ/ЦФО",
 		isActive: false,
-		panel: shallowRef(CCBidPanel),
-		access: Access.CCBid,
+		panel: shallowRef(FACAndCCBidHistoryPanel),
+		access: Access.FAC_CCbid,
 	},
 	{
 		id: 7,
