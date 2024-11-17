@@ -107,11 +107,11 @@ watch([departmentSearchString, searchString], () => {
 		result.push({
 			column: "department",
 			term: departmentSearchString.value,
-			groups: [0, 1],
+			groups: [0, 1, 2],
 		});
 	}
 
-	if (searchString.value.length > 3) {
+	if (searchString.value.length > 0) {
 		result.push(
 			{
 				column: "worker",
@@ -122,6 +122,11 @@ watch([departmentSearchString, searchString], () => {
 				column: "expenditure",
 				term: searchString.value,
 				groups: [1],
+			},
+			{
+				column: "id",
+				term: searchString.value,
+				groups: [2],
 			},
 		);
 	}

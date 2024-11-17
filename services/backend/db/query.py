@@ -4,7 +4,18 @@ import logging
 from typing import Callable, Type
 import typing
 from abc import ABC
-from sqlalchemy import BinaryExpression, Result, Select, and_, or_, desc, select, func
+from sqlalchemy import (
+    BinaryExpression,
+    Result,
+    Select,
+    and_,
+    or_,
+    desc,
+    select,
+    func,
+    cast,
+    String,
+)
 from sqlalchemy.orm import InstrumentedAttribute, Session
 from pydantic import BaseModel
 from xlsxwriter import Workbook
@@ -291,7 +302,11 @@ class QueryBuilder(Builder):
                     column: InstrumentedAttribute[any] = getattr(
                         model_type, column_name
                     )
-                    search_clause = column.ilike(f"%{term}%")
+
+                    if issubclass(column_type, str):
+                        search_clause = column.ilike(f"%{term}%")
+                    else:
+                        search_clause = cast(column, String).ilike(f"%{term}%")
                 # If column is schema with non implemented search.
                 else:
                     self._warning(
