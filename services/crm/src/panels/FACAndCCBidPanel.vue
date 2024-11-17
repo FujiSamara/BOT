@@ -72,7 +72,7 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { FAC_CCBidTable } from "@/table";
+import { FACAndCCBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 
 const props = defineProps({
@@ -88,7 +88,7 @@ const emit = defineEmits<{
 
 const editingElement = ref(false);
 
-const table = new FAC_CCBidTable();
+const table = new FACAndCCBidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 

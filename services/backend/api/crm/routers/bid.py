@@ -242,6 +242,75 @@ async def reject_fac_cc_bid(
     await reject_coordinator_bid(id, reason, ["fac_state", "cc_state"], coordinator.id)
 
 
+# history section
+@router.post("/fac_cc/history/page/info")
+async def get_fac_cc_bid_history_pages_info(
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
+) -> TalbeInfoSchema:
+    service.apply_bid_status_filter(
+        query,
+        "fac_state",
+        ApprovalStatus.denied,
+        ApprovalStatus.approved,
+        group=1,
+    )
+    service.apply_bid_status_filter(
+        query,
+        "cc_state",
+        ApprovalStatus.denied,
+        ApprovalStatus.approved,
+        group=1,
+    )
+    record_count = service.get_coordinator_bid_count(
+        query, user.username, ["fac", "cc"]
+    )
+    all_record_count = service.get_coordinator_bid_count(
+        service.apply_bid_status_filter(
+            QuerySchema(),
+            "fac_state",
+            ApprovalStatus.pending_approval,
+            ApprovalStatus.approved,
+        ),
+        user.username,
+        ["fac", "cc"],
+    )
+    page_count = (record_count + records_per_page - 1) // records_per_page
+
+    return TalbeInfoSchema(
+        record_count=record_count,
+        page_count=page_count,
+        all_record_count=all_record_count,
+    )
+
+
+@router.post("/fac_cc/history/page/{page}")
+async def get_fac_cc_history_bids(
+    page: int,
+    query: QuerySchema,
+    records_per_page: int = 15,
+    user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
+) -> list[BidOutSchema]:
+    service.apply_bid_status_filter(
+        query,
+        "fac_state",
+        ApprovalStatus.denied,
+        ApprovalStatus.approved,
+        group=1,
+    )
+    service.apply_bid_status_filter(
+        query,
+        "cc_state",
+        ApprovalStatus.denied,
+        ApprovalStatus.approved,
+        group=1,
+    )
+    return service.get_coordinator_bid_records_at_page(
+        page, records_per_page, query, user.username, ["fac", "cc"]
+    )
+
+
 # endregion
 
 
