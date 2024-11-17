@@ -885,26 +885,14 @@ export class BidTable extends Table<BidSchema> {
 	}
 }
 
-export class FACBidTable extends BidTable {
+export class FAC_CCBidTable extends BidTable {
 	constructor() {
 		super({
-			getEndpoint: "/fac",
-			infoEndpoint: "/fac",
-			exportEndpoint: "/fac",
-			approveEndpoint: "/fac",
-			rejectEndpoint: "/fac",
-		});
-	}
-}
-
-export class CCBidTable extends BidTable {
-	constructor() {
-		super({
-			getEndpoint: "/cc",
-			infoEndpoint: "/cc",
-			exportEndpoint: "/cc",
-			approveEndpoint: "/cc",
-			rejectEndpoint: "/cc",
+			getEndpoint: "/fac_cc",
+			infoEndpoint: "/fac_cc",
+			exportEndpoint: "/fac_cc",
+			approveEndpoint: "/fac_cc",
+			rejectEndpoint: "/fac_cc",
 		});
 	}
 }

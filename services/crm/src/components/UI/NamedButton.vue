@@ -36,6 +36,10 @@ export default {
 	user-select: none;
 	transition: 0.5s;
 	-webkit-transition: 0.5s;
+
+	max-width: 80px;
+	white-space: pre-wrap;
+	text-align: center;
 }
 .button-wrapper:hover {
 	transition: 0.5s;
