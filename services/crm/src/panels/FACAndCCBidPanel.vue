@@ -1,7 +1,7 @@
 <template>
 	<div class="bid-content">
 		<div v-show="!editingElement" class="header-content">
-			<h1>Заявки ЦФО</h1>
+			<h1>Заявки на согласование</h1>
 			<PanelTools class="top-tools">
 				<BidExpenditureTool
 					v-model:filters="expenditureFilters"

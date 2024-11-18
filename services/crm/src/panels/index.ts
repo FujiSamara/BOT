@@ -48,7 +48,7 @@ const panels: Array<PanelData> = [
 	{
 		id: 5,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЦЗ/ЦФО",
+		label: "Заявки на соглас.",
 		isActive: false,
 		panel: shallowRef(FACAndCCBidPanel),
 		access: Access.FAC_CCbid,
@@ -56,7 +56,7 @@ const panels: Array<PanelData> = [
 	{
 		id: 6,
 		imageSrc: "/img/bid_logo.svg",
-		label: "История ЦЗ/ЦФО",
+		label: "История соглас.",
 		isActive: false,
 		panel: shallowRef(FACAndCCBidHistoryPanel),
 		access: Access.FAC_CCbid,
