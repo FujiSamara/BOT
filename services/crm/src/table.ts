@@ -109,10 +109,10 @@ interface QuerySchema {
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
-	private _loadedRows: Ref<Array<T>> = ref([]);
+	protected _loadedRows: Ref<Array<T>> = ref([]);
 	protected _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
-	private _newIds: Ref<Array<number>> = ref([]);
+	protected _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
 
 	/**
@@ -809,6 +809,7 @@ export class BidTable extends Table<BidSchema> {
 		approveEndpoint?: string;
 		rejectEndpoint?: string;
 		exportEndpoint?: string;
+		withPendingNotifies?: boolean;
 	}) {
 		super("bid", options);
 
@@ -853,6 +854,23 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("create_date", 12);
 		this._columsOrder.set("close_date", 13);
 		this._columsOrder.set("activity_type", 14);
+
+		if (options?.withPendingNotifies !== false) {
+			this.notifies = computed(() => {
+				let result = 0;
+
+				for (const row of this._loadedRows.value) {
+					if (
+						!row.status.includes("Отказано") &&
+						!row.status.includes("Выплачено")
+					) {
+						result++;
+					}
+				}
+
+				return result;
+			});
+		}
 	}
 
 	protected color(model: BidSchema): string {
@@ -904,6 +922,7 @@ export class FACAndCCBidHistoryTable extends BidTable {
 			exportEndpoint: "/fac_cc/history",
 			approveEndpoint: "/fac_cc/history",
 			rejectEndpoint: "/fac_cc/history",
+			withPendingNotifies: false,
 		});
 	}
 }
@@ -939,6 +958,7 @@ export class MyBidTable extends BidTable {
 			infoEndpoint: "/my",
 			exportEndpoint: "/my",
 			createEndpoint: "",
+			withPendingNotifies: false,
 		});
 	}
 }
@@ -951,6 +971,7 @@ export class ArchiveBidTable extends BidTable {
 			exportEndpoint: "/archive",
 			approveEndpoint: "/archive",
 			rejectEndpoint: "/archive",
+			withPendingNotifies: false,
 		});
 	}
 }
