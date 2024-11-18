@@ -95,19 +95,25 @@ export const useNetworkStore = defineStore("network", {
 			return await handler.catch((error: AxiosError) => {
 				const statusCode = error.response ? error.response.status : null;
 
+				let msg;
+
 				if (statusCode === 401) {
-					router.go(0);
+					msg =
+						"У вас нет доступа к этой панели. " +
+						"Вы можете попробовать обновить страницу, " +
+						"либо обратиться к администратору. \n" +
+						"URL: " +
+						error.config?.url;
 				} else {
-					let msg;
 					if (error.response && (error.response.data as any).detail) {
 						msg = JSON.stringify((error.response.data as any).detail);
 					} else {
 						msg = error.message;
 					}
-
-					this.errors.push(msg);
-					return Promise.reject(error);
 				}
+
+				this.errors.push(msg);
+				return Promise.reject(error);
 			});
 		},
 		async getFile(filename: string): Promise<Uint8Array> {
