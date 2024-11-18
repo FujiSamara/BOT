@@ -809,7 +809,6 @@ export class BidTable extends Table<BidSchema> {
 		approveEndpoint?: string;
 		rejectEndpoint?: string;
 		exportEndpoint?: string;
-		withPendingNotifies?: boolean;
 	}) {
 		super("bid", options);
 
@@ -854,23 +853,6 @@ export class BidTable extends Table<BidSchema> {
 		this._columsOrder.set("create_date", 12);
 		this._columsOrder.set("close_date", 13);
 		this._columsOrder.set("activity_type", 14);
-
-		if (options?.withPendingNotifies !== false) {
-			this.notifies = computed(() => {
-				let result = 0;
-
-				for (const row of this._loadedRows.value) {
-					if (
-						!row.status.includes("Отказано") &&
-						!row.status.includes("Выплачено")
-					) {
-						result++;
-					}
-				}
-
-				return result;
-			});
-		}
 	}
 
 	protected color(model: BidSchema): string {
@@ -913,6 +895,10 @@ export class FACAndCCBidTable extends BidTable {
 			rejectEndpoint: "/fac_cc",
 		});
 	}
+
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
 }
 export class FACAndCCBidHistoryTable extends BidTable {
 	constructor() {
@@ -922,12 +908,11 @@ export class FACAndCCBidHistoryTable extends BidTable {
 			exportEndpoint: "/fac_cc/history",
 			approveEndpoint: "/fac_cc/history",
 			rejectEndpoint: "/fac_cc/history",
-			withPendingNotifies: false,
 		});
 	}
 }
 
-export class CCSupervisorBidTable extends BidTable {
+export class ParalegalBidTable extends BidTable {
 	constructor() {
 		super({
 			getEndpoint: "/paralegal",
@@ -937,6 +922,9 @@ export class CCSupervisorBidTable extends BidTable {
 			rejectEndpoint: "/paralegal",
 		});
 	}
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
 }
 
 export class AccountantCardBidTable extends BidTable {
@@ -949,6 +937,9 @@ export class AccountantCardBidTable extends BidTable {
 			rejectEndpoint: "/accountant_card",
 		});
 	}
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
 }
 
 export class MyBidTable extends BidTable {
@@ -958,7 +949,6 @@ export class MyBidTable extends BidTable {
 			infoEndpoint: "/my",
 			exportEndpoint: "/my",
 			createEndpoint: "",
-			withPendingNotifies: false,
 		});
 	}
 }
@@ -971,7 +961,6 @@ export class ArchiveBidTable extends BidTable {
 			exportEndpoint: "/archive",
 			approveEndpoint: "/archive",
 			rejectEndpoint: "/archive",
-			withPendingNotifies: false,
 		});
 	}
 }
