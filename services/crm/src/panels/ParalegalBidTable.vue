@@ -72,7 +72,7 @@ import {
 	ShallowRef,
 	watch,
 } from "vue";
-import { CCSupervisorBidTable } from "@/table";
+import { ParalegalBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
 import { useBidSearchingHook } from "@/hooks/bidSearchingHook";
 
@@ -89,7 +89,7 @@ const emit = defineEmits<{
 
 const editingElement = ref(false);
 
-const table = new CCSupervisorBidTable();
+const table = new ParalegalBidTable();
 const fromDateString = ref("");
 const toDateString = ref("");
 
