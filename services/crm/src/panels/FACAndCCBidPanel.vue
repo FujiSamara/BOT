@@ -74,6 +74,7 @@ import {
 } from "vue";
 import { FACAndCCBidTable } from "@/table";
 import { BidViewer } from "@/viewer";
+import { useBidSearchingHook } from "@/hooks/bidSearchingHook";
 
 const props = defineProps({
 	id: {
@@ -100,39 +101,7 @@ const viewingIndex: Ref<number> = ref(-1);
 const departmentSearchString = ref("");
 const searchString = ref("");
 
-watch([departmentSearchString, searchString], () => {
-	const result = [];
-
-	if (departmentSearchString.value.length > 3) {
-		result.push({
-			column: "department",
-			term: departmentSearchString.value,
-			groups: [0, 1, 2],
-		});
-	}
-
-	if (searchString.value.length > 0) {
-		result.push(
-			{
-				column: "worker",
-				term: searchString.value,
-				groups: [0],
-			},
-			{
-				column: "expenditure",
-				term: searchString.value,
-				groups: [1],
-			},
-			{
-				column: "id",
-				term: searchString.value,
-				groups: [2],
-			},
-		);
-	}
-
-	table.searchQuery.value = result;
-});
+useBidSearchingHook(departmentSearchString, searchString, table);
 
 watch([fromDateString, toDateString], () => {
 	const fromDate = new Date(fromDateString.value);
