@@ -332,14 +332,12 @@ async def get_paralegal_bid_pages_info(
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> TalbeInfoSchema:
     service.apply_bid_status_filter(
-        query,
-        "paralegal_state",
-        ApprovalStatus.pending_approval,
+        query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
     record_count = service.get_coordinator_bid_count(query, user.username, "paralegal")
     all_record_count = service.get_coordinator_bid_count(
         service.apply_bid_status_filter(
-            QuerySchema(), "paralegal_state", ApprovalStatus.pending_approval
+            QuerySchema(), "paralegal_state", ApprovalStatus.pending_approval, group=1
         ),
         user.username,
         "paralegal",
@@ -361,9 +359,7 @@ async def get_paralegal_bids(
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> list[BidOutSchema]:
     service.apply_bid_status_filter(
-        query,
-        "paralegal_state",
-        ApprovalStatus.pending_approval,
+        query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
     return service.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "paralegal"
@@ -376,9 +372,7 @@ async def export_paralegal_bids(
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> Response:
     service.apply_bid_status_filter(
-        query,
-        "paralegal_state",
-        ApprovalStatus.pending_approval,
+        query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
     file = service.export_coordintator_bid_records(query, user.username, "paralegal")
 
@@ -426,7 +420,7 @@ async def get_accountant_card_bid_pages_info(
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> TalbeInfoSchema:
     service.apply_bid_status_filter(
-        query, "accountant_card_state", ApprovalStatus.pending_approval
+        query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
     record_count = service.get_bid_count(query)
     all_record_count = service.get_bid_count(
@@ -434,6 +428,7 @@ async def get_accountant_card_bid_pages_info(
             QuerySchema(),
             "accountant_card_state",
             ApprovalStatus.pending_approval,
+            group=1,
         ),
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
@@ -453,9 +448,7 @@ async def get_accountant_card_bids(
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> list[BidOutSchema]:
     service.apply_bid_status_filter(
-        query,
-        "accountant_card_state",
-        ApprovalStatus.pending_approval,
+        query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
     return service.get_bid_record_at_page(page, records_per_page, query)
 
@@ -466,9 +459,7 @@ async def export_accountant_card_bids(
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> Response:
     service.apply_bid_status_filter(
-        query,
-        "accountant_card_state",
-        ApprovalStatus.pending_approval,
+        query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
     file = service.export_bid_records(query)
 
