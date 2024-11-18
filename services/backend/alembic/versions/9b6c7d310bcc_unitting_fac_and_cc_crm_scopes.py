@@ -42,6 +42,7 @@ old_options = (
     "bot_incident_monitoring",
     "crm_bid_readonly",
     "bot_bid_fac_cc",
+    "crm_accountant_card_bid",
 )
 
 new_options = (
@@ -75,6 +76,7 @@ new_options = (
     "bot_incident_monitoring",
     "crm_bid_readonly",
     "bot_bid_fac_cc",
+    "crm_accountant_card_bid",
     "crm_fac_cc_bid",
 )
 table_columns = {"post_scopes": ["scope"]}
