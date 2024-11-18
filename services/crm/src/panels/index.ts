@@ -3,7 +3,7 @@ import BidPanel from "@/panels/BidPanel.vue";
 import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACAndCCBidPanel from "@/panels/FACAndCCBidPanel.vue";
 import FACAndCCBidHistoryPanel from "@/panels/FACAndCCBidHistoryPanel.vue";
-import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
+import ParalegalBidTable from "@/panels/ParalegalBidTable.vue";
 import AccountantCardBidPanel from "@/panels/AccountantCardBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
@@ -66,7 +66,7 @@ const panels: Array<PanelData> = [
 		imageSrc: "/img/bid_logo.svg",
 		label: "Заявки ЮК",
 		isActive: false,
-		panel: shallowRef(CCSupervisorBidPanel),
+		panel: shallowRef(ParalegalBidTable),
 		access: Access.CCSupervisorBid,
 	},
 	{

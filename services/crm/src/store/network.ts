@@ -92,12 +92,16 @@ export const useNetworkStore = defineStore("network", {
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,
 		): Promise<any> {
-			return await handler.catch((error: AxiosError) => {
+			return await handler.catch(async (error: AxiosError) => {
 				const statusCode = error.response ? error.response.status : null;
 
 				let msg;
 
 				if (statusCode === 401) {
+					if (!(await this.auth())) {
+						router.go(0);
+					}
+
 					msg =
 						"У вас нет доступа к этой панели. " +
 						"Вы можете попробовать обновить страницу, " +
