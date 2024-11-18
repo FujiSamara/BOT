@@ -131,7 +131,6 @@ async def get_fac_cc_bid_pages_info(
         query,
         "fac_state",
         ApprovalStatus.pending_approval,
-        ApprovalStatus.approved,
         group=1,
     )
     service.apply_bid_status_filter(
@@ -174,7 +173,6 @@ async def get_fac_cc_bids(
         query,
         "fac_state",
         ApprovalStatus.pending_approval,
-        ApprovalStatus.approved,
         group=1,
     )
     service.apply_bid_status_filter(
@@ -197,7 +195,6 @@ async def export_fac_cc_bids(
         query,
         "fac_state",
         ApprovalStatus.pending_approval,
-        ApprovalStatus.approved,
         group=1,
     )
     service.apply_bid_status_filter(
