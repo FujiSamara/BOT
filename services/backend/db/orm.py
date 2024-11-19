@@ -1572,8 +1572,8 @@ def get_sum_duration_for_worker_in_month(
             return 0
 
 
-def get_last_closed_worktimes_by_tg_id(
-    tg_id: int, limit: int = 10
+def get_last_completed_worktimes_by_tg_id(
+    tg_id: int, limit: int = 10, offset: int = 0
 ) -> list[WorkTimeSchema] | None:
     with session.begin() as s:
         worker_id = get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
@@ -1594,6 +1594,7 @@ def get_last_closed_worktimes_by_tg_id(
                     )
                 )
                 .order_by(WorkTime.day.desc())
+                .offset(offset * limit)
                 .limit(limit)
             )
             .scalars()

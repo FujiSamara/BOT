@@ -233,9 +233,22 @@ async def set_documents(message: Message, state: FSMContext):
 # Worktimes
 
 
+@router.callback_query(
+    ShowWorkTimeCallbackData.filter(
+        F.end_point == get_per_cab_worktimes_button.callback_data
+    )
+)
 @router.callback_query(F.data == get_per_cab_worktimes_button.callback_data)
-async def get_per_cab_worktimes(callback: CallbackQuery):
-    worktimes = get_last_completed_worktimes_by_tg_id(callback.message.chat.id)
+async def get_per_cab_worktimes(
+    callback: CallbackQuery, callback_data: ShowWorkTimeCallbackData | None = None
+):
+    if callback_data is None:
+        offset = 0
+    else:
+        offset = callback_data.page
+    worktimes = get_last_completed_worktimes_by_tg_id(
+        callback.message.chat.id, offset=offset
+    )
     buttons: list[list[InlineKeyboardButton]] = []
     for worktime in worktimes:
         buttons.append(
@@ -249,6 +262,32 @@ async def get_per_cab_worktimes(callback: CallbackQuery):
                 )
             ]
         )
+    if offset != 0:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Прошлая страница",
+                    callback_data=ShowWorkTimeCallbackData(
+                        end_point=get_per_cab_worktimes_button.callback_data,
+                        page=offset - 1,
+                    ).pack(),
+                )
+            ]
+        )
+    else:
+        if len(worktimes) == 10:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=ShowWorkTimeCallbackData(
+                            end_point=get_per_cab_worktimes_button.callback_data,
+                            page=offset + 1,
+                        ).pack(),
+                    )
+                ]
+            )
+
     worker = get_worker_by_telegram_id(callback.message.chat.id)
     await try_edit_or_answer(
         message=callback.message,
