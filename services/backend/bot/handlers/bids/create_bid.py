@@ -43,6 +43,7 @@ from bot.handlers.bids.utils import (
 )
 from bot.handlers.utils import (
     try_delete_message,
+    try_edit_or_answer,
     try_edit_message,
     download_file,
     handle_documents_form,
@@ -434,7 +435,7 @@ async def get_bid(
 
     caption = get_full_bid_info(bid)
 
-    await try_edit_message(
+    await try_edit_or_answer(
         message=message,
         text=caption,
         reply_markup=create_inline_keyboard(
@@ -547,18 +548,17 @@ async def find_bid(message: Message, state: FSMContext):
         try:
             msg_text = int(message.text)
             bid = find_bid_for_worker(msg_text, message.chat.id)
-
-            if bid is None:
-                msg = await message.answer(text=hbold("Заявка не найдена!"))
-                await asyncio.sleep(2)
-                await get_bid_id(message, state)
-
-            elif not bid:
-                msg = await message.answer(
-                    text=hbold("У Вас нет доступа к этой заявке!")
-                )
-                await asyncio.sleep(2)
-                await get_bid_id(message, state)
+            if isinstance(bid, bool):
+                if bid:
+                    msg = await message.answer(
+                        text=hbold("У Вас нет доступа к этой заявке!")
+                    )
+                    await asyncio.sleep(2)
+                    await get_bid_id(message, state)
+                else:
+                    msg = await message.answer(text=hbold("Заявка не найдена!"))
+                    await asyncio.sleep(2)
+                    await get_bid_id(message, state)
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)

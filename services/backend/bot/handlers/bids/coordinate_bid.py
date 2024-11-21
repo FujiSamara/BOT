@@ -564,20 +564,21 @@ async def set_bid(message: Message, state: FSMContext):
             msg_text = int(message.text)
             state_column = data["state_column"].name
             bid = find_bid_for_worker(msg_text, message.chat.id)
-
-            if bid is None:
-                msg = await message.answer(text=hbold("Заявка не найдена!"))
-                await asyncio.sleep(2)
-                await get_menu(message, state)
-                await msg.delete()
-
-            elif not bid:
-                msg = await message.answer(
-                    text=hbold("У Вас нет доступа к этой заявке!")
-                )
-                await asyncio.sleep(2)
-                await get_menu(message, state)
-                await msg.delete()
+            if isinstance(bid, bool):
+                if bid:
+                    msg = await message.answer(
+                        text=hbold("У Вас нет доступа к этой заявке!")
+                    )
+                    await asyncio.sleep(2)
+                    search_bid: Callable = data["search_bid"]
+                    await search_bid(message, state)
+                    await msg.delete()
+                else:
+                    msg = await message.answer(text=hbold("Заявка не найдена!"))
+                    await asyncio.sleep(2)
+                    search_bid: Callable = data["search_bid"]
+                    await search_bid(message, state)
+                    await msg.delete()
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)

@@ -2319,7 +2319,12 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
         ]
 
 
-def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
+def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool:
+    """Find bid by id and telegram id
+    Return
+    BidSchema if worker with telegram id relevant to the bid
+    else False - bid not found, otherwise True
+    """
     states = {
         FujiScope.bot_bid_kru: "kru_state",
         FujiScope.bot_bid_owner: "owner_state",
@@ -2329,9 +2334,10 @@ def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
     }
     with session.begin() as s:
         worker = get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
-        raw_bid = s.execute(select(Bid).where(Bid.id == bid_id)).scalar()
+        raw_bid = s.execute(select(Bid).where(Bid.id == bid_id)).scalars().first()
         if raw_bid is None:
-            return None
+            return False
+
         bid = BidSchema.model_validate(raw_bid)
 
         if FujiScope.admin in worker.post.scopes:
@@ -2356,6 +2362,7 @@ def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
 
         if (
             FujiScope.bot_bid_teller_cash in worker.post.scopes
+            and bid.paying_department is not None
             and bid.paying_department.id == worker.department.id
             and bid.teller_cash_state != ApprovalStatus.skipped
         ):  #        FujiScope.bot_bid_teller_cash
@@ -2363,5 +2370,4 @@ def find_bid_for_worker(bid_id, tg_id) -> BidSchema | bool | None:
 
         if worker.id == bid.worker.id:  #    FujiScope.bot_bid_create
             return bid
-
-        return False
+        return True
