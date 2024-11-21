@@ -699,7 +699,7 @@ def get_accountant_card_bid_count(
     return get_bid_count(query_schema)
 
 
-def find_bid_for_worker(bid_id: int, tg_id: int) -> tuple[BidSchema, bool] | None:
+def find_bid_for_worker(bid_id: int, tg_id: int) -> Tuple[BidSchema, bool] | None:
     """Find bid by id and telegram id
     Return
     If bid is found: tuple of BidSchema and bool, where bool indicates access to bid
