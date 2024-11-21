@@ -547,18 +547,17 @@ async def find_bid(message: Message, state: FSMContext):
     else:
         try:
             msg_text = int(message.text)
-            bid = find_bid_for_worker(msg_text, message.chat.id)
-            if isinstance(bid, bool):
-                if bid:
-                    msg = await message.answer(
-                        text=hbold("У Вас нет доступа к этой заявке!")
-                    )
-                    await asyncio.sleep(2)
-                    await get_bid_id(message, state)
-                else:
-                    msg = await message.answer(text=hbold("Заявка не найдена!"))
-                    await asyncio.sleep(2)
-                    await get_bid_id(message, state)
+            bid_with_access = find_bid_for_worker(msg_text, message.chat.id)
+            if bid_with_access is None:
+                msg = await message.answer(text=hbold("Заявка не найдена!"))
+                await asyncio.sleep(2)
+                await get_bid_id(message, state)
+            elif not bid_with_access[1]:
+                msg = await message.answer(
+                    text=hbold("У Вас нет доступа к этой заявке!")
+                )
+                await asyncio.sleep(2)
+                await get_bid_id(message, state)
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)
@@ -566,7 +565,7 @@ async def find_bid(message: Message, state: FSMContext):
                 await get_bid(
                     message,
                     BidCallbackData(
-                        id=bid.id,
+                        id=bid_with_access[0].id,
                         mode=BidViewMode.state_only,
                         type=BidViewType.creation,
                         endpoint_name="create_bid_info",

@@ -563,22 +563,23 @@ async def set_bid(message: Message, state: FSMContext):
         try:
             msg_text = int(message.text)
             state_column = data["state_column"].name
-            bid = find_bid_for_worker(msg_text, message.chat.id)
-            if isinstance(bid, bool):
-                if bid:
-                    msg = await message.answer(
-                        text=hbold("У Вас нет доступа к этой заявке!")
-                    )
-                    await asyncio.sleep(2)
-                    search_bid: Callable = data["search_bid"]
-                    await search_bid(message, state)
-                    await msg.delete()
-                else:
-                    msg = await message.answer(text=hbold("Заявка не найдена!"))
-                    await asyncio.sleep(2)
-                    search_bid: Callable = data["search_bid"]
-                    await search_bid(message, state)
-                    await msg.delete()
+            bid_with_access = find_bid_for_worker(msg_text, message.chat.id)
+            if bid_with_access is None:
+                msg = await message.answer(text=hbold("Заявка не найдена!"))
+                await asyncio.sleep(2)
+                search_bid: Callable = data["search_bid"]
+                await search_bid(message, state)
+                await msg.delete()
+
+            elif not bid_with_access[1]:
+                msg = await message.answer(
+                    text=hbold("У Вас нет доступа к этой заявке!")
+                )
+                await asyncio.sleep(2)
+                search_bid: Callable = data["search_bid"]
+                await search_bid(message, state)
+                await msg.delete()
+
             else:
                 msg = await message.answer("Успешно!")
                 await asyncio.sleep(1)
@@ -587,9 +588,10 @@ async def set_bid(message: Message, state: FSMContext):
                 await get_bid(
                     message,
                     BidCallbackData(
-                        id=bid.id,
+                        id=bid_with_access[0].id,
                         mode=BidViewMode.full_with_approve
-                        if getattr(bid, state_column) == ApprovalStatus.pending_approval
+                        if getattr(bid_with_access[0], state_column)
+                        == ApprovalStatus.pending_approval
                         else BidViewMode.full,
                         type=BidViewType.coordination,
                         endpoint_name=state_column.split("_state")[0],

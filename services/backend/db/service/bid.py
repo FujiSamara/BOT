@@ -23,7 +23,7 @@ from db.schemas import (
 import logging
 from datetime import datetime
 from fastapi import UploadFile
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 # In right order
 states = [
@@ -699,10 +699,53 @@ def get_accountant_card_bid_count(
     return get_bid_count(query_schema)
 
 
-def find_bid_for_worker(bid_id: int, tg_id: int) -> BidSchema | bool:
+def find_bid_for_worker(bid_id: int, tg_id: int) -> tuple[BidSchema, bool] | None:
     """Find bid by id and telegram id
     Return
-    BidSchema if worker with telegram id relevant to the bid
-    else False - bid not found, otherwise True
+    If bid is found: tuple of BidSchema and bool, where bool indicates access to bid
+    Else None
     """
-    return orm.find_bid_for_worker(bid_id, tg_id)
+    bid = orm.find_bid_for_worker(bid_id, tg_id)
+    if bid is None:
+        return None
+    try:
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
+    except IndexError:
+        logging.getLogger("uvicorn.error").error(
+            f"Worker with telegram id: {tg_id} not found"
+        )
+    if FujiScope.admin in worker.post.scopes:
+        return (bid, True)
+
+    if FujiScope.bot_bid_fac_cc in worker.post.scopes:  #    FujiScope.bot_bid_fac_cc
+        for state in [["fac_state", "fac"], ["cc_state", "cc"]]:
+            if (
+                getattr(bid, state[0]) != ApprovalStatus.skipped
+                and worker.id == getattr(bid.expenditure, state[1]).id
+            ):
+                return (bid, True)
+
+    for scope, state in {
+        FujiScope.bot_bid_kru: "kru_state",
+        FujiScope.bot_bid_owner: "owner_state",
+        FujiScope.bot_bid_accountant_card: "accountant_card_state",
+        FujiScope.bot_bid_accountant_cash: "accountant_cash_state",
+        FujiScope.bot_bid_teller_card: "teller_card_state",
+    }.items():
+        if (
+            getattr(bid, state) != ApprovalStatus.skipped
+            and scope in worker.post.scopes
+        ):
+            return (bid, True)
+
+    if (
+        FujiScope.bot_bid_teller_cash in worker.post.scopes
+        and bid.paying_department is not None
+        and bid.paying_department.id == worker.department.id
+        and bid.teller_cash_state != ApprovalStatus.skipped
+    ):  #        FujiScope.bot_bid_teller_cash
+        return (bid, True)
+
+    if worker.id == bid.worker.id:  #    FujiScope.bot_bid_create
+        return (bid, True)
+    return (bid, False)
