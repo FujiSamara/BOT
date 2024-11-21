@@ -2317,15 +2317,3 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(coordinator.coordinator)
             for coordinator in coordinators
         ]
-
-
-def find_bid_for_worker(bid_id, tg_id) -> BidSchema | None:
-    """Find bid by id and telegram id
-    Return
-    BidSchema if worker with telegram id relevant to the bid
-    """
-    with session.begin() as s:
-        raw_bid = s.execute(select(Bid).where(Bid.id == bid_id)).scalars().first()
-        if raw_bid is None:
-            return None
-        return BidSchema.model_validate(raw_bid)

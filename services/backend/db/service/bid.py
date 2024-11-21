@@ -701,11 +701,9 @@ def get_accountant_card_bid_count(
 
 def find_bid_for_worker(bid_id: int, tg_id: int) -> Tuple[BidSchema, bool] | None:
     """Find bid by id and telegram id
-    Return
-    If bid is found: tuple of BidSchema and bool, where bool indicates access to bid
-    Else None
+    :return: bid and worker access state for this bid, if bid found, `None` otherwise
     """
-    bid = orm.find_bid_for_worker(bid_id, tg_id)
+    bid = orm.find_bid_by_column(Bid.id, bid_id)
     if bid is None:
         return None
     try:
