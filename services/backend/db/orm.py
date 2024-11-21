@@ -2319,7 +2319,7 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
         ]
 
 
-def find_bid_for_worker(bid_id, tg_id) -> BidSchema|None:
+def find_bid_for_worker(bid_id, tg_id) -> BidSchema | None:
     """Find bid by id and telegram id
     Return
     BidSchema if worker with telegram id relevant to the bid
