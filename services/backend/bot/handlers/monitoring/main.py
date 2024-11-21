@@ -77,7 +77,7 @@ async def get_incident(callback: CallbackQuery, callback_data: IncidentCallbackD
 @router.callback_query(F.data == kb.get_incident_history_btn.callback_data)
 async def get_incident_history(callback: CallbackQuery):
     incidents = es_service.get_incidents_history()
-    incidents.sort(key=lambda incident: incident.id)
+    incidents.sort(key=lambda incident: incident.id, reverse=True)
     incidents = incidents[:10]
 
     buttons: list[InlineKeyboardButton] = [
@@ -103,7 +103,7 @@ async def get_incident_history(callback: CallbackQuery):
 @router.callback_query(F.data == kb.get_incidents_btn.callback_data)
 async def get_incidents(callback: CallbackQuery):
     incidents = es_service.get_pending_incidents()
-    incidents.sort(key=lambda incident: incident.id, reverse=True)
+    incidents.sort(key=lambda incident: incident.id)
     incidents = incidents[:10]
 
     buttons: list[InlineKeyboardButton] = [
