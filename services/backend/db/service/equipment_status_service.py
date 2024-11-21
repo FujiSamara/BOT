@@ -19,8 +19,13 @@ async def update_equipment_status(
 ) -> bool:
     """Updates equipment status, adds incident if `equipment_status_in.status` is bad.
 
-    If status not exist in db creates it.s
+    If status not exist in db creates it.
     """
+
+    from bot.handlers.utils import (
+        notify_workers_by_scope,
+    )
+
     if (
         department := orm.find_department_by_column(
             Department.asterisk_id, asterisk_id, DepartmentSchemaFull
@@ -47,6 +52,12 @@ async def update_equipment_status(
     if equipment_status.status in bad_statuses:
         if last_incident is None:
             await add_equipment_incident(equipment_status)
+        await notify_workers_by_scope(
+            FujiScope.bot_incident_monitoring,
+            f"""Оборудование не доступно!
+Предприятие: {equipment_status.department.name}
+Тип оборудования: {equipment_status.equipment_name}""",
+        )
     else:
         if last_incident is not None:
             last_incident.stage = IncidentStage.solved
@@ -61,17 +72,6 @@ async def add_equipment_incident(equipment_status: EquipmentStatusSchema):
             status=equipment_status.status,
             stage=IncidentStage.created,
         )
-    )
-
-    from bot.handlers.utils import (
-        notify_workers_by_scope,
-    )
-
-    await notify_workers_by_scope(
-        FujiScope.bot_incident_monitoring,
-        f"""Оборудование не доступно!
-Предприятие: {equipment_status.department.name}
-Тип оборудования: {equipment_status.equipment_name}""",
     )
 
 

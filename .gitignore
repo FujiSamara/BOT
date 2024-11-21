@@ -57,6 +57,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.sh
 
 # Special file
 .clear_env
