@@ -397,6 +397,7 @@ def get_specified_history_bids(pending_column) -> list[BidSchema]:
                     pending_column == ApprovalStatus.approved,
                 )
             )
+            .order_by(Bid.id.desc())
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
@@ -423,6 +424,7 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
                     Bid.paying_department_id == department_id,
                 )
             )
+            .order_by(Bid.id.desc())
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
