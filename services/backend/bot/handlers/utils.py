@@ -136,12 +136,19 @@ async def try_edit_message(
         return False
 
 
-async def try_answer(message: Message, text: str, reply_markup: Any = None) -> bool:
+async def try_answer(
+    message: Message, text: str, reply_markup: Any = None, return_message: bool = False
+) -> bool | Message:
     """
     Tries to answer message.
+
+    If return_message = True then return Message
+
     Returns: `True` if message answered, `False` otherwise.
     """
     try:
+        if return_message:
+            return await message.answer(text=text, reply_markup=reply_markup)
         await message.answer(text=text, reply_markup=reply_markup)
         return True
     except TelegramAPIError:
@@ -149,21 +156,26 @@ async def try_answer(message: Message, text: str, reply_markup: Any = None) -> b
 
 
 async def try_edit_or_answer(
-    message: Message, text: str, reply_markup: Any = None
-) -> bool:
+    message: Message, text: str, reply_markup: Any = None, return_message: bool = False
+) -> bool | Message:
     """
     Tries to edit message.
     if the `message` unsuccessfully edited
     then answers message by `Message.answer_text`.
+
+    If return_message = True then return Message
 
     Returns: `True` if message edited, `False` otherwise.
     """
     if not await try_edit_message(
         message=message, text=text, reply_markup=reply_markup
     ):
-        await try_answer(message, text, reply_markup)
+        if return_message:
+            return await try_answer(message, text, reply_markup, return_message)
+        await try_answer(message, text, reply_markup, return_message)
         return False
-
+    if return_message:
+        return message
     return True
 
 

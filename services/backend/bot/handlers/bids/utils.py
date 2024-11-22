@@ -141,13 +141,13 @@ def get_bid_state_info(bid: BidSchema, separator: str = "-----") -> str:
         or bid.teller_card_state == ApprovalStatus.denied
         or bid.teller_cash_state == ApprovalStatus.denied
     ):
-        separator = separator + "\n"
+        separator = "\n" + separator + "\n"
         stage = str.join(separator, (stage, "Отказано"))
     elif (
         bid.teller_card_state == ApprovalStatus.approved
         or bid.teller_cash_state == ApprovalStatus.approved
     ):
-        separator = separator + "\n"
+        separator = "\n" + separator + "\n"
         stage = str.join(separator, (stage, "Выплачено"))
 
     return stage

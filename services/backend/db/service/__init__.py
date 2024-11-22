@@ -28,6 +28,7 @@ from db.service.bid import (
     skip_repeating_bid_state,
     update_bid,
     update_bid_state,
+    find_bid_for_worker,
 )
 from db.service.budget import (
     create_budget_record,
@@ -276,4 +277,5 @@ __all__ = [
     "update_worker_tg_id_by_number",
     "set_department_for_worker",
     "update_worktime",
+    "find_bid_for_worker",
 ]

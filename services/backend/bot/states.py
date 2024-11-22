@@ -21,12 +21,14 @@ class BidCreating(StatesGroup):
     documents = State()
     edm = State()
     activity_type = State()
+    search = State()
 
 
 class BidCoordination(StatesGroup):
     comment = State()
     paying_comment = State()
     department = State()
+    search = State()
 
 
 class WorkerBidCreating(StatesGroup):
