@@ -5,6 +5,7 @@ from fastapi.routing import APIRouter
 
 from db.models import ApprovalStatus
 from db import service
+import db.service.bid as bid_service
 from db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from bot.handlers.bids.utils import get_current_coordinator_field
 
@@ -127,41 +128,12 @@ async def get_fac_cc_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_status_filter(
-        query,
-        "fac_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    service.apply_bid_status_filter(
-        query,
-        "cc_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    record_count = service.get_coordinator_bid_count(
-        query, user.username, ["fac", "cc"]
-    )
-    empty_query = QuerySchema()
-    service.apply_bid_status_filter(
-        empty_query,
-        "fac_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    service.apply_bid_status_filter(
-        empty_query,
-        "cc_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    all_record_count = service.get_coordinator_bid_count(
-        empty_query,
+    record_count = bid_service.get_fac_or_cc_bid_count(query, user.username)
+    all_record_count = bid_service.get_fac_or_cc_bid_count(
+        QuerySchema(),
         user.username,
-        ["fac", "cc"],
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
-
     return TalbeInfoSchema(
         record_count=record_count,
         page_count=page_count,
@@ -176,20 +148,8 @@ async def get_fac_cc_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_status_filter(
-        query,
-        "fac_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    service.apply_bid_status_filter(
-        query,
-        "cc_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    return service.get_coordinator_bid_records_at_page(
-        page, records_per_page, query, user.username, ["fac", "cc"]
+    return bid_service.get_fac_or_cc_bid_records_at_page(
+        page, records_per_page, query, user.username
     )
 
 
@@ -197,19 +157,7 @@ async def get_fac_cc_bids(
 async def export_fac_cc_bids(
     query: QuerySchema, user: User = Security(get_user, scopes=["crm_fac_cc_bid"])
 ) -> Response:
-    service.apply_bid_status_filter(
-        query,
-        "fac_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    service.apply_bid_status_filter(
-        query,
-        "cc_state",
-        ApprovalStatus.pending_approval,
-        group=1,
-    )
-    file = service.export_coordintator_bid_records(query, user.username, ["fac", "cc"])
+    file = bid_service.export_fac_or_cc_bid_records(query, user.username)
 
     return StreamingResponse(
         content=file,
