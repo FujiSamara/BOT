@@ -671,17 +671,56 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
     return orm.get_bid_coordinators(bid_id)
 
 
-def get_accountant_card_bid_records_at_page(
-    page: int,
-    records_per_page: int,
-    query_schema: QuerySchema,
+def get_fac_or_cc_bid_count(query_schema: QuerySchema, worker_phone: str) -> int:
+    """Return bid count in bd."""
+    bids_select = orm.create_fac_or_cc_select_query(worker_phone)
+    return orm.get_model_count(Bid, query_schema, bids_select)
+
+
+def get_fac_or_cc_bid_records_at_page(
+    page: int, records_per_page: int, query_schema: QuerySchema, worker_phone: str
 ) -> list[BidOutSchema]:
-    """Returns all bid records in database with `query_schema`."""
-    return get_bid_record_at_page(page, records_per_page, query_schema)
+    """Return bid records with applied instructions.
+
+    See `QueryBuilder.apply` for more info applied instructions.
+    """
+    bids_select = orm.create_fac_or_cc_select_query(worker_phone)
+    return [
+        bid_to_out_bid(bid)
+        for bid in orm.get_models(
+            Bid, BidSchema, page, records_per_page, query_schema, bids_select
+        )
+    ]
 
 
-def get_accountant_card_bid_count(
-    query_schema: QuerySchema,
-) -> int:
-    """Returns all bid records in database with `query_schema`."""
-    return get_bid_count(query_schema)
+def export_fac_or_cc_bid_records(
+    query_schema: QuerySchema, worker_phone: str
+) -> BytesIO:
+    """Returns xlsx file with bids records filtered by `query_schema`."""
+    # Formatters
+    from bot.kb import payment_type_dict
+
+    bids_select = orm.create_fac_or_cc_select_query(worker_phone)
+
+    return orm.export_models(
+        Bid,
+        query_schema,
+        dict(
+            payment_type=lambda type: payment_type_dict[type],
+            need_edm=lambda need: "Да" if need else "Нет",
+        ),
+        [
+            "documents",
+            "fac_state",
+            "cc_state",
+            "paralegal_state",
+            "kru_state",
+            "owner_state",
+            "accountant_card_state",
+            "accountant_cash_state",
+            "teller_card_state",
+            "teller_cash_state",
+        ],
+        aliases[BidSchema],
+        select_query=bids_select,
+    )

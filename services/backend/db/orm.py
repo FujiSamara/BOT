@@ -1,6 +1,11 @@
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
+from pydantic import BaseModel
+from sqlalchemy.sql.expression import func
+from sqlalchemy.orm import selectinload, Session
+from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
+
 from db.query import QueryBuilder, XLSXExporter
 from db.database import Base, engine, session
 from db.models import (
@@ -62,10 +67,6 @@ from db.schemas import (
     MaterialValuesSchema,
     CompanySchema,
 )
-from pydantic import BaseModel
-from sqlalchemy.sql.expression import func
-from sqlalchemy.orm import selectinload
-from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
 
 def create_tables():
@@ -1423,14 +1424,29 @@ def get_count_req_in_departments(
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
+def create_query_builder(
+    model_type: Type[Base],
+    query_schema: QuerySchema,
+    session: Session,
+    select_query: Select | None = None,
+) -> QueryBuilder:
+    if select_query is None:
+        select_query = select(model_type)
+
+    builder = QueryBuilder(select_query, session)
+    builder.apply(query_schema)
+
+    return builder
+
+
 def get_model_count(
     model_type: Type[Base],
     query_schema: QuerySchema,
+    select_query: Select | None = None,
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
-        query_builder = QueryBuilder(select(model_type), s)
-        query_builder.apply(query_schema)
+        query_builder = create_query_builder(model_type, query_schema, s, select_query)
 
         return query_builder.count()
 
@@ -1441,14 +1457,14 @@ def get_models(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
+    select_query: Select | None = None,
 ) -> list[SchemaT]:
     """Returns `model_type` schemas with applied instructions.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
     with session.begin() as s:
-        query_builder = QueryBuilder(select(model_type), s)
-        query_builder.apply(query_schema)
+        query_builder = create_query_builder(model_type, query_schema, s, select_query)
         query_builder.select = query_builder.select.offset(
             (page - 1) * records_per_page
         ).limit(records_per_page)
@@ -1465,11 +1481,11 @@ def export_models(
     formatters: dict[str, Callable[[any], str]] = {},
     exclude_columns: list[str] = [],
     aliases: dict[str, str] = {},
+    select_query: Select | None = None,
 ) -> BytesIO:
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
-        query_builder = QueryBuilder(select(model_type), s)
-        query_builder.apply(query_schema)
+        query_builder = create_query_builder(model_type, query_schema, s, select_query)
         exporter = XLSXExporter(
             query_builder.select, s, formatters, exclude_columns, aliases
         )
@@ -1478,6 +1494,34 @@ def export_models(
 
 
 # endregion
+
+# region Bids
+
+
+def create_fac_or_cc_select_query(phone: str) -> Select:
+    worker_id = select(Worker.id).filter(Worker.phone_number == phone)
+    fac_expenditures = select(Expenditure.id).filter(Expenditure.fac_id.in_(worker_id))
+    cc_expenditures = select(Expenditure.id).filter(Expenditure.cc_id.in_(worker_id))
+
+    bids_select = select(Bid).filter(
+        or_(
+            and_(
+                Bid.expenditure_id.in_(fac_expenditures),
+                Bid.fac_state == "pending_approval",
+            ),
+            and_(
+                Bid.expenditure_id.in_(cc_expenditures),
+                Bid.cc_state == "pending_approval",
+            ),
+        )
+    )
+
+    return bids_select
+
+
+# endregion
+
+
 # region WorkTimes
 def get_worktimes_without_photo(
     page: int,
