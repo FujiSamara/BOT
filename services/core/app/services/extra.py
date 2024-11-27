@@ -3,15 +3,15 @@ from typing import Optional
 from app.infra.logging import logger
 from app.infra.config import settings
 
-import app.database.orm as orm
-from app.database.models import (
+import app.infra.database.orm as orm
+from app.infra.database.models import (
     Department,
     FujiScope,
     Post,
     Worker,
     Company,
 )
-from app.database.schemas import (
+from app.infra.database.schemas import (
     PostSchema,
     WorkerSchema,
     DepartmentSchema,

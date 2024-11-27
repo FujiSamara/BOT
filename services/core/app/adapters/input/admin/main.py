@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from app.infra.logging import logger
 from app.infra.config import settings
-from app.database.database import engine, session
+from app.infra.database.database import engine, session
 
 from app.adapters.input.admin.admin import FujiAdmin, AdminAuth
 from app.adapters.input.admin.configure import configure

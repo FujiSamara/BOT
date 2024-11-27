@@ -5,15 +5,15 @@ from fastapi import UploadFile
 from app.infra.logging import logger
 
 from app.services.extra import get_worker_by_id
-import app.database.orm as orm
-from app.database.models import (
+import app.infra.database.orm as orm
+from app.infra.database.models import (
     Department,
     ApprovalStatus,
     Post,
     Worker,
     WorkerBid,
 )
-from app.database.schemas import (
+from app.infra.database.schemas import (
     WorkerBidSchema,
     DocumentSchema,
 )

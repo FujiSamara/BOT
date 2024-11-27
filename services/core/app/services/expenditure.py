@@ -1,10 +1,10 @@
 from app.infra.logging import logger
 
-import app.database.orm as orm
-from app.database.models import (
+import app.infra.database.orm as orm
+from app.infra.database.models import (
     Expenditure,
 )
-from app.database.schemas import (
+from app.infra.database.schemas import (
     BudgetRecordSchema,
     ExpenditureSchema,
     QuerySchema,

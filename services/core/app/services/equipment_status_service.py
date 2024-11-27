@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from app.database.schemas import (
+from app.infra.database.schemas import (
     DepartmentSchemaFull,
     EquipmentIncidentSchema,
     EquipmentStatusSchemaIn,
     EquipmentStatusSchema,
 )
-from app.database.models import Department, FujiScope, IncidentStage
-from app.database import orm
+from app.infra.database.models import Department, FujiScope, IncidentStage
+from app.infra.database import orm
 
 from app.infra.logging import logger
 

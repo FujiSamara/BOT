@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from app.database.models import (
+from app.infra.database.models import (
     ApprovalStatus,
     FujiScope,
     Gender,

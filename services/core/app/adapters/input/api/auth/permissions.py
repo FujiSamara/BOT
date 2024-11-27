@@ -1,5 +1,5 @@
 from fastapi.security import OAuth2PasswordBearer
-from app.database.models import FujiScope
+from app.infra.database.models import FujiScope
 
 _scopes = {
     "admin": "Full access",

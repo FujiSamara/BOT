@@ -6,9 +6,9 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
-from app.database.query import QueryBuilder, XLSXExporter
-from app.database.database import Base, engine, session
-from app.database.models import (
+from app.infra.database.query import QueryBuilder, XLSXExporter
+from app.infra.database.database import Base, engine, session
+from app.infra.database.models import (
     Bid,
     BidCoordinator,
     BidDocument,
@@ -43,7 +43,7 @@ from app.database.models import (
     MaterialValues,
     Company,
 )
-from app.database.schemas import (
+from app.infra.database.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,

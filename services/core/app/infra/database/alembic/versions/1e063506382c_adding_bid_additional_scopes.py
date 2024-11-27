@@ -1,14 +1,14 @@
-"""Adding monitoring scope
+"""Adding bid additional scopes
 
-Revision ID: 5797fcce91fa
-Revises: 64b61b54d123
-Create Date: 2024-10-24 10:21:25.622194
+Revision ID: 1e063506382c
+Revises: e7b7c1e84e10
+Create Date: 2024-08-16 20:15:21.786232
 
 """
 
 from typing import Sequence, Union
 
-import app.database.alembic.enum as c_enum
+import app.infra.database.alembic.enum as c_enum
 
 
 old_options = (
@@ -30,25 +30,18 @@ old_options = (
     "bot_technical_request_chief_technician",
     "bot_technical_request_territorial_manager",
     "bot_technical_request_department_director",
-    "crm_fac_bid",
-    "crm_cc_bid",
-    "crm_paralegal_bid",
-    "bot_bid_it_worker",
-    "bot_bid_it_repairman",
-    "bot_bid_it_tm",
-    "bot_personal_cabinet",
-    "crm_my_bid",
-    "crm_archive_bid",
-    "crm_my_file",
 )
 
-new_options = sorted((*old_options, "bot_incident_monitoring"))
+table_columns = {"post_scopes": ["scope"]}
+new_options = sorted(
+    old_options + ("crm_fac_bid", "crm_cc_bid", "crm_cc_supervisor_bid")
+)
+
 table_columns = {"post_scopes": ["scope"]}
 
-
 # revision identifiers, used by Alembic.
-revision: str = "5797fcce91fa"
-down_revision: Union[str, None] = "64b61b54d123"
+revision: str = "1e063506382c"
+down_revision: Union[str, None] = "e7b7c1e84e10"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

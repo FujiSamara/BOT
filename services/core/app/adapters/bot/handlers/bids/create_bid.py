@@ -61,7 +61,7 @@ from app.services import (
     get_expenditures_names_by_chapter,
     find_bid_for_worker,
 )
-from app.database.models import ApprovalStatus
+from app.infra.database.models import ApprovalStatus
 
 
 router = Router(name="bid_creating")

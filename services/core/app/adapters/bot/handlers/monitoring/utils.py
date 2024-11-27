@@ -1,11 +1,11 @@
 from aiogram.utils.markdown import hbold, hcode
 
-from app.database.models import IncidentStage
+from app.infra.database.models import IncidentStage
 from app.infra.config import settings
 
 import app.services.equipment_status_service as es_service
 import app.services.extra as ex_service
-import app.database.schemas as schemas
+import app.infra.database.schemas as schemas
 
 
 def get_monitoring_list() -> str:

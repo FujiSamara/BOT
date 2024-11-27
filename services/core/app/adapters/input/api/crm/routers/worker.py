@@ -2,7 +2,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from app import services
-from app.database.schemas import WorkerSchema
+from app.infra.database.schemas import WorkerSchema
 
 from app.adapters.input.api.auth import User, get_user
 

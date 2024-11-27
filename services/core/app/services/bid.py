@@ -6,8 +6,8 @@ from typing import Any, Optional, Tuple
 
 from app.infra.logging import logger
 
-import app.database.orm as orm
-from app.database.models import (
+import app.infra.database.orm as orm
+from app.infra.database.models import (
     Department,
     ApprovalStatus,
     Bid,
@@ -15,7 +15,7 @@ from app.database.models import (
     FujiScope,
     Worker,
 )
-from app.database.schemas import (
+from app.infra.database.schemas import (
     BidOutSchema,
     BidSchema,
     FilterSchema,

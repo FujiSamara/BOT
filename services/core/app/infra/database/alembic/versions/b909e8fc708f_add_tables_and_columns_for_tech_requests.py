@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ENUM
 
 from app.infra.config import settings
-import app.database.alembic.enum as c_enum
+import app.infra.database.alembic.enum as c_enum
 
 
 old_options = (

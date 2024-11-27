@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
-import app.database.alembic.enum as c_enum
+import app.infra.database.alembic.enum as c_enum
 
 old_options = (
     "admin",
