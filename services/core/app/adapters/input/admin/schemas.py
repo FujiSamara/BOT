@@ -1,0 +1,826 @@
+# sqladmin shemas
+from fastapi import Request
+from fastapi.responses import RedirectResponse
+from sqladmin import ModelView, action
+from sqlalchemy import Select, or_, select
+
+from app.infra.database.models import (
+    PostScope,
+    TechnicalProblem,
+    Worker,
+    Company,
+    Department,
+    Post,
+    WorkerBid,
+    WorkerBidDocument,
+    ApprovalStatus,
+    Gender,
+    TechnicalRequest,
+    Group,
+    WorkTime,
+    AccountLogins,
+    Subordination,
+    MaterialValues,
+    WorkerFingerprint,
+    FingerprintAttempt,
+)
+from app.adapters.bot.kb import payment_type_dict, approval_status_dict
+from app.infra.database.schemas import FileOutSchema
+from app import services
+from app.adapters.input.api.auth import encrypt_password
+
+
+class PostScopeView(ModelView, model=PostScope):
+    column_list = [PostScope.post, PostScope.scope]
+    column_searchable_list = [PostScope.scope]
+    form_columns = [PostScope.scope, PostScope.post]
+    column_details_exclude_list = [PostScope.post_id, PostScope.id]
+    can_export = False
+    can_edit = False
+
+    name_plural = "Доступы"
+    name = "Доступ"
+    column_labels = {
+        PostScope.post: "Должность",
+        PostScope.scope: "Доступ",
+    }
+
+
+class PostView(ModelView, model=Post):
+    column_list = [Post.id, Post.name, Post.level, Post.salary]
+    column_searchable_list = [Post.name, Post.level]
+    form_columns = [Post.name, Post.level, Post.salary]
+    column_details_exclude_list = [Post.work_times, Post.workers_bids]
+    can_export = False
+
+    name_plural = "Должности"
+    name = "Должность"
+    column_labels = {
+        Post.name: "Название",
+        Post.level: "Уровень доступа",
+        Post.workers: "Работники",
+        Post.salary: "Зарплата",
+        Post.scopes: "Доступы",
+    }
+
+
+class CompanyView(ModelView, model=Company):
+    column_list = [Company.id, Company.name]
+    column_details_exclude_list = [
+        Company.work_times,
+    ]
+    column_searchable_list = [Company.name]
+    form_columns = [Company.name]
+    can_export = False
+
+    name_plural = "Компании"
+    name = "Компания"
+    column_labels = {
+        Company.name: "Название",
+        Company.departments: "Производства",
+        Company.workers: "Работники",
+    }
+
+
+class DepartmentView(ModelView, model=Department):
+    column_list = [Department.id, Department.name]
+    column_searchable_list = [Department.name]
+    column_details_exclude_list = [
+        Department.company_id,
+        Department.work_times,
+        Department.workers_bids,
+        Department.bids,
+        Department.delivery_manager_id,
+        Department.territorial_manager_id,
+        Department.territorial_director_id,
+        Department.territorial_brand_chef_id,
+        Department.technical_requests,
+        Department.budget_records,
+        Department.technician_id,
+        Department.electrician_id,
+        Department.chief_technician_id,
+        Department.bids_it,
+        Department.it_repairman_id,
+    ]
+    form_excluded_columns = [
+        Department.workers,
+        Department.bids,
+        Department.work_times,
+        Department.workers_bids,
+        Department.technical_requests,
+        Department.budget_records,
+    ]
+    can_export = False
+
+    name_plural = "Производства"
+    name = "Производство"
+    column_labels = {
+        Department.name: "Название",
+        Department.address: "Адрес",
+        Department.workers: "Работники",
+        Department.bids: "Заявки",
+        Department.company: "Компания",
+        Department.type: "Формат",
+        Department.city: "Город",
+        Department.opening_date: "Дата открытия",
+        Department.closing_date: "Дата закрытия",
+        Department.area: "Общая площадь",
+        Department.territorial_manager: "Территориальный управляющий",
+        Department.territorial_brand_chef: "Территориальный брендшеф",
+        Department.delivery_manager: "Менеджер доставки",
+        Department.territorial_director: "Территориальный директор",
+        Department.chief_technician: "Главный техник",
+        Department.technician: "Техник",
+        Department.electrician: "Электрик",
+        Department.it_repairman: "IT ремотник",
+        Department.fingerprint_device_hex: "Номер СКУД устройства",
+    }
+
+    form_ajax_refs = {
+        "company": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "delivery_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_director": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "territorial_brand_chef": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "chief_technician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "technician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "electrician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+
+class GroupView(ModelView, model=Group):
+    column_list = [
+        Group.id,
+        Group.name,
+    ]
+    column_searchable_list = [
+        Group.name,
+    ]
+    form_columns = [
+        Group.name,
+    ]
+    can_export = False
+
+    name_plural = "Отделы"
+    name = "Отдел"
+    column_labels = {
+        Group.name: "Название",
+        Group.workers: "Сотрудники",
+    }
+
+
+class WorkerView(ModelView, model=Worker):
+    column_searchable_list = [
+        Worker.f_name,
+        Worker.l_name,
+        Worker.o_name,
+        Worker.phone_number,
+    ]
+    column_list = [
+        Worker.l_name,
+        Worker.f_name,
+        Worker.o_name,
+        Worker.phone_number,
+    ]
+
+    column_details_list = [
+        Worker.l_name,
+        Worker.f_name,
+        Worker.o_name,
+        Worker.post,
+        Worker.subordination_chief,
+        Worker.phone_number,
+        Worker.department,
+        Worker.company,
+        Worker.group,
+        Worker.b_date,
+        Worker.telegram_id,
+        Worker.gender,
+        Worker.employment_date,
+        Worker.dismissal_date,
+        Worker.medical_records_availability,
+        Worker.citizenship,
+        Worker.can_use_crm,
+    ]
+    can_export = False
+
+    name_plural = "Работники"
+    name = "Работник"
+    column_labels = {
+        Worker.f_name: "Имя",
+        Worker.l_name: "Фамилия",
+        Worker.o_name: "Отчество",
+        Worker.subordination_chief: "Руководитель",
+        Worker.department: "Производство",
+        Worker.group: "Отдел",
+        Worker.post: "Должность",
+        Worker.b_date: "Дата рождения",
+        Worker.bids: "Заявки",
+        Worker.phone_number: "Номер телефона",
+        Worker.company: "Компания",
+        Worker.telegram_id: "ID телеграмм",
+        Worker.employment_date: "Дата приема",
+        Worker.dismissal_date: "Дата увольнения",
+        Worker.medical_records_availability: "Наличие медицинской книжки",
+        Worker.gender: "Пол",
+        Worker.citizenship: "Гражданство",
+        Worker.can_use_crm: "Может использовать CRM",
+        Worker.password: "Пароль",
+    }
+
+    form_columns = [
+        Worker.f_name,
+        Worker.l_name,
+        Worker.o_name,
+        Worker.phone_number,
+        Worker.department,
+        Worker.group,
+        Worker.telegram_id,
+        Worker.post,
+        Worker.b_date,
+        Worker.employment_date,
+        Worker.dismissal_date,
+        Worker.medical_records_availability,
+        Worker.gender,
+        Worker.citizenship,
+        Worker.can_use_crm,
+        Worker.password,
+    ]
+
+    form_ajax_refs = {
+        "department": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "post": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "group": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+    }
+
+    @staticmethod
+    def gender_format(inst, columm):
+        value = getattr(inst, columm)
+
+        if value == Gender.man:
+            return "Мужчина"
+        else:
+            return "Женщина"
+
+    async def on_model_change(self, data: dict, model: Worker, is_created, request):
+        if "password" in data and data["password"] != model.password:
+            data["password"] = encrypt_password(data["password"])
+
+    column_formatters = {Worker.gender: gender_format}
+    column_formatters_detail = column_formatters
+
+
+class WorkerBidView(ModelView, model=WorkerBid):
+    details_template = "worker_bid_details.html"
+
+    column_labels = {
+        WorkerBid.f_name: "Имя",
+        WorkerBid.l_name: "Фамилия",
+        WorkerBid.o_name: "Отчество",
+        WorkerBid.post: "Должность",
+        WorkerBid.department: "Предприятия",
+        WorkerBid.work_permission: "Разрешение на работу",
+        WorkerBid.worksheet: "Анкета",
+        WorkerBid.passport: "Паспорт",
+        WorkerBid.state: "Статус",
+        WorkerBid.create_date: "Дата создания",
+        WorkerBid.comment: "Комментарий",
+    }
+
+    column_list = [
+        WorkerBid.id,
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.f_name,
+        WorkerBid.o_name,
+        WorkerBid.post,
+        WorkerBid.department,
+        WorkerBid.state,
+        WorkerBid.comment,
+    ]
+
+    column_details_list = [
+        WorkerBid.id,
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.f_name,
+        WorkerBid.o_name,
+        WorkerBid.worksheet,
+        WorkerBid.passport,
+        WorkerBid.work_permission,
+        WorkerBid.post,
+        WorkerBid.department,
+        WorkerBid.state,
+        WorkerBid.comment,
+    ]
+
+    column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
+
+    column_sortable_list = [
+        WorkerBid.create_date,
+        WorkerBid.l_name,
+        WorkerBid.id,
+        WorkerBid.o_name,
+        WorkerBid.f_name,
+    ]
+
+    form_columns = [WorkerBid.comment]
+
+    @staticmethod
+    def datetime_format(inst, columm):
+        format = "%H:%M %d.%m.%y"
+        value = getattr(inst, columm)
+        if value:
+            return value.strftime(format)
+        else:
+            return "Заявка не закрыта"
+
+    @staticmethod
+    def payment_type_format(inst, column):
+        value = getattr(inst, column)
+
+        return payment_type_dict.get(value)
+
+    @staticmethod
+    def approval_status_format(inst, columm):
+        value = getattr(inst, columm)
+
+        return approval_status_dict.get(value)
+
+    @action(
+        name="approve_worker_bid",
+        label="Согласовать",
+        add_in_detail=True,
+    )
+    async def approve_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await services.update_worker_bid_state(ApprovalStatus.approved, pk)
+
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
+
+    @action(
+        name="decline_worker_bid",
+        label="Отказать",
+        add_in_detail=True,
+    )
+    async def decline_worker_bid(self, request: Request):
+        pk = int(request.query_params.get("pks", "").split(",")[0])
+        await services.update_worker_bid_state(ApprovalStatus.denied, pk)
+
+        return RedirectResponse(request.url_for("admin:list", identity=self.identity))
+
+    @staticmethod
+    def files_format(inst, column):
+        documents: list[WorkerBidDocument] = getattr(inst, column)
+        urls: list[FileOutSchema] = []
+        for doc in documents:
+            url = services.get_file_data(doc.document)
+            if url:
+                urls.append(url)
+
+        return urls
+
+    can_create = False
+    can_export = False
+    name_plural = "Заявки на работу"
+    name = "Заявка на работу"
+
+    column_formatters = {
+        WorkerBid.state: approval_status_format,
+        WorkerBid.passport: files_format,
+        WorkerBid.work_permission: files_format,
+        WorkerBid.worksheet: files_format,
+        WorkerBid.create_date: datetime_format,
+    }
+
+    column_formatters_detail = column_formatters
+
+
+class TechnicalRequestView(ModelView, model=TechnicalRequest):
+    details_template = "tech_req_details.html"
+
+    column_labels = {
+        TechnicalRequest.description: "описание проблемы",
+        TechnicalRequest.state: "Статус выполнения",
+        TechnicalRequest.score: "Оценка ТУ",
+        TechnicalRequest.open_date: "Дата открытия заявки",
+        TechnicalRequest.deadline_date: "Крайний срок ремонта",
+        TechnicalRequest.repair_date: "Дата ремонта",
+        TechnicalRequest.confirmation_date: "Дата утверждения ремонта",
+        TechnicalRequest.confirmation_description: "Описания доработки",
+        TechnicalRequest.reopen_date: "Дата пере открытия",
+        TechnicalRequest.reopen_deadline_date: "Крайний срок ремонта при пере открытие",
+        TechnicalRequest.reopen_repair_date: "Дата повторного ремонта",
+        TechnicalRequest.reopen_confirmation_date: "Дата повторного утверждения",
+        TechnicalRequest.close_date: "Дата закрытия заявки",
+        TechnicalRequest.close_description: "Комментарий ТУ при закрытие заявки",
+        TechnicalRequest.repair_photos: "Фотографии ремонта",
+        TechnicalRequest.problem_photos: "Фотографии проблемы",
+        TechnicalRequest.repairman: "Исполнитель",
+        TechnicalRequest.department: "Производство",
+        TechnicalRequest.problem: "Проблема",
+        TechnicalRequest.territorial_manager: "Территориальный менеджер",
+        TechnicalRequest.worker: "Создатель",
+        TechnicalRequest.acceptor_post: "Должность закрывшего",
+    }
+
+    column_list = [
+        TechnicalRequest.id,
+        TechnicalRequest.department,
+        TechnicalRequest.problem,
+        TechnicalRequest.repairman,
+        TechnicalRequest.state,
+        TechnicalRequest.description,
+    ]
+
+    column_details_exclude_list = [
+        TechnicalRequest.department_id,
+        TechnicalRequest.worker_id,
+        TechnicalRequest.problem_id,
+        TechnicalRequest.repairman_id,
+        TechnicalRequest.department_id,
+        TechnicalRequest.territorial_manager_id,
+        TechnicalRequest.acceptor_post_id,
+    ]
+
+    column_sortable_list = [
+        TechnicalRequest.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        # Searches corresponding depatrmtens and problems
+        deps = select(Department.id).filter(Department.name.ilike(f"%{term}%"))
+        probs = select(TechnicalProblem.id).filter(
+            TechnicalProblem.problem_name.ilike(f"%{term}%")
+        )
+
+        # Chooses requests with found deps or probs.
+        return select(TechnicalRequest).filter(
+            or_(
+                TechnicalRequest.department_id.in_(deps),
+                TechnicalRequest.problem_id.in_(probs),
+            )
+        )
+
+    column_searchable_list = [TechnicalRequest.department, TechnicalRequest.problem]
+
+    can_create = False
+    can_edit = False
+    can_export = False
+    name_plural = "Технические заявки"
+    name = "Техническая заявка"
+
+    @staticmethod
+    def files_format(inst, column):
+        return WorkerBidView.files_format(inst, column)
+
+    column_formatters = {
+        TechnicalRequest.state: WorkerBidView.approval_status_format,
+        TechnicalRequest.repair_photos: files_format,
+        TechnicalRequest.problem_photos: files_format,
+        TechnicalRequest.open_date: WorkerBidView.datetime_format,
+        TechnicalRequest.close_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_date: WorkerBidView.datetime_format,
+        TechnicalRequest.repair_date: WorkerBidView.datetime_format,
+        TechnicalRequest.deadline_date: WorkerBidView.datetime_format,
+        TechnicalRequest.confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_repair_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.reopen_deadline_date: WorkerBidView.datetime_format,
+    }
+
+    column_formatters_detail = column_formatters
+
+
+class WorkTimeAdminView(ModelView, model=WorkTime):
+    name = "Явка"
+    name_plural = "Явки"
+
+    can_create = False
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        WorkTime.id,
+        WorkTime.worker,
+        WorkTime.post,
+        WorkTime.department,
+        WorkTime.company,
+        WorkTime.work_begin,
+        WorkTime.work_end,
+        WorkTime.work_duration,
+        WorkTime.day,
+        WorkTime.rating,
+        WorkTime.fine,
+        WorkTime.salary,
+    ]
+
+    column_sortable_list = [
+        WorkTime.id,
+    ]
+
+    column_labels = {
+        WorkTime.worker: "Работник",
+        WorkTime.post: "Должность",
+        WorkTime.department: "Департамент",
+        WorkTime.company: "Компания",
+        WorkTime.work_begin: "Начало работы",
+        WorkTime.work_end: "Конец работы",
+        WorkTime.work_duration: "Продолжительность (мин)",
+        WorkTime.day: "День",
+        WorkTime.rating: "Рейтинг",
+        WorkTime.fine: "Штраф",
+        WorkTime.salary: "Зарплата",
+    }
+
+
+class AccountLoginsView(ModelView, model=AccountLogins):
+    name = "Логин"
+    name_plural = "Логины"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        AccountLogins.id,
+        AccountLogins.worker,
+        AccountLogins.cop_mail_login,
+        AccountLogins.liko_login,
+        AccountLogins.bitrix_login,
+        AccountLogins.pyrus_login,
+        AccountLogins.check_office_login,
+        AccountLogins.pbi_login,
+    ]
+
+    column_details_exclude_list = [AccountLogins.worker_id]
+
+    column_sortable_list = [
+        AccountLogins.id,
+    ]
+
+    column_labels = {
+        AccountLogins.id: "id",
+        AccountLogins.worker: "Работник",
+        AccountLogins.cop_mail_login: "Корпоративная почта",
+        AccountLogins.liko_login: "Iiko",
+        AccountLogins.bitrix_login: "Bitrix",
+        AccountLogins.pyrus_login: "Pyrus",
+        AccountLogins.check_office_login: "CheckOffice",
+        AccountLogins.pbi_login: "PBI",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(AccountLogins).filter(
+            AccountLogins.worker_id.in_(workers_id),
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+
+class MaterialValuesView(ModelView, model=MaterialValues):
+    name = "Материальная ценность"
+    name_plural = "Материальные ценности"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        MaterialValues.id,
+        MaterialValues.worker,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
+        MaterialValues.issue_date,
+        MaterialValues.return_date,
+    ]
+
+    column_details_exclude_list = [MaterialValues.worker_id]
+
+    column_sortable_list = [
+        MaterialValues.id,
+        MaterialValues.item,
+        MaterialValues.price,
+        MaterialValues.inventory_number,
+        MaterialValues.return_date,
+        MaterialValues.issue_date,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(MaterialValues).filter(
+            or_(
+                MaterialValues.worker_id.in_(workers_id),
+                MaterialValues.item.ilike(f"%{term}%"),
+                MaterialValues.inventory_number.ilike(f"%{term}%"),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+        MaterialValues.item,
+        MaterialValues.inventory_number,
+    ]
+
+    column_labels = {
+        MaterialValues.worker: "Работник",
+        MaterialValues.item: "Предмет",
+        MaterialValues.quanity: "Количество",
+        MaterialValues.price: "Цена",
+        MaterialValues.inventory_number: "Инвентаризационный номер",
+        MaterialValues.issue_date: "Дата выдачи",
+        MaterialValues.return_date: "Дата возврата",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+
+class SubordinationView(ModelView, model=Subordination):
+    name = "Субординация"
+    name_plural = "Субординация"
+
+    can_create = True
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        Subordination.id,
+        Subordination.chief,
+        Subordination.employee,
+    ]
+    column_details_exclude_list = [
+        Subordination.employee_id,
+        Subordination.chief_id,
+    ]
+
+    column_sortable_list = [
+        Subordination.id,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(Subordination).filter(
+            or_(
+                Subordination.chief_id.in_(workers_id),
+                Subordination.employee_id.in_(workers_id),
+            )
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+    column_labels = {
+        Subordination.chief: "Руководитель",
+        Subordination.employee: "Сотрудник",
+        Subordination.id: "id",
+    }
+
+    form_ajax_refs = {
+        "chief": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "employee": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+
+class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
+    name = "Отпечатки рабочих"
+    name_plural = "Отпечатки рабочих"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerFingerprint.id,
+        WorkerFingerprint.worker_id,
+        WorkerFingerprint.department_id,
+        WorkerFingerprint.department_hex,
+        WorkerFingerprint.cell_number,
+        WorkerFingerprint.rfid_card,
+    ]
+
+    column_sortable_list = [
+        WorkerFingerprint.id,
+        WorkerFingerprint.worker_id,
+    ]
+
+    column_labels = {
+        WorkerFingerprint.worker_id: "Работник",
+        WorkerFingerprint.department_id: "Департамент",
+        WorkerFingerprint.department_hex: "Номер СУКД устройства",
+        WorkerFingerprint.cell_number: "Номер ячейки",
+        WorkerFingerprint.rfid_card: "РФИД карты",
+    }
+
+
+class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
+    name = "Попытки авторизаций на СКУДЕ"
+    name_plural = "Попытки авторизаций на СКУДЕ"
+
+    can_create = False
+    can_edit = False
+    can_export = False
+
+    column_list = [
+        FingerprintAttempt.id,
+        FingerprintAttempt.worker_finger_or_card,
+        FingerprintAttempt.department,
+        FingerprintAttempt.event_dttm,
+    ]
+
+    column_sortable_list = [
+        FingerprintAttempt.id,
+        FingerprintAttempt.event_dttm,
+    ]
+
+    column_labels = {
+        FingerprintAttempt.worker_finger_or_card: "Карта или номер ячейки",
+        FingerprintAttempt.department: "Номер устройства СКУД",
+        FingerprintAttempt.event_dttm: "Время авторизации",
+    }
