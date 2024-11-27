@@ -8,20 +8,20 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from app.bot import text, kb
-from app.bot.states import (
+from app.adapters.bot import text, kb
+from app.adapters.bot.states import (
     Base,
     DepartmentDirectorRequestForm,
 )
 
-from app.bot.handlers.tech_request.utils import (
+from app.adapters.bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
     department_names_with_count,
 )
-from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.bot.handlers.tech_request import kb as tech_kb
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,

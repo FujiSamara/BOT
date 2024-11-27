@@ -14,16 +14,16 @@ from aiogram.utils.markdown import hbold
 
 from fastapi import UploadFile
 
-from app.bot.text import (
+from app.adapters.bot.text import (
     format_err,
     notification_it_territorial_manager,
     notification_it_worker,
 )
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     create_reply_keyboard_resize,
     create_inline_keyboard,
 )
-from app.bot.handlers.bids_it.kb import (
+from app.adapters.bot.handlers.bids_it.kb import (
     repairman_bids_it_menu,
     repairman_department_menu,
     bids_pending_for_repairman,
@@ -31,9 +31,9 @@ from app.bot.handlers.bids_it.kb import (
     back_repairman_button,
     bids_it_denied_for_repairman,
 )
-from app.bot.states import RepairmanBidForm, Base
+from app.adapters.bot.states import RepairmanBidForm, Base
 
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
     try_edit_message,
@@ -42,7 +42,7 @@ from app.bot.handlers.utils import (
     handle_documents,
     notify_worker_by_telegram_id,
 )
-from app.bot.handlers.bids_it.utils import (
+from app.adapters.bot.handlers.bids_it.utils import (
     clear_state_with_success_rm_rework,
     clear_state_with_success_rm_work,
     create_buttons_for_repairman,
@@ -51,7 +51,7 @@ from app.bot.handlers.bids_it.utils import (
     filter_media_by_reopen,
     filter_media_by_done,
 )
-from app.bot.handlers.bids_it.schemas import (
+from app.adapters.bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITCallbackData,
 )

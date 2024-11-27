@@ -9,10 +9,10 @@ from aiogram.types import InlineKeyboardMarkup
 from app.infra.logging import logger
 import app.db.service as service
 
-from app.bot.handlers.rate.utils import shift_closed
-from app.bot.text import unclosed_shift_notify, unclosed_shift_request
-from app.bot.handlers.utils import notify_worker_by_telegram_id
-from app.bot.kb import (
+from app.adapters.bot.handlers.rate.utils import shift_closed
+from app.adapters.bot.text import unclosed_shift_notify, unclosed_shift_request
+from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+from app.adapters.bot.kb import (
     rating_menu_button,
     create_inline_keyboard,
     get_personal_cabinet_button,

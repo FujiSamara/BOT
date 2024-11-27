@@ -5,12 +5,12 @@ from aiogram.utils.markdown import hbold
 from app.db.models import IncidentStage
 import app.db.service.equipment_status_service as es_service
 
-import app.bot.kb as kb
-from app.bot.handlers.utils import (
+import app.adapters.bot.kb as kb
+from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
 )
-from app.bot.handlers.monitoring import utils
-from app.bot.handlers.monitoring.schemas import (
+from app.adapters.bot.handlers.monitoring import utils
+from app.adapters.bot.handlers.monitoring.schemas import (
     IncidentCallbackData,
     ConfirmIncidentCallbackData,
 )

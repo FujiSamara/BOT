@@ -1,5 +1,5 @@
 from aiogram import Router
-from app.bot.handlers.bids_it import (
+from app.adapters.bot.handlers.bids_it import (
     repairman,
     territorial_manager,
     worker,

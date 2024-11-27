@@ -3,8 +3,8 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.markdown import hbold
 
 from app.infra.config import settings
-from app.bot.kb import get_personal_cabinet_button
-from app.bot.text import personal_cabinet_logins_dict
+from app.adapters.bot.kb import get_personal_cabinet_button
+from app.adapters.bot.text import personal_cabinet_logins_dict
 from app.db.service import (
     get_worker_chief,
     get_material_value_by_inventory_number,
@@ -15,7 +15,7 @@ from app.db.service import (
     get_sum_hours_in_month,
 )
 from app.db.schemas import WorkerSchema
-from app.bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
+from app.adapters.bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
 
 
 def menu_text(worker: WorkerSchema) -> str:

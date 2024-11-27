@@ -4,9 +4,9 @@ from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 import asyncio
 from typing import Any, Callable
-import app.bot.handlers.utils as utils
+import app.adapters.bot.handlers.utils as utils
 
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     main_menu_button,
     create_inline_keyboard,
     InlineKeyboardButton,
@@ -19,7 +19,7 @@ from app.bot.kb import (
     teller_card_menu_button,
     teller_cash_menu_button,
 )
-from app.bot import text
+from app.adapters.bot import text
 
 from app.db.models import Bid
 from app.db.schemas import ApprovalStatus, BidSchema
@@ -36,16 +36,16 @@ from app.db.service import (
     get_departments_names,
     find_bid_for_worker,
 )
-from app.bot.handlers.bids.schemas import (
+from app.adapters.bot.handlers.bids.schemas import (
     BidCallbackData,
     BidViewMode,
     BidViewType,
     BidActionData,
     ActionType,
 )
-from app.bot.states import BidCoordination, Base
-from app.bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
-from app.bot.handlers.utils import (
+from app.adapters.bot.states import BidCoordination, Base
+from app.adapters.bot.handlers.bids.utils import get_full_bid_info, get_bid_list_info
+from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_message,
     try_edit_or_answer,

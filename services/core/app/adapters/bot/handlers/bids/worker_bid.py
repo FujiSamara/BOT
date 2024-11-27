@@ -10,16 +10,16 @@ from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 
 from fastapi import UploadFile
-import app.bot.kb as kb
-from app.bot.handlers import utils
-from app.bot.states import WorkerBidCreating, Base
+import app.adapters.bot.kb as kb
+from app.adapters.bot.handlers import utils
+from app.adapters.bot.states import WorkerBidCreating, Base
 from app.db import service
-from app.bot.handlers.bids.schemas import BidViewMode, WorkerBidCallbackData
-from app.bot.handlers.bids.utils import (
+from app.adapters.bot.handlers.bids.schemas import BidViewMode, WorkerBidCallbackData
+from app.adapters.bot.handlers.bids.utils import (
     get_worker_bid_list_info,
     get_full_worker_bid_info,
 )
-import app.bot.text as text
+import app.adapters.bot.text as text
 
 
 router = Router(name="worker_bid")

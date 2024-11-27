@@ -13,18 +13,18 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from app.bot.text import (
+from app.adapters.bot.text import (
     format_err,
     notification_it_repairman_reopen,
     notification_it_worker,
 )
 
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     create_reply_keyboard_resize,
     create_inline_keyboard,
     create_reply_keyboard_raw,
 )
-from app.bot.handlers.bids_it.kb import (
+from app.adapters.bot.handlers.bids_it.kb import (
     tm_department_menu,
     tm_bids_it_menu,
     get_create_tm_bid_it_menu,
@@ -32,22 +32,22 @@ from app.bot.handlers.bids_it.kb import (
     back_tm_button,
     bid_it_tm_create_history_button,
 )
-from app.bot.states import TMForm, Base
+from app.adapters.bot.states import TMForm, Base
 
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
     try_edit_message,
 )
-from app.bot.handlers.bids_it.utils import (
+from app.adapters.bot.handlers.bids_it.utils import (
     get_bid_it_list_info,
     get_bid_it_info,
     clear_state_with_success_it_tm,
     filter_media_by_reopen,
     create_buttons_for_territorial_manager,
 )
-from app.bot.handlers.bids_it.schemas import (
+from app.adapters.bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITCallbackData,
 )

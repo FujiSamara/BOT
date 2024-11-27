@@ -8,10 +8,10 @@ from datetime import datetime
 from app.infra.config import settings
 from app.infra.logging import logger
 
-from app.bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
+from app.adapters.bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
 import logging
-from app.bot.router import router
-from app.bot.tasks import (
+from app.adapters.bot.router import router
+from app.adapters.bot.tasks import (
     TaskScheduler,
     notify_with_unclosed_shift,
     notify_and_droped_departments_teller_cash,

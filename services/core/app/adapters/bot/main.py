@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.bot.configure import configure
+from app.adapters.bot.configure import configure
 import sys
 import logging
 

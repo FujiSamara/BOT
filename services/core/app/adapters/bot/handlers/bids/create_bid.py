@@ -13,7 +13,7 @@ import asyncio
 from fastapi import UploadFile
 
 # bot imports
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     bid_menu,
     get_create_bid_menu,
     payment_type_menu,
@@ -27,21 +27,21 @@ from app.bot.kb import (
     bid_create_search_button,
 )
 
-from app.bot.text import format_err, payment_types, bid_create_greet, back
+from app.adapters.bot.text import format_err, payment_types, bid_create_greet, back
 
-from app.bot.states import BidCreating, Base
-from app.bot.handlers.bids.schemas import (
+from app.adapters.bot.states import BidCreating, Base
+from app.adapters.bot.handlers.bids.schemas import (
     BidCallbackData,
     BidViewMode,
     BidViewType,
 )
 
-from app.bot.handlers.bids.utils import (
+from app.adapters.bot.handlers.bids.utils import (
     get_full_bid_info,
     get_short_bid_info,
     get_bid_list_info,
 )
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
     try_edit_message,
@@ -534,7 +534,7 @@ async def get_bid_id(message: CallbackQuery | Message, state: FSMContext):
 
 @router.message(BidCreating.search)
 async def find_bid(message: Message, state: FSMContext):
-    from app.bot.handlers.bids.main import get_menu
+    from app.adapters.bot.handlers.bids.main import get_menu
 
     data = await state.get_data()
     await try_delete_message(data["msg"])

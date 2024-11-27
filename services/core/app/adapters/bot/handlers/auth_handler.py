@@ -3,11 +3,11 @@ from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
 # bot imports
-from app.bot.text import user_not_exist_text
+from app.adapters.bot.text import user_not_exist_text
 
-from app.bot.states import Auth, Base
+from app.adapters.bot.states import Auth, Base
 
-from app.bot.handlers.main_handler import send_menu_by_scopes
+from app.adapters.bot.handlers.main_handler import send_menu_by_scopes
 
 # db imports
 from app.db.service import update_worker_tg_id_by_number

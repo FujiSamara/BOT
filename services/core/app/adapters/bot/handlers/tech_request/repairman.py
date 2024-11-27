@@ -9,15 +9,15 @@ from aiogram.utils.markdown import hbold
 
 from fastapi import UploadFile
 
-from app.bot import text, kb
-from app.bot.states import (
+from app.adapters.bot import text, kb
+from app.adapters.bot.states import (
     Base,
     RepairmanTechnicalRequestForm,
 )
 
-from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.bot.handlers.tech_request import kb as tech_kb
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
@@ -25,7 +25,7 @@ from app.bot.handlers.utils import (
     handle_documents_form,
     handle_documents,
 )
-from app.bot.handlers.tech_request.utils import (
+from app.adapters.bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
     department_names_with_count,

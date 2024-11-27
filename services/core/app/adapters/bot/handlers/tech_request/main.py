@@ -1,6 +1,6 @@
 from aiogram import Router
 
-from app.bot.handlers.tech_request import (
+from app.adapters.bot.handlers.tech_request import (
     worker,
     repairman,
     territorial_manager,

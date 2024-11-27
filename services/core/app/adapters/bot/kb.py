@@ -7,7 +7,7 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 
 from app.db.schemas import WorkTimeSchema
-from app.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
+from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from app.db.models import ApprovalStatus
 
 # Buttons

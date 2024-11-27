@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-from app.bot.handlers.bids_it.schemas import (
+from app.adapters.bot.handlers.bids_it.schemas import (
     BidITCallbackData,
     BidITViewMode,
 )
@@ -16,13 +16,13 @@ from app.db.schemas import (
     ProblemITSchema,
     BidITSchema,
 )
-from app.bot.states import Base
-from app.bot.handlers.utils import (
+from app.adapters.bot.states import Base
+from app.adapters.bot.handlers.utils import (
     try_edit_message,
 )
 from app.db.service import get_bid_it_by_id
 from app.db.models import ApprovalStatus
-from app.bot.handlers.bids_it.kb import (
+from app.adapters.bot.handlers.bids_it.kb import (
     get_create_tm_bid_it_menu,
     get_create_repairman_it_menu,
 )

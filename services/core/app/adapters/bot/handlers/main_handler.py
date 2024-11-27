@@ -8,11 +8,11 @@ import asyncio
 from app.infra.logging import logger
 import app.db.service as service
 
-from app.bot.handlers.utils import send_menu_by_scopes, try_delete_message
-from app.bot.text import err
-from app.bot.states import Base
-from app.bot.states import Auth
-from app.bot.text import first_run_text
+from app.adapters.bot.handlers.utils import send_menu_by_scopes, try_delete_message
+from app.adapters.bot.text import err
+from app.adapters.bot.states import Base
+from app.adapters.bot.states import Auth
+from app.adapters.bot.text import first_run_text
 
 
 router = Router(name="main")

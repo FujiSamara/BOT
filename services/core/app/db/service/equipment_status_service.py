@@ -22,7 +22,7 @@ async def update_equipment_status(
     If status not exist in db creates it.
     """
 
-    from app.bot.handlers.utils import (
+    from app.adapters.bot.handlers.utils import (
         notify_workers_by_scope,
     )
 

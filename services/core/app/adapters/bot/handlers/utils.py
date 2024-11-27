@@ -18,8 +18,8 @@ from fastapi import UploadFile
 from app.db.models import FujiScope
 from app.db.schemas import WorkerSchema
 import app.db.service as service
-from app.bot.bot import get_bot
-from app.bot.kb import (
+from app.adapters.bot.bot import get_bot
+from app.adapters.bot.kb import (
     fac_cc_menu_button,
     create_bid_menu_button,
     create_bid_it_menu_button,
@@ -37,7 +37,7 @@ from app.bot.kb import (
     get_personal_cabinet_button,
     get_monitoring_menu_btn,
 )
-from app.bot.handlers.tech_request.kb import (
+from app.adapters.bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
     rm_button,  # repairman
     ct_button,  # chief technician

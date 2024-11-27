@@ -22,7 +22,7 @@ from xlsxwriter import Workbook
 from app.infra.config import settings
 from app.infra.logging import logger
 
-from app.bot.kb import approval_status_dict
+from app.adapters.bot.kb import approval_status_dict
 
 import app.db.schemas as schemas
 import app.db.models as models

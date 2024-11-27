@@ -6,17 +6,17 @@ from datetime import datetime, timedelta
 
 from app.db import service
 from app.infra.config import settings
-from app.bot.handlers.utils import try_edit_or_answer
-from app.bot.handlers.rate.utils import shift_closed
-from app.bot.kb import (
+from app.adapters.bot.handlers.utils import try_edit_or_answer
+from app.adapters.bot.handlers.rate.utils import shift_closed
+from app.adapters.bot.kb import (
     create_inline_keyboard,
     main_menu_button,
     rating_menu_button,
     get_rating_worker_menu,
 )
-from app.bot.text import format_err
-from app.bot.handlers.rate.schemas import RateShiftCallbackData, RateFormStatus
-from app.bot.states import RateForm, Base
+from app.adapters.bot.text import format_err
+from app.adapters.bot.handlers.rate.schemas import RateShiftCallbackData, RateFormStatus
+from app.adapters.bot.states import RateForm, Base
 
 router = Router(name="rating")
 

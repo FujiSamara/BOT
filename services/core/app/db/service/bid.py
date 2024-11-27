@@ -304,7 +304,7 @@ async def update_bid_state(
     """
     Updates bid state with `state_name` by specified `state`.
     """
-    from app.bot.handlers.utils import (
+    from app.adapters.bot.handlers.utils import (
         notify_worker_by_telegram_id,
     )
 
@@ -383,7 +383,7 @@ def increment_bid_state(bid: BidSchema, state: ApprovalStatus):
 
 async def notify_next_coordinator(bid: BidSchema):
     """Notifies next coordinator with `ApprovalStatus.pending_approval`."""
-    from app.bot.handlers.utils import (
+    from app.adapters.bot.handlers.utils import (
         notify_workers_by_scope,
         notify_workers_in_department_by_scope,
         notify_worker_by_telegram_id,
@@ -485,7 +485,7 @@ def update_bid(bid: BidSchema, paying_department_name: Optional[str] = None):
 
 def bid_to_out_bid(bid: BidSchema) -> BidOutSchema:
     """Converts `BidSchema` to `BidRecordSchema`"""
-    from app.bot.handlers.bids.utils import get_bid_state_info
+    from app.adapters.bot.handlers.bids.utils import get_bid_state_info
 
     return BidOutSchema(
         id=bid.id,
@@ -625,7 +625,7 @@ def export_bid_records(
 ) -> BytesIO:
     """Returns xlsx file with bids records filtered by `query_schema`."""
     # Formatters
-    from app.bot.kb import payment_type_dict
+    from app.adapters.bot.kb import payment_type_dict
 
     return orm.export_models(
         Bid,
@@ -695,7 +695,7 @@ def export_fac_or_cc_bid_records(
 ) -> BytesIO:
     """Returns xlsx file with bids records filtered by `query_schema`."""
     # Formatters
-    from app.bot.kb import payment_type_dict
+    from app.adapters.bot.kb import payment_type_dict
 
     bids_select = orm.create_fac_or_cc_select_query(worker_phone)
 

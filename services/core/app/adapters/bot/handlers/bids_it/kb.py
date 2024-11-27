@@ -4,8 +4,8 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.bot.handlers.bids_it.schemas import BidITCallbackData, BidITViewMode
-from app.bot.kb import (
+from app.adapters.bot.handlers.bids_it.schemas import BidITCallbackData, BidITViewMode
+from app.adapters.bot.kb import (
     main_menu_button,
 )
 

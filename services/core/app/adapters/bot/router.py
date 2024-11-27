@@ -1,6 +1,6 @@
 from aiogram import Router
-import app.bot.handlers as handlers
-from app.bot.handlers import (
+import app.adapters.bot.handlers as handlers
+from app.adapters.bot.handlers import (
     auth_handler,
     main_handler,
 )

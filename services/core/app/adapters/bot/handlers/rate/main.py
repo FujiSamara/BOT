@@ -1,5 +1,5 @@
 from aiogram import Router
-from app.bot.handlers.rate import rate_worker
+from app.adapters.bot.handlers.rate import rate_worker
 
 
 router = Router(name="rating_main")

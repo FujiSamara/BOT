@@ -34,7 +34,10 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     worker_bid.state = state
     orm.update_worker_bid(worker_bid)
 
-    from app.bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
+    from app.adapters.bot.handlers.utils import (
+        notify_worker_by_telegram_id,
+        send_menu_by_scopes,
+    )
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:

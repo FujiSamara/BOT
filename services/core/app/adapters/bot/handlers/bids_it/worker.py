@@ -14,12 +14,12 @@ from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     create_reply_keyboard_resize,
     create_inline_keyboard,
     create_bid_it_menu_button,
 )
-from app.bot.handlers.bids_it.kb import (
+from app.adapters.bot.handlers.bids_it.kb import (
     get_create_bid_it_menu,
     settings_bid_it_menu_button,
     bid_it_create_history_button,
@@ -27,15 +27,15 @@ from app.bot.handlers.bids_it.kb import (
     bid_it_create_pending_button,
 )
 
-from app.bot.text import (
+from app.adapters.bot.text import (
     bid_create_greet,
     format_err,
     notification_it_repairman,
 )
 
-from app.bot.states import BidITCreating, Base
+from app.adapters.bot.states import BidITCreating, Base
 
-from app.bot.handlers.bids_it.utils import (
+from app.adapters.bot.handlers.bids_it.utils import (
     filter_media_by_done,
     filter_media_by_reopen,
     get_id_by_problem_type,
@@ -43,7 +43,7 @@ from app.bot.handlers.bids_it.utils import (
     get_bid_it_info,
     create_buttons_for_worker,
 )
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     try_edit_message,
     try_delete_message,
     download_file,
@@ -52,7 +52,7 @@ from app.bot.handlers.utils import (
     notify_worker_by_telegram_id,
 )
 
-from app.bot.handlers.bids_it.schemas import (
+from app.adapters.bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITCallbackData,
 )

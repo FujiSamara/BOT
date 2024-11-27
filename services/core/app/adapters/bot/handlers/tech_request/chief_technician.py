@@ -8,12 +8,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
 
-from app.bot import text, kb
-from app.bot.states import Base, ChiefTechnicianTechnicalRequestForm
+from app.adapters.bot import text, kb
+from app.adapters.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.bot.handlers.tech_request import kb as tech_kb
-from app.bot.handlers.utils import (
+from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.utils import (
     download_file,
     handle_documents,
     handle_documents_form,
@@ -21,7 +21,7 @@ from app.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from app.bot.handlers.tech_request.utils import (
+from app.adapters.bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
     department_names_with_count,

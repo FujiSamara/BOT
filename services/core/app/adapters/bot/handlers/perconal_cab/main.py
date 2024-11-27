@@ -26,7 +26,7 @@ from app.db.service import (
 from app.db.schemas import WorkerSchema
 from app.db.models import FujiScope
 
-from app.bot.kb import (
+from app.adapters.bot.kb import (
     get_personal_cabinet_button,
     get_per_cab_logins_button,
     get_per_cab_mat_vals_button,
@@ -37,17 +37,17 @@ from app.bot.kb import (
     main_menu_button,
     create_reply_keyboard,
 )
-from app.bot import text as text_imp
-from app.bot.states import PersconalCabinet, Base
-from app.bot.handlers.utils import (
+from app.adapters.bot import text as text_imp
+from app.adapters.bot.states import PersconalCabinet, Base
+from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
     handle_documents_form,
     handle_documents,
     download_file,
 )
-from app.bot.handlers.perconal_cab import utils
-from app.bot.handlers.perconal_cab.schemas import (
+from app.adapters.bot.handlers.perconal_cab import utils
+from app.adapters.bot.handlers.perconal_cab.schemas import (
     ShowLoginCallbackData,
     ShowWorkTimeCallbackData,
 )
