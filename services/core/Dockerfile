@@ -1,11 +1,9 @@
-FROM python:latest
-
-ADD . /app
-
-ADD templates /app/templates
+FROM python:3.11
 
 WORKDIR /app
 
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+ADD . .
 CMD ["python", "manage.py"]
