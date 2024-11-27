@@ -18,16 +18,16 @@ services:
     env_file:
       - .env
 
-  backend:
-    container_name: bot-backend
+  core:
+    container_name: bot-core
     build:
-      context: services/backend
+      context: services/core
       network: host
 
     volumes:
       - cert-dir:/var/www/certs:ro
       - files-dir:/tmp
-      - ./services/backend:/app
+      - ./services/core:/app
 
     network_mode: "host"
 
