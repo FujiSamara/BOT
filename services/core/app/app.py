@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-import app.admin as admin
+import app.adapters.input.admin as admin
 import app.adapters.bot as bot
 import app.adapters.input.api as api
 from app.middlewares.setup import setup_core_middlewares

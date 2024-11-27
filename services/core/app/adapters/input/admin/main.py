@@ -2,15 +2,16 @@ from fastapi import FastAPI
 import sys
 from uuid import uuid4
 
-from app.admin.admin import FujiAdmin, AdminAuth
-from app.admin.configure import configure
 from app.infra.logging import logger
 from app.infra.config import settings
 from app.db.database import engine, session
 
+from app.adapters.input.admin.admin import FujiAdmin, AdminAuth
+from app.adapters.input.admin.configure import configure
+
 
 def create(app: FastAPI) -> FastAPI:
-    templates_dir = settings.app_directory_path + "/app/admin/templates"
+    templates_dir = settings.app_directory_path + "/app/adapters/inpurt/admin/templates"
     admin = FujiAdmin(
         app,
         engine=engine,
