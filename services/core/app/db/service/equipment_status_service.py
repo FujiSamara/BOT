@@ -1,7 +1,5 @@
 from datetime import datetime
 
-from settings import logger
-
 from app.db.schemas import (
     DepartmentSchemaFull,
     EquipmentIncidentSchema,
@@ -10,6 +8,8 @@ from app.db.schemas import (
 )
 from app.db.models import Department, FujiScope, IncidentStage
 from app.db import orm
+
+from app.infra.logging import logger
 
 bad_statuses = ["Не доступна"]
 
