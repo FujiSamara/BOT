@@ -80,35 +80,33 @@ def get_bid_state_info(bid: BidSchema, separator: str = "-----") -> str:
         case "paralegal_state":
             pending_coordintators.append(bid.expenditure.paralegal)
         case "kru_state":
-            krus = extra_services.get_workers_by_scope(FujiScope.bot_bid_kru)
+            krus = extra_service.get_workers_by_scope(FujiScope.bot_bid_kru)
             pending_coordintators.extend(krus)
         case "owner_state":
-            owners = extra_services.get_workers_by_scope(FujiScope.bot_bid_owner)
+            owners = extra_service.get_workers_by_scope(FujiScope.bot_bid_owner)
             pending_coordintators.extend(owners)
         case "accountant_card_state":
-            accountants = extra_services.get_workers_by_scope(
+            accountants = extra_service.get_workers_by_scope(
                 FujiScope.bot_bid_accountant_card
             )
             pending_coordintators.extend(accountants)
         case "accountant_cash_state":
-            accountants = extra_services.get_workers_by_scope(
+            accountants = extra_service.get_workers_by_scope(
                 FujiScope.bot_bid_accountant_cash
             )
             pending_coordintators.extend(accountants)
         case "teller_card_state":
-            tellers = extra_services.get_workers_in_department_by_scope(
+            tellers = extra_service.get_workers_in_department_by_scope(
                 FujiScope.bot_bid_teller_card, bid.department.id
             )
             pending_coordintators.extend(tellers)
         case "teller_card_state":
-            tellers = extra_services.get_tellers_cash_for_department(bid.department.id)
+            tellers = extra_service.get_tellers_cash_for_department(bid.department.id)
             pending_coordintators.extend(tellers)
         case _:
             pass
 
-    previous_coordinators: list[WorkerSchema] = bid_services.get_bid_coordinators(
-        bid.id
-    )
+    previous_coordinators: list[WorkerSchema] = bid_service.get_bid_coordinators(bid.id)
 
     stage = ""
     if len(previous_coordinators) > 0:

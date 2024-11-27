@@ -133,8 +133,8 @@ async def get_fac_cc_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> TalbeInfoSchema:
-    record_count = bid_services.get_fac_or_cc_bid_count(query, user.username)
-    all_record_count = bid_services.get_fac_or_cc_bid_count(
+    record_count = bid_service.get_fac_or_cc_bid_count(query, user.username)
+    all_record_count = bid_service.get_fac_or_cc_bid_count(
         QuerySchema(),
         user.username,
     )
@@ -153,7 +153,7 @@ async def get_fac_cc_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> list[BidOutSchema]:
-    return bid_services.get_fac_or_cc_bid_records_at_page(
+    return bid_service.get_fac_or_cc_bid_records_at_page(
         page, records_per_page, query, user.username
     )
 
@@ -162,7 +162,7 @@ async def get_fac_cc_bids(
 async def export_fac_cc_bids(
     query: QuerySchema, user: User = Security(get_user, scopes=["crm_fac_cc_bid"])
 ) -> Response:
-    file = bid_services.export_fac_or_cc_bid_records(query, user.username)
+    file = bid_service.export_fac_or_cc_bid_records(query, user.username)
 
     return StreamingResponse(
         content=file,

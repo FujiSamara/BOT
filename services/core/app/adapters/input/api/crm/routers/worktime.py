@@ -2,7 +2,7 @@ from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
-import app.services.worktime as service
+import app.services.worktime as services
 from app.infra.database.schemas import (
     WorkTimeSchema,
     QuerySchema,

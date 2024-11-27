@@ -10,7 +10,7 @@ import app.infra.database.schemas as schemas
 
 def get_monitoring_list() -> str:
     """Returns multiline monitoring list."""
-    statuses = es_services.get_equipment_statuses()
+    statuses = es_service.get_equipment_statuses()
 
     sep = "\n"
 
@@ -38,7 +38,7 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
         territorial_manager_text = (
             f"{territorial_manager.l_name} {territorial_manager.f_name}"
         )
-    tellers_cash = ex_services.get_tellers_cash_for_department(
+    tellers_cash = ex_service.get_tellers_cash_for_department(
         incident.equipment_status.department.id
     )
     status = incident.status
@@ -70,7 +70,7 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
 def get_incidents_history_list() -> str:
     """Returns incidents history list."""
     incidents = sorted(
-        es_services.get_incidents_history(),
+        es_service.get_incidents_history(),
         key=lambda incident: incident.id,
         reverse=True,
     )[:10]
