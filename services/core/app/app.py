@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-from core.middlewares.setup import setup_core_middlewares
-
-# Apps
 import admin
 import bot
 import api
+from middlewares.setup import setup_core_middlewares
 
 
-def configure(app: FastAPI):
-    """Configures fast api core app."""
+def create_app() -> FastAPI:
+    app = FastAPI(lifespan=global_lifespan, docs_url=None, redoc_url=None)
+
     bot.create(app)
     admin.create(app)
     api.create(app)

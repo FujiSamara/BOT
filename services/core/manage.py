@@ -1,7 +1,9 @@
 import uvicorn
+
+
 from configure import configure
-from core.main import create_app
 from settings import get_settings
+from app.app import create_app
 
 
 def run():
