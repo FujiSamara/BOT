@@ -1,6 +1,5 @@
 from io import BytesIO
 from pathlib import Path
-import logging
 from datetime import datetime
 from fastapi import UploadFile
 from typing import Any, Optional, Tuple

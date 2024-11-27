@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, ErrorEvent, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
-import logging
+
 import asyncio
 
 from app.infra.logging import logger

@@ -1,5 +1,3 @@
-import logging
-
 from app.infra.logging import logger
 
 import app.db.orm as orm

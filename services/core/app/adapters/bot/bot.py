@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import Update, WebhookInfo
 from typing import Annotated
 from fastapi import Header
-import logging
+
 
 from app.infra.config import settings
 from app.infra.logging import logger

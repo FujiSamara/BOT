@@ -1,6 +1,5 @@
 from pathlib import Path
 from sqlalchemy import null
-import logging
 from datetime import datetime, timedelta
 from fastapi import UploadFile
 from typing import Any, Optional

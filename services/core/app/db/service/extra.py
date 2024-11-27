@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from app.infra.logging import logger
