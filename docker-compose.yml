@@ -43,7 +43,7 @@ services:
     volumes:
       - cert-dir:/var/www/certs:ro
       - nginx-html:/usr/share/nginx/html
-      - ./services/server/nginx.conf:/etc/nginx/conf.d/franchise-fuji.conf:ro
+      - ./services/server/nginx.conf:/etc/nginx/conf.d/default.conf
 
     network_mode: "host"
 
