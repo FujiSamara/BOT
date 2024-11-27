@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import logging
 import sys
 
-from app.api.external.routers import equipment_status
+from app.adapters.input.api.external.routers import equipment_status
 
 
 def create(api: FastAPI) -> FastAPI:

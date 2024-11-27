@@ -4,7 +4,7 @@ from fastapi.routing import APIRouter
 from app.db import service
 from app.db.schemas import ExpenditureSchema, TalbeInfoSchema, QuerySchema
 
-from app.api.auth import User, get_user
+from app.adapters.input.api.auth import User, get_user
 
 
 router = APIRouter()

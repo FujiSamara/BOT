@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.api.configure import configure
+from app.adapters.input.api.configure import configure
 import logging
 import sys
 

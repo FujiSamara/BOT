@@ -26,7 +26,7 @@ from app.db.models import (
 from app.bot.kb import payment_type_dict, approval_status_dict
 from app.db.schemas import FileOutSchema
 from app.db import service
-from app.api.auth import encrypt_password
+from app.adapters.input.api.auth import encrypt_password
 
 
 class PostScopeView(ModelView, model=PostScope):

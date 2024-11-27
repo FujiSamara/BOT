@@ -8,8 +8,8 @@ from calendar import timegm
 
 from pydantic import ValidationError
 
-from app.api.auth.schemas import TokenData, User, UserWithScopes
-from app.api.auth.permissions import _oauth2_schema, _to_auth_scope
+from app.adapters.input.api.auth.schemas import TokenData, User, UserWithScopes
+from app.adapters.input.api.auth.permissions import _oauth2_schema, _to_auth_scope
 from app.db.models import FujiScope
 from app.infra.config import settings
 from app.db import service

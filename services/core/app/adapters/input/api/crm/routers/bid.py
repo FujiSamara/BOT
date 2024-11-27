@@ -9,7 +9,7 @@ import app.db.service.bid as bid_service
 from app.db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from app.bot.handlers.bids.utils import get_current_coordinator_field
 
-from app.api.auth import User, get_user
+from app.adapters.input.api.auth import User, get_user
 
 
 router = APIRouter()

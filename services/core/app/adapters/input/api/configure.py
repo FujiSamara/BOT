@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 
-from app.api import crm
-from app.api import auth
-from app.api import external
+from app.adapters.input.api import crm
+from app.adapters.input.api import auth
+from app.adapters.input.api import external
 
-from app.api.route import register_base_routes
+from app.adapters.input.api.route import register_base_routes
 
 
 def configure(api: FastAPI):
