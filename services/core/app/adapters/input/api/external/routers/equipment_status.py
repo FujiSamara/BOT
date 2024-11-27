@@ -1,6 +1,6 @@
 from fastapi.routing import APIRouter
 
-from app.services import equipment_status_service
+import app.services.equipment_status as equipment_service
 from app.infra.database.schemas import EquipmentStatusSchemaIn
 
 router = APIRouter()
@@ -10,6 +10,4 @@ router = APIRouter()
 async def update_equipment_status(
     asterisk_id: str, equipment_status: EquipmentStatusSchemaIn
 ):
-    await equipment_status_service.update_equipment_status(
-        asterisk_id, equipment_status
-    )
+    await equipment_service.update_equipment_status(asterisk_id, equipment_status)

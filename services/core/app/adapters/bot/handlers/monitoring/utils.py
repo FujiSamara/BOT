@@ -3,7 +3,7 @@ from aiogram.utils.markdown import hbold, hcode
 from app.infra.database.models import IncidentStage
 from app.infra.config import settings
 
-import app.services.equipment_status_service as es_service
+import app.services.equipment_status as es_service
 import app.services.extra as ex_service
 import app.infra.database.schemas as schemas
 
