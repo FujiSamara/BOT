@@ -16,6 +16,8 @@ def create_app() -> FastAPI:
 
     setup_core_middlewares(app)
 
+    return app
+
 
 @asynccontextmanager
 async def global_lifespan(app: FastAPI):
