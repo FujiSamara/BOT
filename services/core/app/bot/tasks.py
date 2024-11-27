@@ -1,11 +1,13 @@
 from fastapi_utils.tasks import repeat_every
-import logging
 import asyncio
 from typing import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup
+
+from app.infra.logging import logger
+import app.db.service as service
 
 from app.bot.handlers.rate.utils import shift_closed
 from app.bot.text import unclosed_shift_notify, unclosed_shift_request
@@ -15,7 +17,6 @@ from app.bot.kb import (
     create_inline_keyboard,
     get_personal_cabinet_button,
 )
-import app.db.service as service
 
 
 @dataclass
@@ -29,7 +30,7 @@ class _Task:
 class TaskScheduler:
     def __init__(self):
         self.tasks: list[_Task] = []
-        self.logger = logging.getLogger("uvicorn.error")
+        self.logger = logger
 
     def register_task(self, task: Callable, time: datetime, name: str):
         try:
@@ -77,10 +78,9 @@ class TaskScheduler:
         self.logger.info("Termination tasks are completed.")
 
 
-@repeat_every(seconds=60 * 60 * 24, logger=logging.getLogger("uvicorn.error"))
+@repeat_every(seconds=60 * 60 * 24, logger=logger)
 async def notify_with_unclosed_shift() -> None:
     """Notify all owners who has unclosed shifts."""
-    logger = logging.getLogger("uvicorn.error")
     logger.info("Notifying owners with unclosed shift.")
 
     departments_ids = service.get_departments_ids()
@@ -113,11 +113,10 @@ async def notify_with_unclosed_shift() -> None:
 
 @repeat_every(
     seconds=60 * 60 * 24,
-    logger=logging.getLogger("uvicorn.error"),
+    logger=logger,
 )
 async def notify_and_droped_departments_teller_cash() -> None:
     """Notify all teller cash to change department"""
-    logger = logging.getLogger("uvicorn.error")
     logger.info("Notifying all tellers cash to change department.")
     tellers = service.set_tellers_cash_department()
     for teller in tellers:

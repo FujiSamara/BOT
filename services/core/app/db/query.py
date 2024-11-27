@@ -1,6 +1,5 @@
 from io import BytesIO
 from datetime import datetime
-import logging
 from typing import Callable, Type
 import typing
 from abc import ABC
@@ -20,7 +19,9 @@ from sqlalchemy.orm import InstrumentedAttribute, Session
 from pydantic import BaseModel
 from xlsxwriter import Workbook
 
-from settings import get_settings
+from app.infra.config import settings
+from app.infra.logging import logger
+
 from app.bot.kb import approval_status_dict
 
 import app.db.schemas as schemas
@@ -37,7 +38,7 @@ class Builder(ABC):
 
     name = "|BUILDER|"
 
-    logger = logging.getLogger("uvicorn.error")
+    logger = logger
 
     def __init__(self, initial_select: Select, session: Session):
         """
@@ -591,7 +592,7 @@ class XLSXExporter(Builder):
         return f"{value.name}"
 
     def _format_datetime(self, value: datetime) -> str:
-        return value.strftime(get_settings().date_format)
+        return value.strftime(settings.date_format)
 
     def _format_approval_status(self, value: models.ApprovalStatus) -> str:
         return approval_status_dict[value]

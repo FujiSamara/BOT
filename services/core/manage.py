@@ -1,22 +1,20 @@
 import uvicorn
 
 
-from configure import configure
-from settings import get_settings
+from app.infra.config.settings import settings
+from app.infra.logging.logger import config
+
 from app.app import create_app
 
 
 def run():
-    configure()
-
-    log_config_path = get_settings().app_directory_path + "/log_config.yaml"
     uvicorn.run(
         app=create_app(),
-        host=get_settings().host,
-        port=get_settings().port,
-        log_config=log_config_path,
-        ssl_keyfile=get_settings().ssl_keyfile,
-        ssl_certfile=get_settings().ssl_certfile,
+        host=settings.host,
+        port=settings.port,
+        log_config=config,
+        ssl_keyfile=settings.ssl_keyfile,
+        ssl_certfile=settings.ssl_certfile,
     )
 
 
