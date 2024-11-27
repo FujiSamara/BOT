@@ -16,7 +16,7 @@ from fastapi import UploadFile
 
 from app.infra.config import settings
 
-from app.db.service import (
+from app.services import (
     get_worker_by_telegram_id,
     get_departments_names,
     set_department_for_worker,

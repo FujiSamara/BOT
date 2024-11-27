@@ -1,7 +1,7 @@
 from fastapi import Security
 from fastapi.routing import APIRouter
 
-from app.db import service
+from app import services
 from app.db.schemas import WorkerSchema
 
 from app.adapters.input.api.auth import User, get_user
@@ -18,7 +18,7 @@ async def find_workers(
 
     Search is carried out by f_name, l_name, o_name.
     """
-    return service.find_workers(name)
+    return services.find_workers(name)
 
 
 @router.get("/by/phone")
@@ -26,4 +26,4 @@ async def get_worker_by_number(
     phone: str, _: User = Security(get_user, scopes=["authenticated"])
 ) -> WorkerSchema:
     """Finds worker by given `phone`."""
-    return service.get_worker_by_phone_number(phone)
+    return services.get_worker_by_phone_number(phone)

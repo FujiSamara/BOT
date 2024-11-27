@@ -28,7 +28,7 @@ from app.adapters.bot.handlers.utils import (
 )
 
 
-from app.db.service import (
+from app.services import (
     get_all_history_technical_requests_for_territorial_manager,
     get_all_waiting_technical_requests_for_territorial_manager,
     get_departments_names_for_territorial_manager,

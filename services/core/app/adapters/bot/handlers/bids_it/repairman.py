@@ -57,7 +57,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
 )
 
 
-from app.db.service import (
+from app.services import (
     update_bid_it_rm,
     get_departments_names_by_repairman_telegram_id,
     get_pending_bids_it_by_repairman,

@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 
-from app.db import service
+from app import services
 from app.infra.config import settings
 from app.adapters.bot.handlers.utils import try_edit_or_answer
 from app.adapters.bot.handlers.rate.utils import shift_closed
@@ -23,7 +23,7 @@ router = Router(name="rating")
 
 @router.callback_query(F.data == rating_menu_button.callback_data)
 async def get_rating_list(callback: CallbackQuery):
-    department = service.get_worker_department_by_telegram_id(callback.message.chat.id)
+    department = services.get_worker_department_by_telegram_id(callback.message.chat.id)
     day = datetime.now().date()
 
     buttons = []
@@ -55,9 +55,9 @@ async def get_rating_list(callback: CallbackQuery):
 
 
 async def generate_shifts_menu(message: Message, day: str) -> None:
-    department = service.get_worker_department_by_telegram_id(message.chat.id)
+    department = services.get_worker_department_by_telegram_id(message.chat.id)
     date = day
-    records = service.get_work_time_records_by_day_and_department(department.id, date)
+    records = services.get_work_time_records_by_day_and_department(department.id, date)
 
     buttons = []
 
@@ -114,7 +114,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
 
 async def generate_worker_menu(message: Message, record_id: int) -> None:
     # Settings data
-    record = service.get_work_time_record_by_id(record_id)
+    record = services.get_work_time_record_by_id(record_id)
     time_begin = record.work_begin.strftime(settings.date_time_format)
     fine = record.fine or 0
     rating = record.rating or 0
@@ -182,9 +182,9 @@ async def set_rating(message: Message, state: FSMContext):
     data = await state.get_data()
 
     record_id = data.get("record_id")
-    record = service.get_work_time_record_by_id(record_id)
+    record = services.get_work_time_record_by_id(record_id)
     record.rating = rating
-    service.update_work_time_record(record)
+    services.update_work_time_record(record)
     await state.clear()
     await state.set_state(Base.none)
     msg = await message.answer("Успешно!")
@@ -205,9 +205,9 @@ async def set_fine(message: Message, state: FSMContext):
     data = await state.get_data()
 
     record_id = data.get("record_id")
-    record = service.get_work_time_record_by_id(record_id)
+    record = services.get_work_time_record_by_id(record_id)
     record.fine = fine
-    service.update_work_time_record(record)
+    services.update_work_time_record(record)
     await state.clear()
     await state.set_state(Base.none)
     msg = await message.answer("Успешно!")

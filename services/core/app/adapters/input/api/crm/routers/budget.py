@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import Security
 from fastapi.routing import APIRouter
 
-from app.db import service
+from app import services
 from app.db.schemas import (
     BudgetRecordSchema,
     BudgetRecordWithChapter,
@@ -22,8 +22,8 @@ async def get_pages_info(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> TalbeInfoSchema:
-    record_count = service.get_budget_records_count(query)
-    all_record_count = service.get_budget_records_count(QuerySchema())
+    record_count = services.get_budget_records_count(query)
+    all_record_count = services.get_budget_records_count(QuerySchema())
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
@@ -49,7 +49,7 @@ async def get_bid_records(
             department=record.department,
             chapter=record.expenditure.chapter,
         )
-        for record in service.get_budget_records_at_page(page, records_per_page, query)
+        for record in services.get_budget_records_at_page(page, records_per_page, query)
     ]
 
 
@@ -57,7 +57,7 @@ async def get_bid_records(
 async def get_last_budget_record(
     _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> Optional[BudgetRecordWithChapter]:
-    record = service.get_last_budget_record()
+    record = services.get_last_budget_record()
     if record:
         return BudgetRecordWithChapter(
             id=record.id,
@@ -74,7 +74,7 @@ async def get_last_budget_record(
 async def delete_budget_record(
     id: int, _: User = Security(get_user, scopes=["crm_budget"])
 ) -> None:
-    service.remove_budget_record(id)
+    services.remove_budget_record(id)
 
 
 @router.patch("/")
@@ -82,4 +82,4 @@ async def update_budget_record(
     schema: BudgetRecordSchema,
     _: User = Security(get_user, scopes=["crm_budget"]),
 ) -> None:
-    service.update_budget_record(schema)
+    services.update_budget_record(schema)

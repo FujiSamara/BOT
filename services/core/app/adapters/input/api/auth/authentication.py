@@ -12,7 +12,7 @@ from app.adapters.input.api.auth.schemas import TokenData, User, UserWithScopes
 from app.adapters.input.api.auth.permissions import _oauth2_schema, _to_auth_scope
 from app.db.models import FujiScope
 from app.infra.config import settings
-from app.db import service
+from app import services
 
 
 def encrypt_password(password: str) -> str:
@@ -25,7 +25,7 @@ def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
 
     Returns corresponding `User` if `username` and `password` correct,
     `None` otherwise."""
-    worker = service.get_worker_by_phone_number(username)
+    worker = services.get_worker_by_phone_number(username)
 
     if (
         not worker
@@ -132,7 +132,7 @@ async def get_user(
             username="guest", full_name="guest", scopes=token_data.scopes
         )
     else:
-        worker = service.get_worker_by_phone_number(username)
+        worker = services.get_worker_by_phone_number(username)
         if not worker:
             raise credentials_exception
         user = User(

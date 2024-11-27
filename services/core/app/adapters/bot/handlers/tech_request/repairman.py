@@ -32,7 +32,7 @@ from app.adapters.bot.handlers.tech_request.utils import (
 )
 
 
-from app.db.service import (
+from app.services import (
     get_all_history_technical_requests_for_repairman,
     get_all_rework_technical_requests_for_repairman,
     get_all_waiting_technical_requests_for_repairman,

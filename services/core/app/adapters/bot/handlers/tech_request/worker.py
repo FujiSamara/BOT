@@ -27,7 +27,7 @@ from app.adapters.bot.handlers.tech_request.utils import show_form
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.tech_request import kb as tech_kb
 
-from app.db.service import (
+from app.services import (
     get_all_history_technical_requests_for_worker,
     get_all_waiting_technical_requests_for_worker,
     get_technical_problem_names,

@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 import asyncio
 
 from app.infra.logging import logger
-import app.db.service as service
+import app.services as services
 
 from app.adapters.bot.handlers.utils import send_menu_by_scopes, try_delete_message
 from app.adapters.bot.text import err
@@ -20,7 +20,7 @@ router = Router(name="main")
 
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
-    worker = service.get_worker_by_telegram_id(message.from_user.id)
+    worker = services.get_worker_by_telegram_id(message.from_user.id)
     if not worker:
         await state.set_state(Auth.authing)
         await message.answer(first_run_text(message.from_user.full_name))

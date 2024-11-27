@@ -7,7 +7,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup
 
 from app.infra.logging import logger
-import app.db.service as service
+import app.services as services
 
 from app.adapters.bot.handlers.rate.utils import shift_closed
 from app.adapters.bot.text import unclosed_shift_notify, unclosed_shift_request
@@ -83,12 +83,12 @@ async def notify_with_unclosed_shift() -> None:
     """Notify all owners who has unclosed shifts."""
     logger.info("Notifying owners with unclosed shift.")
 
-    departments_ids = service.get_departments_ids()
+    departments_ids = services.get_departments_ids()
     previous_day = datetime.now().date() - timedelta(days=1)
 
     for deparment_id in departments_ids:
         if not shift_closed(previous_day, deparment_id):
-            chef = service.get_chef_by_department_id(deparment_id)
+            chef = services.get_chef_by_department_id(deparment_id)
             if chef and chef.telegram_id:
                 try:
                     logger.info(f"Notifying {chef.l_name} {chef.f_name}...")
@@ -118,7 +118,7 @@ async def notify_with_unclosed_shift() -> None:
 async def notify_and_droped_departments_teller_cash() -> None:
     """Notify all teller cash to change department"""
     logger.info("Notifying all tellers cash to change department.")
-    tellers = service.set_tellers_cash_department()
+    tellers = services.set_tellers_cash_department()
     for teller in tellers:
         await notify_worker_by_telegram_id(
             message="Актуализируйте производтсво",

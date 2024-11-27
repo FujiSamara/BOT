@@ -20,7 +20,7 @@ from app.adapters.bot.states import Base
 from app.adapters.bot.handlers.utils import (
     try_edit_message,
 )
-from app.db.service import get_bid_it_by_id
+from app.services import get_bid_it_by_id
 from app.db.models import ApprovalStatus
 from app.adapters.bot.handlers.bids_it.kb import (
     get_create_tm_bid_it_menu,

@@ -10,7 +10,7 @@ from app.adapters.bot.states import Auth, Base
 from app.adapters.bot.handlers.main_handler import send_menu_by_scopes
 
 # db imports
-from app.db.service import update_worker_tg_id_by_number
+from app.services import update_worker_tg_id_by_number
 
 
 router = Router(name="auth")

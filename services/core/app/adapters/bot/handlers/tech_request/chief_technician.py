@@ -27,7 +27,7 @@ from app.adapters.bot.handlers.tech_request.utils import (
     department_names_with_count,
 )
 
-from app.db.service import (
+from app.services import (
     close_request,
     get_all_history_technical_requests_for_repairman,
     get_all_worker_in_group,

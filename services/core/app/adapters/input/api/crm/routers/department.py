@@ -1,7 +1,7 @@
 from fastapi import Security
 from fastapi.routing import APIRouter
 
-from app.db import service
+from app import services
 from app.db.schemas import DepartmentSchema
 
 from app.adapters.input.api.auth import User, get_user
@@ -18,4 +18,4 @@ async def find_workers(
 
     Search is carried out by name.
     """
-    return service.find_department_by_name(name)
+    return services.find_department_by_name(name)

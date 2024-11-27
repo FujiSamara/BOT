@@ -10,7 +10,7 @@ from app.db.schemas import (
     QuerySchema,
     WorkerSchema,
 )
-from app.db.service.budget import create_budget_record
+from app.services.budget import create_budget_record
 
 
 def get_chapters() -> list[str]:

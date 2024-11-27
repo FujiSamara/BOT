@@ -4,7 +4,7 @@ from fastapi import UploadFile
 
 from app.infra.logging import logger
 
-from app.db.service.extra import (
+from app.services.extra import (
     find_department_by_name,
     get_worker_by_telegram_id,
     get_worker_department_by_telegram_id,

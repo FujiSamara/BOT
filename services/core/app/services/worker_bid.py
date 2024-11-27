@@ -4,7 +4,7 @@ from fastapi import UploadFile
 
 from app.infra.logging import logger
 
-from app.db.service.extra import get_worker_by_id
+from app.services.extra import get_worker_by_id
 import app.db.orm as orm
 from app.db.models import (
     Department,

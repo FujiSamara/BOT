@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.db.service import get_technical_request_by_id
+from app.services import get_technical_request_by_id
 
 router = Router()
 

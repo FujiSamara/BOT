@@ -58,7 +58,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
 )
 
 # db imports
-from app.db.service import (
+from app.services import (
     get_problems_it_types,
     get_problems_it_schema,
     create_bid_it,

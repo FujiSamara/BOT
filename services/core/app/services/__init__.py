@@ -1,4 +1,4 @@
-from app.db.service.bid import (
+from app.services.bid import (
     add_documents_to_bid,
     apply_bid_archive_filter,
     apply_bid_creator_filter,
@@ -30,7 +30,7 @@ from app.db.service.bid import (
     update_bid_state,
     find_bid_for_worker,
 )
-from app.db.service.budget import (
+from app.services.budget import (
     create_budget_record,
     get_budget_record_by_id,
     get_budget_records,
@@ -40,7 +40,7 @@ from app.db.service.budget import (
     remove_budget_record,
     update_budget_record,
 )
-from app.db.service.expenditure import (
+from app.services.expenditure import (
     create_expenditure,
     find_expenditures,
     get_chapters,
@@ -53,7 +53,7 @@ from app.db.service.expenditure import (
     remove_expenditure,
     update_expenditure,
 )
-from app.db.service.extra import (
+from app.services.extra import (
     find_department_by_name,
     find_posts,
     find_workers,
@@ -78,7 +78,7 @@ from app.db.service.extra import (
     get_companies_names,
     set_tellers_cash_department,
 )
-from app.db.service.it_problem import (
+from app.services.it_problem import (
     create_bid_it,
     get_bid_it_by_id,
     get_denied_bids_it_by_repairman,
@@ -96,7 +96,7 @@ from app.db.service.it_problem import (
     update_bid_it_rm,
     update_bid_it_tm,
 )
-from app.db.service.technical_request import (
+from app.services.technical_request import (
     close_request,
     counting_date_sla,
     create_technical_request,
@@ -125,12 +125,12 @@ from app.db.service.technical_request import (
     get_departments_names_for_chief_technician,
     get_request_count_in_departments,
 )
-from app.db.service.worker_bid import (
+from app.services.worker_bid import (
     create_worker_bid,
     get_worker_bid_by_id,
     update_worker_bid_state,
 )
-from app.db.service.worktime import (
+from app.services.worktime import (
     create_worktime,
     dump_worktime,
     export_worktimes,

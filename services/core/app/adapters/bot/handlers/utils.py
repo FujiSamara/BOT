@@ -17,7 +17,7 @@ from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
 from app.db.models import FujiScope
 from app.db.schemas import WorkerSchema
-import app.db.service as service
+import app.services as services
 from app.adapters.bot.bot import get_bot
 from app.adapters.bot.kb import (
     fac_cc_menu_button,
@@ -81,7 +81,7 @@ async def send_menu_by_scopes(message: Message, edit=None):
     If `edit = True` - calling `Message.edit_text` instead `Message.answer`
     """
     scopes = []
-    worker = service.get_worker_by_telegram_id(message.chat.id)
+    worker = services.get_worker_by_telegram_id(message.chat.id)
     if worker:
         scopes = worker.post.scopes
 
@@ -186,8 +186,8 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     telegram_ids: set[int] = {
         worker.telegram_id
         for worker in (
-            *service.get_workers_by_scope(scope),
-            *service.get_workers_by_scope(FujiScope.admin),
+            *services.get_workers_by_scope(scope),
+            *services.get_workers_by_scope(FujiScope.admin),
         )
         if worker.telegram_id is not None
     }
@@ -206,8 +206,8 @@ async def notify_workers_in_department_by_scope(
     Sends notify `message` to workers in department by their `scope`.
     """
     workers: list[WorkerSchema] = [
-        *service.get_workers_in_department_by_scope(scope, department_id),
-        *service.get_workers_by_scope(FujiScope.admin),
+        *services.get_workers_in_department_by_scope(scope, department_id),
+        *services.get_workers_by_scope(FujiScope.admin),
     ]
 
     for worker in workers:
@@ -340,4 +340,4 @@ def get_worker_my_message(message: Message | CallbackQuery) -> WorkerSchema | No
     if isinstance(message, CallbackQuery):
         message = message.message
 
-    return service.get_worker_by_telegram_id(message.chat.id)
+    return services.get_worker_by_telegram_id(message.chat.id)

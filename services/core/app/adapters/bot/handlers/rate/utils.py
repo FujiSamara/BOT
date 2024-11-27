@@ -1,5 +1,5 @@
 from datetime import date
-from app.db import service
+from app import services
 
 
 def shift_closed(day: date, department_id: int) -> bool:
@@ -8,7 +8,7 @@ def shift_closed(day: date, department_id: int) -> bool:
 
     Returns `True` if shift closed `False` otherwise.
     """
-    records = service.get_work_time_records_by_day_and_department(department_id, day)
+    records = services.get_work_time_records_by_day_and_department(department_id, day)
 
     for record in records:
         if not record.work_begin or not record.work_end:

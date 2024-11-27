@@ -4,8 +4,8 @@ from fastapi.exceptions import HTTPException
 from fastapi.routing import APIRouter
 
 from app.db.models import ApprovalStatus
-from app.db import service
-import app.db.service.bid as bid_service
+from app import services
+import app.services.bid as bid_service
 from app.db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from app.adapters.bot.handlers.bids.utils import get_current_coordinator_field
 
@@ -22,8 +22,8 @@ async def get_bid_pages_info(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_bid|crm_bid_readonly"]),
 ) -> TalbeInfoSchema:
-    record_count = service.get_bid_count(query)
-    all_record_count = service.get_bid_count(QuerySchema())
+    record_count = services.get_bid_count(query)
+    all_record_count = services.get_bid_count(QuerySchema())
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
@@ -40,18 +40,18 @@ async def get_bids(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_bid|crm_bid_readonly"]),
 ) -> list[BidOutSchema]:
-    return service.get_bid_record_at_page(page, records_per_page, query)
+    return services.get_bid_record_at_page(page, records_per_page, query)
 
 
 @router.patch("/approve/{id}")
 async def approve_bid(id: int, user: User = Security(get_user, scopes=["crm_bid"])):
     """Approves bid by `id`"""
-    bid = service.get_bid_by_id(id)
+    bid = services.get_bid_by_id(id)
     if bid:
-        coordinator = service.get_worker_by_phone_number(user.username)
+        coordinator = services.get_worker_by_phone_number(user.username)
         if coordinator is None:
             raise HTTPException(status_code=400, detail="Coordinator not found")
-        await service.update_bid_state(
+        await services.update_bid_state(
             bid,
             get_current_coordinator_field(bid),
             ApprovalStatus.approved,
@@ -64,13 +64,13 @@ async def reject_bid(
     id: int, reason: str, user: User = Security(get_user, scopes=["crm_bid"])
 ):
     """Rejects bid by `id`"""
-    bid = service.get_bid_by_id(id)
+    bid = services.get_bid_by_id(id)
     if bid:
         bid.denying_reason = reason
-        coordinator = service.get_worker_by_phone_number(user.username)
+        coordinator = services.get_worker_by_phone_number(user.username)
         if coordinator is None:
             raise HTTPException(status_code=400, detail="Coordinator not found")
-        await service.update_bid_state(
+        await services.update_bid_state(
             bid,
             get_current_coordinator_field(bid),
             ApprovalStatus.denied,
@@ -82,7 +82,7 @@ async def reject_bid(
 async def export_bids(
     query: QuerySchema, _: User = Security(get_user, scopes=["crm_bid"])
 ) -> Response:
-    file = service.export_bid_records(query)
+    file = services.export_bid_records(query)
 
     return StreamingResponse(
         content=file,
@@ -97,7 +97,7 @@ async def export_bids(
 async def delete_bid(
     id: int, _: User = Security(get_user, scopes=["authenticated"])
 ) -> None:
-    service.remove_bid(id)
+    services.remove_bid(id)
 
 
 @router.post("/")
@@ -105,8 +105,8 @@ async def create_my_bid(
     bid: BidInSchema,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> BidOutSchema:
-    bid.worker = service.get_worker_by_phone_number(user.username)
-    return await service.create_bid_by_in_schema(bid)
+    bid.worker = services.get_worker_by_phone_number(user.username)
+    return await services.create_bid_by_in_schema(bid)
 
 
 @router.post("/{id}")
@@ -115,7 +115,7 @@ async def add_document(
     files: list[UploadFile],
     _: User = Security(get_user, scopes=["authenticated"]),
 ):
-    service.add_documents_to_bid(id, files)
+    services.add_documents_to_bid(id, files)
 
 
 # endregion
@@ -128,8 +128,8 @@ async def get_fac_cc_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> TalbeInfoSchema:
-    record_count = bid_service.get_fac_or_cc_bid_count(query, user.username)
-    all_record_count = bid_service.get_fac_or_cc_bid_count(
+    record_count = bid_services.get_fac_or_cc_bid_count(query, user.username)
+    all_record_count = bid_services.get_fac_or_cc_bid_count(
         QuerySchema(),
         user.username,
     )
@@ -148,7 +148,7 @@ async def get_fac_cc_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> list[BidOutSchema]:
-    return bid_service.get_fac_or_cc_bid_records_at_page(
+    return bid_services.get_fac_or_cc_bid_records_at_page(
         page, records_per_page, query, user.username
     )
 
@@ -157,7 +157,7 @@ async def get_fac_cc_bids(
 async def export_fac_cc_bids(
     query: QuerySchema, user: User = Security(get_user, scopes=["crm_fac_cc_bid"])
 ) -> Response:
-    file = bid_service.export_fac_or_cc_bid_records(query, user.username)
+    file = bid_services.export_fac_or_cc_bid_records(query, user.username)
 
     return StreamingResponse(
         content=file,
@@ -173,7 +173,7 @@ async def approve_fac_cc_bid(
     id: int, user: User = Security(get_user, scopes=["crm_fac_cc_bid"])
 ):
     """Approves bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await approve_coordinator_bid(id, ["fac_state", "cc_state"], coordinator.id)
@@ -186,7 +186,7 @@ async def reject_fac_cc_bid(
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ):
     """Rejects bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await reject_coordinator_bid(id, reason, ["fac_state", "cc_state"], coordinator.id)
@@ -199,37 +199,37 @@ async def get_fac_cc_bid_history_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query,
         "fac_state",
         ApprovalStatus.denied,
         ApprovalStatus.approved,
         group=1,
     )
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query,
         "cc_state",
         ApprovalStatus.denied,
         ApprovalStatus.approved,
         group=1,
     )
-    record_count = service.get_coordinator_bid_count(
+    record_count = services.get_coordinator_bid_count(
         query, user.username, ["fac", "cc"]
     )
     empty_query = QuerySchema()
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         empty_query,
         "fac_state",
         ApprovalStatus.pending_approval,
         group=1,
     )
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         empty_query,
         "cc_state",
         ApprovalStatus.pending_approval,
         group=1,
     )
-    all_record_count = service.get_coordinator_bid_count(
+    all_record_count = services.get_coordinator_bid_count(
         empty_query,
         user.username,
         ["fac", "cc"],
@@ -250,21 +250,21 @@ async def get_fac_cc_history_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_fac_cc_bid"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query,
         "fac_state",
         ApprovalStatus.denied,
         ApprovalStatus.approved,
         group=1,
     )
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query,
         "cc_state",
         ApprovalStatus.denied,
         ApprovalStatus.approved,
         group=1,
     )
-    return service.get_coordinator_bid_records_at_page(
+    return services.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, ["fac", "cc"]
     )
 
@@ -279,12 +279,12 @@ async def get_paralegal_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
-    record_count = service.get_coordinator_bid_count(query, user.username, "paralegal")
-    all_record_count = service.get_coordinator_bid_count(
-        service.apply_bid_status_filter(
+    record_count = services.get_coordinator_bid_count(query, user.username, "paralegal")
+    all_record_count = services.get_coordinator_bid_count(
+        services.apply_bid_status_filter(
             QuerySchema(), "paralegal_state", ApprovalStatus.pending_approval, group=1
         ),
         user.username,
@@ -306,10 +306,10 @@ async def get_paralegal_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
-    return service.get_coordinator_bid_records_at_page(
+    return services.get_coordinator_bid_records_at_page(
         page, records_per_page, query, user.username, "paralegal"
     )
 
@@ -319,10 +319,10 @@ async def export_paralegal_bids(
     query: QuerySchema,
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ) -> Response:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "paralegal_state", ApprovalStatus.pending_approval, group=1
     )
-    file = service.export_coordintator_bid_records(query, user.username, "paralegal")
+    file = services.export_coordintator_bid_records(query, user.username, "paralegal")
 
     return StreamingResponse(
         content=file,
@@ -338,7 +338,7 @@ async def approve_paralegal_bid(
     id: int, user: User = Security(get_user, scopes=["crm_paralegal_bid"])
 ):
     """Approves bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await approve_coordinator_bid(id, "paralegal_state", coordinator.id)
@@ -351,7 +351,7 @@ async def reject_paralegal_bid(
     user: User = Security(get_user, scopes=["crm_paralegal_bid"]),
 ):
     """Rejects bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await reject_coordinator_bid(id, reason, "paralegal_state", coordinator.id)
@@ -367,12 +367,12 @@ async def get_accountant_card_bid_pages_info(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
-    record_count = service.get_bid_count(query)
-    all_record_count = service.get_bid_count(
-        service.apply_bid_status_filter(
+    record_count = services.get_bid_count(query)
+    all_record_count = services.get_bid_count(
+        services.apply_bid_status_filter(
             QuerySchema(),
             "accountant_card_state",
             ApprovalStatus.pending_approval,
@@ -395,10 +395,10 @@ async def get_accountant_card_bids(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
-    return service.get_bid_record_at_page(page, records_per_page, query)
+    return services.get_bid_record_at_page(page, records_per_page, query)
 
 
 @router.post("/accountant_card/export")
@@ -406,10 +406,10 @@ async def export_accountant_card_bids(
     query: QuerySchema,
     _: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ) -> Response:
-    service.apply_bid_status_filter(
+    services.apply_bid_status_filter(
         query, "accountant_card_state", ApprovalStatus.pending_approval, group=1
     )
-    file = service.export_bid_records(query)
+    file = services.export_bid_records(query)
 
     return StreamingResponse(
         content=file,
@@ -425,7 +425,7 @@ async def approve_accountant_card_bid(
     id: int, user: User = Security(get_user, scopes=["crm_accountant_card_bid"])
 ):
     """Approves bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await approve_coordinator_bid(id, "accountant_card_state", coordinator.id)
@@ -438,7 +438,7 @@ async def reject_accountant_card_bid(
     user: User = Security(get_user, scopes=["crm_accountant_card_bid"]),
 ):
     """Rejects bid by `id`"""
-    coordinator = service.get_worker_by_phone_number(user.username)
+    coordinator = services.get_worker_by_phone_number(user.username)
     if coordinator is None:
         raise HTTPException(status_code=400, detail="Coordinator not found")
     await reject_coordinator_bid(id, reason, "accountant_card_state", coordinator.id)
@@ -454,10 +454,10 @@ async def get_my_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_creator_filter(query, user.username)
-    record_count = service.get_bid_count(query)
-    all_record_count = service.get_bid_count(
-        service.apply_bid_creator_filter(QuerySchema(), user.username)
+    services.apply_bid_creator_filter(query, user.username)
+    record_count = services.get_bid_count(query)
+    all_record_count = services.get_bid_count(
+        services.apply_bid_creator_filter(QuerySchema(), user.username)
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
@@ -475,8 +475,8 @@ async def get_my_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_creator_filter(query, user.username)
-    return service.get_bid_record_at_page(page, records_per_page, query)
+    services.apply_bid_creator_filter(query, user.username)
+    return services.get_bid_record_at_page(page, records_per_page, query)
 
 
 @router.post("/my/export")
@@ -484,8 +484,8 @@ async def export_my_bids(
     query: QuerySchema,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> Response:
-    service.apply_bid_creator_filter(query, user.username)
-    file = service.export_bid_records(query)
+    services.apply_bid_creator_filter(query, user.username)
+    file = services.export_bid_records(query)
 
     return StreamingResponse(
         content=file,
@@ -506,12 +506,12 @@ async def get_archive_bid_pages_info(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> TalbeInfoSchema:
-    service.apply_bid_creator_filter(query, user.username)
-    service.apply_bid_archive_filter(query)
-    record_count = service.get_bid_count(query)
-    all_record_count = service.get_bid_count(
-        service.apply_bid_archive_filter(
-            service.apply_bid_creator_filter(QuerySchema(), user.username)
+    services.apply_bid_creator_filter(query, user.username)
+    services.apply_bid_archive_filter(query)
+    record_count = services.get_bid_count(query)
+    all_record_count = services.get_bid_count(
+        services.apply_bid_archive_filter(
+            services.apply_bid_creator_filter(QuerySchema(), user.username)
         )
     )
     page_count = (record_count + records_per_page - 1) // records_per_page
@@ -530,9 +530,9 @@ async def get_archive_bids(
     records_per_page: int = 15,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> list[BidOutSchema]:
-    service.apply_bid_creator_filter(query, user.username)
-    service.apply_bid_archive_filter(query)
-    return service.get_bid_record_at_page(page, records_per_page, query)
+    services.apply_bid_creator_filter(query, user.username)
+    services.apply_bid_archive_filter(query)
+    return services.get_bid_record_at_page(page, records_per_page, query)
 
 
 @router.post("/archive/export")
@@ -540,9 +540,9 @@ async def export_archive_bids(
     query: QuerySchema,
     user: User = Security(get_user, scopes=["authenticated"]),
 ) -> Response:
-    service.apply_bid_creator_filter(query, user.username)
-    service.apply_bid_archive_filter(query)
-    file = service.export_bid_records(query)
+    services.apply_bid_creator_filter(query, user.username)
+    services.apply_bid_archive_filter(query)
+    file = services.export_bid_records(query)
 
     return StreamingResponse(
         content=file,
@@ -560,7 +560,7 @@ async def approve_coordinator_bid(
     id: int, coordinator_field: str | list[str], coordinator_id: int
 ):
     """Approves bid by `id` if coordinator is current coordinator."""
-    bid = service.get_bid_by_id(id)
+    bid = services.get_bid_by_id(id)
 
     if isinstance(coordinator_field, str):
         coordinator_field = [coordinator_field]
@@ -568,7 +568,7 @@ async def approve_coordinator_bid(
     current_coordinator_field = get_current_coordinator_field(bid)
 
     if bid and current_coordinator_field in coordinator_field:
-        await service.update_bid_state(
+        await services.update_bid_state(
             bid, current_coordinator_field, ApprovalStatus.approved, coordinator_id
         )
 
@@ -577,12 +577,12 @@ async def reject_coordinator_bid(
     id: int, reason: str, coordinator_field: str, coordinator_id: int
 ):
     """Rejects bid by `id` if coordinator is current coordinator."""
-    bid = service.get_bid_by_id(id)
+    bid = services.get_bid_by_id(id)
 
     current_coordinator_field = get_current_coordinator_field(bid)
 
     if bid and coordinator_field == current_coordinator_field:
         bid.denying_reason = reason
-        await service.update_bid_state(
+        await services.update_bid_state(
             bid, current_coordinator_field, ApprovalStatus.denied, coordinator_id
         )

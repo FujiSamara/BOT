@@ -5,7 +5,7 @@ from aiogram.utils.markdown import hbold
 from app.infra.config import settings
 from app.adapters.bot.kb import get_personal_cabinet_button
 from app.adapters.bot.text import personal_cabinet_logins_dict
-from app.db.service import (
+from app.services import (
     get_worker_chief,
     get_material_value_by_inventory_number,
     get_worker_by_telegram_id,

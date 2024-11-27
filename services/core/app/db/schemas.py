@@ -388,14 +388,14 @@ class BidOutSchema(BaseSchema):
     @field_validator("documents", mode="before")
     @classmethod
     def upload_file_validate(cls, val):
-        from app.db import service
+        from app import services
 
         if isinstance(val, list):
             result = []
             for doc in val:
                 if isinstance(doc, UploadFile):
                     if hasattr(doc.file, "name"):
-                        result.append(service.get_file_data(doc.filename, "api"))
+                        result.append(services.get_file_data(doc.filename, "api"))
             return result
         return val
 

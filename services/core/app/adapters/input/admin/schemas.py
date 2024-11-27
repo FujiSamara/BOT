@@ -26,7 +26,7 @@ from app.db.models import (
 )
 from app.adapters.bot.kb import payment_type_dict, approval_status_dict
 from app.db.schemas import FileOutSchema
-from app.db import service
+from app import services
 from app.adapters.input.api.auth import encrypt_password
 
 
@@ -387,7 +387,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
     )
     async def approve_worker_bid(self, request: Request):
         pk = int(request.query_params.get("pks", "").split(",")[0])
-        await service.update_worker_bid_state(ApprovalStatus.approved, pk)
+        await services.update_worker_bid_state(ApprovalStatus.approved, pk)
 
         return RedirectResponse(request.url_for("admin:list", identity=self.identity))
 
@@ -398,7 +398,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
     )
     async def decline_worker_bid(self, request: Request):
         pk = int(request.query_params.get("pks", "").split(",")[0])
-        await service.update_worker_bid_state(ApprovalStatus.denied, pk)
+        await services.update_worker_bid_state(ApprovalStatus.denied, pk)
 
         return RedirectResponse(request.url_for("admin:list", identity=self.identity))
 
@@ -407,7 +407,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         documents: list[WorkerBidDocument] = getattr(inst, column)
         urls: list[FileOutSchema] = []
         for doc in documents:
-            url = service.get_file_data(doc.document)
+            url = services.get_file_data(doc.document)
             if url:
                 urls.append(url)
 

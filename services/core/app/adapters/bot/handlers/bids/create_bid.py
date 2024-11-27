@@ -51,7 +51,7 @@ from app.adapters.bot.handlers.utils import (
 )
 
 # db imports
-from app.db.service import (
+from app.services import (
     get_departments_names,
     create_bid,
     get_bids_by_worker_telegram_id,

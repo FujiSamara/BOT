@@ -2,7 +2,7 @@ from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
-import app.db.service.worktime as service
+import app.services.worktime as service
 from app.db.schemas import (
     WorkTimeSchema,
     QuerySchema,
@@ -22,8 +22,8 @@ async def get_pages_info(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> TalbeInfoSchema:
-    record_count = service.get_wortkime_count(query)
-    all_record_count = service.get_wortkime_count(QuerySchema())
+    record_count = services.get_wortkime_count(query)
+    all_record_count = services.get_wortkime_count(QuerySchema())
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
@@ -40,7 +40,7 @@ async def get_worktimes(
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> list[WorkTimeSchemaFull]:
-    return service.get_worktimes_at_page(page, records_per_page, query)
+    return services.get_worktimes_at_page(page, records_per_page, query)
 
 
 @router.post("/")
@@ -48,14 +48,14 @@ async def create_worktime(
     schema: WorkTimeSchema,
     _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> None:
-    await service.create_worktime(schema)
+    await services.create_worktime(schema)
 
 
 @router.delete("/{id}")
 async def delete_worktime(
     id: int, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> None:
-    await service.remove_worktime(id)
+    await services.remove_worktime(id)
 
 
 @router.patch("/")
@@ -63,14 +63,14 @@ async def update_worktime(
     schema: WorkTimeSchema,
     _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> None:
-    await service.update_worktime(schema)
+    await services.update_worktime(schema)
 
 
 @router.post("/export")
 async def export_worktimes(
     query: QuerySchema, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> Response:
-    file = service.export_worktimes(query)
+    file = services.export_worktimes(query)
 
     return StreamingResponse(
         content=file,
@@ -85,7 +85,7 @@ async def export_worktimes(
 async def get_worktime_photo(
     photo_id: int, _: User = Security(get_user, scopes=["crm_worktime"])
 ) -> Response:
-    photo = service.get_worktime_photo_by_id(photo_id)
+    photo = services.get_worktime_photo_by_id(photo_id)
     return StreamingResponse(
         content=photo,
         headers={

@@ -28,7 +28,7 @@ from app.adapters.bot.handlers.utils import (
 )
 
 
-from app.db.service import (
+from app.services import (
     close_request,
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,

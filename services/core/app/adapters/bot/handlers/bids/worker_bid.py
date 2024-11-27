@@ -13,7 +13,7 @@ from fastapi import UploadFile
 import app.adapters.bot.kb as kb
 from app.adapters.bot.handlers import utils
 from app.adapters.bot.states import WorkerBidCreating, Base
-from app.db import service
+from app import services
 from app.adapters.bot.handlers.bids.schemas import BidViewMode, WorkerBidCallbackData
 from app.adapters.bot.handlers.bids.utils import (
     get_worker_bid_list_info,
@@ -75,7 +75,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     for doc in work_permission:
         work_permission_files.append(await utils.download_file(doc))
 
-    service.create_worker_bid(
+    services.create_worker_bid(
         f_name,
         l_name,
         o_name,
@@ -159,7 +159,7 @@ async def set_oname(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_worker_bid_post_form")
 async def get_post_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.post)
-    posts = service.get_posts_names()
+    posts = services.get_posts_names()
     posts.sort()
     await utils.try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -175,7 +175,7 @@ async def set_post(message: Message, state: FSMContext):
     msg = data.get("msg")
     if msg:
         await utils.try_delete_message(msg)
-    posts = service.get_posts_names()
+    posts = services.get_posts_names()
     await utils.try_delete_message(message)
     if message.text not in posts:
         posts.sort()
@@ -193,7 +193,7 @@ async def set_post(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_worker_bid_department_form")
 async def get_department_form(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerBidCreating.department)
-    departments = service.get_departments_names()
+    departments = services.get_departments_names()
     departments.sort()
     await utils.try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -209,7 +209,7 @@ async def set_department(message: Message, state: FSMContext):
     msg = data.get("msg")
     if msg:
         await utils.try_delete_message(msg)
-    departments = service.get_departments_names()
+    departments = services.get_departments_names()
     await utils.try_delete_message(message)
     if message.text not in departments:
         departments.sort()
@@ -271,7 +271,7 @@ async def set_work_permission(message: Message, state: FSMContext):
 async def get_documents(
     callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
 ):
-    bid = service.get_worker_bid_by_id(callback_data.id)
+    bid = services.get_worker_bid_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
     for doc in bid.worksheet:
         media.append(
@@ -324,7 +324,7 @@ async def get_worker_bid(
     callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
 ):
     bid_id = callback_data.id
-    bid = service.get_worker_bid_by_id(bid_id)
+    bid = services.get_worker_bid_by_id(bid_id)
     data = await state.get_data()
     if "msgs" in data:
         for msg in data["msgs"]:
@@ -352,7 +352,7 @@ async def get_worker_bid(
 
 @router.callback_query(F.data == "get_worker_bid_history")
 async def get_workers_bids_history(callback: CallbackQuery):
-    bids = service.get_workers_bids_by_sender_telegram_id(callback.message.chat.id)
+    bids = services.get_workers_bids_by_sender_telegram_id(callback.message.chat.id)
     bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
     keyboard = kb.create_inline_keyboard(
         *(

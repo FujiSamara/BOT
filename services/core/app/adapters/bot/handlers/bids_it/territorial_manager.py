@@ -53,7 +53,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
 )
 
 
-from app.db.service import (
+from app.services import (
     update_bid_it_tm,
     get_departments_names_by_tm_telegram_id,
     get_pending_bids_it_for_territorial_manager,
