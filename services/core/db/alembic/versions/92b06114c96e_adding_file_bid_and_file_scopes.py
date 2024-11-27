@@ -8,7 +8,7 @@ Create Date: 2024-10-05 11:46:31.757692
 
 from typing import Sequence, Union
 
-import alembic_custom.enum as c_enum
+import db.alembic.enum as c_enum
 
 
 # revision identifiers, used by Alembic.

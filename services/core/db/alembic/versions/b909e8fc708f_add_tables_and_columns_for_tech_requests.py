@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ENUM
 
 from settings import get_settings
-import alembic_custom.enum as c_enum
+import db.alembic.enum as c_enum
 
 
 old_options = (

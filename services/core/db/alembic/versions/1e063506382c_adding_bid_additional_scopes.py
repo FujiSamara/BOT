@@ -8,7 +8,7 @@ Create Date: 2024-08-16 20:15:21.786232
 
 from typing import Sequence, Union
 
-import alembic_custom.enum as c_enum
+import db.alembic.enum as c_enum
 
 
 old_options = (

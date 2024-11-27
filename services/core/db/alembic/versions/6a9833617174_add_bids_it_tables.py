@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 import fastapi_storages
 
 from settings import get_settings
-import alembic_custom.enum as c_enum
+import db.alembic.enum as c_enum
 
 old_options = (
     "admin",

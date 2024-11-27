@@ -12,7 +12,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-import alembic_custom.enum as c_enum
+import db.alembic.enum as c_enum
 
 # revision identifiers, used by Alembic.
 revision: str = "4a228ca5d1cd"
