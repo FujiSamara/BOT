@@ -39,7 +39,7 @@ from app.services import (
     get_departments_names_for_repairman,
     update_technical_request_from_repairman,
 )
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 
 router = Router(name="technical_request_repairman")
 

@@ -2,7 +2,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.markdown import hbold
 
-from app.db.models import IncidentStage
+from app.database.models import IncidentStage
 import app.services.equipment_status_service as es_service
 
 import app.adapters.bot.kb as kb

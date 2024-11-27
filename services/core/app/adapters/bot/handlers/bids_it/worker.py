@@ -57,7 +57,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
     BidITCallbackData,
 )
 
-# db imports
+# database imports
 from app.services import (
     get_problems_it_types,
     get_problems_it_schema,

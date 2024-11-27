@@ -41,7 +41,7 @@ from app.services import (
     update_technical_request_problem,
 )
 
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 
 
 router = Router(name="technical_request_department_director")

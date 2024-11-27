@@ -34,7 +34,7 @@ from app.services import (
     get_departments_names_for_territorial_manager,
     update_technical_request_from_territorial_manager,
 )
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 
 router = Router(name="technical_request_territorial_manager")
 

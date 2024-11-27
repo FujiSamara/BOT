@@ -1,10 +1,10 @@
 from app.infra.logging import logger
 
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     Expenditure,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     BudgetRecordSchema,
     ExpenditureSchema,
     QuerySchema,
@@ -14,13 +14,13 @@ from app.services.budget import create_budget_record
 
 
 def get_chapters() -> list[str]:
-    """Returns list of all unique chapters in db"""
+    """Returns list of all unique chapters in database"""
     expenditures = orm.get_expenditures()
     return list(set(expenditure.chapter for expenditure in expenditures))
 
 
 def get_expenditures_names_by_chapter(chapter: str) -> list[str]:
-    """Returns list of all expenditure names in db"""
+    """Returns list of all expenditure names in database"""
     expenditures = orm.get_expenditures()
 
     result = []
@@ -96,5 +96,5 @@ def get_expenditure_by_id(id: int) -> ExpenditureSchema:
 
 
 def get_last_expenditure() -> ExpenditureSchema:
-    """Returns last expenditure in db."""
+    """Returns last expenditure in database."""
     return orm.get_last_expenditrure()

@@ -24,9 +24,9 @@ from app.infra.logging import logger
 
 from app.adapters.bot.kb import approval_status_dict
 
-import app.db.schemas as schemas
-import app.db.models as models
-from app.db.database import Base
+import app.database.schemas as schemas
+import app.database.models as models
+from app.database.database import Base
 
 
 class Builder(ABC):
@@ -77,13 +77,13 @@ class Builder(ABC):
         }
 
     def all(self) -> BaseModel:
-        """Returns all entries in db with `self.query`."""
+        """Returns all entries in database with `self.query`."""
         schema_type = self._model_to_schema[self._model_type]
         rows = self.session.execute(self.select).scalars().all()
         return [schema_type.model_validate(model) for model in rows]
 
     def count(self) -> int:
-        """Returns count of all entries in db with `self.query`."""
+        """Returns count of all entries in database with `self.query`."""
         res: Result = self.session.execute(
             select(func.count()).select_from(self.select)
         )

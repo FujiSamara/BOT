@@ -2,7 +2,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from app import services
-from app.db.schemas import ExpenditureSchema, TalbeInfoSchema, QuerySchema
+from app.database.schemas import ExpenditureSchema, TalbeInfoSchema, QuerySchema
 
 from app.adapters.input.api.auth import User, get_user
 

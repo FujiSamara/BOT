@@ -12,7 +12,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
     BidITCallbackData,
     BidITViewMode,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     ProblemITSchema,
     BidITSchema,
 )
@@ -21,7 +21,7 @@ from app.adapters.bot.handlers.utils import (
     try_edit_message,
 )
 from app.services import get_bid_it_by_id
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 from app.adapters.bot.handlers.bids_it.kb import (
     get_create_tm_bid_it_menu,
     get_create_repairman_it_menu,

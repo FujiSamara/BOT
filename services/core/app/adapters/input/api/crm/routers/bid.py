@@ -3,10 +3,10 @@ from fastapi.responses import StreamingResponse
 from fastapi.exceptions import HTTPException
 from fastapi.routing import APIRouter
 
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 from app import services
 import app.services.bid as bid_service
-from app.db.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
+from app.database.schemas import BidOutSchema, QuerySchema, TalbeInfoSchema, BidInSchema
 from app.adapters.bot.handlers.bids.utils import get_current_coordinator_field
 
 from app.adapters.input.api.auth import User, get_user

@@ -3,7 +3,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from app import services
-from app.db.schemas import (
+from app.database.schemas import (
     BudgetRecordSchema,
     BudgetRecordWithChapter,
     QuerySchema,

@@ -23,8 +23,8 @@ from app.services import (
     get_last_completed_worktimes_by_tg_id,
     get_work_time_record_by_id,
 )
-from app.db.schemas import WorkerSchema
-from app.db.models import FujiScope
+from app.database.schemas import WorkerSchema
+from app.database.models import FujiScope
 
 from app.adapters.bot.kb import (
     get_personal_cabinet_button,

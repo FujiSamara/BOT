@@ -1,10 +1,10 @@
 from app.infra.logging import logger
 
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     BudgetRecord,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     BudgetRecordSchema,
     QuerySchema,
 )
@@ -58,5 +58,5 @@ def get_budget_record_by_id(id: int) -> BudgetRecordSchema:
 
 
 def get_last_budget_record() -> BudgetRecordSchema:
-    """Returns last budget record in db."""
+    """Returns last budget record in database."""
     return orm.get_last_budget_record()

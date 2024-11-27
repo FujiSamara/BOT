@@ -9,15 +9,15 @@ from app.services.extra import (
     get_worker_by_telegram_id,
     get_worker_department_by_telegram_id,
 )
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     Department,
     ApprovalStatus,
     Worker,
     ProblemIT,
     BidIT,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     DocumentSchema,
     ProblemITSchema,
     BidITSchema,

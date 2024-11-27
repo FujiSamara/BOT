@@ -1,13 +1,13 @@
 from datetime import datetime
 
-from app.db.schemas import (
+from app.database.schemas import (
     DepartmentSchemaFull,
     EquipmentIncidentSchema,
     EquipmentStatusSchemaIn,
     EquipmentStatusSchema,
 )
-from app.db.models import Department, FujiScope, IncidentStage
-from app.db import orm
+from app.database.models import Department, FujiScope, IncidentStage
+from app.database import orm
 
 from app.infra.logging import logger
 
@@ -19,7 +19,7 @@ async def update_equipment_status(
 ) -> bool:
     """Updates equipment status, adds incident if `equipment_status_in.status` is bad.
 
-    If status not exist in db creates it.
+    If status not exist in database creates it.
     """
 
     from app.adapters.bot.handlers.utils import (

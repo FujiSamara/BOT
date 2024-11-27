@@ -15,8 +15,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
-from app.db.models import FujiScope
-from app.db.schemas import WorkerSchema
+from app.database.models import FujiScope
+from app.database.schemas import WorkerSchema
 import app.services as services
 from app.adapters.bot.bot import get_bot
 from app.adapters.bot.kb import (

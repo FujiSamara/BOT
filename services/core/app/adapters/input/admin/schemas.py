@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 from sqladmin import ModelView, action
 from sqlalchemy import Select, or_, select
 
-from app.db.models import (
+from app.database.models import (
     PostScope,
     TechnicalProblem,
     Worker,
@@ -25,7 +25,7 @@ from app.db.models import (
     FingerprintAttempt,
 )
 from app.adapters.bot.kb import payment_type_dict, approval_status_dict
-from app.db.schemas import FileOutSchema
+from app.database.schemas import FileOutSchema
 from app import services
 from app.adapters.input.api.auth import encrypt_password
 

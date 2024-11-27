@@ -3,15 +3,15 @@ from typing import Optional
 from app.infra.logging import logger
 from app.infra.config import settings
 
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     Department,
     FujiScope,
     Post,
     Worker,
     Company,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     PostSchema,
     WorkerSchema,
     DepartmentSchema,
@@ -131,7 +131,7 @@ def get_chef_by_department_id(id: int) -> WorkerSchema:
 
 
 def get_posts_names() -> list[str]:
-    """Returns all posts names in db."""
+    """Returns all posts names in database."""
     return [post.name for post in orm.get_posts()]
 
 
@@ -179,7 +179,7 @@ def find_department_by_name(record: str) -> list[DepartmentSchema]:
 
 
 def get_groups_names() -> list[str]:
-    """Returns list of all groups names in db"""
+    """Returns list of all groups names in database"""
     groups = orm.get_groups()
     return [group.name for group in groups]
 

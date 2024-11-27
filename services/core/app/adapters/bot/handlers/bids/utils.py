@@ -1,6 +1,6 @@
 from aiogram.utils.markdown import hbold
-from app.db.models import ApprovalStatus, FujiScope
-from app.db.schemas import BidSchema, WorkerBidSchema, WorkerSchema
+from app.database.models import ApprovalStatus, FujiScope
+from app.database.schemas import BidSchema, WorkerBidSchema, WorkerSchema
 from app.adapters.bot.kb import payment_type_dict
 
 import app.services.bid as bid_service

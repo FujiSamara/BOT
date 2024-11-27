@@ -14,7 +14,7 @@ from aiogram.utils.markdown import hbold
 
 from app.adapters.bot import text
 
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 from app.services import get_technical_request_by_id, get_request_count_in_departments
 
 from app.adapters.bot.handlers.utils import (

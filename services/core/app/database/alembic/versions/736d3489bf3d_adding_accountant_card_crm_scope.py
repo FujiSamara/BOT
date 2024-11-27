@@ -1,15 +1,13 @@
-"""Adding worktime crm scope
+"""Adding accountant card crm scope
 
-Revision ID: 92d5acaccad0
-Revises: 5d23f201dfea
-Create Date: 2024-11-06 20:37:55.460366
+Revision ID: 736d3489bf3d
+Revises: 442e2772d9cd
+Create Date: 2024-11-11 10:08:17.065795
 
 """
 
 from typing import Sequence, Union
-
-
-import app.db.alembic.enum as c_enum
+import app.database.alembic.enum as c_enum
 
 
 old_options = (
@@ -39,19 +37,21 @@ old_options = (
     "bot_bid_it_tm",
     "bot_personal_cabinet",
     "crm_my_bid",
+    "crm_worktime",
     "crm_archive_bid",
     "crm_my_file",
     "bot_incident_monitoring",
     "crm_bid_readonly",
+    "bot_bid_fac_cc",
 )
 
-new_options = sorted((*old_options, "crm_worktime"))
+new_options = sorted((*old_options, "crm_accountant_card_bid"))
 table_columns = {"post_scopes": ["scope"]}
 
 
 # revision identifiers, used by Alembic.
-revision: str = "92d5acaccad0"
-down_revision: Union[str, None] = "5d23f201dfea"
+revision: str = "736d3489bf3d"
+down_revision: Union[str, None] = "442e2772d9cd"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -6,9 +6,9 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
-from app.db.query import QueryBuilder, XLSXExporter
-from app.db.database import Base, engine, session
-from app.db.models import (
+from app.database.query import QueryBuilder, XLSXExporter
+from app.database.database import Base, engine, session
+from app.database.models import (
     Bid,
     BidCoordinator,
     BidDocument,
@@ -43,7 +43,7 @@ from app.db.models import (
     MaterialValues,
     Company,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
@@ -823,7 +823,7 @@ def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
 
 
 def get_last_expenditrure() -> ExpenditureSchema:
-    """Returns last expenditure bind db."""
+    """Returns last expenditure bind database."""
     with session.begin() as s:
         raw_expenditure = s.query(Expenditure).order_by(desc(Expenditure.id)).first()
         if not raw_expenditure:
@@ -879,7 +879,7 @@ def create_budget_record(record: BudgetRecordSchema) -> bool:
 
 
 def get_last_budget_record() -> BudgetRecordSchema:
-    """Returns last budget record bind db."""
+    """Returns last budget record bind database."""
     with session.begin() as s:
         raw_expenditure = s.query(BudgetRecord).order_by(desc(BudgetRecord.id)).first()
         if not raw_expenditure:
@@ -982,7 +982,7 @@ def get_groups() -> list[GroupSchema]:
 
 
 def remove_bid(id: int) -> None:
-    """Removes bid by `id` if it exist in db."""
+    """Removes bid by `id` if it exist in database."""
     with session.begin() as s:
         if bid := s.query(Bid).filter(Bid.id == id).first():
             s.delete(bid)

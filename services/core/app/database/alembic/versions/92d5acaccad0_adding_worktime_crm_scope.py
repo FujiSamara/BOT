@@ -1,14 +1,15 @@
-"""Adding monitoring scope
+"""Adding worktime crm scope
 
-Revision ID: 5797fcce91fa
-Revises: 64b61b54d123
-Create Date: 2024-10-24 10:21:25.622194
+Revision ID: 92d5acaccad0
+Revises: 5d23f201dfea
+Create Date: 2024-11-06 20:37:55.460366
 
 """
 
 from typing import Sequence, Union
 
-import app.db.alembic.enum as c_enum
+
+import app.database.alembic.enum as c_enum
 
 
 old_options = (
@@ -40,15 +41,17 @@ old_options = (
     "crm_my_bid",
     "crm_archive_bid",
     "crm_my_file",
+    "bot_incident_monitoring",
+    "crm_bid_readonly",
 )
 
-new_options = sorted((*old_options, "bot_incident_monitoring"))
+new_options = sorted((*old_options, "crm_worktime"))
 table_columns = {"post_scopes": ["scope"]}
 
 
 # revision identifiers, used by Alembic.
-revision: str = "5797fcce91fa"
-down_revision: Union[str, None] = "64b61b54d123"
+revision: str = "92d5acaccad0"
+down_revision: Union[str, None] = "5d23f201dfea"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -50,7 +50,7 @@ from app.adapters.bot.handlers.utils import (
     handle_documents,
 )
 
-# db imports
+# database imports
 from app.services import (
     get_departments_names,
     create_bid,
@@ -61,7 +61,7 @@ from app.services import (
     get_expenditures_names_by_chapter,
     find_bid_for_worker,
 )
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 
 
 router = Router(name="bid_creating")

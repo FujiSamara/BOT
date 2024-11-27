@@ -1,14 +1,14 @@
-"""Upgrade fujiscope department director
+"""Adding bid additional scopes
 
-Revision ID: e7b7c1e84e10
-Revises: ce432ef44a5c
-Create Date: 2024-08-15 12:16:44.870450
+Revision ID: 1e063506382c
+Revises: e7b7c1e84e10
+Create Date: 2024-08-16 20:15:21.786232
 
 """
 
 from typing import Sequence, Union
 
-import app.db.alembic.enum as c_enum
+import app.database.alembic.enum as c_enum
 
 
 old_options = (
@@ -29,32 +29,26 @@ old_options = (
     "bot_technical_request_repairman",
     "bot_technical_request_chief_technician",
     "bot_technical_request_territorial_manager",
+    "bot_technical_request_department_director",
 )
 
-new_options = sorted(old_options + ("bot_technical_request_department_director",))
+table_columns = {"post_scopes": ["scope"]}
+new_options = sorted(
+    old_options + ("crm_fac_bid", "crm_cc_bid", "crm_cc_supervisor_bid")
+)
 
 table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
-revision: str = "e7b7c1e84e10"
-down_revision: Union[str, None] = "ce432ef44a5c"
+revision: str = "1e063506382c"
+down_revision: Union[str, None] = "e7b7c1e84e10"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    c_enum.update_enum(
-        old_options,
-        new_options,
-        "fujiscope",
-        table_columns,
-    )
+    c_enum.update_enum(old_options, new_options, "fujiscope", table_columns)
 
 
 def downgrade() -> None:
-    c_enum.update_enum(
-        new_options,
-        old_options,
-        "fujiscope",
-        table_columns,
-    )
+    c_enum.update_enum(new_options, old_options, "fujiscope", table_columns)

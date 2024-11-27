@@ -7,7 +7,7 @@ Create Date: 2024-08-22 16:03:25.004534
 """
 
 from typing import Sequence, Union
-from app.db.alembic.enum import update_enum
+from app.database.alembic.enum import update_enum
 
 name = "approvalstatus"
 table_columns = {

@@ -6,8 +6,8 @@ from typing import Any, Optional, Tuple
 
 from app.infra.logging import logger
 
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     Department,
     ApprovalStatus,
     Bid,
@@ -15,7 +15,7 @@ from app.db.models import (
     FujiScope,
     Worker,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     BidOutSchema,
     BidSchema,
     FilterSchema,
@@ -213,7 +213,7 @@ def add_documents_to_bid(id, files: list[UploadFile]):
 
 
 def remove_bid(id: int) -> None:
-    """Removes bid by `id` if it exist in db."""
+    """Removes bid by `id` if it exist in database."""
     orm.remove_bid(id)
 
 

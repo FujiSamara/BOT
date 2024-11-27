@@ -6,14 +6,14 @@ from typing import Any, Optional
 
 from app.infra.logging import logger
 
-import app.db.orm as orm
-from app.db.models import (
+import app.database.orm as orm
+from app.database.models import (
     Department,
     ApprovalStatus,
     TechnicalRequest,
     Worker,
 )
-from app.db.schemas import (
+from app.database.schemas import (
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerSchema,

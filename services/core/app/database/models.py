@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.db.database import Base
+from app.database.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship

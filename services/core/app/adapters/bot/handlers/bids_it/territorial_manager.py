@@ -60,7 +60,7 @@ from app.services import (
     get_history_bids_it_for_territorial_manager,
     get_bid_it_by_id,
 )
-from app.db.models import ApprovalStatus
+from app.database.models import ApprovalStatus
 
 router = Router(name="bid_it_territorial_manager")
 
