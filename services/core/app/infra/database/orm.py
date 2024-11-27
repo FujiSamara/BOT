@@ -43,7 +43,7 @@ from app.infra.database.models import (
     MaterialValues,
     Company,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,

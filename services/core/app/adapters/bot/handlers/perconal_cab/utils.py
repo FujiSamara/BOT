@@ -14,7 +14,7 @@ from app.services import (
     get_openned_today_worktime,
     get_sum_hours_in_month,
 )
-from app.infra.database.schemas import WorkerSchema
+from app.schemas import WorkerSchema
 from app.adapters.bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
 
 

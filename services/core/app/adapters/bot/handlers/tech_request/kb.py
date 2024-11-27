@@ -8,7 +8,7 @@ from app.services import get_technical_problem_by_id, get_technical_request_by_i
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.kb import main_menu_button
 
-from app.infra.database.schemas import TechnicalRequestSchema
+from app.schemas import TechnicalRequestSchema
 
 
 # region Chief technician (CT)

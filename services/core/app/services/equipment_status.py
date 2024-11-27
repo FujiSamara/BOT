@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.infra.database.schemas import (
+from app.schemas import (
     DepartmentSchemaFull,
     EquipmentIncidentSchema,
     EquipmentStatusSchemaIn,

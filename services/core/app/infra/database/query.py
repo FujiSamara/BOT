@@ -24,7 +24,7 @@ from app.infra.logging import logger
 
 from app.adapters.bot.kb import approval_status_dict
 
-import app.infra.database.schemas as schemas
+import app.schemas as schemas
 import app.infra.database.models as models
 from app.infra.database.database import Base
 

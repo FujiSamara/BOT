@@ -11,7 +11,7 @@ from app.infra.database.models import (
     Worker,
     Company,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     PostSchema,
     WorkerSchema,
     DepartmentSchema,

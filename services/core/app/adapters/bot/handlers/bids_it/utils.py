@@ -12,7 +12,7 @@ from app.adapters.bot.handlers.bids_it.schemas import (
     BidITCallbackData,
     BidITViewMode,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     ProblemITSchema,
     BidITSchema,
 )

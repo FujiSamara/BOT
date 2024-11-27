@@ -5,7 +5,7 @@ from app.infra.config import settings
 
 import app.services.equipment_status as es_service
 import app.services.extra as ex_service
-import app.infra.database.schemas as schemas
+import app.schemas as schemas
 
 
 def get_monitoring_list() -> str:
