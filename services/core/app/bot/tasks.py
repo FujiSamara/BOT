@@ -34,7 +34,7 @@ class TaskScheduler:
 
     def register_task(self, task: Callable, time: datetime, name: str):
         try:
-            self.logger.info(f"Register task: {name}")
+            self.logger.info(f"Register task: [{name}]")
             self.tasks.append(
                 _Task(
                     callback=task,
