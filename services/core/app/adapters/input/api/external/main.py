@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-import logging
 import sys
+
+from app.infra.logging import logger
 
 from app.adapters.input.api.external.routers import equipment_status
 
@@ -10,9 +11,9 @@ def create(api: FastAPI) -> FastAPI:
     try:
         configure(crm)
     except Exception as e:
-        logging.critical(f"External subapp configuring is failed: {e}")
+        logger.critical(f"External subapp configuring is failed: {e}")
         sys.exit()
-    logging.info("External subapp created")
+    logger.info("External subapp created")
     api.mount(path="/external", app=crm)
     return crm
 

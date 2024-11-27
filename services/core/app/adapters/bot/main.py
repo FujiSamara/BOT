@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from app.adapters.bot.configure import configure
 import sys
-import logging
+
+from app.infra.logging import logger
+
+from app.adapters.bot.configure import configure
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -9,8 +11,8 @@ def create(app: FastAPI) -> FastAPI:
     try:
         configure(bot)
     except Exception as e:
-        logging.critical(f"Bot configuring is failed: {e}")
+        logger.critical(f"Bot configuring is failed: {e}")
         sys.exit()
-    logging.info("Bot created")
+    logger.info("Bot created")
     app.mount(path="/bot", app=bot)
     return bot

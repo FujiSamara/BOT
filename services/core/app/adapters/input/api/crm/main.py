@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-import logging
 import sys
+
+from app.infra.logging import logger
 
 from app.adapters.input.api.crm.routers import expenditure
 from app.adapters.input.api.crm.routers import worker
@@ -16,9 +17,9 @@ def create(api: FastAPI) -> FastAPI:
     try:
         configure(crm)
     except Exception as e:
-        logging.critical(f"Crm configuring is failed: {e}")
+        logger.critical(f"Crm configuring is failed: {e}")
         sys.exit()
-    logging.info("Crm created")
+    logger.info("Crm created")
     api.mount(path="/crm", app=crm)
     return crm
 

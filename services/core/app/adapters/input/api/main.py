@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from app.adapters.input.api.configure import configure
-import logging
 import sys
+
+from app.infra.logging import logger
+
+from app.adapters.input.api.configure import configure
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -9,8 +11,8 @@ def create(app: FastAPI) -> FastAPI:
     try:
         configure(api)
     except Exception as e:
-        logging.critical(f"Api configuring is failed: {e}")
+        logger.critical(f"Api configuring is failed: {e}")
         sys.exit()
-    logging.info("Api created")
+    logger.info("Api created")
     app.mount(path="/api", app=api)
     return api

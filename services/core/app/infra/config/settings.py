@@ -1,11 +1,11 @@
 import os
 from typing import Optional
 from pydantic import Field, computed_field
-import logging
 import sys
 from fastapi_storages import FileSystemStorage
 from dotenv import load_dotenv
 
+from app.infra.logging import logger
 from app.infra.config.postgres import PostgreSQLSettings
 from app.infra.config.bot import BotSettings
 from app.infra.config.security import SecuritySettings
@@ -44,7 +44,7 @@ def _generate() -> Settings:
         settings = Settings()
         return settings
     except Exception as e:
-        logging.critical(f"Settings generated with error: {e}")
+        logger.critical(f"Settings generated with error: {e}")
         sys.exit()
 
 

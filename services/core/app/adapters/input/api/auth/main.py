@@ -1,7 +1,9 @@
 from fastapi import FastAPI
-from app.adapters.input.api.auth.configure import configure
-import logging
 import sys
+
+from app.infra.logging import logger
+
+from app.adapters.input.api.auth.configure import configure
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -9,8 +11,8 @@ def create(app: FastAPI) -> FastAPI:
     try:
         configure(auth)
     except Exception as e:
-        logging.critical(f"Auth configuring is failed: {e}")
+        logger.critical(f"Auth configuring is failed: {e}")
         sys.exit()
-    logging.info("Auth created")
+    logger.info("Auth created")
     app.mount(path="/auth", app=auth)
     return auth

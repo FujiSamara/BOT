@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+import sys
+from uuid import uuid4
+
 from app.admin.admin import FujiAdmin, AdminAuth
 from app.admin.configure import configure
-import sys
-from app.db.database import engine, session
-import logging
+from app.infra.logging import logger
 from app.infra.config import settings
-from uuid import uuid4
+from app.db.database import engine, session
 
 
 def create(app: FastAPI) -> FastAPI:
@@ -21,7 +22,7 @@ def create(app: FastAPI) -> FastAPI:
     try:
         configure(admin)
     except Exception as e:
-        logging.critical(f"Admin configuring is failed: {e}")
+        logger.critical(f"Admin configuring is failed: {e}")
         sys.exit()
-    logging.info("Admin created")
+    logger.info("Admin created")
     return admin
