@@ -3,7 +3,7 @@ from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.responses import FileResponse
 
 from app.api.auth import User, get_user
-from settings import get_settings
+from app.infra.config import settings
 
 
 def register_base_routes(api: FastAPI):
@@ -16,7 +16,7 @@ async def get_file(
     _: User = Security(get_user, scopes=["authenticated", "file_all"]),
 ) -> FileResponse:
     """Returns file by his `name`."""
-    path = Path(get_settings().storage_path).joinpath(Path(name))
+    path = Path(settings.storage_path).joinpath(Path(name))
     if not Path(path).is_file():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="File not exist"

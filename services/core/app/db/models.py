@@ -6,7 +6,7 @@ from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List, Optional
 import datetime
-from settings import get_settings
+from app.infra.config import settings
 import enum
 
 
@@ -493,7 +493,7 @@ class BidDocument(Base):
 
     __tablename__ = "bids_documents"
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
     bid_id: Mapped[int] = mapped_column(ForeignKey("bids.id"))
     bid: Mapped["Bid"] = relationship("Bid", back_populates="documents")
 
@@ -543,7 +543,7 @@ class WorkerBidDocument(Base):
 
     __abstract__ = True
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
     worker_bid_id: Mapped[int] = mapped_column(ForeignKey("worker_bids.id"))
 
 
@@ -694,7 +694,7 @@ class BidITDocument(Base):
 
     __abstract__ = True
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
     bid_id: Mapped[int] = mapped_column(ForeignKey("bids_it.id"))
 
 
@@ -804,7 +804,7 @@ class TechnicalRequestDocument(Base):
 
     __abstract__ = True
 
-    document: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
     technical_request_id: Mapped[int] = mapped_column(
         ForeignKey("technical_requests.id")
     )
@@ -978,7 +978,7 @@ class File(Base):
 
     __tablename__ = "files"
 
-    file: Mapped[FileType] = mapped_column(FileType(storage=get_settings().storage))
+    file: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
     description: Mapped[str] = mapped_column(nullable=True)
 
 

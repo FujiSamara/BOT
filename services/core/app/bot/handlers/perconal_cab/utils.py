@@ -2,7 +2,7 @@ from typing import Optional
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.markdown import hbold
 
-from settings import get_settings
+from app.infra.config import settings
 from app.bot.kb import get_personal_cabinet_button
 from app.bot.text import personal_cabinet_logins_dict
 from app.db.service import (
@@ -43,7 +43,7 @@ def menu_text(worker: WorkerSchema) -> str:
     worktime = get_openned_today_worktime(worker.id)
     text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}
 
-Открытая смена: {worktime.work_begin.strftime(get_settings().time_format) if worktime is not None else 'Отсутствует'}
+Открытая смена: {worktime.work_begin.strftime(settings.time_format) if worktime is not None else 'Отсутствует'}
 Отработанно за месяц: {get_sum_hours_in_month(worker_id=worker.id)} ч."""
     return text
 
@@ -56,9 +56,9 @@ def get_material_values_text(callback_data: ShowLoginCallbackData) -> str:
     text = f"Предмет: {material_value.item}\
 \nКоличество: {material_value.quanity}\
 \nСтоимость: {material_value.price}\
-\nДата выдачи: {material_value.issue_date.date().strftime(get_settings().date_format)}"
+\nДата выдачи: {material_value.issue_date.date().strftime(settings.date_format)}"
     if material_value.return_date:
-        text += f"\nДата возврата: {material_value.return_date.date().strftime(get_settings().date_format)}"
+        text += f"\nДата возврата: {material_value.return_date.date().strftime(settings.date_format)}"
     text += f"\nИнвентаризационный номер: {material_value.inventory_number}"
     return text
 

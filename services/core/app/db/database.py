@@ -1,10 +1,10 @@
 from typing import Annotated
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from settings import get_settings
+from app.infra.config import settings
 from sqlalchemy.orm import mapped_column, Mapped
 
-engine = create_engine(get_settings().psql_dsn)
+engine = create_engine(settings.psql_dsn)
 
 session = sessionmaker(engine)
 

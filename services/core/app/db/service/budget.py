@@ -1,3 +1,7 @@
+import logging
+
+from app.infra.logging import logger
+
 import app.db.orm as orm
 from app.db.models import (
     BudgetRecord,
@@ -6,7 +10,6 @@ from app.db.schemas import (
     BudgetRecordSchema,
     QuerySchema,
 )
-import logging
 
 
 def get_budget_records_count(
@@ -38,7 +41,7 @@ def get_budget_records() -> list[BudgetRecordSchema]:
 def create_budget_record(record: BudgetRecordSchema) -> None:
     """Creates budget record"""
     if not orm.create_budget_record(record):
-        logging.getLogger("uvicorn.error").error("Budget record wasn't created.")
+        logger.error("Budget record wasn't created.")
 
 
 def remove_budget_record(id: int) -> None:
@@ -48,7 +51,7 @@ def remove_budget_record(id: int) -> None:
 def update_budget_record(record: BudgetRecordSchema) -> None:
     """Updates expenditure by `ExpenditureSchema.id`"""
     if not orm.update_budget_record(record):
-        logging.getLogger("uvicorn.error").error("Budget record wasn't updated.")
+        logger.error("Budget record wasn't updated.")
 
 
 def get_budget_record_by_id(id: int) -> BudgetRecordSchema:

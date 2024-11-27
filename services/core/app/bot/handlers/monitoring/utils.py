@@ -1,7 +1,7 @@
 from aiogram.utils.markdown import hbold, hcode
 
 from app.db.models import IncidentStage
-from settings import get_settings
+from app.infra.config import settings
 
 import app.db.service.equipment_status_service as es_service
 import app.db.service.extra as ex_service
@@ -24,14 +24,14 @@ def get_monitoring_list() -> str:
 
 def get_incident_short_info(incident: schemas.EquipmentIncidentSchema) -> str:
     department_name = incident.equipment_status.department.name
-    date_time = incident.incident_time.strftime(get_settings().date_time_format)
+    date_time = incident.incident_time.strftime(settings.date_time_format)
     prefix = " ✅" if incident.stage == IncidentStage.processed else ""
     return f"{department_name} {date_time}{prefix}"
 
 
 def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
     department_name = incident.equipment_status.department.name
-    date_time = incident.incident_time.strftime(get_settings().date_time_format)
+    date_time = incident.incident_time.strftime(settings.date_time_format)
     territorial_manager = incident.equipment_status.department.territorial_manager
     territorial_manager_text = "Отсутствует"
     if territorial_manager is not None:

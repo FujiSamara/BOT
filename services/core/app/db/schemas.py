@@ -14,7 +14,7 @@ from app.db.models import (
 )
 from io import BytesIO
 
-from settings import get_settings
+from app.infra.config import settings
 
 
 # region Shemas for models
@@ -309,9 +309,9 @@ class FileSchema(BaseSchema):
         """Converted `FileSchema` to `FileOutSchema`"""
         proto = "http"
 
-        host = get_settings().domain
-        port = get_settings().port
-        if get_settings().ssl_certfile:
+        host = settings.domain
+        port = settings.port
+        if settings.ssl_certfile:
             proto = "https"
 
         source: str = ""

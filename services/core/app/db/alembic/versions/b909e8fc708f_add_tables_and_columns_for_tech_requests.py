@@ -13,7 +13,7 @@ import fastapi_storages
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ENUM
 
-from settings import get_settings
+from app.infra.config import settings
 import app.db.alembic.enum as c_enum
 
 
@@ -129,9 +129,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("technical_request_id", sa.Integer(), nullable=False),
@@ -146,9 +144,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("technical_request_id", sa.Integer(), nullable=False),

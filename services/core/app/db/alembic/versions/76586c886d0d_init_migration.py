@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import fastapi_storages
 import sqlalchemy as sa
-from settings import get_settings
+from app.infra.config import settings
 
 
 # revision identifiers, used by Alembic.
@@ -70,23 +70,17 @@ def upgrade() -> None:
         sa.Column("post_id", sa.Integer(), nullable=False),
         sa.Column(
             "pasport",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column(
             "work_permission_document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column(
             "worksheet",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column(
@@ -153,9 +147,7 @@ def upgrade() -> None:
         sa.Column("worker_id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column(

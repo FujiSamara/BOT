@@ -1,6 +1,6 @@
 from typing import Optional
 from app.bot.states import Base
-from settings import get_settings
+from app.infra.config import settings
 
 from aiogram.types import (
     CallbackQuery,
@@ -44,7 +44,7 @@ async def show_form(
     request = get_technical_request_by_id(callback_data.request_id)
     text_form = (
         f"{hbold(request.problem.problem_name)} от "
-        + request.open_date.date().strftime(get_settings().date_format)
+        + request.open_date.date().strftime(settings.date_format)
         + f"\nОписание:\n{request.description}\n\
 Адрес: {request.worker.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
@@ -74,13 +74,13 @@ async def show_form(
     if request.repair_date:
         text_form += (
             "Дата ремонта: "
-            + request.repair_date.date().strftime(get_settings().date_format)
+            + request.repair_date.date().strftime(settings.date_format)
             + "\n"
         )
     if request.confirmation_date:
         text_form += (
             "Дата утверждения проделанной работы: "
-            + request.confirmation_date.date().strftime(get_settings().date_format)
+            + request.confirmation_date.date().strftime(settings.date_format)
             + "\n"
         )
         if request.confirmation_description:
@@ -89,21 +89,19 @@ async def show_form(
         if request.reopen_date:
             text_form += (
                 "Дата переоткрытия заявки: "
-                + request.reopen_date.date().strftime(get_settings().date_format)
+                + request.reopen_date.date().strftime(settings.date_format)
                 + "\n"
             )
         if request.reopen_repair_date:
             text_form += (
                 "Повторная дата ремонта: "
-                + request.reopen_repair_date.date().strftime(get_settings().date_format)
+                + request.reopen_repair_date.date().strftime(settings.date_format)
                 + "\n"
             )
         if request.reopen_confirmation_date:
             text_form += (
                 "Повторная дата утверждения: "
-                + request.reopen_confirmation_date.date().strftime(
-                    get_settings().date_format
-                )
+                + request.reopen_confirmation_date.date().strftime(settings.date_format)
                 + "\n"
             )
             if request.close_description:
@@ -112,7 +110,7 @@ async def show_form(
         if request.close_date:
             text_form += (
                 "Дата закрытия заявки: "
-                + request.close_date.date().strftime(get_settings().date_format)
+                + request.close_date.date().strftime(settings.date_format)
                 + "\n"
             )
 

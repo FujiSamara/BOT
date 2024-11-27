@@ -1,5 +1,15 @@
 from pathlib import Path
+import logging
+from datetime import datetime
+from fastapi import UploadFile
 
+from app.infra.logging import logger
+
+from app.db.service.extra import (
+    find_department_by_name,
+    get_worker_by_telegram_id,
+    get_worker_department_by_telegram_id,
+)
 import app.db.orm as orm
 from app.db.models import (
     Department,
@@ -12,15 +22,6 @@ from app.db.schemas import (
     DocumentSchema,
     ProblemITSchema,
     BidITSchema,
-)
-import logging
-from datetime import datetime
-from fastapi import UploadFile
-
-from app.db.service.extra import (
-    find_department_by_name,
-    get_worker_by_telegram_id,
-    get_worker_department_by_telegram_id,
 )
 
 
@@ -73,18 +74,14 @@ def create_bid_it(
     worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
 
     if not worker_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id '{telegram_id}' not found"
-        )
+        logger.error(f"Worker with telegram id '{telegram_id}' not found")
         return
 
     department = get_worker_department_by_telegram_id(telegram_id)
     department_inst = orm.find_department_by_column(Department.name, department.name)
 
     if not department_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department}' not found"
-        )
+        logger.error(f"Department with name '{department}' not found")
         return
 
     last_bid_it_id = orm.get_last_bid_it_id()

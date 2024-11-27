@@ -1,4 +1,7 @@
 import logging
+
+from app.infra.logging import logger
+
 import app.db.orm as orm
 from app.db.models import (
     Expenditure,
@@ -68,7 +71,7 @@ def get_expenditures() -> list[ExpenditureSchema]:
 def create_expenditure(expenditure: ExpenditureSchema) -> None:
     """Creates expenditure"""
     if not orm.create_expenditure(expenditure):
-        logging.getLogger("uvicorn.error").error("Expenditure wasn't created.")
+        logger.error("Expenditure wasn't created.")
     updated_expenditure = get_last_expenditure()
     budget_record = BudgetRecordSchema(
         expenditure=updated_expenditure,
@@ -86,7 +89,7 @@ def remove_expenditure(id: int) -> None:
 def update_expenditure(expenditure: ExpenditureSchema) -> None:
     """Updates expenditure by `ExpenditureSchema.id`"""
     if not orm.update_expenditure(expenditure):
-        logging.getLogger("uvicorn.error").error("Expenditure wasn't updated.")
+        logger.error("Expenditure wasn't updated.")
 
 
 def get_expenditure_by_id(id: int) -> ExpenditureSchema:

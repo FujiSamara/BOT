@@ -11,7 +11,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import fastapi_storages
-from settings import get_settings
+from app.infra.config import settings
 
 
 # revision identifiers, used by Alembic.
@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),
@@ -44,9 +42,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),
@@ -60,9 +56,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("worker_bid_id", sa.Integer(), nullable=False),

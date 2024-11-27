@@ -1,4 +1,9 @@
-from settings import get_settings
+import logging
+from typing import Optional
+
+from app.infra.logging import logger
+from app.infra.config import settings
+
 import app.db.orm as orm
 from app.db.models import (
     Department,
@@ -15,8 +20,6 @@ from app.db.schemas import (
     AccountLoginsSchema,
     MaterialValuesSchema,
 )
-import logging
-from typing import Optional
 
 
 def get_worker_by_telegram_id(id: str) -> Optional[WorkerSchema]:
@@ -72,7 +75,7 @@ def update_worker_tg_id_by_number(number: str, tg_id: int) -> bool:
     try:
         orm.update_worker(worker)
     except Exception as e:
-        logging.getLogger("uvicorn.error").error(f"update_worker error: {e}")
+        logger.error(f"update_worker error: {e}")
         return False
     return True
 
@@ -138,9 +141,9 @@ def get_file_data(filename: str, mode: str = "sqladmin") -> FileOutSchema:
     - `mode`  Specifies file request source.
     """
     proto = "http"
-    host = get_settings().domain
-    port = get_settings().port
-    if get_settings().ssl_certfile:
+    host = settings.domain
+    port = settings.port
+    if settings.ssl_certfile:
         proto = "https"
 
     source: str = ""
@@ -216,7 +219,7 @@ def set_department_for_worker(telegram_id: int, department_name: str) -> bool:
     """Change department for worker"""
     if orm.set_department_for_worker(telegram_id, department_name):
         return True
-    logging.getLogger("uvicorn.error").error(
+    logger.error(
         f"The employee's department could not be changed. TG id: {telegram_id}. Department_name: {department_name}"
     )
     return False

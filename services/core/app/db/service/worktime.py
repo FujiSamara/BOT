@@ -3,7 +3,7 @@ from io import BytesIO
 import base64
 
 import aiohttp
-from settings import get_settings
+from app.infra.config import settings
 import app.db.orm as orm
 from app.db.models import (
     WorkTime,
@@ -89,12 +89,12 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
         "company_id": record.department.company.id,
         "post_id": record.post.id,
         "department_id": record.department.id,
-        "work_begin": record.work_begin.strftime(get_settings().date_time_format),
-        "day": record.day.strftime(get_settings().date_format),
+        "work_begin": record.work_begin.strftime(settings.date_time_format),
+        "day": record.day.strftime(settings.date_format),
     }
 
     if hasattr(record, "work_end") and record.work_end is not None:
-        dump["work_end"] = record.work_end.strftime(get_settings().date_time_format)
+        dump["work_end"] = record.work_end.strftime(settings.date_time_format)
     if hasattr(record, "work_duration") and record.work_duration is not None:
         dump["work_duration"] = record.work_duration
     if hasattr(record, "salary") and record.salary is not None:
@@ -110,7 +110,7 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
 async def remove_worktime(id: int) -> None:
     async with aiohttp.ClientSession() as session:
         async with session.delete(
-            f"{get_settings().external_api}/connector/biosmart/work_times/{id}",
+            f"{settings.external_api}/connector/biosmart/work_times/{id}",
         ) as resp:
             if resp.status >= 400:
                 raise HTTPException(status_code=resp.status)
@@ -124,7 +124,7 @@ async def update_worktime(record: WorkTimeSchema) -> None:
 
     async with aiohttp.ClientSession() as session:
         async with session.put(
-            f"{get_settings().external_api}/connector/biosmart/work_times/{record.id}",
+            f"{settings.external_api}/connector/biosmart/work_times/{record.id}",
             json=dif,
         ) as resp:
             if resp.status >= 400:
@@ -135,7 +135,7 @@ async def create_worktime(record: WorkTimeSchema) -> None:
     """Creates worktime"""
     async with aiohttp.ClientSession() as session:
         async with session.post(
-            f"{get_settings().external_api}/connector/biosmart/work_times",
+            f"{settings.external_api}/connector/biosmart/work_times",
             json=dump_worktime(record),
         ) as resp:
             if resp.status >= 400:

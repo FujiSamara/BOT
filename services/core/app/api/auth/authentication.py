@@ -11,7 +11,7 @@ from pydantic import ValidationError
 from app.api.auth.schemas import TokenData, User, UserWithScopes
 from app.api.auth.permissions import _oauth2_schema, _to_auth_scope
 from app.db.models import FujiScope
-from settings import get_settings
+from app.infra.config import settings
 from app.db import service
 
 
@@ -48,7 +48,7 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     expire = datetime.now() + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, get_settings().secret_key, algorithm=get_settings().token_algorithm
+        to_encode, settings.secret_key, algorithm=settings.token_algorithm
     )
     return encoded_jwt
 
@@ -69,7 +69,7 @@ def create_access_link(scopes: list[Union[str, FujiScope]] = None) -> str:
         "authenticated",
     ]
 
-    access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={
             "sub": "guest",
@@ -78,7 +78,7 @@ def create_access_link(scopes: list[Union[str, FujiScope]] = None) -> str:
         expires_delta=access_token_expires,
     )
 
-    link = get_settings().crm_addr
+    link = settings.crm_addr
 
     return f"{link}/crm/guest?token={access_token}&token_type=bearer"
 
@@ -109,8 +109,8 @@ async def get_user(
     try:
         payload = jwt.decode(
             token,
-            get_settings().secret_key,
-            algorithms=[get_settings().token_algorithm],
+            settings.secret_key,
+            algorithms=[settings.token_algorithm],
         )
 
         expire: datetime = payload.get("exp")

@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ENUM
 import fastapi_storages
 
-from settings import get_settings
+from app.infra.config import settings
 import app.db.alembic.enum as c_enum
 
 old_options = (
@@ -134,9 +134,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("bid_id", sa.Integer(), nullable=False),
@@ -151,9 +149,7 @@ def upgrade() -> None:
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("bid_id", sa.Integer(), nullable=False),

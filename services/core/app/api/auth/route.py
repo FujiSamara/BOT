@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.auth.schemas import Token
 from app.api.auth.authentication import authorize_user, create_access_token
 
-from settings import get_settings
+from app.infra.config import settings
 
 from app.api.auth.schemas import User
 from app.api.auth.authentication import get_user
@@ -27,7 +27,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     user = authorize_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
-    access_token_expires = timedelta(minutes=get_settings().access_token_expire_minutes)
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
         data={
             "sub": user.username,

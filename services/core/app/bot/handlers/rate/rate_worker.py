@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 
 from app.db import service
-from settings import get_settings
+from app.infra.config import settings
 from app.bot.handlers.utils import try_edit_or_answer
 from app.bot.handlers.rate.utils import shift_closed
 from app.bot.kb import (
@@ -38,7 +38,7 @@ async def get_rating_list(callback: CallbackQuery):
 
         buttons.append(
             InlineKeyboardButton(
-                text=day.strftime(get_settings().date_format) + f" {label}",
+                text=day.strftime(settings.date_format) + f" {label}",
                 callback_data=RateShiftCallbackData(day=day, record_id=-1).pack(),
             )
         )
@@ -65,7 +65,7 @@ async def generate_shifts_menu(message: Message, day: str) -> None:
         if not record.work_begin or not record.work_end:
             continue
 
-        time = record.work_begin.strftime(get_settings().date_time_format)
+        time = record.work_begin.strftime(settings.date_time_format)
         label = ""
 
         if record.fine or record.rating:
@@ -115,7 +115,7 @@ async def get_shift(callback: CallbackQuery, callback_data: RateShiftCallbackDat
 async def generate_worker_menu(message: Message, record_id: int) -> None:
     # Settings data
     record = service.get_work_time_record_by_id(record_id)
-    time_begin = record.work_begin.strftime(get_settings().date_time_format)
+    time_begin = record.work_begin.strftime(settings.date_time_format)
     fine = record.fine or 0
     rating = record.rating or 0
 

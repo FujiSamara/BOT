@@ -2,14 +2,17 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, ErrorEvent, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
-from app.bot.text import first_run_text
-from app.bot.states import Auth
-import app.db.service as service
-from app.bot.states import Base
 import logging
-from app.bot.text import err
 import asyncio
+
+from app.infra.logging import logger
+import app.db.service as service
+
 from app.bot.handlers.utils import send_menu_by_scopes, try_delete_message
+from app.bot.text import err
+from app.bot.states import Base
+from app.bot.states import Auth
+from app.bot.text import first_run_text
 
 
 router = Router(name="main")
@@ -42,7 +45,7 @@ async def get_menu_by_scope(callback: CallbackQuery, state: FSMContext):
 
 @router.error()
 async def error_handler(event: ErrorEvent):
-    logging.getLogger("uvicorn.error").error(f"Error occurred: {event.exception}")
+    logger.error(f"Error occurred: {event.exception}")
     message = event.update.callback_query.message
     await try_delete_message(message)
     msg = await message.answer(err, reply_markup=ReplyKeyboardRemove())

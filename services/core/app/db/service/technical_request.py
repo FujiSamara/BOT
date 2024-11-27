@@ -1,6 +1,12 @@
 from pathlib import Path
-
 from sqlalchemy import null
+import logging
+from datetime import datetime, timedelta
+from fastapi import UploadFile
+from typing import Any, Optional
+
+from app.infra.logging import logger
+
 import app.db.orm as orm
 from app.db.models import (
     Department,
@@ -14,10 +20,6 @@ from app.db.schemas import (
     WorkerSchema,
     DocumentSchema,
 )
-import logging
-from datetime import datetime, timedelta
-from fastapi import UploadFile
-from typing import Any, Optional
 
 
 def counting_date_sla(sla: int):
@@ -81,22 +83,18 @@ def create_technical_request(
 
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     if not worker:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id {telegram_id} wasn't found"
-        )
+        logger.error(f"Worker with telegram id {telegram_id} wasn't found")
 
     problem = orm.get_technical_problem_by_problem_name(problem_name=problem_name)
     if not problem:
-        logging.getLogger("uvicorn.error").error(
-            f"Problem with name {problem_name} wasn't found"
-        )
+        logger.error(f"Problem with name {problem_name} wasn't found")
 
     repairman = orm.get_repairman_by_department_id_and_executor_type(
         department_id=worker.department.id, executor_type=problem.executor.name
     )
 
     if not repairman:
-        logging.getLogger("uvicorn.error").error(
+        logger.error(
             f"Repairman from department id: {worker.department.id} and responsible by {problem.executor.name} wasn't found"
         )
 
@@ -104,7 +102,7 @@ def create_technical_request(
         worker.department.id
     )
     if not territorial_manager:
-        logging.getLogger("uvicorn.error").error(
+        logger.error(
             f"Territorial manager with department id: {worker.department.id} wasn't found"
         )
 
@@ -131,9 +129,7 @@ def create_technical_request(
     )
 
     if not orm.create_technical_request(request):
-        logging.getLogger("uvicorn.error").error(
-            "Technical problem record wasn't created"
-        )
+        logger.error("Technical problem record wasn't created")
 
     return {
         "repairman_telegram_id": repairman.telegram_id,
@@ -176,9 +172,7 @@ def update_technical_request_from_repairman(
     request.state = ApprovalStatus.pending_approval
 
     if not orm.update_technical_request_from_repairman(request):
-        logging.getLogger("uvicorn.error").error(
-            f"Technical problem with id {request.id} record wasn't updated"
-        )
+        logger.error(f"Technical problem with id {request.id} record wasn't updated")
     return_dict = {
         "territorial_manager_telegram_id": request.territorial_manager.telegram_id,
         "worker_telegram_id": request.worker.telegram_id,
@@ -227,9 +221,7 @@ def update_technical_request_from_territorial_manager(
             request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
-        logging.getLogger("uvicorn.error").error(
-            f"Technical problem with id {request.id} record wasn't updated"
-        )
+        logger.error(f"Technical problem with id {request.id} record wasn't updated")
 
     return {
         "repairman_telegram_id": request.repairman.telegram_id,
@@ -250,16 +242,12 @@ def update_tech_request_executor(
             [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with full name: {repairman_full_name} wasn't found"
-        )
+        logger.error(f"Worker with full name: {repairman_full_name} wasn't found")
 
     if not orm.update_tech_request_executor(
         request_id=request_id, repairman_id=repairman.id
     ):
-        logging.getLogger("uvicorn.error").error(
-            f"Technical request with id: {request_id} wasn't update executor"
-        )
+        logger.error(f"Technical request with id: {request_id} wasn't update executor")
     return repairman.telegram_id
 
 
@@ -267,9 +255,7 @@ def update_technical_request_problem(request_id: int, problem_id: int):
     if not orm.update_technical_request_problem(
         request_id=request_id, problem_id=problem_id
     ):
-        logging.getLogger("uvicorn.error").error(
-            f"Technical request with id: {request_id} wasn't update problem"
-        )
+        logger.error(f"Technical request with id: {request_id} wasn't update problem")
 
 
 def get_all_waiting_technical_requests_for_worker(
@@ -281,9 +267,7 @@ def get_all_waiting_technical_requests_for_worker(
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id {telegram_id} wasn't found"
-        )
+        logger.error(f"Worker with telegram id {telegram_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id, TechnicalRequest.close_date],
@@ -305,16 +289,12 @@ def get_all_waiting_technical_requests_for_repairman(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Repairman with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Repairman with telegram id: {telegram_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
         except IndexError:
-            logging.getLogger("uvicorn.error").error(
-                f"Department with name: {department_name} wasn't found"
-            )
+            logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
@@ -341,16 +321,12 @@ def get_all_rework_technical_requests_for_repairman(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Repairman with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Repairman with telegram id: {telegram_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
         except IndexError:
-            logging.getLogger("uvicorn.error").error(
-                f"Department with name: {department_name} wasn't found"
-            )
+            logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_rework_tech_request(
                 department_id=department_id, repairman_id=repairman.id
@@ -370,16 +346,14 @@ def get_all_waiting_technical_requests_for_territorial_manager(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
+        logger.error(
             f"Territorial manager with telegram id: {telegram_id} wasn't found"
         )
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
         except IndexError:
-            logging.getLogger("uvicorn.error").error(
-                f"Department with name: {department_name} wasn't found"
-            )
+            logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
@@ -407,9 +381,7 @@ def get_all_active_technical_requests_for_department_director(
     try:
         department = orm.find_departments_by_name(department_name)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name {department_name} wasn't found"
-        )
+        logger.error(f"Department with name {department_name} wasn't found")
     else:
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
@@ -429,16 +401,12 @@ def get_all_history_technical_requests_for_repairman(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Repairman with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Repairman with telegram id: {telegram_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
         except IndexError:
-            logging.getLogger("uvicorn.error").error(
-                f"Department with name: {department_name} wasn't found"
-            )
+            logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_for_repairman_history(
                 repairman.id, department_id
@@ -458,16 +426,14 @@ def get_all_history_technical_requests_for_territorial_manager(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
+        logger.error(
             f"Territorial manager with telegram id: {telegram_id} wasn't found"
         )
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
         except IndexError:
-            logging.getLogger("uvicorn.error").error(
-                f"Department with name: {department_name} wasn't found"
-            )
+            logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
@@ -490,9 +456,7 @@ def get_all_history_technical_requests_for_worker(
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Worker with telegram id: {telegram_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id], [worker.id], history=True
@@ -510,9 +474,7 @@ def get_all_history_technical_requests_for_department_director(
     try:
         department = orm.find_departments_by_name(department_name)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name {department_name} wasn't found"
-        )
+        logger.error(f"Department with name {department_name} wasn't found")
     else:
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
@@ -532,9 +494,7 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         ]
         return request
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Request with id: {request_id} wasn't founds"
-        )
+        logger.error(f"Request with id: {request_id} wasn't founds")
 
 
 def _get_departments_names_for_employee(
@@ -546,9 +506,7 @@ def _get_departments_names_for_employee(
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Worker with telegram id: {telegram_id} wasn't found")
     else:
         departments_names = orm.get_departments_names_by_worker_id_and_worker_column(
             worker_column=worker_column, worker_id=worker.id
@@ -562,9 +520,7 @@ def get_departments_names_for_repairman(
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Worker with telegram id: {telegram_id} wasn't found")
     else:
         return orm.get_departments_names_for_repairman(worker_id=worker.id)
 
@@ -594,9 +550,7 @@ def get_all_active_requests_in_department_for_chief_technician(
     try:
         department_id = (orm.find_departments_by_name(department_name)[0]).id
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name: {department_name} wasn't found"
-        )
+        logger.error(f"Department with name: {department_name} wasn't found")
     else:
         requests = orm.get_all_active_requests_in_department(department_id)[:-16:-1]
         return requests
@@ -610,14 +564,10 @@ def get_all_worker_in_group(
     """
     group = orm.get_group_by_name(group_name)
     if not group:
-        logging.getLogger("uvicorn.error").error(
-            f"Group with name: {group_name} wasn't found"
-        )
+        logger.error(f"Group with name: {group_name} wasn't found")
     workers = orm.get_all_worker_in_group(group.id)
     if len(workers) == 0:
-        logging.getLogger("uvicorn.error").error(
-            f"Workers with group id: {group.id} wasn't founds"
-        )
+        logger.error(f"Workers with group id: {group.id} wasn't founds")
     return workers
 
 
@@ -631,7 +581,7 @@ def close_request(
     Return creator TG id
     """
     cur_date = datetime.now()
-    logging.getLogger("uvicorn.error").error(12)
+    logger.error(12)
     acceptor_post_id = (
         orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     ).post.id
@@ -643,9 +593,7 @@ def close_request(
     )
 
     if not tg_id:
-        logging.getLogger("uvicorn.error").error(
-            f"Request with id: {request_id} wasn't close"
-        )
+        logger.error(f"Request with id: {request_id} wasn't close")
 
     return tg_id
 
@@ -655,9 +603,7 @@ def get_request_count_in_departments(
 ) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {tg_id} not found"
-        )
+        logger.error(f"Worker with telegram id: {tg_id} not found")
     else:
         worker_id = worker_id[0].id
 

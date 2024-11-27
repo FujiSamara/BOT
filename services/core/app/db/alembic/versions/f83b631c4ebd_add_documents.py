@@ -12,7 +12,7 @@ from alembic import op
 import fastapi_storages
 import sqlalchemy as sa
 
-from settings import get_settings
+from app.infra.config import settings
 
 # revision identifiers, used by Alembic.
 revision: str = "f83b631c4ebd"
@@ -27,9 +27,7 @@ def upgrade() -> None:
         "bids",
         sa.Column(
             "document1",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=True,
         ),
     )
@@ -37,9 +35,7 @@ def upgrade() -> None:
         "bids",
         sa.Column(
             "document2",
-            fastapi_storages.integrations.sqlalchemy.FileType(
-                storage=get_settings().storage
-            ),
+            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
             nullable=True,
         ),
     )

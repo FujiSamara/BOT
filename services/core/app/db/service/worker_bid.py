@@ -1,5 +1,11 @@
 from pathlib import Path
+import logging
+from datetime import datetime
+from fastapi import UploadFile
 
+from app.infra.logging import logger
+
+from app.db.service.extra import get_worker_by_id
 import app.db.orm as orm
 from app.db.models import (
     Department,
@@ -12,11 +18,6 @@ from app.db.schemas import (
     WorkerBidSchema,
     DocumentSchema,
 )
-import logging
-from datetime import datetime
-from fastapi import UploadFile
-
-from app.db.service.extra import get_worker_by_id
 
 
 async def update_worker_bid_state(state: ApprovalStatus, bid_id):
@@ -73,23 +74,17 @@ def create_worker_bid(
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
     if not department:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department_name}' not found"
-        )
+        logger.error(f"Department with name '{department_name}' not found")
         return
 
     post = orm.find_post_by_column(Post.name, post_name)
     if not post:
-        logging.getLogger("uvicorn.error").error(
-            f"Post with name '{post_name}' not found"
-        )
+        logger.error(f"Post with name '{post_name}' not found")
         return
 
     sender = orm.find_worker_by_column(Worker.telegram_id, sender_telegram_id)
     if not sender:
-        logging.getLogger("uvicorn.error").error(
-            f"Sender with telegram id '{sender_telegram_id}' not found"
-        )
+        logger.error(f"Sender with telegram id '{sender_telegram_id}' not found")
         return
 
     last_bid_id = orm.get_last_worker_bid_id()

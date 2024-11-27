@@ -4,12 +4,12 @@ from app.admin.configure import configure
 import sys
 from app.db.database import engine, session
 import logging
-from settings import get_settings
+from app.infra.config import settings
 from uuid import uuid4
 
 
 def create(app: FastAPI) -> FastAPI:
-    templates_dir = get_settings().app_directory_path + "/app/admin/templates"
+    templates_dir = settings.app_directory_path + "/app/admin/templates"
     admin = FujiAdmin(
         app,
         engine=engine,

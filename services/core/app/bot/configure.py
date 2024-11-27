@@ -1,18 +1,21 @@
 from fastapi import FastAPI
 from typing import AsyncGenerator
 from aiogram import Dispatcher
-from app.bot.router import router
-from settings import get_settings
-from app.bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
-import logging
 from aiogram.loggers import dispatcher, event, middlewares, scene, webhook
 from aiogram.types import BotCommand
+from datetime import datetime
+
+from app.infra.config import settings
+from app.infra.logging import logger
+
+from app.bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
+import logging
+from app.bot.router import router
 from app.bot.tasks import (
     TaskScheduler,
     notify_with_unclosed_shift,
     notify_and_droped_departments_teller_cash,
 )
-from datetime import datetime
 
 
 def configure(bot_api: FastAPI):
@@ -32,17 +35,15 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     # Bot webhooks
     await get_bot().delete_webhook(drop_pending_updates=True)
     await get_bot().set_webhook(
-        url=get_settings().bot_webhook_url,
-        secret_token=get_settings().telegram_token,
+        url=settings.bot_webhook_url,
+        secret_token=settings.telegram_token,
         allowed_updates=get_dispatcher().resolve_used_update_types(),
         drop_pending_updates=True,
     )
     await get_bot().set_my_commands(
         [BotCommand(command="start", description="Запускает бота")]
     )
-    logging.getLogger("uvicorn.error").info(
-        "Webhook info: " + str(await _check_webhook()).split()[0]
-    )
+    logger.info("Webhook info: " + str(await _check_webhook()).split()[0])
     # Tasks
     tasks = TaskScheduler()
     YMD = {"year": 1, "month": 1, "day": 1}

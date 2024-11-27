@@ -14,7 +14,7 @@ from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
 from fastapi import UploadFile
 
-from settings import get_settings
+from app.infra.config import settings
 
 from app.db.service import (
     get_worker_by_telegram_id,
@@ -216,7 +216,7 @@ async def set_documents(message: Message, state: FSMContext):
 
         document: UploadFile = await download_file(documents[0])
 
-        path = pathlib.Path(get_settings().storage_path) / "menu.pdf"
+        path = pathlib.Path(settings.storage_path) / "menu.pdf"
         data = await document.read()
 
         with open(path, "wb") as f:
@@ -254,7 +254,7 @@ async def get_per_cab_worktimes(
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text=f"{worktime.day.strftime(get_settings().date_format)} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}",
+                    text=f"{worktime.day.strftime(settings.date_format)} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}",
                     callback_data=ShowWorkTimeCallbackData(
                         end_point="per_cab_worktime",
                         id=worktime.id,
@@ -309,13 +309,13 @@ async def show_worktime(
     callback: CallbackQuery, callback_data: ShowWorkTimeCallbackData
 ):
     worktime = get_work_time_record_by_id(callback_data.id)
-    text = f"{hbold('Смена от: ', worktime.day.strftime(get_settings().date_format))}\n"
+    text = f"{hbold('Смена от: ', worktime.day.strftime(settings.date_format))}\n"
     text += (
         f"{hbold('Сотрудник: ')} {worktime.worker.l_name} {worktime.worker.f_name}\n"
     )
     text += f"{hbold('Производство:')} {worktime.department.name if worktime.department is not None else 'Отсутствует'}\n"
-    text += f"{hbold('Начало смены:')} {worktime.work_begin.strftime(get_settings().time_format) if worktime.work_begin is not None else 'Отсутствует'}\n"
-    text += f"{hbold('Конец смены:')} {worktime.work_end.strftime(get_settings().time_format) if worktime.work_end is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Начало смены:')} {worktime.work_begin.strftime(settings.time_format) if worktime.work_begin is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Конец смены:')} {worktime.work_end.strftime(settings.time_format) if worktime.work_end is not None else 'Отсутствует'}\n"
     text += f"{hbold('Отработанно часов:')} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}\n"
     text += f"{hbold('Оценка:')} {worktime.rating if worktime.rating is not None else 'Отсутствует'}\n"
     if worktime.fine is not None:

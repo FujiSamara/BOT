@@ -1,5 +1,11 @@
 from io import BytesIO
 from pathlib import Path
+import logging
+from datetime import datetime
+from fastapi import UploadFile
+from typing import Any, Optional, Tuple
+
+from app.infra.logging import logger
 
 import app.db.orm as orm
 from app.db.models import (
@@ -20,10 +26,7 @@ from app.db.schemas import (
     aliases,
     BidInSchema,
 )
-import logging
-from datetime import datetime
-from fastapi import UploadFile
-from typing import Any, Optional, Tuple
+
 
 # In right order
 states = [
@@ -139,25 +142,19 @@ async def create_bid(
     department_inst = orm.find_department_by_column(Department.name, department)
 
     if not department_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Department with name '{department}' not found"
-        )
+        logger.error(f"Department with name '{department}' not found")
         return
 
     worker_inst = orm.find_worker_by_column(Worker.telegram_id, telegram_id)
 
     if not worker_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id '{telegram_id}' not found"
-        )
+        logger.error(f"Worker with telegram id '{telegram_id}' not found")
         return
 
     expenditure_inst = orm.find_expenditure_by_column(Expenditure.name, expenditure)
 
     if not expenditure_inst:
-        logging.getLogger("uvicorn.error").error(
-            f"Expenditure with name '{expenditure}' not found"
-        )
+        logger.error(f"Expenditure with name '{expenditure}' not found")
         return
 
     cur_date = datetime.now()
@@ -737,9 +734,7 @@ def find_bid_for_worker(bid_id: int, tg_id: int) -> Tuple[BidSchema, bool] | Non
     try:
         worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logging.getLogger("uvicorn.error").error(
-            f"Worker with telegram id: {tg_id} not found"
-        )
+        logger.error(f"Worker with telegram id: {tg_id} not found")
     if FujiScope.admin in worker.post.scopes:
         return (bid, True)
 
