@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-import app.admin
-import app.bot
-import app.api
-from middlewares.setup import setup_core_middlewares
+import app.admin as admin
+import app.bot as bot
+import app.api as api
+from app.middlewares.setup import setup_core_middlewares
 
 
 def create_app() -> FastAPI:
