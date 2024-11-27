@@ -9,7 +9,7 @@ from uuid import uuid4
 
 
 def create(app: FastAPI) -> FastAPI:
-    templates_dir = get_settings().app_directory_path + "/templates"
+    templates_dir = get_settings().app_directory_path + "/app/admin/templates"
     admin = FujiAdmin(
         app,
         engine=engine,
