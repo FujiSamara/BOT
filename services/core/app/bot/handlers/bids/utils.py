@@ -1,10 +1,10 @@
 from aiogram.utils.markdown import hbold
-from db.models import ApprovalStatus, FujiScope
-from db.schemas import BidSchema, WorkerBidSchema, WorkerSchema
-from bot.kb import payment_type_dict
+from app.db.models import ApprovalStatus, FujiScope
+from app.db.schemas import BidSchema, WorkerBidSchema, WorkerSchema
+from app.bot.kb import payment_type_dict
 
-import db.service.bid as bid_service
-import db.service.extra as extra_service
+import app.db.service.bid as bid_service
+import app.db.service.extra as extra_service
 
 
 def get_full_bid_info(bid: BidSchema) -> str:

@@ -1,7 +1,7 @@
 from fastapi.routing import APIRouter
 
-from db.service import equipment_status_service
-from db.schemas import EquipmentStatusSchemaIn
+from app.db.service import equipment_status_service
+from app.db.schemas import EquipmentStatusSchemaIn
 
 router = APIRouter()
 

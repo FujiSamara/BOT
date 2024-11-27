@@ -2,15 +2,15 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
-from bot.handlers.bids import create_bid
-from bot.handlers.bids import coordinate_bid
-from bot.handlers.bids import worker_bid
+from app.bot.handlers.bids import create_bid
+from app.bot.handlers.bids import coordinate_bid
+from app.bot.handlers.bids import worker_bid
 
 # bot imports
-from bot.kb import bid_menu
+from app.bot.kb import bid_menu
 
 
-from bot.states import Base
+from app.bot.states import Base
 
 
 router = Router(name="bid_main")

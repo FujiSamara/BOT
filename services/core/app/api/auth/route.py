@@ -3,13 +3,13 @@ from datetime import timedelta
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 
-from api.auth.schemas import Token
-from api.auth.authentication import authorize_user, create_access_token
+from app.api.auth.schemas import Token
+from app.api.auth.authentication import authorize_user, create_access_token
 
 from settings import get_settings
 
-from api.auth.schemas import User
-from api.auth.authentication import get_user
+from app.api.auth.schemas import User
+from app.api.auth.authentication import get_user
 
 
 def register_general_routes(auth: FastAPI):

@@ -8,12 +8,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from fastapi import UploadFile
 
-from bot import text, kb
-from bot.states import Base, ChiefTechnicianTechnicalRequestForm
+from app.bot import text, kb
+from app.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from bot.handlers.tech_request import kb as tech_kb
-from bot.handlers.utils import (
+from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.bot.handlers.tech_request import kb as tech_kb
+from app.bot.handlers.utils import (
     download_file,
     handle_documents,
     handle_documents_form,
@@ -21,13 +21,13 @@ from bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from bot.handlers.tech_request.utils import (
+from app.bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
     department_names_with_count,
 )
 
-from db.service import (
+from app.db.service import (
     close_request,
     get_all_history_technical_requests_for_repairman,
     get_all_worker_in_group,
@@ -40,7 +40,7 @@ from db.service import (
     update_tech_request_executor,
     update_technical_request_from_repairman,
 )
-from db.models import ApprovalStatus
+from app.db.models import ApprovalStatus
 
 router = Router(name="technical_request_chief_technician")
 

@@ -2,14 +2,14 @@ from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message, CallbackQuery, ErrorEvent, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
-from bot.text import first_run_text
-from bot.states import Auth
-import db.service as service
-from bot.states import Base
+from app.bot.text import first_run_text
+from app.bot.states import Auth
+import app.db.service as service
+from app.bot.states import Base
 import logging
-from bot.text import err
+from app.bot.text import err
 import asyncio
-from bot.handlers.utils import send_menu_by_scopes, try_delete_message
+from app.bot.handlers.utils import send_menu_by_scopes, try_delete_message
 
 
 router = Router(name="main")

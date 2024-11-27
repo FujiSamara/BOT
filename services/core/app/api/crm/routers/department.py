@@ -1,10 +1,10 @@
 from fastapi import Security
 from fastapi.routing import APIRouter
 
-from db import service
-from db.schemas import DepartmentSchema
+from app.db import service
+from app.db.schemas import DepartmentSchema
 
-from api.auth import User, get_user
+from app.api.auth import User, get_user
 
 
 router = APIRouter()

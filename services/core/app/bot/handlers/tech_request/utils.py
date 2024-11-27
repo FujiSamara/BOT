@@ -1,5 +1,5 @@
 from typing import Optional
-from bot.states import Base
+from app.bot.states import Base
 from settings import get_settings
 
 from aiogram.types import (
@@ -12,17 +12,17 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from bot import text
+from app.bot import text
 
-from db.models import ApprovalStatus
-from db.service import get_technical_request_by_id, get_request_count_in_departments
+from app.db.models import ApprovalStatus
+from app.db.service import get_technical_request_by_id, get_request_count_in_departments
 
-from bot.handlers.utils import (
+from app.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from bot.kb import create_inline_keyboard, create_reply_keyboard
-from bot.handlers.tech_request.schemas import (
+from app.bot.kb import create_inline_keyboard, create_reply_keyboard
+from app.bot.handlers.tech_request.schemas import (
     ShowRequestCallbackData,
 )
 

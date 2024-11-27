@@ -7,15 +7,15 @@ from datetime import datetime, timedelta
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import InlineKeyboardMarkup
 
-from bot.handlers.rate.utils import shift_closed
-from bot.text import unclosed_shift_notify, unclosed_shift_request
-from bot.handlers.utils import notify_worker_by_telegram_id
-from bot.kb import (
+from app.bot.handlers.rate.utils import shift_closed
+from app.bot.text import unclosed_shift_notify, unclosed_shift_request
+from app.bot.handlers.utils import notify_worker_by_telegram_id
+from app.bot.kb import (
     rating_menu_button,
     create_inline_keyboard,
     get_personal_cabinet_button,
 )
-import db.service as service
+import app.db.service as service
 
 
 @dataclass

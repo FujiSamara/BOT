@@ -2,7 +2,7 @@ from pathlib import Path
 from fastapi import FastAPI, Security, HTTPException, status
 from fastapi.responses import FileResponse
 
-from api.auth import User, get_user
+from app.api.auth import User, get_user
 from settings import get_settings
 
 

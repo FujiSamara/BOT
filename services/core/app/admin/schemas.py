@@ -3,7 +3,7 @@ from fastapi import Request
 from fastapi.responses import RedirectResponse
 from sqladmin import ModelView, action
 from sqlalchemy import Select, or_, select
-from db.models import (
+from app.db.models import (
     PostScope,
     TechnicalProblem,
     Worker,
@@ -23,10 +23,10 @@ from db.models import (
     WorkerFingerprint,
     FingerprintAttempt,
 )
-from bot.kb import payment_type_dict, approval_status_dict
-from db.schemas import FileOutSchema
-from db import service
-from api.auth import encrypt_password
+from app.bot.kb import payment_type_dict, approval_status_dict
+from app.db.schemas import FileOutSchema
+from app.db import service
+from app.api.auth import encrypt_password
 
 
 class PostScopeView(ModelView, model=PostScope):

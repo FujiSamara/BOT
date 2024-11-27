@@ -4,11 +4,11 @@ import base64
 
 import aiohttp
 from settings import get_settings
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     WorkTime,
 )
-from db.schemas import (
+from app.db.schemas import (
     QuerySchema,
     WorkTimeSchema,
     WorkTimeSchemaFull,

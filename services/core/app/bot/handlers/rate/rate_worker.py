@@ -4,19 +4,19 @@ from aiogram.types import CallbackQuery, InlineKeyboardButton, Message
 from aiogram.fsm.context import FSMContext
 from datetime import datetime, timedelta
 
-from db import service
+from app.db import service
 from settings import get_settings
-from bot.handlers.utils import try_edit_or_answer
-from bot.handlers.rate.utils import shift_closed
-from bot.kb import (
+from app.bot.handlers.utils import try_edit_or_answer
+from app.bot.handlers.rate.utils import shift_closed
+from app.bot.kb import (
     create_inline_keyboard,
     main_menu_button,
     rating_menu_button,
     get_rating_worker_menu,
 )
-from bot.text import format_err
-from bot.handlers.rate.schemas import RateShiftCallbackData, RateFormStatus
-from bot.states import RateForm, Base
+from app.bot.text import format_err
+from app.bot.handlers.rate.schemas import RateShiftCallbackData, RateFormStatus
+from app.bot.states import RateForm, Base
 
 router = Router(name="rating")
 

@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from typing import AsyncGenerator
 from aiogram import Dispatcher
-from bot.router import router
+from app.bot.router import router
 from settings import get_settings
-from bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
+from app.bot.bot import get_bot, get_dispatcher, _bot_webhook, _check_webhook
 import logging
 from aiogram.loggers import dispatcher, event, middlewares, scene, webhook
 from aiogram.types import BotCommand
-from bot.tasks import (
+from app.bot.tasks import (
     TaskScheduler,
     notify_with_unclosed_shift,
     notify_and_droped_departments_teller_cash,

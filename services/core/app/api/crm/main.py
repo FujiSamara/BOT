@@ -2,13 +2,13 @@ from fastapi import FastAPI
 import logging
 import sys
 
-from api.crm.routers import expenditure
-from api.crm.routers import worker
-from api.crm.routers import budget
-from api.crm.routers import department
-from api.crm.routers import bid
-from api.crm.routers import worktime
-from api.crm.routers import post
+from app.api.crm.routers import expenditure
+from app.api.crm.routers import worker
+from app.api.crm.routers import budget
+from app.api.crm.routers import department
+from app.api.crm.routers import bid
+from app.api.crm.routers import worktime
+from app.api.crm.routers import post
 
 
 def create(api: FastAPI) -> FastAPI:

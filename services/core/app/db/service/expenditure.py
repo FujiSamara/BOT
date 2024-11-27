@@ -1,15 +1,15 @@
 import logging
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     Expenditure,
 )
-from db.schemas import (
+from app.db.schemas import (
     BudgetRecordSchema,
     ExpenditureSchema,
     QuerySchema,
     WorkerSchema,
 )
-from db.service.budget import create_budget_record
+from app.db.service.budget import create_budget_record
 
 
 def get_chapters() -> list[str]:

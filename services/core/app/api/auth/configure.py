@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from api.auth.route import register_general_routes
+from app.api.auth.route import register_general_routes
 
 
 def configure(auth: FastAPI):

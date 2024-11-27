@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 
-import admin
-import bot
-import api
+import app.admin
+import app.bot
+import app.api
 from middlewares.setup import setup_core_middlewares
 
 

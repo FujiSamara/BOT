@@ -1,8 +1,8 @@
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     BudgetRecord,
 )
-from db.schemas import (
+from app.db.schemas import (
     BudgetRecordSchema,
     QuerySchema,
 )

@@ -1,5 +1,5 @@
 from datetime import date
-from db import service
+from app.db import service
 
 
 def shift_closed(day: date, department_id: int) -> bool:

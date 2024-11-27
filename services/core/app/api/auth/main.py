@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from api.auth.configure import configure
+from app.api.auth.configure import configure
 import logging
 import sys
 

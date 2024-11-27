@@ -13,18 +13,18 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from bot.text import (
+from app.bot.text import (
     format_err,
     notification_it_repairman_reopen,
     notification_it_worker,
 )
 
-from bot.kb import (
+from app.bot.kb import (
     create_reply_keyboard_resize,
     create_inline_keyboard,
     create_reply_keyboard_raw,
 )
-from bot.handlers.bids_it.kb import (
+from app.bot.handlers.bids_it.kb import (
     tm_department_menu,
     tm_bids_it_menu,
     get_create_tm_bid_it_menu,
@@ -32,35 +32,35 @@ from bot.handlers.bids_it.kb import (
     back_tm_button,
     bid_it_tm_create_history_button,
 )
-from bot.states import TMForm, Base
+from app.bot.states import TMForm, Base
 
-from bot.handlers.utils import (
+from app.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
     try_edit_message,
 )
-from bot.handlers.bids_it.utils import (
+from app.bot.handlers.bids_it.utils import (
     get_bid_it_list_info,
     get_bid_it_info,
     clear_state_with_success_it_tm,
     filter_media_by_reopen,
     create_buttons_for_territorial_manager,
 )
-from bot.handlers.bids_it.schemas import (
+from app.bot.handlers.bids_it.schemas import (
     BidITViewMode,
     BidITCallbackData,
 )
 
 
-from db.service import (
+from app.db.service import (
     update_bid_it_tm,
     get_departments_names_by_tm_telegram_id,
     get_pending_bids_it_for_territorial_manager,
     get_history_bids_it_for_territorial_manager,
     get_bid_it_by_id,
 )
-from db.models import ApprovalStatus
+from app.db.models import ApprovalStatus
 
 router = Router(name="bid_it_territorial_manager")
 

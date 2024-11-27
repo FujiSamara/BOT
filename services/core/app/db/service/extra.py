@@ -1,13 +1,13 @@
 from settings import get_settings
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     Department,
     FujiScope,
     Post,
     Worker,
     Company,
 )
-from db.schemas import (
+from app.db.schemas import (
     PostSchema,
     WorkerSchema,
     DepartmentSchema,

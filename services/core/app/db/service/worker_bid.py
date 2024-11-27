@@ -1,14 +1,14 @@
 from pathlib import Path
 
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     Department,
     ApprovalStatus,
     Post,
     Worker,
     WorkerBid,
 )
-from db.schemas import (
+from app.db.schemas import (
     WorkerBidSchema,
     DocumentSchema,
 )
@@ -16,7 +16,7 @@ import logging
 from datetime import datetime
 from fastapi import UploadFile
 
-from db.service.extra import get_worker_by_id
+from app.db.service.extra import get_worker_by_id
 
 
 async def update_worker_bid_state(state: ApprovalStatus, bid_id):
@@ -33,7 +33,7 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     worker_bid.state = state
     orm.update_worker_bid(worker_bid)
 
-    from bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
+    from app.bot.handlers.utils import notify_worker_by_telegram_id, send_menu_by_scopes
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:

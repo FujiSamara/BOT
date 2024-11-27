@@ -1,14 +1,14 @@
 from pathlib import Path
 
 from sqlalchemy import null
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     Department,
     ApprovalStatus,
     TechnicalRequest,
     Worker,
 )
-from db.schemas import (
+from app.db.schemas import (
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerSchema,

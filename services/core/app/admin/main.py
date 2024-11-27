@@ -1,8 +1,8 @@
 from fastapi import FastAPI
-from admin.admin import FujiAdmin, AdminAuth
-from admin.configure import configure
+from app.admin.admin import FujiAdmin, AdminAuth
+from app.admin.configure import configure
 import sys
-from db.database import engine, session
+from app.db.database import engine, session
 import logging
 from settings import get_settings
 from uuid import uuid4

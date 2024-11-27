@@ -4,11 +4,11 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from db.service import get_technical_problem_by_id, get_technical_request_by_id
-from bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from bot.kb import main_menu_button
+from app.db.service import get_technical_problem_by_id, get_technical_request_by_id
+from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.bot.kb import main_menu_button
 
-from db.schemas import TechnicalRequestSchema
+from app.db.schemas import TechnicalRequestSchema
 
 
 # region Chief technician (CT)

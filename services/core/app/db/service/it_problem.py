@@ -1,14 +1,14 @@
 from pathlib import Path
 
-import db.orm as orm
-from db.models import (
+import app.db.orm as orm
+from app.db.models import (
     Department,
     ApprovalStatus,
     Worker,
     ProblemIT,
     BidIT,
 )
-from db.schemas import (
+from app.db.schemas import (
     DocumentSchema,
     ProblemITSchema,
     BidITSchema,
@@ -17,7 +17,7 @@ import logging
 from datetime import datetime
 from fastapi import UploadFile
 
-from db.service.extra import (
+from app.db.service.extra import (
     find_department_by_name,
     get_worker_by_telegram_id,
     get_worker_department_by_telegram_id,

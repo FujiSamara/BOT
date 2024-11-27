@@ -2,14 +2,14 @@ from datetime import datetime
 
 from settings import logger
 
-from db.schemas import (
+from app.db.schemas import (
     DepartmentSchemaFull,
     EquipmentIncidentSchema,
     EquipmentStatusSchemaIn,
     EquipmentStatusSchema,
 )
-from db.models import Department, FujiScope, IncidentStage
-from db import orm
+from app.db.models import Department, FujiScope, IncidentStage
+from app.db import orm
 
 bad_statuses = ["Не доступна"]
 
@@ -22,7 +22,7 @@ async def update_equipment_status(
     If status not exist in db creates it.
     """
 
-    from bot.handlers.utils import (
+    from app.bot.handlers.utils import (
         notify_workers_by_scope,
     )
 

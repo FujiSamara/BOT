@@ -8,11 +8,11 @@ from calendar import timegm
 
 from pydantic import ValidationError
 
-from api.auth.schemas import TokenData, User, UserWithScopes
-from api.auth.permissions import _oauth2_schema, _to_auth_scope
-from db.models import FujiScope
+from app.api.auth.schemas import TokenData, User, UserWithScopes
+from app.api.auth.permissions import _oauth2_schema, _to_auth_scope
+from app.db.models import FujiScope
 from settings import get_settings
-from db import service
+from app.db import service
 
 
 def encrypt_password(password: str) -> str:

@@ -21,11 +21,11 @@ from pydantic import BaseModel
 from xlsxwriter import Workbook
 
 from settings import get_settings
-from bot.kb import approval_status_dict
+from app.bot.kb import approval_status_dict
 
-import db.schemas as schemas
-import db.models as models
-from db.database import Base
+import app.db.schemas as schemas
+import app.db.models as models
+from app.db.database import Base
 
 
 class Builder(ABC):

@@ -8,27 +8,27 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
-from bot import text, kb
-from bot.states import (
+from app.bot import text, kb
+from app.bot.states import (
     Base,
     DepartmentDirectorRequestForm,
 )
 
-from bot.handlers.tech_request.utils import (
+from app.bot.handlers.tech_request.utils import (
     handle_department,
     show_form,
     department_names_with_count,
 )
-from bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from bot.handlers.tech_request import kb as tech_kb
-from bot.handlers.utils import (
+from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.bot.handlers.tech_request import kb as tech_kb
+from app.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
 
 
-from db.service import (
+from app.db.service import (
     close_request,
     get_all_history_technical_requests_for_department_director,
     get_all_active_technical_requests_for_department_director,
@@ -41,7 +41,7 @@ from db.service import (
     update_technical_request_problem,
 )
 
-from db.models import ApprovalStatus
+from app.db.models import ApprovalStatus
 
 
 router = Router(name="technical_request_department_director")

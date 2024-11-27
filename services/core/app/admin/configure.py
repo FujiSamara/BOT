@@ -1,4 +1,4 @@
-from admin.schemas import (
+from app.admin.schemas import (
     DepartmentView,
     CompanyView,
     GroupView,
@@ -17,7 +17,7 @@ from admin.schemas import (
 
 
 # Routers
-from admin.admin import FujiAdmin
+from app.admin.admin import FujiAdmin
 
 
 def configure(admin: FujiAdmin):

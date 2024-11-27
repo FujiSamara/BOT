@@ -10,7 +10,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import db.alembic.enum as c_enum
+import app.db.alembic.enum as c_enum
 
 
 # revision identifiers, used by Alembic.

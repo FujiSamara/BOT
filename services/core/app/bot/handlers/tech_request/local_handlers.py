@@ -1,6 +1,6 @@
 from aiogram import Router, F
-from bot.handlers.tech_request.utils import send_photos
-from bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.bot.handlers.tech_request.utils import send_photos
+from app.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from aiogram.types import (
     CallbackQuery,
     InputMediaDocument,
@@ -8,7 +8,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from db.service import get_technical_request_by_id
+from app.db.service import get_technical_request_by_id
 
 router = Router()
 

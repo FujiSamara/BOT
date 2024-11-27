@@ -16,17 +16,17 @@ from fastapi import UploadFile
 
 from settings import get_settings
 
-from db.service import (
+from app.db.service import (
     get_worker_by_telegram_id,
     get_departments_names,
     set_department_for_worker,
     get_last_completed_worktimes_by_tg_id,
     get_work_time_record_by_id,
 )
-from db.schemas import WorkerSchema
-from db.models import FujiScope
+from app.db.schemas import WorkerSchema
+from app.db.models import FujiScope
 
-from bot.kb import (
+from app.bot.kb import (
     get_personal_cabinet_button,
     get_per_cab_logins_button,
     get_per_cab_mat_vals_button,
@@ -37,17 +37,17 @@ from bot.kb import (
     main_menu_button,
     create_reply_keyboard,
 )
-from bot import text as text_imp
-from bot.states import PersconalCabinet, Base
-from bot.handlers.utils import (
+from app.bot import text as text_imp
+from app.bot.states import PersconalCabinet, Base
+from app.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
     handle_documents_form,
     handle_documents,
     download_file,
 )
-from bot.handlers.perconal_cab import utils
-from bot.handlers.perconal_cab.schemas import (
+from app.bot.handlers.perconal_cab import utils
+from app.bot.handlers.perconal_cab.schemas import (
     ShowLoginCallbackData,
     ShowWorkTimeCallbackData,
 )

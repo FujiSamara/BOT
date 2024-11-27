@@ -6,9 +6,9 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from db.schemas import WorkTimeSchema
-from bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
-from db.models import ApprovalStatus
+from app.db.schemas import WorkTimeSchema
+from app.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
+from app.db.models import ApprovalStatus
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")

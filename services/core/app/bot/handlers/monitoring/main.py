@@ -2,15 +2,15 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.markdown import hbold
 
-from db.models import IncidentStage
-import db.service.equipment_status_service as es_service
+from app.db.models import IncidentStage
+import app.db.service.equipment_status_service as es_service
 
-import bot.kb as kb
-from bot.handlers.utils import (
+import app.bot.kb as kb
+from app.bot.handlers.utils import (
     try_edit_or_answer,
 )
-from bot.handlers.monitoring import utils
-from bot.handlers.monitoring.schemas import (
+from app.bot.handlers.monitoring import utils
+from app.bot.handlers.monitoring.schemas import (
     IncidentCallbackData,
     ConfirmIncidentCallbackData,
 )

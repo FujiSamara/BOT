@@ -2,15 +2,15 @@ from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
-import db.service.worktime as service
-from db.schemas import (
+import app.db.service.worktime as service
+from app.db.schemas import (
     WorkTimeSchema,
     QuerySchema,
     TalbeInfoSchema,
     WorkTimeSchemaFull,
 )
 
-from api.auth import User, get_user
+from app.api.auth import User, get_user
 
 
 router = APIRouter()

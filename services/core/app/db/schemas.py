@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
-from db.models import (
+from app.db.models import (
     ApprovalStatus,
     FujiScope,
     Gender,
@@ -388,7 +388,7 @@ class BidOutSchema(BaseSchema):
     @field_validator("documents", mode="before")
     @classmethod
     def upload_file_validate(cls, val):
-        from db import service
+        from app.db import service
 
         if isinstance(val, list):
             result = []
