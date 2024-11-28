@@ -116,7 +116,7 @@ import ModalWindow from "@/components/ModalWindow.vue";
 import DocumentView from "@/components/DocumentView.vue";
 import type { Viewer } from "@/viewer";
 import { Ref, ref, type PropType } from "vue";
-import { BaseSchema, DocumentSchema } from "@/types";
+import { BaseSchema, DocumentSchema } from "@/type";
 import { useNetworkStore } from "@/store/network";
 import { Cell } from "@/table";
 

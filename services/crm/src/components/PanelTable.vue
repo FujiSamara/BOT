@@ -182,7 +182,7 @@ import TablePagination from "@/components/TablePagination.vue";
 import DocumentView from "@/components/DocumentView.vue";
 import type { Cell, CellLine, Table } from "@/table";
 import { Ref, ref, type PropType } from "vue";
-import { BaseSchema, DocumentSchema } from "@/types";
+import { BaseSchema, DocumentSchema } from "@/type";
 import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({

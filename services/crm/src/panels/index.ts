@@ -1,4 +1,4 @@
-import { Access, PanelData } from "@/types";
+import { Access, PanelData } from "@/type";
 import BidPanel from "@/panels/BidPanel.vue";
 import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACAndCCBidPanel from "@/panels/FACAndCCBidPanel.vue";

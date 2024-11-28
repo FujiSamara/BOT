@@ -26,7 +26,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { NavigationData } from "@/types";
+import { NavigationData } from "@/type";
 
 const props = defineProps({
 	navigationButtons: {
