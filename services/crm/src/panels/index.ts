@@ -1,4 +1,4 @@
-import { Access, PanelData } from "@/type";
+import { Access, PanelData } from "../../types/index";
 import BidPanel from "@/panels/BidPanel.vue";
 import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
 import FACAndCCBidPanel from "@/panels/FACAndCCBidPanel.vue";
@@ -15,7 +15,7 @@ import ArchiveBidPanel from "@/panels/ArchiveBidPanel.vue";
 const panels: Array<PanelData> = [
 	{
 		id: 1,
-		imageSrc: "/img/expenditure_logo.svg",
+		imageSrc: "@/assets/icons/expenditure_logo.svg",
 		label: "Статьи",
 		isActive: false,
 		panel: shallowRef(ExpenditurePanel),
@@ -23,7 +23,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 2,
-		imageSrc: "/img/budget_logo.svg",
+		imageSrc: "@/assets/icons/budget_logo.svg",
 		label: "Бюджет",
 		isActive: false,
 		panel: shallowRef(BudgetPanel),
@@ -31,7 +31,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 3,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Заявки",
 		isActive: false,
 		panel: shallowRef(BidPanel),
@@ -39,7 +39,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 4,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Заявки пр.",
 		isActive: false,
 		panel: shallowRef(BidPanelReadOnly),
@@ -47,7 +47,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 5,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Заявки на соглас.",
 		isActive: false,
 		panel: shallowRef(FACAndCCBidPanel),
@@ -55,7 +55,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 6,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "История соглас.",
 		isActive: false,
 		panel: shallowRef(FACAndCCBidHistoryPanel),
@@ -63,7 +63,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 7,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Заявки ЮК",
 		isActive: false,
 		panel: shallowRef(ParalegalBidTable),
@@ -71,7 +71,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 8,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Заявки бух.",
 		isActive: false,
 		panel: shallowRef(AccountantCardBidPanel),
@@ -79,7 +79,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 9,
-		imageSrc: "/img/worktime.svg",
+		imageSrc: "@/assets/icons/worktime.svg",
 		label: "Явки",
 		isActive: false,
 		panel: shallowRef(WorkTimePanel),
@@ -87,7 +87,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 10,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Мои заявки",
 		isActive: false,
 		panel: shallowRef(MyBidPanel),
@@ -95,7 +95,7 @@ const panels: Array<PanelData> = [
 	},
 	{
 		id: 11,
-		imageSrc: "/img/bid_logo.svg",
+		imageSrc: "@/assets/icons/bid_logo.svg",
 		label: "Архив заявок",
 		isActive: false,
 		panel: shallowRef(ArchiveBidPanel),

@@ -1,6 +1,6 @@
 <template>
 	<div class="button-wrapper" @click="$emit('click')">
-		<img src="/img/logout-logo.svg" />
+		<img src="@/assets/icons/logout-logo.svg" />
 		<p>выход</p>
 	</div>
 </template>

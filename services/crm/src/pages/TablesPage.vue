@@ -27,7 +27,7 @@ import TableSidebar from "@/components/table/TableSidebar.vue";
 	width: 100%;
 	height: 100%;
 
-	background-color: var(--body-background-color);
+	background-color: $body-background-color;
 
 	.sidebar {
 		position: fixed;
@@ -36,7 +36,7 @@ import TableSidebar from "@/components/table/TableSidebar.vue";
 		overflow-x: hidden;
 		overflow-y: auto;
 
-		width: var(--sidebar-width);
+		width: $sidebar-width;
 		height: 100%;
 	}
 }

@@ -5,7 +5,7 @@
 			:placeholder="props.placeholder"
 			@input.prevent="onInput"
 		/>
-		<img src="/img/search.svg" />
+		<img src="@/assets/icons/search.svg" />
 	</div>
 </template>
 <script setup lang="ts">

@@ -4,7 +4,7 @@ import {
 	ExpenditureSchema,
 	PostSchema,
 	WorkerSchema,
-} from "@/type";
+} from "../types/index";
 import * as config from "@/config";
 import { Cell, CellLine } from "@/table";
 

@@ -8,7 +8,7 @@ import {
 	BudgetSchema,
 	ExpenditureSchema,
 	WorkTimeSchema,
-} from "./type";
+} from "../types";
 import { useNetworkStore } from "./store/network";
 
 class TableElementObserver<T> {

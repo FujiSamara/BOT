@@ -12,6 +12,6 @@
 
 	flex: 1;
 
-	background-color: var(--table-background-color);
+	background-color: $table-background-color;
 }
 </style>

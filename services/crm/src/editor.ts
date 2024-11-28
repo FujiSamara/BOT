@@ -2,7 +2,7 @@ import axios from "axios";
 import { computed, Ref, ref, watch } from "vue";
 import * as config from "@/config";
 import { useNetworkStore } from "./store/network";
-import { DocumentSchema } from "./type";
+import { DocumentSchema } from "../types";
 import * as parser from "@/parser";
 
 export class SmartField {

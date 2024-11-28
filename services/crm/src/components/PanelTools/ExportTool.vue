@@ -1,7 +1,7 @@
 <template>
 	<purple-button class="button-wrapper" @click="onClick">
 		<p style="margin: 0">Выгрузить в Excel</p>
-		<img v-if="!loading" src="/img/export.svg" />
+		<img v-if="!loading" src="@/assets/icons/export.svg" />
 		<CircleLoader class="circle" v-if="loading"></CircleLoader>
 	</purple-button>
 </template>

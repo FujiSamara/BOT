@@ -4,7 +4,7 @@
 		<div class="add-files">
 			<clickable-icon
 				class="icons"
-				img-src="/img/add-plus.svg"
+				img-src="@/assets/icons/add-plus.svg"
 				@click="input!.click()"
 			></clickable-icon>
 			<span>Добавить файлы</span>

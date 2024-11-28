@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Access, accessesDict, Token } from "@/type";
+import { Access, accessesDict, Token } from "@types";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import * as config from "@/config";
 import { inject } from "vue";

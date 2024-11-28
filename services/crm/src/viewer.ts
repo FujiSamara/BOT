@@ -1,5 +1,5 @@
 import { Cell, CellLine } from "@/table";
-import { BaseSchema, BidSchema } from "@/type";
+import { BaseSchema, BidSchema } from "../types/index";
 import * as parser from "@/parser";
 
 class HeaderedCell extends Cell {

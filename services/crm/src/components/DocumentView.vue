@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useNetworkStore } from "@/store/network";
-import { DocumentSchema } from "@/type";
+import { DocumentSchema } from "../../types/index";
 import Viewer from "viewerjs";
 import { onMounted, ref, Ref, useTemplateRef } from "vue";
 

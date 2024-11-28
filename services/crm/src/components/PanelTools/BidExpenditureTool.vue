@@ -20,7 +20,7 @@
 		<ClickableIcon
 			v-if="selectList.length !== 0"
 			class="icon"
-			img-src="/img/filter.svg"
+			img-src="@/assets/icons/filter.svg"
 			@click="selectListVisible = !selectListVisible"
 		></ClickableIcon>
 		<div class="list-wrapper">

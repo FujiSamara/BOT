@@ -10,6 +10,6 @@
 	flex-direction: column;
 	justify-content: center;
 
-	background-color: var(--sidebar-background-color);
+	background-color: $sidebar-background-color;
 }
 </style>

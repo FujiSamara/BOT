@@ -8,7 +8,7 @@
 		<ClickableIcon
 			@click="listVisible = !listVisible"
 			class="icon"
-			img-src="/img/filter.svg"
+			img-src="@/assets/icons/filter.svg"
 		></ClickableIcon>
 		<div class="list-wrapper">
 			<Transition>

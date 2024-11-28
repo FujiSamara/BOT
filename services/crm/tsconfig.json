@@ -2,7 +2,8 @@
   "compilerOptions": {
     "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@types": ["./src/types.ts"]
     },
     "types": ["vite/client"],
     "target": "ES2020",

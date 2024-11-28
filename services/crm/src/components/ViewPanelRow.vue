@@ -9,19 +9,19 @@
 								<clickable-icon
 									class="icons"
 									style="width: 34px; margin-right: 15px"
-									img-src="/img/backward.svg"
+									img-src="@/assets/icons/backward.svg"
 									@click="emit('close')"
 								></clickable-icon>
 								<clickable-icon
 									v-if="canDelete"
 									class="icons"
-									img-src="/img/trash.svg"
+									img-src="@/assets/icons/trash.svg"
 									@click="emit('delete')"
 								></clickable-icon>
 								<clickable-icon
 									v-if="canApprove"
 									class="icons"
-									img-src="/img/check.svg"
+									img-src="@/assets/icons/check.svg"
 									:with-filter="false"
 									@click="emit('approve')"
 								>
@@ -29,7 +29,7 @@
 								<clickable-icon
 									v-if="canReject"
 									class="icons"
-									img-src="/img/reject.svg"
+									img-src="@/assets/icons/reject.svg"
 									:with-filter="false"
 									@click="modalVisible = true"
 								></clickable-icon>
@@ -116,7 +116,7 @@ import ModalWindow from "@/components/ModalWindow.vue";
 import DocumentView from "@/components/DocumentView.vue";
 import type { Viewer } from "@/viewer";
 import { Ref, ref, type PropType } from "vue";
-import { BaseSchema, DocumentSchema } from "@/type";
+import { BaseSchema, DocumentSchema } from "../../types/index";
 import { useNetworkStore } from "@/store/network";
 import { Cell } from "@/table";
 
@@ -357,7 +357,7 @@ th {
 	height: 20px;
 
 	transition: color 0.25s;
-	mask: url("/img/eye.svg");
+	mask: url("@/assets/icons/eye.svg");
 	fill: currentColor;
 	background-color: currentColor;
 	cursor: pointer;

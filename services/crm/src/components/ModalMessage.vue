@@ -5,7 +5,7 @@
 			<div class="tools">
 				<ClickableIcon
 					class="icon"
-					img-src="/img/copy.svg"
+					img-src="@/assets/icons/copy.svg"
 					@click="onCopy"
 				></ClickableIcon>
 				<window-cross class="cross" @click="emit('close')"></window-cross>

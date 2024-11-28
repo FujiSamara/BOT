@@ -1,6 +1,6 @@
 <template>
 	<div class="panel-wrapper">
-		<img src="/img/logo.svg" />
+		<img src="@/assets/icons/logo.svg" />
 		<div class="menu">
 			<div
 				class="nav-button"
@@ -26,7 +26,7 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { NavigationData } from "@/type";
+import { NavigationData } from "../../types/index";
 
 const props = defineProps({
 	navigationButtons: {

@@ -1,0 +1,21 @@
+:root {
+  --fuji-blue: #2e5ffa;
+  --fuji-gray: #474747;
+  --fuji-gray-lighter: #47474780;
+  --fuji-soft-gray: #f3f6fa;
+  --fuji-soft-gray-lighter: #fafbfd;
+  --fuji-white: #ffffff;
+}
+
+// Base
+$sidebar-width: 230px;
+
+// Colors
+$text-color: var(--fuji-gray);
+$text-color-lighter: var(--fuji-gray-lighter);
+$row-color-1: var(--fuji-white);
+$row-color-2: var(var(--fuji-soft-gray-lighter));
+$body-background-color: var(--fuji-soft-gray);
+
+$sidebar-background-color: var(--fuji-white);
+$table-background-colo: var(--fuji-white);

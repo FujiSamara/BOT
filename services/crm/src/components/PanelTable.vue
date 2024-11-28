@@ -16,14 +16,14 @@
 										v-show="props.table.anyChecked.value"
 										v-if="canDelete"
 										class="icons"
-										img-src="/img/trash.svg"
+										img-src="@/assets/icons/trash.svg"
 										@click="onDelete"
 									></clickable-icon>
 									<clickable-icon
 										v-show="!props.table.anyChecked.value"
 										v-if="canCreate"
 										class="icons"
-										img-src="/img/add-plus.svg"
+										img-src="@/assets/icons/add-plus.svg"
 										@click="emit('create')"
 										style="filter: none !important"
 									></clickable-icon>
@@ -31,7 +31,7 @@
 										v-show="props.table.anyChecked.value"
 										v-if="canApprove"
 										class="icons"
-										img-src="/img/check.svg"
+										img-src="@/assets/icons/check.svg"
 										:with-filter="false"
 										@click="onApprove"
 									>
@@ -40,7 +40,7 @@
 										v-show="props.table.anyChecked.value"
 										v-if="canReject"
 										class="icons"
-										img-src="/img/reject.svg"
+										img-src="@/assets/icons/reject.svg"
 										:with-filter="false"
 										@click="onReject"
 									></clickable-icon>
@@ -68,7 +68,7 @@
 								<img
 									v-if="props.table.ordered(columnName)"
 									:class="{ rotated: props.table.desc.value }"
-									src="/img/sort_icon.svg"
+									src="@/assets/icons/sort_icon.svg"
 								/>
 							</div>
 						</th>
@@ -182,7 +182,7 @@ import TablePagination from "@/components/TablePagination.vue";
 import DocumentView from "@/components/DocumentView.vue";
 import type { Cell, CellLine, Table } from "@/table";
 import { Ref, ref, type PropType } from "vue";
-import { BaseSchema, DocumentSchema } from "@/type";
+import { BaseSchema, DocumentSchema } from "../../types/index";
 import { useNetworkStore } from "@/store/network";
 
 const props = defineProps({
@@ -458,7 +458,7 @@ th {
 	height: 20px;
 
 	transition: color 0.25s;
-	mask: url("/img/eye.svg");
+	mask: url("@/assets/icons/eye.svg");
 	fill: currentColor;
 	background-color: currentColor;
 	cursor: pointer;
