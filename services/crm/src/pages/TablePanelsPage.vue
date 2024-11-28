@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import TableSidebar from "@/components/table/TableSidebar.vue";
+
+const links = [
+	{
+		label: "Статьи",
+		routeName: "table-expenditures",
+		iconURL: "/src/assets/icons/exit.svg",
+		active: false,
+	},
+	{
+		label: "Выход",
+		routeName: "exit",
+		iconURL: "/src/assets/icons/exit.svg",
+		active: true,
+	},
+];
 </script>
 
 <template>
 	<div class="layout">
-		<TableSidebar class="sidebar"></TableSidebar>
+		<TableSidebar :links="links" class="sidebar"></TableSidebar>
 		<div class="content">
 			<RouterView v-slot="{ Component }">
 				<Suspense timeout="0">

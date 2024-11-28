@@ -1,5 +1,12 @@
 import { ShallowRef } from "vue";
 
+export interface LinkData {
+	label: string;
+	iconURL: string;
+	routeName: string;
+	active: boolean;
+}
+
 export interface NavigationData {
 	id: number;
 	imageSrc: string;

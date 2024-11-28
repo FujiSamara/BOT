@@ -1,19 +1,31 @@
 <script setup lang="ts">
 import FujiHeader from "@/components/FujiHeader.vue";
+import { LinkData } from "@/types";
+
+const props = defineProps({
+	links: {
+		type: Array<LinkData>,
+		required: true,
+	},
+});
 </script>
 
 <template>
 	<div class="table-sidebar">
 		<FujiHeader class="header"></FujiHeader>
 		<ul class="list">
-			<li class="sb-row">
-				<div class="sb-link">Статьи</div>
-			</li>
-			<li class="sb-row">
+			<li
+				class="sb-row"
+				:class="{ active: link.active }"
+				v-for="link in props.links"
+			>
 				<div class="sb-icon-wrapper">
-					<div class="sb-icon"></div>
+					<div
+						class="sb-icon"
+						:style="`mask: url(${link.iconURL}) no-repeat`"
+					></div>
 				</div>
-				<span class="sb-link">Выход</span>
+				<span class="sb-link">{{ link.label }}</span>
 			</li>
 		</ul>
 	</div>
@@ -88,14 +100,14 @@ import FujiHeader from "@/components/FujiHeader.vue";
 					fill: currentColor;
 					opacity: 50%;
 
-					mask: url("@/assets/icons/exit.svg") no-repeat;
 					mask-size: cover;
 
 					transition: opacity 0.3s;
 				}
 			}
 
-			&:hover {
+			&:hover,
+			&.active {
 				.sb-icon-wrapper {
 					.sb-icon {
 						opacity: 100%;
