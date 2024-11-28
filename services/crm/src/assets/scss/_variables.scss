@@ -1,23 +1,27 @@
-:root {
-  --fuji-blue: #2e5ffa;
-  --fuji-gray-darker: #1f1f1f;
-  --fuji-gray: #474747;
-  --fuji-gray-lighter: #47474780;
-  --fuji-soft-gray: #f3f6fa;
-  --fuji-soft-gray-lighter: #fafbfd;
-  --fuji-white: #ffffff;
-}
+$fuji-blue: #2e5ffa;
+$fuji-blue-lighter: #f8f9ff;
+$fuji-gray-darker: #1f1f1f;
+$fuji-gray: #474747;
+$fuji-gray-lighter: #47474780;
+$fuji-soft-gray: #f3f6fa;
+$fuji-soft-gray-lighter: #fafbfd;
+$fuji-white: #ffffff;
 
 // Base
-$sidebar-width: 230px;
+$sidebar-width: 256px;
 
 // Colors
-$text-color: var(--fuji-gray);
-$text-color-lighter: var(--fuji-gray-lighter);
-$logo-color: var(--fuji-gray-darker);
-$row-color-1: var(--fuji-white);
-$row-color-2: var(var(--fuji-soft-gray-lighter));
-$body-background-color: var(--fuji-soft-gray);
+$text-color: $fuji-gray;
+$text-color-lighter: $fuji-gray-lighter;
+$logo-color: $fuji-gray-darker;
+$row-color-1: $fuji-white;
+$row-color-2: $fuji-soft-gray-lighter;
 
-$sidebar-background-color: var(--fuji-white);
-$table-background-color: var(--fuji-white);
+$body-background-color: $fuji-soft-gray;
+$sidebar-background-color: $fuji-white;
+
+$sidebar-link-background-color: $fuji-blue-lighter;
+$sidebar-link-border-color: $fuji-blue;
+$sidebar-link-text-color: $fuji-blue;
+
+$table-background-color: $fuji-white;
