@@ -1,15 +1,24 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import FujiHeader from "@/components/FujiHeader.vue";
+</script>
 
 <template>
-	<div class="table-sidebar"></div>
+	<div class="table-sidebar">
+		<FujiHeader class="header"></FujiHeader>
+	</div>
 </template>
 
-<style scope lang="scss">
+<style scoped lang="scss">
 .table-sidebar {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
+	justify-content: flex-start;
+
+	padding: 46px 32px 64px 32px;
 
 	background-color: $sidebar-background-color;
+
+	.header {
+	}
 }
 </style>

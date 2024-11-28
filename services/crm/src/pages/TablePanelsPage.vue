@@ -9,7 +9,7 @@ import TableSidebar from "@/components/table/TableSidebar.vue";
 			<RouterView v-slot="{ Component }">
 				<Suspense timeout="0">
 					<template #default>
-						<component class="table" :is="Component" v-if="Component">
+						<component class="panel" :is="Component" v-if="Component">
 						</component>
 					</template>
 					<template #fallback>
@@ -22,7 +22,7 @@ import TableSidebar from "@/components/table/TableSidebar.vue";
 	</div>
 </template>
 
-<style scope lang="scss">
+<style scoped lang="scss">
 .layout {
 	width: 100%;
 	height: 100%;
@@ -37,6 +37,14 @@ import TableSidebar from "@/components/table/TableSidebar.vue";
 		overflow-y: auto;
 
 		width: $sidebar-width;
+		height: 100%;
+	}
+
+	.content {
+		padding: 32px 64px;
+		padding-left: calc($sidebar-width + 64px);
+
+		width: 100%;
 		height: 100%;
 	}
 }

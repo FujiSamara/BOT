@@ -4,13 +4,18 @@
 	<div class="table"></div>
 </template>
 
-<style scope lang="scss">
+<style scoped lang="scss">
 .table {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 
-	flex: 1;
+	flex-grow: 1;
+
+	margin: 0;
+
+	padding: 0 16px;
+	border-radius: 16px;
 
 	background-color: $table-background-color;
 }

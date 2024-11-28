@@ -31,8 +31,8 @@
 </template>
 <script setup lang="ts">
 import NavigationPanel from "@/components/NavigationPanel.vue";
-import DefaultPanel from "@/panels/DefaultPanel.vue";
-import { getPanelsByAccesses } from "@/panels";
+import DefaultPanel from "@/pages/panels/DefaultPanel.vue";
+import { getPanelsByAccesses } from "@/pages/panels";
 import { useNetworkStore } from "@/store/network";
 import { ref, shallowRef, watch } from "vue";
 import ModalMessage from "@/components/ModalMessage.vue";

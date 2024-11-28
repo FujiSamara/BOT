@@ -5,6 +5,7 @@ import { createPinia } from "pinia";
 import components from "@/components/UI";
 import VueCookies from "vue-cookies";
 import * as config from "@/config";
+import "@/assets/scss/main.scss";
 
 const app = createApp(App);
 const pinia = createPinia();

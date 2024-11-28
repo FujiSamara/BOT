@@ -13,7 +13,14 @@ const routes = [
 			{
 				name: "tables",
 				path: "/tables",
-				component: async () => await import("@/pages/TablesPage.vue"),
+				component: async () => await import("@/pages/TablePanelsPage.vue"),
+				children: [
+					{
+						path: "expenditures",
+						component: async () =>
+							await import("@/pages/panels/ExpenditurePanel.vue"),
+					},
+				],
 			},
 			{
 				name: "default",
