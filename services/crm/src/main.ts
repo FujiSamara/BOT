@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "@/router";
+import router from "@/router.ts";
 import { createPinia } from "pinia";
 import components from "@/components/UI";
 import VueCookies from "vue-cookies";

@@ -11,9 +11,14 @@ const routes = [
 		path: "/crm",
 		children: [
 			{
-				name: "home",
+				name: "tables",
+				path: "/tables",
+				component: async () => await import("@/pages/TablesPage.vue"),
+			},
+			{
+				name: "default",
 				path: "",
-				component: async () => await import("@/pages/MainPage.vue"),
+				redirect: "/tables",
 			},
 			{
 				name: "login",
@@ -55,7 +60,7 @@ router.beforeEach(async (to, _) => {
 	const authed = await networkStore.auth();
 
 	if (authed && to.name === "login") {
-		return { name: "home" };
+		return { name: "tables" };
 	}
 	if (!authed && to.name !== "login") {
 		return { name: "login" };

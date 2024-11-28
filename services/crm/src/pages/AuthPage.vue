@@ -35,12 +35,12 @@
 <script setup lang="ts">
 import ModalWindow from "@/components/ModalWindow.vue";
 import CircleLoader from "@/components/UI/CircleLoader.vue";
-import router from "@/router";
+import router from "@/router.ts";
 import { useNetworkStore } from "@/store/network";
 import { ref } from "vue";
 
 const onAuth = async () => {
-	await router.replace({ name: "home" });
+	await router.replace({ name: "tables" });
 };
 
 const networkStore = useNetworkStore();

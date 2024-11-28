@@ -16,4 +16,13 @@ export default defineConfig({
 		port: 5001,
 	},
 	envDir: "../../",
+	css: {
+		preprocessorOptions: {
+			scss: {
+				api: "modern-compiler",
+				quietDeps: true,
+				silenceDeprecations: ["import"],
+			},
+		},
+	},
 });
