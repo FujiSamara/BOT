@@ -22,13 +22,19 @@
 						type="password"
 					></border-input>
 				</div>
-				<purple-button><p style="margin: 0">Войти</p></purple-button>
+				<purple-button :disabled="submitting" :class="{ disabled: submitting }">
+					<p style="margin: 0">Войти</p>
+				</purple-button>
+				<div class="loader-wrapper" v-if="submitting">
+					<CircleLoader class="loader"></CircleLoader>
+				</div>
 			</form>
 		</modal-window>
 	</div>
 </template>
 <script setup lang="ts">
 import ModalWindow from "@/components/ModalWindow.vue";
+import CircleLoader from "@/components/UI/CircleLoader.vue";
 import router from "@/router";
 import { useNetworkStore } from "@/store/network";
 import { ref } from "vue";
@@ -42,13 +48,17 @@ const networkStore = useNetworkStore();
 const login = ref("");
 const password = ref("");
 
+const submitting = ref(false);
+
 const onSubmit = async () => {
+	submitting.value = true;
 	if (await networkStore.login(login.value, password.value)) {
 		await onAuth();
 	} else {
 		login.value = "";
 		password.value = "";
 	}
+	submitting.value = false;
 };
 const onClose = () => {
 	window.location.href = "https://fuji.ru";
@@ -99,12 +109,36 @@ form {
 	display: flex;
 	flex-direction: column;
 	gap: 25px;
-}
 
-.inputs {
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
+	.inputs {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.button {
+		&.disabled {
+			background-color: gray;
+			cursor: not-allowed;
+		}
+	}
+
+	.loader-wrapper {
+		display: flex;
+		flex-direction: row;
+		justify-content: center;
+		position: relative;
+
+		flex: 1;
+
+		width: 100%;
+
+		.loader {
+			bottom: 0;
+			height: 30px;
+			width: 30px;
+		}
+	}
 }
 </style>
