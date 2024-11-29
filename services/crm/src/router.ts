@@ -25,7 +25,7 @@ const routes = [
 						name: "table-expenditures",
 						path: "expenditures",
 						component: async () =>
-							await import("@/pages/panels/ExpenditurePanel.vue"),
+							await import("@/pages/panels/expenditure/ExpenditurePanel.vue"),
 					},
 				],
 			},
@@ -71,7 +71,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, _, next) => {
 	const networkStore = useNetworkStore();
-	const authed = await networkStore.auth();
+	const authed = networkStore.authorized || (await networkStore.auth());
 
 	if (authed) {
 		if (to.name === "login") {

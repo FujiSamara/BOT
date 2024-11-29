@@ -1,4 +1,5 @@
 import { Access, PanelData } from "@types";
+import { ExpenditureTable } from "./expenditure/expenditureTable";
 
 const panels: Array<PanelData> = [
 	{
@@ -6,6 +7,8 @@ const panels: Array<PanelData> = [
 		routeName: "table-expenditures",
 		iconURL: "/src/assets/icons/expenditure.svg",
 		active: false,
+		name: "expenditure",
+		create: ExpenditureTable,
 		accesses: [Access.Expenditure],
 	},
 ];

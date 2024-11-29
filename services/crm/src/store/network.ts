@@ -27,20 +27,27 @@ export const useNetworkStore = defineStore("network", {
 			$cookies: $cookies,
 			username: undefined,
 			errors: new Array<string>(),
+			authing: false,
+			authorized: false,
 		};
 	},
 	actions: {
 		async auth(): Promise<boolean> {
 			const url = `${config.fullBackendURL}/${config.authEndpoint}/`;
+			this.authing = true;
 
 			return await axios
 				.get(url)
 				.then((resp) => {
 					this.setUserData(resp.data.access_token);
+					this.authing = false;
 
 					return true;
 				})
-				.catch(() => false);
+				.catch(() => {
+					this.authing = false;
+					return false;
+				});
 		},
 		async login(username: string, password: string): Promise<boolean> {
 			const url = `${config.fullBackendURL}/${config.authEndpoint}/token`;
@@ -61,6 +68,9 @@ export const useNetworkStore = defineStore("network", {
 				.then((resp) => {
 					const data: Token = resp.data;
 					this.setCredentials(data.access_token, data.token_type);
+					this.setUserData(data.access_token);
+
+					this.authorized = true;
 
 					return true;
 				})
@@ -86,6 +96,7 @@ export const useNetworkStore = defineStore("network", {
 			this.$cookies.remove("access_token");
 			this.$cookies.remove("token_type");
 			axios.defaults.headers.common["Authorization"] = undefined;
+			this.authorized = false;
 		},
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,

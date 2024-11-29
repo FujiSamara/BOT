@@ -1,3 +1,5 @@
+import { Table } from "@/components/table";
+
 export interface LinkData {
 	label: string;
 	iconURL: string;
@@ -7,14 +9,8 @@ export interface LinkData {
 
 export interface PanelData extends LinkData {
 	accesses: Access[];
-}
-
-export interface NavigationData {
-	id: number;
-	imageSrc: string;
-	label: string;
-	isActive: boolean;
-	notifyCount?: number;
+	name: string;
+	create: { new (): Table<BaseSchema> };
 }
 
 export interface Token {
@@ -53,6 +49,8 @@ export const accessesDict: any = {
 	crm_worktime: Access.Worktime,
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
+
+// Schemas
 
 export interface BaseSchema {
 	id: number;
@@ -120,4 +118,36 @@ export interface WorkTimeSchema extends BaseSchema {
 
 	rating?: Number;
 	fine?: Number;
+}
+
+export interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+export interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
+}
+
+export interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
+export interface FilterSchema {
+	column: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
+}
+
+export interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
 }

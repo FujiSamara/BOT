@@ -6,10 +6,12 @@ import { useRoute, useRouter } from "vue-router";
 import TableSidebar from "@/components/table/TableSidebar.vue";
 import { getPanelsByAccesses } from "./panels";
 import { useNetworkStore } from "@/store/network";
+import { useTablesStore } from "@/store/tables";
 
 const router = useRouter();
 const route = useRoute();
 const networkStore = useNetworkStore();
+const tablesStore = useTablesStore();
 
 const links: Ref<LinkData[]> = ref([]);
 
@@ -34,6 +36,10 @@ const loadPanels = () => {
 	});
 
 	links.value = grantedLinks;
+
+	for (const panel of panels) {
+		tablesStore.register(panel.name, panel.create);
+	}
 };
 
 const linkChange = async (link: LinkData) => {
@@ -67,9 +73,9 @@ watch(route, async () => {
 });
 
 onMounted(async () => {
-	loadPanels();
 	await syncCurrentLink();
 });
+loadPanels();
 </script>
 
 <template>
