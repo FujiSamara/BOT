@@ -3,18 +3,20 @@ import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import TableToolbar from "@/components/table/TableToolbar.vue";
 
-import { useTablesStore } from "@/store/tables";
+import { Table as BaseTable } from "@/components/table";
+import { BaseSchema } from "@/types";
 
-const tablesStore = useTablesStore();
-
-const table = tablesStore.get("expenditure");
-await tablesStore.waitLoad("expenditure");
+const props = defineProps({
+	table: {
+		type: BaseTable<BaseSchema>,
+	},
+});
 </script>
 
 <template>
 	<div class="table-panel">
 		<TableToolbar class="toolbar"></TableToolbar>
-		<Table class="table"></Table>
+		<Table class="table" :table="props.table"></Table>
 		<TablePagination></TablePagination>
 	</div>
 </template>

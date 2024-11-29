@@ -1,18 +1,17 @@
 <script setup lang="ts">
 import { LinkData } from "@/types";
-import { onMounted, Ref, ref, watch } from "vue";
+import { computed, onMounted, Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import TableSidebar from "@/components/table/TableSidebar.vue";
 import { getPanelsByAccesses } from "./panels";
 import { useNetworkStore } from "@/store/network";
-import { useTablesStore } from "@/store/tables";
+import { TableService } from "@/services/table";
 
 const router = useRouter();
 const route = useRoute();
 const networkStore = useNetworkStore();
-const tablesStore = useTablesStore();
-
+const tableService = new TableService();
 const links: Ref<LinkData[]> = ref([]);
 
 const loadPanels = () => {
@@ -38,10 +37,9 @@ const loadPanels = () => {
 	links.value = grantedLinks;
 
 	for (const panel of panels) {
-		tablesStore.register(panel.name, panel.create);
+		tableService.register(panel.name, panel.create);
 	}
 };
-
 const linkChange = async (link: LinkData) => {
 	await router.push({ name: link.routeName });
 
@@ -49,7 +47,6 @@ const linkChange = async (link: LinkData) => {
 		currentLink.active = currentLink.routeName === link.routeName;
 	}
 };
-
 const syncCurrentLink = async () => {
 	let tableChoosed = false;
 	for (const currentLink of links.value) {
@@ -68,10 +65,14 @@ const syncCurrentLink = async () => {
 	}
 };
 
+const currentTable = computed(() => {
+	const activeLink = links.value.find((link) => link.active);
+	return tableService.get(activeLink?.name!)!;
+});
+
 watch(route, async () => {
 	await syncCurrentLink();
 });
-
 onMounted(async () => {
 	await syncCurrentLink();
 });
@@ -89,7 +90,12 @@ loadPanels();
 			<RouterView v-slot="{ Component }">
 				<Suspense timeout="0">
 					<template #default>
-						<component class="panel" :is="Component" v-if="Component">
+						<component
+							:table="currentTable"
+							class="panel"
+							:is="Component"
+							v-if="Component"
+						>
 						</component>
 					</template>
 					<template #fallback>

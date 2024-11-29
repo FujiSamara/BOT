@@ -5,6 +5,7 @@ export interface LinkData {
 	iconURL: string;
 	routeName: string;
 	active: boolean;
+	name?: string;
 }
 
 export interface PanelData extends LinkData {
