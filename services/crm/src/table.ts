@@ -8,7 +8,7 @@ import {
 	BudgetSchema,
 	ExpenditureSchema,
 	WorkTimeSchema,
-} from "../types";
+} from "@types";
 import { useNetworkStore } from "./store/network";
 
 class TableElementObserver<T> {
@@ -28,6 +28,7 @@ class TableElementObserver<T> {
 	}
 }
 
+/** Presents class for external usage. */
 export class Cell {
 	public cellLines: Array<CellLine> = [];
 
@@ -67,8 +68,6 @@ export class CellLine {
 		}
 	}
 }
-
-/** Presents class for external usage. */
 interface TableData {
 	rows: Array<{ id: number; columns: Array<Cell> }>;
 	headers: Array<string>;
