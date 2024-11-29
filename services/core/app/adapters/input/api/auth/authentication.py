@@ -1,18 +1,19 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Union
 from fastapi import Depends, HTTPException, status
 from fastapi.security import SecurityScopes
 from jose import JWTError, jwt
 from hashlib import sha256
 from calendar import timegm
-
 from pydantic import ValidationError
+
+from app.infra.database.models import FujiScope
+from app.infra.database.schemas import WorkerSchema
+from app.infra.config import settings
+from app import services
 
 from app.adapters.input.api.auth.schemas import TokenData, User, UserWithScopes
 from app.adapters.input.api.auth.permissions import _oauth2_schema, _to_auth_scope
-from app.infra.database.models import FujiScope
-from app.infra.config import settings
-from app import services
 
 
 def encrypt_password(password: str) -> str:
@@ -20,10 +21,36 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
+def refresh_token(user: str | WorkerSchema) -> str | None:
+    """Grants token for exist user.
+
+    :return: created token."""
+    if isinstance(user, str):
+        user = services.get_worker_by_phone_number(user)
+
+    if not user:
+        return None
+
+    username = user.phone_number
+    scopes = [_to_auth_scope(fuji_scope) for fuji_scope in user.post.scopes]
+    access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
+    return create_access_token(
+        data={
+            "sub": username,
+            "scopes": [
+                *scopes,
+                "authenticated",
+                "file_all",
+            ],
+        },
+        expires_delta=access_token_expires,
+    )
+
+
+def authorize_user(username: str, password: str) -> str | None:
     """Authenticates user by his `username` and `password`.
 
-    Returns corresponding `User` if `username` and `password` correct,
+    :return: access token for user if `username` and `password` correct,
     `None` otherwise."""
     worker = services.get_worker_by_phone_number(username)
 
@@ -35,11 +62,7 @@ def authorize_user(username: str, password: str) -> Optional[UserWithScopes]:
     ):
         return
 
-    return UserWithScopes(
-        username=worker.phone_number,
-        full_name=f"{worker.l_name} {worker.f_name}",
-        scopes=[_to_auth_scope(fuji_scope) for fuji_scope in worker.post.scopes],
-    )
+    return refresh_token(worker)
 
 
 def create_access_token(data: dict, expires_delta: timedelta) -> str:
