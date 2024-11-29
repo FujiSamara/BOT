@@ -35,9 +35,8 @@ export const useNetworkStore = defineStore("network", {
 
 			return await axios
 				.get(url)
-				.then(() => {
-					const access_token = this.$cookies.get("access_token");
-					this.setUserData(access_token);
+				.then((resp) => {
+					this.setUserData(resp.data.access_token);
 
 					return true;
 				})
