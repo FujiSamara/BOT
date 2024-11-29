@@ -9,6 +9,7 @@ import { BaseSchema } from "@/types";
 const props = defineProps({
 	table: {
 		type: BaseTable<BaseSchema>,
+		required: true,
 	},
 });
 </script>
@@ -16,7 +17,7 @@ const props = defineProps({
 <template>
 	<div class="table-panel">
 		<TableToolbar class="toolbar"></TableToolbar>
-		<Table class="table" :table="props.table"></Table>
+		<Table class="p-table" :table="props.table"></Table>
 		<TablePagination></TablePagination>
 	</div>
 </template>

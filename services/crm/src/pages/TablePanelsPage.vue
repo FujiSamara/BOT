@@ -67,7 +67,7 @@ const syncCurrentLink = async () => {
 
 const currentTable = computed(() => {
 	const activeLink = links.value.find((link) => link.active);
-	return tableService.get(activeLink?.name!)!;
+	return tableService.get(activeLink?.name!);
 });
 
 watch(route, async () => {
@@ -94,7 +94,7 @@ loadPanels();
 							:table="currentTable"
 							class="panel"
 							:is="Component"
-							v-if="Component"
+							v-if="Component && currentTable !== undefined"
 						>
 						</component>
 					</template>

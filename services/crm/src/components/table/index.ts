@@ -68,9 +68,7 @@ export class CellLine {
 	}
 }
 
-interface TableData {
-	rows: Array<{ id: number; columns: Array<Cell> }>;
-}
+type TableData = Array<{ id: number; columns: Array<Cell> }>;
 
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
@@ -165,7 +163,7 @@ export class Table<T extends BaseSchema> {
 		);
 
 		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
-			if (this._loadedRows.value.length !== this._rowsPerPage) {
+			if (this._loadedRows.value.length !== this.rowsPerPage.value) {
 				this.isLoading.value = true;
 			}
 
@@ -233,7 +231,7 @@ export class Table<T extends BaseSchema> {
 
 	//#region Generating query
 	private _query = computed(() => {
-		return `records_per_page=${this._rowsPerPage}`;
+		return `records_per_page=${this.rowsPerPage.value}`;
 	});
 	private _searchedQuery = computed((): Array<SearchSchema> => {
 		return this.searchQuery.value;
@@ -299,9 +297,7 @@ export class Table<T extends BaseSchema> {
 		return result;
 	});
 	private _formattedOrderedRows = computed(() => {
-		const result: TableData = {
-			rows: [],
-		};
+		const result: TableData = [];
 
 		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
 			const model = this._nonIgnoredRows.value[index];
@@ -316,7 +312,7 @@ export class Table<T extends BaseSchema> {
 				columns.push(formattedField);
 			}
 
-			result.rows.push({
+			result.push({
 				id: model.id,
 				columns: this.sort(columns, Object.keys(model)),
 			});
@@ -326,7 +322,7 @@ export class Table<T extends BaseSchema> {
 	});
 	public rows = computed(() => {
 		if (this.isHidden.value) {
-			return { rows: [] };
+			return [];
 		}
 		return this._formattedOrderedRows.value;
 	});
@@ -367,7 +363,7 @@ export class Table<T extends BaseSchema> {
 	public checked = computed(() => {
 		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this.rows.value.rows.length; index++) {
+		for (let index = 0; index < this.rows.value.length; index++) {
 			result.push(
 				new TableElementObserver(
 					this._checked.value[index],
@@ -462,7 +458,7 @@ export class Table<T extends BaseSchema> {
 	/** Indicates row count for all rows in table. */
 	public rowCount: Ref<number> = ref(0);
 	/** Rows per page. */
-	protected _rowsPerPage: number = 15;
+	public rowsPerPage: Ref<number> = ref(15);
 	/** True when table is execute large loading operations. */
 	public isLoading: Ref<boolean> = ref(false);
 	/** Hides all row if true. */
