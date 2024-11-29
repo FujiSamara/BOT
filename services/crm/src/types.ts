@@ -1,10 +1,12 @@
-import { ShallowRef } from "vue";
-
 export interface LinkData {
 	label: string;
 	iconURL: string;
 	routeName: string;
 	active: boolean;
+}
+
+export interface PanelData extends LinkData {
+	accesses: Access[];
 }
 
 export interface NavigationData {
@@ -51,11 +53,6 @@ export const accessesDict: any = {
 	crm_worktime: Access.Worktime,
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
-
-export interface PanelData extends NavigationData {
-	panel: ShallowRef<any>;
-	access: Access;
-}
 
 export interface BaseSchema {
 	id: number;

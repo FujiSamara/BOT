@@ -16,22 +16,18 @@ const routes = [
 				component: async () => await import("@/pages/TablePanelsPage.vue"),
 				children: [
 					{
+						name: "table-default",
+						path: "default",
+						component: async () =>
+							await import("@/pages/panels/DefaultPanel.vue"),
+					},
+					{
 						name: "table-expenditures",
 						path: "expenditures",
 						component: async () =>
 							await import("@/pages/panels/ExpenditurePanel.vue"),
 					},
 				],
-			},
-			{
-				name: "default",
-				path: "",
-				redirect: "/tables",
-			},
-			{
-				name: "login",
-				path: "login",
-				component: async () => await import("@/pages/AuthPage.vue"),
 			},
 			{
 				path: "guest",
@@ -53,6 +49,11 @@ const routes = [
 
 					return { name: "home" };
 				},
+			},
+			{
+				name: "login",
+				path: "login",
+				component: async () => await import("@/pages/AuthPage.vue"),
 			},
 			{
 				name: "logout",

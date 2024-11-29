@@ -1,26 +1,40 @@
 <script setup lang="ts">
-import TableSidebar from "@/components/table/TableSidebar.vue";
 import { LinkData } from "@/types";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
+
+import TableSidebar from "@/components/table/TableSidebar.vue";
+import { getPanelsByAccesses } from "./panels";
+import { useNetworkStore } from "@/store/network";
 
 const router = useRouter();
 const route = useRoute();
+const networkStore = useNetworkStore();
 
-const links = ref([
-	{
-		label: "Статьи",
-		routeName: "table-expenditures",
-		iconURL: "/src/assets/icons/expenditure.svg",
-		active: false,
-	},
-	{
+const links: Ref<LinkData[]> = ref([]);
+
+const loadPanels = () => {
+	const panels = getPanelsByAccesses(networkStore.accesses);
+	const grantedLinks: LinkData[] = [...panels];
+
+	if (grantedLinks.length === 0) {
+		grantedLinks.push({
+			label: "Нет таблиц",
+			routeName: "table-default",
+			iconURL: "/src/assets/icons/logout.svg",
+			active: false,
+		});
+	}
+
+	grantedLinks.push({
 		label: "Выход",
 		routeName: "logout",
 		iconURL: "/src/assets/icons/logout.svg",
 		active: false,
-	},
-]);
+	});
+
+	links.value = grantedLinks;
+};
 
 const linkChange = async (link: LinkData) => {
 	await router.push({ name: link.routeName });
@@ -53,6 +67,7 @@ watch(route, async () => {
 });
 
 onMounted(async () => {
+	loadPanels();
 	await syncCurrentLink();
 });
 </script>
