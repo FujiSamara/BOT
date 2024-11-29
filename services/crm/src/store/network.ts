@@ -87,7 +87,6 @@ export const useNetworkStore = defineStore("network", {
 			this.$cookies.remove("access_token");
 			this.$cookies.remove("token_type");
 			axios.defaults.headers.common["Authorization"] = undefined;
-			router.push({ name: "login" });
 		},
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,

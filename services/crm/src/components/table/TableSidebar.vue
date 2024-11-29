@@ -8,6 +8,12 @@ const props = defineProps({
 		required: true,
 	},
 });
+
+const emits = defineEmits<{ (e: "change", link: LinkData): void }>();
+
+const onClick = async (link: LinkData) => {
+	emits("change", link);
+};
 </script>
 
 <template>
@@ -18,6 +24,7 @@ const props = defineProps({
 				class="sb-row"
 				:class="{ active: link.active }"
 				v-for="link in props.links"
+				@click="() => onClick(link)"
 			>
 				<div class="sb-icon-wrapper">
 					<div
@@ -68,6 +75,7 @@ const props = defineProps({
 
 			border-left: 2px solid transparent;
 			color: $text-color;
+			cursor: pointer;
 
 			transition:
 				border-left-color 0.3s,

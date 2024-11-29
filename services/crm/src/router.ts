@@ -12,10 +12,11 @@ const routes = [
 		children: [
 			{
 				name: "tables",
-				path: "/tables",
+				path: "tables",
 				component: async () => await import("@/pages/TablePanelsPage.vue"),
 				children: [
 					{
+						name: "table-expenditures",
 						path: "expenditures",
 						component: async () =>
 							await import("@/pages/panels/ExpenditurePanel.vue"),
@@ -53,6 +54,11 @@ const routes = [
 					return { name: "home" };
 				},
 			},
+			{
+				name: "logout",
+				path: "/logout",
+				component: () => {},
+			},
 		],
 	},
 ];
@@ -62,15 +68,27 @@ const router = createRouter({
 	history: createWebHistory(),
 });
 
-router.beforeEach(async (to, _) => {
+router.beforeEach(async (to, _, next) => {
 	const networkStore = useNetworkStore();
 	const authed = await networkStore.auth();
 
-	if (authed && to.name === "login") {
-		return { name: "tables" };
-	}
-	if (!authed && to.name !== "login") {
-		return { name: "login" };
+	if (authed) {
+		if (to.name === "login") {
+			next({ name: "tables" });
+		} else {
+			if (to.name === "logout") {
+				networkStore.logout();
+				next({ name: "login" });
+			} else {
+				next();
+			}
+		}
+	} else {
+		if (to.name === "login") {
+			next();
+		} else {
+			next({ name: "login" });
+		}
 	}
 });
 

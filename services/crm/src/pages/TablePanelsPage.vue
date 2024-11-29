@@ -1,25 +1,69 @@
 <script setup lang="ts">
 import TableSidebar from "@/components/table/TableSidebar.vue";
+import { LinkData } from "@/types";
+import { onMounted, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
-const links = [
+const router = useRouter();
+const route = useRoute();
+
+const links = ref([
 	{
 		label: "Статьи",
 		routeName: "table-expenditures",
-		iconURL: "/src/assets/icons/exit.svg",
+		iconURL: "/src/assets/icons/expenditure.svg",
 		active: false,
 	},
 	{
 		label: "Выход",
-		routeName: "exit",
-		iconURL: "/src/assets/icons/exit.svg",
-		active: true,
+		routeName: "logout",
+		iconURL: "/src/assets/icons/logout.svg",
+		active: false,
 	},
-];
+]);
+
+const linkChange = async (link: LinkData) => {
+	await router.push({ name: link.routeName });
+
+	for (const currentLink of links.value) {
+		currentLink.active = currentLink.routeName === link.routeName;
+	}
+};
+
+const syncCurrentLink = async () => {
+	let tableChoosed = false;
+	for (const currentLink of links.value) {
+		if (currentLink.routeName === route.name) {
+			tableChoosed = true;
+		}
+	}
+
+	if (!tableChoosed) {
+		await linkChange(links.value[0]);
+		return;
+	}
+
+	for (const currentLink of links.value) {
+		currentLink.active = currentLink.routeName === route.name;
+	}
+};
+
+watch(route, async () => {
+	await syncCurrentLink();
+});
+
+onMounted(async () => {
+	await syncCurrentLink();
+});
 </script>
 
 <template>
 	<div class="layout">
-		<TableSidebar :links="links" class="sidebar"></TableSidebar>
+		<TableSidebar
+			:links="links"
+			class="sidebar"
+			@change="linkChange"
+		></TableSidebar>
 		<div class="content">
 			<RouterView v-slot="{ Component }">
 				<Suspense timeout="0">
