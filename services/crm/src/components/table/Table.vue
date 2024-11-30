@@ -17,7 +17,7 @@ const resizeTable = () => {
 	const tableElement = tableRef.value as HTMLElement;
 	const tableHeigth = tableElement.offsetHeight;
 
-	const rowCount = Math.floor(tableHeigth / 64) - 1;
+	const rowCount = Math.floor((tableHeigth - 72) / 64);
 
 	props.table.rowsPerPage.value = rowCount;
 };
@@ -33,13 +33,49 @@ onMounted(() => {
 
 <template>
 	<div class="p-table" ref="table">
-		<TransitionGroup name="table" tag="div">
-			<div class="t-row title" v-if="titles.length !== 0" :key="-1">
-				<TableCell class="t-cell" v-for="title in titles" :key="title">{{
-					title
-				}}</TableCell>
+		<TransitionGroup
+			name="table"
+			tag="div"
+			style="display: inline-block; width: fit-content"
+		>
+			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
+				<TableCell class="t-cell check">
+					<div
+						class="checkbox"
+						:class="{ checked: props.table.allChecked.value }"
+						@click="
+							props.table.allChecked.value = !props.table.allChecked.value
+						"
+					>
+						<div class="icon"></div>
+					</div>
+				</TableCell>
+				<TableCell class="t-cell" v-for="title in titles" :key="title">
+					<div class="title" @click="props.table.order(title)">
+						<p>{{ title }}</p>
+						<Transition name="fade">
+							<div
+								class="icon"
+								:class="{ reversed: props.table.desc.value }"
+								v-show="props.table.ordered(title)"
+							></div>
+						</Transition>
+					</div>
+				</TableCell>
 			</div>
-			<div class="t-row" v-for="row in rows" :key="row.id">
+			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
+				<TableCell class="t-cell check">
+					<div
+						class="checkbox"
+						:class="{ checked: table.checked.value[index].value }"
+						@click="
+							table.checked.value[index].value =
+								!table.checked.value[index].value
+						"
+					>
+						<div class="icon"></div>
+					</div>
+				</TableCell>
 				<TableCell
 					class="t-cell"
 					v-for="(column, index) in row.columns"
@@ -88,9 +124,86 @@ onMounted(() => {
 		line-height: 17.64px;
 		color: $text-color;
 
-		&.title {
+		&.titles {
 			font-size: 16px;
 			line-height: 20.16px;
+
+			height: 72px;
+			min-height: 72px;
+			max-height: 72px;
+
+			.title {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+				gap: 16px;
+
+				cursor: pointer;
+
+				p {
+					margin: 0;
+				}
+
+				.icon {
+					background-color: currentColor;
+					width: 9px;
+					height: 6px;
+					fill: currentColor;
+
+					mask: url("@/assets/icons/arrow.svg") no-repeat;
+					mask-size: contain;
+
+					transition:
+						transform 0.3s,
+						opacity 0.5s ease;
+
+					&.reversed {
+						transform: rotate(180deg);
+					}
+				}
+			}
+		}
+
+		&:nth-child(even) {
+			background-color: $row-bg-color;
+		}
+
+		.check {
+			width: fit-content;
+
+			.checkbox {
+				display: flex;
+				justify-content: center;
+				align-items: center;
+
+				width: 24px;
+				height: 24px;
+				padding: 7px 5px;
+				border-radius: 6px;
+
+				border: 1px $border-color solid;
+
+				.icon {
+					background-color: currentColor;
+					width: 12px;
+					height: 8px;
+					fill: currentColor;
+
+					mask: url("@/assets/icons/check.svg") no-repeat;
+					mask-size: contain;
+
+					color: $fuji-white;
+				}
+
+				transition:
+					background-color 0.3s,
+					border-color 0.3s;
+
+				&.checked {
+					background-color: $fuji-blue;
+					border-color: transparent;
+				}
+			}
 		}
 	}
 
@@ -106,6 +219,11 @@ onMounted(() => {
 	.table-leave-to {
 		opacity: 0;
 		transform: translateY(30px);
+	}
+
+	.fade-enter-from,
+	.fade-leave-to {
+		opacity: 0;
 	}
 }
 </style>
