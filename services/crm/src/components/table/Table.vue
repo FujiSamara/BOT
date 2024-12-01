@@ -184,6 +184,10 @@ onMounted(() => {
 			min-height: 72px;
 			max-height: 72px;
 
+			.t-cell {
+				white-space: nowrap;
+			}
+
 			.title {
 				display: flex;
 				flex-direction: row;
