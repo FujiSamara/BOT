@@ -13,7 +13,7 @@
 	justify-content: center;
 	align-items: flex-start;
 
-	width: 150px;
+	width: fit-content;
 
 	overflow-x: hidden;
 }

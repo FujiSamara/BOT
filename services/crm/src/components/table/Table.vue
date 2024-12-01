@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, useTemplateRef } from "vue";
+import { computed, nextTick, onMounted, useTemplateRef, watch } from "vue";
 import TableCell from "@/components/table/TableCell.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
@@ -22,9 +22,55 @@ const resizeTable = () => {
 	props.table.rowsPerPage.value = rowCount;
 };
 
+const resizeCells = () => {
+	const cells = tableRef.value!.getElementsByClassName("t-cell");
+	for (const cell of cells) {
+		(cell as HTMLElement).style.width = "fit-content";
+	}
+
+	const maxGrantedWidth = 150;
+	const cellsWidth = [...titles.value.map(() => 0), 0];
+
+	for (const cell of cells) {
+		window.getComputedStyle(cell).opacity; // Force dom to rerender component.
+		const id = parseInt(cell.id) + 1;
+		if (cellsWidth[id] < (cell as HTMLElement).offsetWidth) {
+			cellsWidth[id] = (cell as HTMLElement).offsetWidth;
+		}
+	}
+
+	for (let index = 0; index < cellsWidth.length; index++) {
+		const cellWidth = cellsWidth[index];
+
+		if (cellWidth > maxGrantedWidth) {
+			cellsWidth[index] = maxGrantedWidth;
+		}
+	}
+
+	for (const cell of cells) {
+		const id = parseInt(cell.id) + 1;
+
+		(cell as HTMLElement).style.width = `${cellsWidth[id]}px`;
+	}
+
+	return cellsWidth;
+};
+
 const titles = computed(() => props.table.headers.value);
 
 const rows = computed(() => props.table.rows.value);
+
+watch(rows, async () => {
+	if (rows.value.length === 0) {
+		return;
+	}
+
+	await nextTick();
+
+	console.log(rows.value);
+
+	resizeCells();
+});
 
 onMounted(() => {
 	resizeTable();
@@ -39,7 +85,7 @@ onMounted(() => {
 			style="display: inline-block; width: fit-content"
 		>
 			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
-				<TableCell class="t-cell check">
+				<TableCell id="-1" class="t-cell check">
 					<div
 						class="checkbox"
 						:class="{ checked: props.table.allChecked.value }"
@@ -50,7 +96,12 @@ onMounted(() => {
 						<div class="icon"></div>
 					</div>
 				</TableCell>
-				<TableCell class="t-cell" v-for="title in titles" :key="title">
+				<TableCell
+					:id="index"
+					class="t-cell"
+					v-for="(title, index) in titles"
+					:key="title"
+				>
 					<div class="title" @click="props.table.order(title)">
 						<p>{{ title }}</p>
 						<Transition name="fade">
@@ -64,7 +115,7 @@ onMounted(() => {
 				</TableCell>
 			</div>
 			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
-				<TableCell class="t-cell check">
+				<TableCell id="-1" class="t-cell check">
 					<div
 						class="checkbox"
 						:class="{ checked: table.checked.value[index].value }"
@@ -77,11 +128,12 @@ onMounted(() => {
 					</div>
 				</TableCell>
 				<TableCell
+					:id="index"
 					class="t-cell"
 					v-for="(column, index) in row.columns"
 					:key="index"
-					>{{ column.cellLines[0].value }}</TableCell
-				>
+					>{{ column.cellLines[0].value }}
+				</TableCell>
 			</div>
 		</TransitionGroup>
 	</div>
@@ -206,6 +258,8 @@ onMounted(() => {
 			}
 		}
 	}
+
+	// Transitions
 
 	.table-item {
 		display: inline-block;
