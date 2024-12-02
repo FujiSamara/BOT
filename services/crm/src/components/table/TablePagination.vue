@@ -40,6 +40,7 @@ watch([currentPage, props], () => {
 	}
 
 	middlePages.value = result;
+	inputValue.value = currentPage.value;
 });
 
 const onInput = (e: Event) => {
