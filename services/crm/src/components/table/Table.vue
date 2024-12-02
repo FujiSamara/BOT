@@ -28,7 +28,7 @@ const resizeCells = () => {
 		(cell as HTMLElement).style.width = "fit-content";
 	}
 
-	const maxGrantedWidth = 150;
+	const maxGrantedWidth = 200;
 	const cellsWidth = [...titles.value.map(() => 0), 0];
 
 	for (const cell of cells) {
@@ -165,7 +165,7 @@ onMounted(() => {
 
 		border-radius: 8px;
 
-		padding: 0 24px;
+		padding: 12px 24px;
 
 		font-size: 14px;
 		font-family: Wix Madefor Display;
