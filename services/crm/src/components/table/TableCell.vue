@@ -2,7 +2,7 @@
 
 <template>
 	<div class="cell-wrapper">
-		<slot></slot>
+		<div class="cell"><slot></slot></div>
 	</div>
 </template>
 
@@ -10,11 +10,17 @@
 .cell-wrapper {
 	display: flex;
 	flex-direction: column;
-	justify-content: center;
 	align-items: flex-start;
 
+	max-height: 100%;
+	height: 100%;
+	min-height: 100%;
 	width: fit-content;
 
-	overflow-x: hidden;
+	overflow: hidden;
+
+	.cell {
+		margin: auto 0;
+	}
 }
 </style>
