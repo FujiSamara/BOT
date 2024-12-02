@@ -1067,6 +1067,7 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             territorial_manager_id=record.territorial_manager.id,
             repairman_id=record.repairman.id,
             department_id=record.department.id,
+            repairman_worktime=0,
         )
         s.add(technical_request)
 

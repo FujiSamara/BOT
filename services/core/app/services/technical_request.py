@@ -580,7 +580,6 @@ def close_request(
     Return creator TG id
     """
     cur_date = datetime.now()
-    logger.error(12)
     acceptor_post_id = (
         orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     ).post.id
