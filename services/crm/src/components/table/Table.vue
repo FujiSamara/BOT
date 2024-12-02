@@ -150,7 +150,7 @@ onMounted(() => {
 
 	overflow-x: auto;
 
-	background-color: $table-background-color;
+	background-color: $table-bg-color;
 
 	.t-row {
 		display: flex;

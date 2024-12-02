@@ -10,6 +10,31 @@
   .toolbar {
     width: 100%;
     height: 48px;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    margin: 0;
+
+    background: transparent;
+
+    .tb-outer-group {
+      display: flex;
+      flex-direction: row;
+      gap: 16px;
+
+      height: inherit;
+
+      .tb-group {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+      }
+    }
   }
 
   .table {

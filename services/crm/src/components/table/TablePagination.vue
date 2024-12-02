@@ -214,7 +214,7 @@ const onInput = (e: Event) => {
 			outline: none;
 
 			&::placeholder {
-				color: #47474780;
+				color: $text-color-lighter;
 			}
 
 			&::-webkit-outer-spin-button,

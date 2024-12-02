@@ -1,5 +1,5 @@
 import { Access, PanelData } from "@types";
-import { ExpenditureTable } from "./expenditure/expenditureTable";
+import { ExpenditureTable } from "./expenditure";
 
 const panels: Array<PanelData> = [
 	{
