@@ -262,10 +262,6 @@ onMounted(() => {
 
 	// Transitions
 
-	.table-item {
-		display: inline-block;
-		margin-right: 10px;
-	}
 	.table-enter-active,
 	.table-leave-active {
 		transition: all 1s ease;
