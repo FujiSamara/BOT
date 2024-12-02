@@ -161,7 +161,8 @@ loadPanels();
 			opacity: 0;
 			transform: translate(-100%);
 		}
-		.content {
+		.content,
+		.content.expanded {
 			padding-left: 64px;
 		}
 	}
