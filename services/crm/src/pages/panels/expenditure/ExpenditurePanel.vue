@@ -18,7 +18,10 @@ const props = defineProps({
 	<div class="table-panel">
 		<TableToolbar class="toolbar"></TableToolbar>
 		<Table class="p-table" :table="props.table"></Table>
-		<TablePagination></TablePagination>
+		<TablePagination
+			v-model:currentPage="props.table.currentPage.value"
+			:pageCount="props.table.pageCount.value"
+		></TablePagination>
 	</div>
 </template>
 
