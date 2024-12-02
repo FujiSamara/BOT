@@ -11,7 +11,7 @@ from app.adapters.input.admin.configure import configure
 
 
 def create(app: FastAPI) -> FastAPI:
-    templates_dir = settings.app_directory_path + "/app/adapters/inpurt/admin/templates"
+    templates_dir = settings.app_directory_path + "/app/adapters/input/admin/templates"
     admin = FujiAdmin(
         app,
         engine=engine,
