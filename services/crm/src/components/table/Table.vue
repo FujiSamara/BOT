@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, useTemplateRef, watch } from "vue";
+import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
 import TableCell from "@/components/table/TableCell.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
@@ -56,7 +56,13 @@ const resizeCells = () => {
 	return cellsWidth;
 };
 
-const titles = computed(() => props.table.headers.value);
+const titles: Ref<string[]> = computed(() => {
+	if (props.table.headers.value.length || !titles.value) {
+		return props.table.headers.value;
+	} else {
+		return titles.value;
+	}
+});
 
 const rows = computed(() => props.table.rows.value);
 
