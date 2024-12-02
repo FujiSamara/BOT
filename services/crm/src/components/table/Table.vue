@@ -86,6 +86,7 @@ onMounted(() => {
 			name="table"
 			tag="div"
 			style="display: inline-block; width: fit-content"
+			:duration="{ enter: 1500, leave: 500 }"
 		>
 			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
 				<TableCell id="-1" class="t-cell check">
