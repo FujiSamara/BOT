@@ -125,6 +125,7 @@ def create_technical_request(
         repairman=repairman,
         territorial_manager=territorial_manager,
         department=worker.department,
+        repairman_worktime=0,
     )
 
     if not orm.create_technical_request(request):
