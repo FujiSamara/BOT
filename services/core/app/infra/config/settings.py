@@ -1,4 +1,4 @@
-import os
+import pathlib
 from typing import Optional
 from pydantic import Field, computed_field
 import sys
@@ -30,7 +30,7 @@ class Settings(PostgreSQLSettings, BotSettings, SecuritySettings):
     @computed_field
     @property
     def app_directory_path(self) -> str:
-        return os.getcwd()
+        return (pathlib.Path(__file__).parent.parent.parent.parent).resolve().as_posix()
 
     date_format: str = "%d.%m.%Y"
     date_time_format: str = "%d.%m.%Y %H:%M:%S"
