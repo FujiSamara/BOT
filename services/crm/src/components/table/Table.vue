@@ -165,7 +165,7 @@ onMounted(() => {
 
 		border-radius: 8px;
 
-		padding: 12px 24px;
+		padding: 8px 24px;
 
 		font-size: 14px;
 		font-family: Wix Madefor Display;
