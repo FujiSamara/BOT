@@ -1601,7 +1601,7 @@ def get_sum_duration_for_worker_in_month(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
         end_date = begin_date.replace(
-            month=begin_date.month + 1 if begin_date.month != 12 else 1,
+            month=begin_date.month % 12 + 1,
             day=1,
             hour=0,
             minute=0,
