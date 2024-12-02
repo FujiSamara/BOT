@@ -66,9 +66,6 @@ watch(rows, async () => {
 	}
 
 	await nextTick();
-
-	console.log(rows.value);
-
 	resizeCells();
 });
 

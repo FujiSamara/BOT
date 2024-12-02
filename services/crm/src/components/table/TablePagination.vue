@@ -18,41 +18,44 @@ const middlePagesCount = computed(() => {
 
 const middlePages: Ref<Array<number>> = ref([]);
 
+const inputValue = ref(currentPage.value);
+
 watch([currentPage, props], () => {
 	const result: Array<number> = [];
+	const middle = props.pageCount / 2;
 
 	let start = 0;
 	let end = -1;
 
-	if (currentPage.value === 1) {
-		start = 2;
-		end = Math.min(start + middlePagesCount.value - 1, props.pageCount - 1);
-	} else if (currentPage.value === props.pageCount) {
-		end = props.pageCount - 1;
-		start = Math.max(end - middlePagesCount.value + 1, 2);
-	} else if (
-		middlePages.value[0] === currentPage.value &&
-		currentPage.value > 2
-	) {
-		start = middlePages.value[0] - 1;
-		end = Math.min(start + middlePagesCount.value - 1, props.pageCount - 1);
-	} else if (
-		middlePages.value[middlePages.value.length - 1] === currentPage.value &&
-		currentPage.value < props.pageCount - 1
-	) {
-		end = middlePages.value[middlePages.value.length - 1] + 1;
-		start = Math.max(end - middlePagesCount.value + 1, 2);
+	if (currentPage.value < middle) {
+		start = Math.max(currentPage.value - 1, 1);
+		end = start + middlePagesCount.value;
 	} else {
-		start = middlePages.value[0];
-		end = middlePages.value[middlePages.value.length - 1];
+		end = Math.min(currentPage.value + 1, props.pageCount);
+		start = end - middlePagesCount.value;
 	}
 
 	for (let index = start; index <= end; index++) {
-		result.push(index);
+		if (index != 1 && index != props.pageCount) result.push(index);
 	}
 
 	middlePages.value = result;
 });
+
+const onInput = (e: Event) => {
+	const intValue = parseInt((e.target as HTMLInputElement).value);
+
+	if (isNaN(intValue)) {
+		console.log("kek");
+		inputValue.value = 1;
+		return;
+	}
+
+	if (intValue > 0 && intValue <= props.pageCount) {
+		currentPage.value = intValue;
+		inputValue.value = intValue;
+	}
+};
 </script>
 
 <template>
@@ -99,7 +102,15 @@ watch([currentPage, props], () => {
 		</ul>
 		<div class="pag-to-page">
 			<span>Перейти к странице</span>
-			<input placeholder="стр." />
+			<input
+				type="number"
+				step="1"
+				min="0"
+				:max="props.pageCount"
+				placeholder="стр."
+				@change="onInput"
+				:value="inputValue"
+			/>
 		</div>
 	</div>
 </template>
@@ -203,6 +214,12 @@ watch([currentPage, props], () => {
 
 			&::placeholder {
 				color: #47474780;
+			}
+
+			&::-webkit-outer-spin-button,
+			&::-webkit-inner-spin-button {
+				-webkit-appearance: none;
+				margin: 0;
 			}
 		}
 	}
