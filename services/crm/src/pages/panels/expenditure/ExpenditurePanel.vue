@@ -14,7 +14,7 @@ const props = defineProps({
 	},
 });
 
-const listeners = useSearch(
+const searchList = useSearch(
 	props.table,
 	{
 		schemas: [
@@ -23,6 +23,8 @@ const listeners = useSearch(
 				groups: [0, 1, 2],
 			},
 		],
+		placeholder: "Производство",
+		style: "height: 100%; width: 215px",
 	},
 	{
 		schemas: [
@@ -39,6 +41,8 @@ const listeners = useSearch(
 				groups: [2],
 			},
 		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
 	},
 );
 </script>
@@ -49,14 +53,12 @@ const listeners = useSearch(
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<SearchInput
-						style="height: 100%; width: 215px"
-						placeholder="Производство"
-						@submit="listeners[0].onInput"
-					></SearchInput>
-					<SearchInput
-						style="height: 100%; width: 170px"
-						placeholder="Поиск"
-						@submit="listeners[1].onInput"
+						v-for="(search, index) in searchList"
+						:style="search.style"
+						:placeholder="search.placeholder"
+						:error="search.error.value"
+						@submit="search.onInput"
+						:id="index"
 					></SearchInput>
 				</div>
 			</div>
