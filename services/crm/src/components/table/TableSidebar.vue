@@ -25,7 +25,7 @@ const onClick = async (link: LinkData) => {
 
 <template>
 	<div class="table-sidebar">
-		<FujiHeader class="header" :class="{ short: sidebarFolded }"></FujiHeader>
+		<FujiHeader class="header" :short="sidebarFolded"></FujiHeader>
 		<ul class="sb-list">
 			<li
 				class="sb-row"
@@ -39,7 +39,9 @@ const onClick = async (link: LinkData) => {
 						:style="`mask: url(${link.iconURL}) no-repeat`"
 					></div>
 				</div>
-				<span class="sb-link">{{ link.label }}</span>
+				<Transition name="fade">
+					<span class="sb-link" v-if="!sidebarFolded">{{ link.label }}</span>
+				</Transition>
 			</li>
 		</ul>
 		<div class="sb-hide-wrapper">
@@ -84,7 +86,7 @@ const onClick = async (link: LinkData) => {
 			width: 100%;
 			height: 34px;
 
-			padding-left: 9px;
+			padding: 0 9px;
 
 			border-left: 2px solid transparent;
 			color: $text-color;
@@ -180,9 +182,12 @@ const onClick = async (link: LinkData) => {
 
 	&.folded {
 		padding: 46px 20.72px 64px 20.72px;
+		.sb-hide-wrapper {
+			padding: 0;
 
-		.sb-hide {
-			transform: rotate(-90deg);
+			.sb-hide {
+				transform: rotate(-90deg);
+			}
 		}
 	}
 }

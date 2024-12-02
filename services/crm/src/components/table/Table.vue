@@ -269,10 +269,5 @@ onMounted(() => {
 		opacity: 0;
 		transform: translateY(30px);
 	}
-
-	.fade-enter-from,
-	.fade-leave-to {
-		opacity: 0;
-	}
 }
 </style>
