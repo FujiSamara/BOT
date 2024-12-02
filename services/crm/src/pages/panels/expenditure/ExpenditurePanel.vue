@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
+import SearchInput from "@/components/table/tools/SearchInput.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import SearchInput from "@/components/table/tools/SearchInput.vue";
+import { useSearch } from "@/hooks/searchHook";
 
 const props = defineProps({
 	table: {
@@ -12,6 +13,34 @@ const props = defineProps({
 		required: true,
 	},
 });
+
+const listeners = useSearch(
+	props.table,
+	{
+		schemas: [
+			{
+				pattern: "creator.department",
+				groups: [0, 1, 2],
+			},
+		],
+	},
+	{
+		schemas: [
+			{
+				pattern: "fac",
+				groups: [0],
+			},
+			{
+				pattern: "chapter",
+				groups: [1],
+			},
+			{
+				pattern: "name",
+				groups: [2],
+			},
+		],
+	},
+);
 </script>
 
 <template>
@@ -22,11 +51,12 @@ const props = defineProps({
 					<SearchInput
 						style="height: 100%; width: 215px"
 						placeholder="Производство"
-						:error="'Тестовая ошибка'"
+						@submit="listeners[0].onInput"
 					></SearchInput>
 					<SearchInput
 						style="height: 100%; width: 170px"
 						placeholder="Поиск"
+						@submit="listeners[1].onInput"
 					></SearchInput>
 				</div>
 			</div>

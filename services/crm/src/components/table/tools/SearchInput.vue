@@ -13,7 +13,7 @@ const props = defineProps({
 	},
 });
 const emits = defineEmits<{
-	(e: "input", value: string): void;
+	(e: "submit", value: string): void;
 }>();
 
 const active = ref(false);
@@ -25,7 +25,7 @@ const onInput = (event: Event) => {
 	const val = (event.target as HTMLInputElement).value;
 	clearTimeout(delaySetter);
 	delaySetter = setTimeout(async () => {
-		emits("input", val);
+		emits("submit", val);
 	}, delay);
 };
 </script>
@@ -43,7 +43,7 @@ const onInput = (event: Event) => {
 			:disabled="disabled"
 			@focusout="active = false"
 			:placeholder="props.placeholder"
-			@input.prevent="onInput"
+			@input="onInput"
 		/>
 		<Transition name="fade">
 			<div v-show="error !== undefined" class="si-icon-wrapper">
