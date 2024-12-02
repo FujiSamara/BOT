@@ -169,9 +169,9 @@ const onInput = (e: Event) => {
 			color: #474747cc;
 
 			transition:
-				background-color 0.3s,
-				box-shadow 0.3s,
-				color 0.3s;
+				background-color 0.25s,
+				box-shadow 0.25s,
+				color 0.25s;
 
 			&.current {
 				background-color: $fuji-blue;

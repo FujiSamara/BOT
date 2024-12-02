@@ -13,6 +13,7 @@ const route = useRoute();
 const networkStore = useNetworkStore();
 const tableService = new TableService();
 const links: Ref<LinkData[]> = ref([]);
+const sidebarFolded = ref(false);
 
 const loadPanels = () => {
 	const panels = getPanelsByAccesses(networkStore.accesses);
@@ -85,8 +86,10 @@ loadPanels();
 			:links="links"
 			class="sidebar"
 			@change="linkChange"
+			v-model="sidebarFolded"
+			:class="{ folded: sidebarFolded }"
 		></TableSidebar>
-		<div class="content">
+		<div class="content" :class="{ expanded: sidebarFolded }">
 			<RouterView v-slot="{ Component }">
 				<Suspense timeout="0">
 					<template #default>
@@ -109,6 +112,10 @@ loadPanels();
 </template>
 
 <style scoped lang="scss">
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
 .layout {
 	width: 100%;
 	height: 100%;
@@ -124,6 +131,15 @@ loadPanels();
 
 		width: $sidebar-width;
 		height: 100%;
+
+		transition:
+			opacity 0.25s,
+			transform 0.25s ease,
+			width 0.25s;
+
+		&.folded {
+			width: $folded-sidebar-width;
+		}
 	}
 
 	.content {
@@ -132,6 +148,22 @@ loadPanels();
 
 		width: 100%;
 		height: 100%;
+
+		transition: padding-left 0.25s;
+
+		&.expanded {
+			padding-left: calc($folded-sidebar-width + 64px);
+		}
+	}
+
+	@include media-breakpoint-down(lg) {
+		.sidebar {
+			opacity: 0;
+			transform: translate(-100%);
+		}
+		.content {
+			padding-left: 64px;
+		}
 	}
 }
 </style>

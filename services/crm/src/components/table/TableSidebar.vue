@@ -9,7 +9,14 @@ const props = defineProps({
 	},
 });
 
-const emits = defineEmits<{ (e: "change", link: LinkData): void }>();
+const sidebarFolded = defineModel({
+	type: Boolean,
+	required: true,
+});
+
+const emits = defineEmits<{
+	(e: "change", link: LinkData): void;
+}>();
 
 const onClick = async (link: LinkData) => {
 	emits("change", link);
@@ -19,7 +26,7 @@ const onClick = async (link: LinkData) => {
 <template>
 	<div class="table-sidebar">
 		<FujiHeader class="header"></FujiHeader>
-		<ul class="list">
+		<ul class="sb-list">
 			<li
 				class="sb-row"
 				:class="{ active: link.active }"
@@ -35,6 +42,11 @@ const onClick = async (link: LinkData) => {
 				<span class="sb-link">{{ link.label }}</span>
 			</li>
 		</ul>
+		<div class="sb-hide-wrapper">
+			<div class="sb-hide" @click="sidebarFolded = !sidebarFolded">
+				<div class="sb-arrow"></div>
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -42,15 +54,16 @@ const onClick = async (link: LinkData) => {
 .table-sidebar {
 	display: flex;
 	flex-direction: column;
-	justify-content: flex-start;
+	justify-content: space-between;
 
 	padding: 46px 32px 64px 32px;
 
 	background-color: $sidebar-background-color;
 
-	.list {
+	.sb-list {
 		display: flex;
 		flex-direction: column;
+		flex-grow: 1;
 		gap: 26px;
 
 		margin-top: 64px;
@@ -78,8 +91,8 @@ const onClick = async (link: LinkData) => {
 			cursor: pointer;
 
 			transition:
-				border-left-color 0.3s,
-				color 0.3s;
+				border-left-color 0.25s,
+				color 0.25s;
 
 			.sb-link {
 				padding: 0;
@@ -108,9 +121,7 @@ const onClick = async (link: LinkData) => {
 					fill: currentColor;
 					opacity: 50%;
 
-					mask-size: cover;
-
-					transition: opacity 0.3s;
+					transition: opacity 0.25s;
 				}
 			}
 
@@ -125,6 +136,51 @@ const onClick = async (link: LinkData) => {
 				border-left-color: $sidebar-link-border-color;
 				color: $fuji-blue;
 			}
+		}
+	}
+
+	.sb-hide-wrapper {
+		display: flex;
+		flex-direction: row;
+		justify-content: flex-end;
+
+		width: 100%;
+
+		padding-right: 16px;
+
+		.sb-hide {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+
+			width: 48px;
+			height: 48px;
+
+			transform: rotate(90deg);
+
+			border-radius: 8px;
+			background-color: $row-bg-color;
+			cursor: pointer;
+
+			transition: transform 0.25s;
+
+			.sb-arrow {
+				background-color: currentColor;
+				color: $fuji-blue;
+				width: 24px;
+				height: 16px;
+				fill: currentColor;
+
+				mask-size: contain;
+				mask-image: url("@/assets/icons/arrow.svg");
+				mask-repeat: no-repeat;
+			}
+		}
+	}
+
+	&.folded {
+		.sb-hide {
+			transform: rotate(-90deg);
 		}
 	}
 }

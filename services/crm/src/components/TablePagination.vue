@@ -134,12 +134,12 @@ watch([currentPage, props], () => {
 	color: #993ca6;
 	font-size: 20px;
 	border-radius: 5px;
-	transition: 0.3s;
+	transition: 0.25s;
 }
 
 .page-button:hover {
 	transform: scale(1.05);
-	transition: 0.3s;
+	transition: 0.25s;
 	background-color: #e6e6e6;
 }
 

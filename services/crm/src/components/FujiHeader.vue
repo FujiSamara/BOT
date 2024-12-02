@@ -19,7 +19,7 @@
 		height: 31px;
 		fill: currentColor;
 
-		mask: url("@/assets/icons/fuji_logo.svg") no-repeat;
+		mask: url("@/assets/icons/logo.svg") no-repeat;
 		mask-size: cover;
 	}
 }

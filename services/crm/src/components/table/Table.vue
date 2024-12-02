@@ -204,10 +204,9 @@ onMounted(() => {
 					fill: currentColor;
 
 					mask: url("@/assets/icons/arrow.svg") no-repeat;
-					mask-size: contain;
 
 					transition:
-						transform 0.3s,
+						transform 0.25s,
 						opacity 0.5s ease;
 
 					&.reversed {
@@ -243,14 +242,13 @@ onMounted(() => {
 					fill: currentColor;
 
 					mask: url("@/assets/icons/check.svg") no-repeat;
-					mask-size: contain;
 
 					color: $fuji-white;
 				}
 
 				transition:
-					background-color 0.3s,
-					border-color 0.3s;
+					background-color 0.25s,
+					border-color 0.25s;
 
 				&.checked {
 					background-color: $fuji-blue;
