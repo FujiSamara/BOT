@@ -19,8 +19,17 @@
 		height: 31px;
 		fill: currentColor;
 
-		mask: url("@/assets/icons/logo.svg") no-repeat;
+		mask-image: url("@/assets/icons/logo.svg");
 		mask-size: cover;
+		mask-repeat: no-repeat;
+	}
+
+	&.short {
+		.logo {
+			width: 30.56px;
+			height: 20.4px;
+			mask-image: url("@/assets/icons/logo-short.svg");
+		}
 	}
 }
 </style>

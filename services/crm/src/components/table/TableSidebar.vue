@@ -25,7 +25,7 @@ const onClick = async (link: LinkData) => {
 
 <template>
 	<div class="table-sidebar">
-		<FujiHeader class="header"></FujiHeader>
+		<FujiHeader class="header" :class="{ short: sidebarFolded }"></FujiHeader>
 		<ul class="sb-list">
 			<li
 				class="sb-row"
@@ -179,6 +179,8 @@ const onClick = async (link: LinkData) => {
 	}
 
 	&.folded {
+		padding: 46px 20.72px 64px 20.72px;
+
 		.sb-hide {
 			transform: rotate(-90deg);
 		}
