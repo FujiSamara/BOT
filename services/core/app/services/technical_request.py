@@ -155,6 +155,8 @@ def update_technical_request_from_repairman(
             filename = f"photo_repair_technical_request_{request_id}_reopen_{index + 1}{suffix}"
             doc.filename = filename
             request.repair_photos.append(DocumentSchema(document=doc))
+        if request.reopen_date == cur_date:
+            request.repairman_worktime += cur_date.hour - request.reopen_date.hour
     else:
         request.repair_date = cur_date
 
@@ -217,7 +219,10 @@ def update_technical_request_from_territorial_manager(
             request.state = ApprovalStatus.pending
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
-
+            repairman_worktime = 9 - (datetime.now().hour - 9)  # start_work_day
+            request.repairman_worktime -= (
+                repairman_worktime if repairman_worktime > 0 else 0
+            )
             request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
@@ -607,3 +612,36 @@ def get_request_count_in_departments(
         worker_id = worker_id[0].id
 
     return orm.get_count_req_in_departments(state, worker_id)
+
+
+def update_repairman_worktimes(start_work_day: int, end_work_day: int):
+    requests = orm.get_technical_requests_by_column(
+        TechnicalRequest.state, ApprovalStatus.pending
+    )
+    worktime = end_work_day - start_work_day
+    for request in requests:
+        if request.repairman_worktime is None:
+            request.repairman_worktime = 0
+        if request.repairman_worktime > 0:  # Заявка уже проверялась
+            request.repairman_worktime += worktime
+        else:
+            if request.open_date.weekday() > 4:  # Заявка создана в выходной
+                request.repairman_worktime += worktime
+            elif (
+                request.open_date.hour > end_work_day
+            ):  # Заявка создана после рабочего времени
+                if (
+                    request.open_date.date() != datetime.now().date()
+                ):  # Заявка создана не сегодня
+                    request.repairman_worktime += worktime
+            elif (
+                request.open_date.hour < start_work_day
+            ):  # Заявка создана до рабочего времени
+                request.repairman_worktime += worktime
+            else:  # Заявка создана в рабочее время
+                request.repairman_worktime += worktime - (
+                    request.open_date.hour - start_work_day
+                )
+    result = orm.update_technical_requests(requests)
+    if result is Exception:
+        logger.error("Updating repairmans worktimes faced with an error: {e}")

@@ -1089,6 +1089,9 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
         cur_request.reopen_repair_date = record.reopen_repair_date
+        cur_request.repairman_worktime += 9 - (
+            datetime.now().hour - 9
+        )  # start_work_day
 
         for doc in record.repair_photos:
             file = TechnicalRequestRepairPhoto(
@@ -2368,3 +2371,25 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(coordinator.coordinator)
             for coordinator in coordinators
         ]
+
+
+def update_technical_requests(
+    schemas: list[TechnicalRequestSchema],
+) -> Exception | None:
+    try:
+        for schema in schemas:
+            with session.begin() as s:
+                cur_request = (
+                    s.execute(
+                        select(TechnicalRequest).filter(
+                            TechnicalRequest.id == schema.id
+                        )
+                    )
+                    .scalars()
+                    .one()
+                )
+                cur_request.repairman_worktime = schema.repairman_worktime
+    except Exception as e:
+        return e
+    else:
+        return None

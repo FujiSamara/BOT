@@ -260,7 +260,7 @@ class TechnicalRequestSchema(BaseSchema):
     acceptor_post: Optional[PostSchema] = None
     department: DepartmentSchema
 
-    repairman_worktime: int
+    repairman_worktime: int | None = 0
 
 
 class AccountLoginsSchema(BaseSchema):
