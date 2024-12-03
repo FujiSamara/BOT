@@ -7,6 +7,7 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useSearch } from "@/hooks/searchHook";
+import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 
 const props = defineProps({
 	table: {
@@ -66,6 +67,7 @@ const searchList = useSearch(
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<ColumnFilter style="width: 126px; height: 48px"></ColumnFilter>
+					<ExportToExcel style="width: 187px; height: 48px"></ExportToExcel>
 				</div>
 			</div>
 		</div>
