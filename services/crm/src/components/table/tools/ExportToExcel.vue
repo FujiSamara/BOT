@@ -19,13 +19,6 @@
 
 	border-color: $fuji-green;
 
-	.tool-icon-wrapper {
-		.tool-icon {
-			width: 24px;
-			height: 22px;
-		}
-	}
-
 	&:hover,
 	&.active {
 		.tool-icon-wrapper {
