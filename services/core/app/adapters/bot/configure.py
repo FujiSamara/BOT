@@ -60,7 +60,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
     )
     tasks.register_task(
         task=update_repairman_worktimes,
-        time=datetime(**YMD, hour=16, minute=6, second=20),
+        time=datetime(**YMD, hour=3, minute=0, second=0),
         name="update_repairman_worktimes",
     )
     await tasks.run_tasks()
