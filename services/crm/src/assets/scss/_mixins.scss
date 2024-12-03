@@ -47,3 +47,95 @@
     height: 82px;
   }
 }
+
+@mixin tool() {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+
+  gap: 10px;
+
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid $border-color;
+  background-color: $table-bg-color;
+
+  transition: border-color 0.25s;
+
+  span {
+    font-family: Wix Madefor Display;
+    font-weight: 500;
+    font-size: 14px;
+    color: $text-color;
+
+    white-space: nowrap;
+  }
+
+  .tool-icon-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 24px;
+    height: 24px;
+
+    .tool-icon {
+      background-color: currentColor;
+      fill: currentColor;
+
+      color: $text-color;
+
+      mask-size: contain;
+      mask-repeat: no-repeat;
+
+      transition:
+        color 0.25s,
+        opacity 0.25s;
+    }
+  }
+
+  .tool-message {
+    position: absolute;
+    left: calc(-16px + 100%);
+
+    color: $danger-color;
+    font-size: 10px;
+
+    z-index: 1;
+
+    background-color: inherit;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid $danger-color;
+  }
+
+  &:hover,
+  &.active {
+    border-color: $fuji-blue;
+
+    .tool-icon-wrapper .tool-icon {
+      color: $fuji-blue;
+    }
+  }
+
+  &.disabled {
+    background-color: #eeeeee;
+    border-color: #cdcdcd;
+
+    .tool-icon-wrapper > .tool-icon {
+      color: #cdcdcd99;
+    }
+  }
+
+  &.error {
+    border-color: $danger-color;
+
+    .tool-icon-wrapper > .tool-icon {
+      color: $danger-color;
+    }
+
+    span {
+      color: $danger-color;
+    }
+  }
+}
