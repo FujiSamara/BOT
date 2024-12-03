@@ -2,6 +2,7 @@
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/table/tools/SearchInput.vue";
+import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
@@ -62,7 +63,11 @@ const searchList = useSearch(
 					></SearchInput>
 				</div>
 			</div>
-			<div class="tb-outer-group"></div>
+			<div class="tb-outer-group">
+				<div class="tb-group">
+					<ColumnFilter style="width: 126px; height: 48px"></ColumnFilter>
+				</div>
+			</div>
 		</div>
 		<Table class="p-table" :table="props.table"></Table>
 		<TablePagination
