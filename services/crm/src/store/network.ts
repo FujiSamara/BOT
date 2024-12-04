@@ -41,6 +41,7 @@ export const useNetworkStore = defineStore("network", {
 				.then((resp) => {
 					this.setUserData(resp.data.access_token);
 					this.authing = false;
+					this.authorized = true;
 
 					return true;
 				})
