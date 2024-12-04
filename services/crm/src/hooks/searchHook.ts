@@ -55,7 +55,7 @@ export const useSearch = (
 		table.searchQuery.value = result;
 	};
 
-	watch(table.rows, () => {
+	watch(table.visibleRows, () => {
 		if (table.isLoading.value) {
 			return;
 		}
@@ -64,7 +64,7 @@ export const useSearch = (
 			const value = values[index];
 			const error = errors[index];
 
-			if (table.rows.value.length === 0 && value) {
+			if (table.visibleRows.value.length === 0 && value) {
 				error.value = "Соответствия не найдены";
 			} else {
 				error.value = undefined;

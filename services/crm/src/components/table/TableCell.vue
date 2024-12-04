@@ -19,6 +19,8 @@
 
 	overflow: hidden;
 
+	flex-grow: 0;
+
 	.cell {
 		margin: auto 0;
 	}

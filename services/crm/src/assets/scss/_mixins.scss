@@ -140,3 +140,36 @@
     }
   }
 }
+
+@mixin checkbox() {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 24px;
+  height: 24px;
+  padding: 7px 5px;
+  border-radius: 6px;
+
+  border: 1px $border-color solid;
+
+  .icon {
+    background-color: currentColor;
+    width: 12px;
+    height: 8px;
+    fill: currentColor;
+
+    mask: url("@/assets/icons/check.svg") no-repeat;
+
+    color: $fuji-white;
+  }
+
+  transition:
+    background-color 0.25s,
+    border-color 0.25s;
+
+  &.checked {
+    background-color: $fuji-blue;
+    border-color: transparent;
+  }
+}

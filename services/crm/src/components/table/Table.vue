@@ -57,14 +57,14 @@ const resizeCells = () => {
 };
 
 const titles: Ref<string[]> = computed(() => {
-	if (props.table.headers.value.length || !titles.value) {
-		return props.table.headers.value;
+	if (props.table.orderedHeaders.value.length || !titles.value) {
+		return props.table.visibleHeaders.value;
 	} else {
 		return titles.value;
 	}
 });
 
-const rows = computed(() => props.table.rows.value);
+const rows = computed(() => props.table.visibleRows.value);
 
 watch(rows, async () => {
 	if (rows.value.length === 0) {
@@ -231,36 +231,7 @@ onMounted(() => {
 			width: fit-content;
 
 			.checkbox {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-
-				width: 24px;
-				height: 24px;
-				padding: 7px 5px;
-				border-radius: 6px;
-
-				border: 1px $border-color solid;
-
-				.icon {
-					background-color: currentColor;
-					width: 12px;
-					height: 8px;
-					fill: currentColor;
-
-					mask: url("@/assets/icons/check.svg") no-repeat;
-
-					color: $fuji-white;
-				}
-
-				transition:
-					background-color 0.25s,
-					border-color 0.25s;
-
-				&.checked {
-					background-color: $fuji-blue;
-					border-color: transparent;
-				}
+				@include checkbox;
 			}
 		}
 	}

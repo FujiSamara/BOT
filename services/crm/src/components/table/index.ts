@@ -296,7 +296,7 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	});
-	private _formattedOrderedRows = computed(() => {
+	public formattedOrderedRows = computed(() => {
 		const result: TableData = [];
 
 		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
@@ -320,14 +320,48 @@ export class Table<T extends BaseSchema> {
 
 		return result;
 	});
-	public rows = computed(() => {
+	public visibleRows = computed(() => {
 		if (this.isHidden.value) {
 			return [];
 		}
-		return this._formattedOrderedRows.value;
+
+		const result: TableData = [];
+
+		for (const row of this.formattedOrderedRows.value) {
+			const columns: Array<Cell> = [];
+
+			for (let index = 0; index < row.columns.length; index++) {
+				const column = row.columns[index];
+				const header = this.orderedHeaders.value[index];
+
+				if (!this.columnHidden.value.includes(header)) {
+					columns.push(column);
+				}
+			}
+
+			result.push({
+				id: row.id,
+				columns: columns,
+			});
+		}
+
+		return result;
 	});
-	public headers = computed(() => {
+
+	public orderedHeaders = computed(() => {
 		return this.getHeaders();
+	});
+	public visibleHeaders = computed(() => {
+		const result: string[] = [];
+
+		// Removes ignoring columns
+		for (const header of this.orderedHeaders.value) {
+			if (!this.columnHidden.value.includes(header)) {
+				result.push(header);
+			}
+		}
+
+		return result;
 	});
 	//#endregion
 
@@ -363,7 +397,7 @@ export class Table<T extends BaseSchema> {
 	public checked = computed(() => {
 		const result: Array<TableElementObserver<boolean>> = [];
 
-		for (let index = 0; index < this.rows.value.length; index++) {
+		for (let index = 0; index < this.visibleRows.value.length; index++) {
 			result.push(
 				new TableElementObserver(
 					this._checked.value[index],
@@ -510,6 +544,8 @@ export class Table<T extends BaseSchema> {
 	protected _aliases: Map<string, string> = new Map<string, string>();
 	/** Specify ingored column. */
 	protected _ignored: Array<string> = [];
+	/** Specufies hidden columns. */
+	public columnHidden: Ref<Array<string>> = ref([]);
 	/** Default forrmatter for column value. */
 	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
 		if (value === null || value === undefined) {
