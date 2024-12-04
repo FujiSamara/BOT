@@ -15,11 +15,10 @@
 	max-height: 100%;
 	height: 100%;
 	min-height: 100%;
-	width: fit-content;
+	width: max-content;
+	max-width: 200px;
 
 	overflow: hidden;
-
-	flex-grow: 0;
 
 	.cell {
 		margin: auto 0;

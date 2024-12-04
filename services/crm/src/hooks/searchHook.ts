@@ -30,7 +30,6 @@ export const useSearch = (
 	const modelsOut: SearchModelOut[] = [];
 	const listeners = modelsIn.map((_, index) => {
 		const onModelChanged = (value: string) => {
-			console.log(value);
 			modelsOut[index].value.value = value;
 			values[index] = value;
 			onInput();
@@ -50,7 +49,7 @@ export const useSearch = (
 		}
 	}
 
-	const onInput = () => {
+	const onInput = async () => {
 		const result: SearchSchema[] = [];
 
 		const query = { ...route.query };
@@ -58,7 +57,6 @@ export const useSearch = (
 		for (let index = 0; index < modelsIn.length; index++) {
 			const modelIn = modelsIn[index];
 			const term = values[index] !== undefined ? values[index] : "";
-
 			if (term !== "") {
 				query[`${modelIn.name}Search`] = term;
 			} else {
@@ -77,8 +75,7 @@ export const useSearch = (
 				}
 			}
 		}
-
-		router.replace({ query: query });
+		await router.replace({ query: query });
 
 		table.searchQuery.value = result;
 	};

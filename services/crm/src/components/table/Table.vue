@@ -29,7 +29,7 @@ const resizeTable = () => {
 const resizeCells = () => {
 	const cells = tableRef.value!.getElementsByClassName("t-cell");
 	for (const cell of cells) {
-		(cell as HTMLElement).style.width = "fit-content";
+		(cell as HTMLElement).style.width = "max-content";
 	}
 
 	const maxGrantedWidth = 200;
@@ -60,7 +60,7 @@ const resizeCells = () => {
 	return cellsWidth;
 };
 
-const checkOrder = () => {
+const checkOrder = async () => {
 	const query = { ...route.query };
 
 	query["orderBy"] = props.table.orderBy.value;
@@ -71,7 +71,7 @@ const checkOrder = () => {
 		delete query["desc"];
 	}
 
-	router.replace({ query: query });
+	await router.replace({ query: query });
 };
 const loadOrder = () => {
 	if ("orderBy" in route.query) {
@@ -96,7 +96,6 @@ const titles: Ref<string[]> = computed(() => {
 const rows = computed(() => props.table.visibleRows.value);
 
 watch(rows, async () => {
-	checkOrder();
 	if (rows.value.length === 0) {
 		return;
 	}
@@ -105,9 +104,11 @@ watch(rows, async () => {
 	resizeCells();
 });
 
+watch([props.table.orderBy, props.table.desc], checkOrder);
+
 onMounted(() => {
-	resizeTable();
 	loadOrder();
+	resizeTable();
 });
 </script>
 
