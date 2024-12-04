@@ -77,11 +77,8 @@ const loadOrder = () => {
 	if ("orderBy" in route.query) {
 		props.table.orderBy.value = route.query["orderBy"] as string;
 
-		if ("desc" in route.query) {
-			props.table.desc.value = true;
-		} else {
-			props.table.desc.value = false;
-		}
+		if ("desc" in route.query) props.table.desc.value = true;
+		else props.table.desc.value = false;
 	}
 };
 
