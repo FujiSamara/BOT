@@ -244,7 +244,7 @@ export class Table<T extends BaseSchema> {
 	});
 	private _orderedQuery = computed((): OrderBySchema => {
 		return {
-			column: this._orderBy.value,
+			column: this.orderBy.value,
 			desc: this.desc.value,
 		};
 	});
@@ -504,7 +504,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Return **true** if rows sorted by this column with **header**. */
 	public ordered(header: string): boolean {
-		return this.getAlias(this._orderBy.value) === header;
+		return this.getAlias(this.orderBy.value) === header;
 	}
 	/** Return **true** if sorted by this column with **header** is disabled. */
 	public orderDisabled(_: string): boolean {
@@ -512,7 +512,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Sorts columns by specify **header**. */
 	public order(header: string) {
-		if (header === this.getAlias(this._orderBy.value)) {
+		if (header === this.getAlias(this.orderBy.value)) {
 			this.desc.value = !this.desc.value;
 			return;
 		}
@@ -524,12 +524,12 @@ export class Table<T extends BaseSchema> {
 		const column = this.aliasToColumnName(header);
 
 		if (column !== undefined) {
-			this._orderBy.value = column;
+			this.orderBy.value = column;
 			this.desc.value = false;
 		}
 	}
-	/** If sorts column by row[**index**]. */
-	protected _orderBy: Ref<string> = ref("id");
+	/** Specifies row column name for ordering */
+	public orderBy: Ref<string> = ref("id");
 	/** If equal **true** sorted corresponding column in **DESC** mode. */
 	public desc: Ref<boolean> = ref(true);
 	/** Search query. */

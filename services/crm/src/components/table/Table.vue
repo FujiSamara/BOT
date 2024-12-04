@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
 import TableCell from "@/components/table/TableCell.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	table: {
@@ -10,6 +11,9 @@ const props = defineProps({
 		required: true,
 	},
 });
+
+const router = useRouter();
+const route = useRoute();
 
 const tableRef = useTemplateRef("table");
 
@@ -56,6 +60,31 @@ const resizeCells = () => {
 	return cellsWidth;
 };
 
+const checkOrder = () => {
+	const query = { ...route.query };
+
+	query["orderBy"] = props.table.orderBy.value;
+
+	if (props.table.desc.value) {
+		query["desc"] = "";
+	} else if ("desc" in query) {
+		delete query["desc"];
+	}
+
+	router.replace({ query: query });
+};
+const loadOrder = () => {
+	if ("orderBy" in route.query) {
+		props.table.orderBy.value = route.query["orderBy"] as string;
+
+		if ("desc" in route.query) {
+			props.table.desc.value = true;
+		} else {
+			props.table.desc.value = false;
+		}
+	}
+};
+
 const titles: Ref<string[]> = computed(() => {
 	if (props.table.orderedHeaders.value.length || !titles.value) {
 		return props.table.visibleHeaders.value;
@@ -67,6 +96,7 @@ const titles: Ref<string[]> = computed(() => {
 const rows = computed(() => props.table.visibleRows.value);
 
 watch(rows, async () => {
+	checkOrder();
 	if (rows.value.length === 0) {
 		return;
 	}
@@ -77,6 +107,7 @@ watch(rows, async () => {
 
 onMounted(() => {
 	resizeTable();
+	loadOrder();
 });
 </script>
 
