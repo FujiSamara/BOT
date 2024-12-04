@@ -1,12 +1,14 @@
 import { Table } from "@/components/table";
 import { BaseSchema, SearchSchema } from "@/types";
 import { Ref, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 interface SearchModelIn {
 	schemas: {
 		pattern: string; // Pattern in format: parent.child.grandson...
 		groups: number[];
 	}[];
+	name: string;
 	style?: string;
 	placeholder?: string;
 }
@@ -16,6 +18,7 @@ interface SearchModelOut {
 	style?: string;
 	placeholder?: string;
 	error: Ref<string | undefined>;
+	value: Ref<string>;
 }
 
 export const useSearch = (
@@ -23,21 +26,44 @@ export const useSearch = (
 	...modelsIn: SearchModelIn[]
 ): SearchModelOut[] => {
 	const values = modelsIn.map((_) => "");
+	const errors: Ref<string | undefined>[] = modelsIn.map((_) => ref(undefined));
+	const modelsOut: SearchModelOut[] = [];
 	const listeners = modelsIn.map((_, index) => {
 		const onModelChanged = (value: string) => {
+			console.log(value);
+			modelsOut[index].value.value = value;
 			values[index] = value;
 			onInput();
 		};
 		return onModelChanged;
 	});
-	const errors: Ref<string | undefined>[] = modelsIn.map((_) => ref(undefined));
+
+	const router = useRouter();
+	const route = useRoute();
+
+	// Fills values from routes
+	for (let index = 0; index < modelsIn.length; index++) {
+		const name = `${modelsIn[index].name}Search`;
+
+		if (name in route.query) {
+			values[index] = route.query[name] as string;
+		}
+	}
 
 	const onInput = () => {
 		const result: SearchSchema[] = [];
 
+		const query = { ...route.query };
+
 		for (let index = 0; index < modelsIn.length; index++) {
 			const modelIn = modelsIn[index];
 			const term = values[index] !== undefined ? values[index] : "";
+
+			if (term !== "") {
+				query[`${modelIn.name}Search`] = term;
+			} else {
+				delete query[`${modelIn.name}Search`];
+			}
 
 			for (const schema of modelIn.schemas) {
 				const fields = schema.pattern.split(".");
@@ -51,6 +77,8 @@ export const useSearch = (
 				}
 			}
 		}
+
+		router.replace({ query: query });
 
 		table.searchQuery.value = result;
 	};
@@ -72,17 +100,19 @@ export const useSearch = (
 		}
 	});
 
-	const result: SearchModelOut[] = [];
 	for (let index = 0; index < values.length; index++) {
-		result.push({
+		modelsOut.push({
 			onInput: listeners[index],
 			error: errors[index],
 			placeholder: modelsIn[index].placeholder,
 			style: modelsIn[index].style,
+			value: ref(values[index]),
 		});
 	}
 
-	return result;
+	onInput();
+
+	return modelsOut;
 };
 
 const applyPattern = (fields: string[], term: string): SearchSchema => {

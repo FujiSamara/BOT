@@ -27,6 +27,7 @@ const searchList = useSearch(
 		],
 		placeholder: "Производство",
 		style: "height: 100%; width: 215px",
+		name: "department",
 	},
 	{
 		schemas: [
@@ -45,6 +46,7 @@ const searchList = useSearch(
 		],
 		placeholder: "Поиск",
 		style: "height: 100%; width: 170px",
+		name: "general",
 	},
 );
 </script>
@@ -59,6 +61,7 @@ const searchList = useSearch(
 						:style="search.style"
 						:placeholder="search.placeholder"
 						:error="search.error.value"
+						:value="search.value.value"
 						@submit="search.onInput"
 						:id="index"
 					></SearchInput>

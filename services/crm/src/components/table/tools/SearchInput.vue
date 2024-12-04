@@ -11,6 +11,9 @@ const props = defineProps({
 	error: {
 		type: String,
 	},
+	value: {
+		type: String,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -44,6 +47,7 @@ const onInput = (event: Event) => {
 			@focusout="active = false"
 			:placeholder="props.placeholder"
 			@input="onInput"
+			:value="value"
 		/>
 		<Transition name="fade">
 			<div v-show="error !== undefined" class="tool-icon-wrapper">
