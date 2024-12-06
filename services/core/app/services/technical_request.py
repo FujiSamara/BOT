@@ -597,7 +597,7 @@ def close_request(
     return tg_id
 
 
-def get_request_count_in_departments(
+def get_request_count_in_departments_by_tg_id(
     state: ApprovalStatus, tg_id: int
 ) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
@@ -606,4 +606,8 @@ def get_request_count_in_departments(
     else:
         worker_id = worker_id[0].id
 
-    return orm.get_count_req_in_departments(state, worker_id)
+    return orm.get_count_req_in_departments(state=state, worker_id=worker_id)
+
+
+def get_request_count_in_departments(state: ApprovalStatus) -> tuple[str, int]:
+    return orm.get_count_req_in_departments(state)

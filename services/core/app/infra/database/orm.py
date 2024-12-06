@@ -1391,31 +1391,41 @@ def close_request(
 
 
 def get_count_req_in_departments(
-    state: ApprovalStatus, worker_id: int
+    state: ApprovalStatus, worker_id: int | None = None
 ) -> tuple[str, int]:
     """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        match state:
-            case ApprovalStatus.pending:
-                condition = and_(
-                    TechnicalRequest.repairman_id == worker_id,
-                    TechnicalRequest.state == state,
+        stm = select(Department.name, func.count(TechnicalRequest.id)).join(Department)
+
+        if worker_id is not None:
+            match state:
+                case ApprovalStatus.pending:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.repairman_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+                case ApprovalStatus.pending_approval:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.territorial_manager_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+        else:
+            stm = stm.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.pending,
+                    TechnicalRequest.state == ApprovalStatus.pending_approval,
                 )
-            case ApprovalStatus.pending_approval:
-                condition = and_(
-                    TechnicalRequest.territorial_manager_id == worker_id,
-                    TechnicalRequest.state == state,
-                )
-        departments_ids_counts = s.execute(
-            select(Department.name, func.count(TechnicalRequest.id))
-            .join(Department)
-            .filter(
-                condition,
             )
-            .group_by(Department.name)
-            .order_by(Department.name)
+
+        departments_names_counts = s.execute(
+            stm.group_by(Department.name).order_by(Department.name)
         ).all()
-        return departments_ids_counts
+
+        return departments_names_counts
 
 
 # endregion
