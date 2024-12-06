@@ -1089,9 +1089,7 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
         cur_request.reopen_repair_date = record.reopen_repair_date
-        cur_request.repairman_worktime += 9 - (
-            datetime.now().hour - 9
-        )  # start_work_day
+        cur_request.repairman_worktime = record.repairman_worktime
 
         for doc in record.repair_photos:
             file = TechnicalRequestRepairPhoto(

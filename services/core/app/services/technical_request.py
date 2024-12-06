@@ -155,8 +155,13 @@ def update_technical_request_from_repairman(
             filename = f"photo_repair_technical_request_{request_id}_reopen_{index + 1}{suffix}"
             doc.filename = filename
             request.repair_photos.append(DocumentSchema(document=doc))
-        if request.reopen_date == cur_date:
-            request.repairman_worktime += cur_date.hour - request.reopen_date.hour
+        if request.reopen_date.date() == cur_date.date():
+            request.repairman_worktime += (
+                cur_date.hour - request.reopen_date.hour
+            )  # until work day
+        else:
+            request.repairman_worktime += cur_date.hour - 9
+
     else:
         request.repair_date = cur_date
 
@@ -219,10 +224,11 @@ def update_technical_request_from_territorial_manager(
             request.state = ApprovalStatus.pending
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
-            repairman_worktime = 9 - (datetime.now().hour - 9)  # start_work_day
-            request.repairman_worktime -= (
-                repairman_worktime if repairman_worktime > 0 else 0
-            )
+            if request.repairman_worktime > 0:
+                if cur_date.hour >= 18:  # end_work_day
+                    request.repairman_worktime -= 9
+                elif cur_date.hour >= 9:  # start_work_day
+                    request.repairman_worktime -= cur_date.hour - 9
             request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
