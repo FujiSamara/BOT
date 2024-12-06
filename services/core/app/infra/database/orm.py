@@ -268,12 +268,21 @@ def add_bid(bid: BidSchema) -> BidSchema:
         return bid
 
 
-def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
+def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database by worker.
     """
     with session.begin() as s:
-        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        raw_bids = (
+            s.execute(
+                select(Bid)
+                .filter(Bid.worker_id == worker.id)
+                .limit(limit)
+                .order_by(Bid.id.desc())
+            )
+            .scalars()
+            .all()
+        )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
@@ -384,27 +393,32 @@ def get_pending_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_history_bids(pending_column) -> list[BidSchema]:
+def get_specified_history_bids(pending_column, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database with approval or
     denied state in `pending_column`.
     """
     with session.begin() as s:
         raw_bids = (
-            s.query(Bid)
-            .filter(
-                or_(
-                    pending_column == ApprovalStatus.denied,
-                    pending_column == ApprovalStatus.approved,
+            s.execute(
+                select(Bid)
+                .filter(
+                    or_(
+                        pending_column == ApprovalStatus.denied,
+                        pending_column == ApprovalStatus.approved,
+                    )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
-            .order_by(Bid.id.desc())
+            .scalars()
             .all()
         )
+
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
+def get_specified_history_bids_in_department(tg_id: int, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database with approval or
     denied state in teller_cash_state collumn.
@@ -412,26 +426,33 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
 
     with session.begin() as s:
         department_id = (
-            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+            s.execute(select(Worker).filter(Worker.telegram_id == tg_id))
+            .scalars()
+            .first()
+            .department_id
         )
         raw_bids = (
-            s.query(Bid)
-            .filter(
-                and_(
-                    or_(
-                        Bid.teller_cash_state == ApprovalStatus.denied,
-                        Bid.teller_cash_state == ApprovalStatus.approved,
-                    ),
-                    Bid.paying_department_id == department_id,
+            s.execute(
+                select(Bid)
+                .filter(
+                    and_(
+                        or_(
+                            Bid.teller_cash_state == ApprovalStatus.denied,
+                            Bid.teller_cash_state == ApprovalStatus.approved,
+                        ),
+                        Bid.paying_department_id == department_id,
+                    )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
-            .order_by(Bid.id.desc())
+            .scalars()
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
+def get_history_bids_for_cc_fac(tg_id: int, limit) -> list[BidSchema]:
     with session.begin() as s:
         worker_id = s.execute(
             select(Worker.id).filter(Worker.telegram_id == tg_id)
@@ -448,7 +469,8 @@ def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
         )
         raw_bids = (
             s.execute(
-                select(Bid).filter(
+                select(Bid)
+                .filter(
                     or_(
                         and_(
                             Bid.expenditure_id.in_(cc_expenditures_ids),
@@ -466,6 +488,8 @@ def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
                         ),
                     )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
             .scalars()
             .all()
