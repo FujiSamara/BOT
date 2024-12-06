@@ -349,7 +349,9 @@ async def update_bid_state(
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
             bid.worker.telegram_id,
-            "Ваша заявка отклонена!\nПричина: " + bid.denying_reason,
+            "Ваша заявка отклонена!\nПричина: "
+            + bid.denying_reason
+            + f"\nНомер заявки: {bid.id}",
         )
         bid.close_date = datetime.now()
 
