@@ -128,3 +128,14 @@ async def notify_and_droped_departments_teller_cash() -> None:
             ),
         )
     logger.info("Notifying tellers cash completed")
+
+
+@repeat_every(
+    seconds=60 * 60 * 24,
+    logger=logger,
+)
+async def update_repairman_worktimes() -> None:  # Technical requests
+    if datetime.now().weekday() <= 4:
+        logger.info("Updating the working hours of the repairmen.")
+        services.update_repairman_worktimes(9, 18)
+        logger.info("Updating the working hours of the repairmen. Completed")
