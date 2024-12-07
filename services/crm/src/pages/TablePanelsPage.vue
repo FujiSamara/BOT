@@ -91,21 +91,23 @@ loadPanels();
 		></TableSidebar>
 		<div class="content" :class="{ expanded: sidebarFolded }">
 			<RouterView v-slot="{ Component }">
-				<Suspense timeout="0">
-					<template #default>
-						<component
-							:table="currentTable"
-							class="panel"
-							:is="Component"
-							v-if="Component && currentTable !== undefined"
-						>
-						</component>
-					</template>
-					<template #fallback>
-						<p>Loading</p>
-						<!-- <LoadingPage></LoadingPage> -->
-					</template>
-				</Suspense>
+				<template v-if="Component && currentTable !== undefined">
+					<Transition mode="out-in" name="fade">
+						<KeepAlive>
+							<Suspense timeout="0">
+								<!-- main content -->
+								<component :table="currentTable" class="panel" :is="Component">
+								</component>
+
+								<!-- loading state -->
+								<template #fallback>
+									<p>Loading</p>
+									<!-- <LoadingPage></LoadingPage> -->
+								</template>
+							</Suspense>
+						</KeepAlive>
+					</Transition>
+				</template>
 			</RouterView>
 		</div>
 	</div>
