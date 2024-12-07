@@ -174,13 +174,13 @@ const onInput = (e: Event) => {
 				color 0.25s;
 
 			&.current {
-				background-color: $fuji-blue;
+				background-color: $fuji-gray;
 				color: $text-color-white;
 			}
 
 			&:hover {
-				background-color: $fuji-blue;
-				box-shadow: 0px 0px 4px 0px $fuji-blue;
+				background-color: $fuji-gray;
+				box-shadow: 0px 0px 4px 0px $fuji-gray;
 				color: $text-color-white;
 			}
 		}
