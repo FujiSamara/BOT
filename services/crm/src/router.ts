@@ -27,6 +27,12 @@ const routes = [
 						component: async () =>
 							await import("@/pages/panels/expenditure/ExpenditurePanel.vue"),
 					},
+					{
+						name: "table-worktimes",
+						path: "worktime",
+						component: async () =>
+							await import("@/pages/panels/worktime/WorktimePanel.vue"),
+					},
 				],
 			},
 			{

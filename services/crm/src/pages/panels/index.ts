@@ -1,5 +1,6 @@
 import { Access, PanelData } from "@types";
-import { ExpenditureTable } from "./expenditure";
+import { ExpenditureTable } from "@/pages/panels/expenditure";
+import { WorktimeTable } from "@/pages/panels/worktime";
 
 const panels: Array<PanelData> = [
 	{
@@ -10,6 +11,15 @@ const panels: Array<PanelData> = [
 		name: "expenditure",
 		create: ExpenditureTable,
 		accesses: [Access.Expenditure],
+	},
+	{
+		label: "Явки",
+		routeName: "table-worktimes",
+		iconURL: "/src/assets/icons/watch.svg",
+		active: false,
+		name: "worktime",
+		create: WorktimeTable,
+		accesses: [Access.Worktime],
 	},
 ];
 

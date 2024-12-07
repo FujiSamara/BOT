@@ -1,5 +1,7 @@
 import { Table } from "@/components/table";
 import { ExpenditureSchema } from "@/types";
+import { Editor } from "@/components/table/editor";
+import { InputSmartField, WorkerSmartField } from "@/components/table/field";
 import * as parser from "@/parser";
 
 export class ExpenditureTable extends Table<ExpenditureSchema> {
@@ -19,5 +21,19 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("cc", "ЦЗ");
 		this._aliases.set("paralegal", "Юрисконсульт");
 		this._aliases.set("creator", "Создал");
+	}
+}
+
+export class ExpenditureEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+
+		this.fields = [
+			new InputSmartField("Статья", "name", _instance?.name),
+			new InputSmartField("Раздел", "chapter", _instance?.chapter),
+			new WorkerSmartField("ЦФО", "fac", _instance?.fac),
+			new WorkerSmartField("ЦЗ", "cc", _instance?.cc),
+			new WorkerSmartField("Юрисконсульт", "paralegal", _instance?.paralegal),
+		];
 	}
 }

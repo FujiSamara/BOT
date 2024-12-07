@@ -1,0 +1,70 @@
+import { Table } from "@/components/table";
+import { WorkTimeSchema as WorktimeSchema } from "@/types";
+import { Editor } from "@/components/table/editor";
+import {
+	DateTimeSmartField,
+	DepartmentSmartField,
+	InputSmartField,
+	PostSmartField,
+	WorkerSmartField,
+} from "@/components/table/field";
+import * as parser from "@/parser";
+
+export class WorktimeTable extends Table<WorktimeSchema> {
+	constructor() {
+		super("worktime");
+		this._formatters.set("worker", parser.formatWorker);
+		this._formatters.set("department", parser.formatDepartment);
+		this._formatters.set("post", parser.formatPost);
+		this._formatters.set("work_begin", parser.formatDateTime);
+		this._formatters.set("work_end", parser.formatDateTime);
+		this._formatters.set("day", parser.formatDateTime);
+		this._formatters.set("photo_b64", parser.formatWorkTimePhoto);
+
+		this._aliases.set("id", "ID");
+		this._aliases.set("worker", "Работник");
+		this._aliases.set("department", "Производство");
+		this._aliases.set("post", "Должность");
+		this._aliases.set("work_begin", "Начало смены");
+		this._aliases.set("work_end", "Конец смены");
+		this._aliases.set("day", "День");
+		this._aliases.set("work_duration", "Длительность");
+		this._aliases.set("rating", "Оценка");
+		this._aliases.set("fine", "Штраф");
+		this._aliases.set("photo_b64", "Фото");
+	}
+}
+
+export class WorkTimeEditor extends Editor {
+	constructor(_instance?: any) {
+		super();
+		this.fields = [
+			new WorkerSmartField("Работник", "worker", _instance?.worker, true, true),
+			new DepartmentSmartField(
+				"Производство",
+				"department",
+				_instance?.department,
+				true,
+				true,
+			),
+			new PostSmartField("Должность", "post", _instance?.post, true, true),
+			new DateTimeSmartField(
+				"Начало смены",
+				"work_begin",
+				_instance?.work_begin,
+				true,
+				true,
+			),
+			new DateTimeSmartField("Конец смены", "work_end", _instance?.work_end),
+			new DateTimeSmartField("День", "day", _instance?.day, true, true, "date"),
+			new InputSmartField(
+				"Длительность работы",
+				"work_duration",
+				_instance?.work_duration,
+				false,
+			),
+			new InputSmartField("Оценка", "rating", _instance?.rating),
+			new InputSmartField("Штраф", "fine", _instance?.fine),
+		];
+	}
+}
