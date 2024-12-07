@@ -1067,6 +1067,7 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             territorial_manager_id=record.territorial_manager.id,
             repairman_id=record.repairman.id,
             department_id=record.department.id,
+            repairman_worktime=0,
         )
         s.add(technical_request)
 
@@ -1088,6 +1089,7 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
         cur_request.reopen_repair_date = record.reopen_repair_date
+        cur_request.repairman_worktime = record.repairman_worktime
 
         for doc in record.repair_photos:
             file = TechnicalRequestRepairPhoto(
@@ -2377,3 +2379,18 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(coordinator.coordinator)
             for coordinator in coordinators
         ]
+
+
+def update_technical_requests(
+    schemas: list[TechnicalRequestSchema],
+) -> None:
+    for schema in schemas:
+        with session.begin() as s:
+            cur_request = (
+                s.execute(
+                    select(TechnicalRequest).filter(TechnicalRequest.id == schema.id)
+                )
+                .scalars()
+                .one()
+            )
+            cur_request.repairman_worktime = schema.repairman_worktime

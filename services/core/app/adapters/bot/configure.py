@@ -15,6 +15,7 @@ from app.adapters.bot.tasks import (
     TaskScheduler,
     notify_with_unclosed_shift,
     notify_and_droped_departments_teller_cash,
+    update_repairman_worktimes,
 )
 
 
@@ -56,6 +57,11 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         task=notify_and_droped_departments_teller_cash,
         time=datetime(**YMD, hour=8, minute=0, second=0),
         name="notify_and_droped_departments_teller_cash",
+    )
+    tasks.register_task(
+        task=update_repairman_worktimes,
+        time=datetime(**YMD, hour=3, minute=0, second=0),
+        name="update_repairman_worktimes",
     )
     await tasks.run_tasks()
 

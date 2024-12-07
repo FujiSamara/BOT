@@ -910,6 +910,8 @@ class TechnicalRequest(Base):
         "Department", back_populates="technical_requests", foreign_keys=[department_id]
     )
 
+    repairman_worktime: Mapped[int] = mapped_column(nullable=True)
+
 
 # endregion
 

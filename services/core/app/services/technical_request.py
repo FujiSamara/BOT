@@ -125,6 +125,7 @@ def create_technical_request(
         repairman=repairman,
         territorial_manager=territorial_manager,
         department=worker.department,
+        repairman_worktime=0,
     )
 
     if not orm.create_technical_request(request):
@@ -154,6 +155,13 @@ def update_technical_request_from_repairman(
             filename = f"photo_repair_technical_request_{request_id}_reopen_{index + 1}{suffix}"
             doc.filename = filename
             request.repair_photos.append(DocumentSchema(document=doc))
+        if request.reopen_date.date() == cur_date.date():
+            request.repairman_worktime += (
+                cur_date.hour - request.reopen_date.hour
+            )  # until work day
+        else:
+            request.repairman_worktime += cur_date.hour - 9
+
     else:
         request.repair_date = cur_date
 
@@ -216,7 +224,11 @@ def update_technical_request_from_territorial_manager(
             request.state = ApprovalStatus.pending
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
-
+            if request.repairman_worktime > 0:
+                if cur_date.hour >= 18:  # end_work_day
+                    request.repairman_worktime -= 9
+                elif cur_date.hour >= 9:  # start_work_day
+                    request.repairman_worktime -= cur_date.hour - 9
             request.reopen_deadline_date = counting_date_sla(24)
 
     if not orm.update_technical_request_from_territorial_manager(request):
@@ -580,7 +592,6 @@ def close_request(
     Return creator TG id
     """
     cur_date = datetime.now()
-    logger.error(12)
     acceptor_post_id = (
         orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     ).post.id
@@ -611,3 +622,34 @@ def get_request_count_in_departments_by_tg_id(
 
 def get_request_count_in_departments(state: ApprovalStatus) -> tuple[str, int]:
     return orm.get_count_req_in_departments(state)
+
+
+def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:
+    requests = orm.get_technical_requests_by_column(
+        TechnicalRequest.state, ApprovalStatus.pending
+    )
+    worktime = end_work_day - start_work_day
+    for request in requests:
+        if request.repairman_worktime is None:
+            request.repairman_worktime = 0
+        if request.repairman_worktime > 0:  # Заявка уже проверялась
+            request.repairman_worktime += worktime
+        else:
+            if request.open_date.weekday() > 4:  # Заявка создана в выходной
+                request.repairman_worktime += worktime
+            elif (
+                request.open_date.hour > end_work_day
+            ):  # Заявка создана после рабочего времени
+                if (
+                    request.open_date.date() != datetime.now().date()
+                ):  # Заявка создана не сегодня
+                    request.repairman_worktime += worktime
+            elif (
+                request.open_date.hour < start_work_day
+            ):  # Заявка создана до рабочего времени
+                request.repairman_worktime += worktime
+            else:  # Заявка создана в рабочее время
+                request.repairman_worktime += worktime - (
+                    request.open_date.hour - start_work_day
+                )
+    orm.update_technical_requests(requests)
