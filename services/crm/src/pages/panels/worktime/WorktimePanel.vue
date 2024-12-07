@@ -71,7 +71,7 @@ const searchList = useSearch(
 				</div>
 			</div>
 		</div>
-		<Table class="p-table" :table="props.table"></Table>
+		<Table class="table" :table="props.table"></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"

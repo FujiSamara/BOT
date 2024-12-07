@@ -17,15 +17,6 @@ const route = useRoute();
 
 const tableRef = useTemplateRef("table");
 
-const resizeTable = () => {
-	const tableElement = tableRef.value as HTMLElement;
-	const tableHeigth = tableElement.offsetHeight;
-
-	const rowCount = Math.floor((tableHeigth - 72) / 64);
-
-	props.table.rowsPerPage.value = rowCount;
-};
-
 const resizeCells = () => {
 	const cells = tableRef.value!.getElementsByClassName("t-cell");
 	for (const cell of cells) {
@@ -92,8 +83,8 @@ const titles: Ref<string[]> = computed(() => {
 
 const rows = computed(() => props.table.visibleRows.value);
 
-watch(rows, async () => {
-	if (rows.value.length === 0) {
+watch([rows, tableRef], async () => {
+	if (rows.value.length === 0 || tableRef.value === null) {
 		return;
 	}
 
@@ -105,12 +96,11 @@ watch([props.table.orderBy, props.table.desc], checkOrder);
 
 onMounted(() => {
 	loadOrder();
-	resizeTable();
 });
 </script>
 
 <template>
-	<div class="p-table" ref="table">
+	<div class="table" ref="table">
 		<TransitionGroup
 			name="table"
 			tag="div"
@@ -173,7 +163,7 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-.p-table {
+.table {
 	display: flex;
 	flex-direction: column;
 

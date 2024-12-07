@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LinkData } from "@/types";
-import { computed, onMounted, Ref, ref, watch } from "vue";
+import { computed, onMounted, Ref, ref, useTemplateRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import TableSidebar from "@/components/table/TableSidebar.vue";
@@ -11,9 +11,10 @@ import { TableService } from "@/services/table";
 const router = useRouter();
 const route = useRoute();
 const networkStore = useNetworkStore();
-const tableService = new TableService();
 const links: Ref<LinkData[]> = ref([]);
 const sidebarFolded = ref(false);
+const contentRef = useTemplateRef("content");
+const tableService = new TableService(contentRef);
 
 const loadPanels = () => {
 	const panels = getPanelsByAccesses(networkStore.accesses);
@@ -36,6 +37,8 @@ const loadPanels = () => {
 	});
 
 	links.value = grantedLinks;
+
+	// Calcs table height
 
 	for (const panel of panels) {
 		tableService.register(panel.name, panel.create);
@@ -75,6 +78,9 @@ watch(route, async () => {
 	await syncCurrentLink();
 });
 onMounted(async () => {
+	await tableService.startLoops();
+});
+onMounted(async () => {
 	await syncCurrentLink();
 });
 loadPanels();
@@ -89,7 +95,7 @@ loadPanels();
 			v-model="sidebarFolded"
 			:class="{ folded: sidebarFolded }"
 		></TableSidebar>
-		<div class="content" :class="{ expanded: sidebarFolded }">
+		<div ref="content" class="content" :class="{ expanded: sidebarFolded }">
 			<RouterView v-slot="{ Component }">
 				<template v-if="Component && currentTable !== undefined">
 					<Transition mode="out-in" name="fade">

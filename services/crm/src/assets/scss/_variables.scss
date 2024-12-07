@@ -14,6 +14,13 @@ $fuji-green: #107c41;
 // Base
 $sidebar-width: 256px;
 $folded-sidebar-width: 72px;
+$table-pagination-height: 82px;
+$table-toollbar-height: 48px;
+
+:root {
+  --table-pagination-height: $table-pagination-height;
+  --table-toollbar-height: $table-toollbar-height;
+}
 
 // Colors
 $text-color: $fuji-gray;

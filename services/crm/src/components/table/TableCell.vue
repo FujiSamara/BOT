@@ -18,6 +18,8 @@
 	width: max-content;
 	max-width: 200px;
 
+	background-color: transparent;
+
 	overflow: hidden;
 
 	.cell {
