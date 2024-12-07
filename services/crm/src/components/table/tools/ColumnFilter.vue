@@ -89,6 +89,20 @@ watch(headersHidden, () => {
 	.cf-switch {
 		@include tool;
 
+		&.active {
+			background-color: $fuji-blue;
+
+			span {
+				color: white;
+			}
+
+			.tool-icon-wrapper {
+				.tool-icon {
+					color: white;
+				}
+			}
+		}
+
 		.tool-icon-wrapper {
 			.tool-icon {
 				width: 15px;

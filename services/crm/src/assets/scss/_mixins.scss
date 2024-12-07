@@ -61,7 +61,9 @@
   border: 1px solid $border-color;
   background-color: $table-bg-color;
 
-  transition: border-color 0.25s;
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
 
   span {
     font-family: Wix Madefor Display;

@@ -21,12 +21,11 @@
 
 	&:hover,
 	&.active {
-		.tool-icon-wrapper {
-			.tool-icon {
-				&.search {
-					color: $fuji-blue;
-				}
-			}
+		background-color: $fuji-green;
+		border-color: $fuji-green;
+
+		span {
+			color: $fuji-white;
 		}
 	}
 }
