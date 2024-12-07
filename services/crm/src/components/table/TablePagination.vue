@@ -20,7 +20,7 @@ const middlePages: Ref<Array<number>> = ref([]);
 
 const inputValue = ref(currentPage.value);
 
-watch([currentPage, props], () => {
+const updatePages = () => {
 	const result: Array<number> = [];
 	const middle = props.pageCount / 2;
 
@@ -41,7 +41,12 @@ watch([currentPage, props], () => {
 
 	middlePages.value = result;
 	inputValue.value = currentPage.value;
+};
+
+watch([currentPage, props], () => {
+	updatePages();
 });
+updatePages();
 
 const onInput = (e: Event) => {
 	const intValue = parseInt((e.target as HTMLInputElement).value);
