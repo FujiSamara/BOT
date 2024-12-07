@@ -3,11 +3,12 @@ import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/table/tools/SearchInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
+import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
+import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useSearch } from "@/hooks/searchHook";
-import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 
 const props = defineProps({
 	table: {
@@ -65,6 +66,7 @@ const searchList = useSearch(
 						@submit="search.onInput"
 						:id="index"
 					></SearchInput>
+					<DateFilter style="width: 245px; height: 48px"></DateFilter>
 				</div>
 			</div>
 			<div class="tb-outer-group">
