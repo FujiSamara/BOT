@@ -1,6 +1,6 @@
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { nextTick, ShallowRef } from "vue";
+import { ShallowRef } from "vue";
 
 type TableMap = Map<string, Table<BaseSchema>>;
 
@@ -18,16 +18,30 @@ export class TableService {
 			return;
 		}
 
-		let tableElement: HTMLElement;
+		const table = await new Promise<HTMLElement>((resolve) => {
+			if (!this.tableContainer.value) {
+				return;
+			}
 
-		do {
-			tableElement = this.tableContainer.value.getElementsByClassName(
-				"table",
-			)[0] as HTMLElement;
-			await nextTick();
-		} while (!tableElement);
+			const observer = new MutationObserver((_) => {
+				if (!this.tableContainer.value) {
+					return;
+				}
+				const element = this.tableContainer.value.querySelector(".table");
 
-		return tableElement.offsetHeight;
+				if (element) {
+					observer.disconnect();
+					resolve(element as HTMLElement);
+				}
+			});
+
+			observer.observe(this.tableContainer.value, {
+				childList: true,
+				subtree: true,
+			});
+		});
+
+		return table.offsetHeight;
 	}
 
 	private async setRowsCount() {
