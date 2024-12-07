@@ -620,7 +620,7 @@ def get_request_count_in_departments(
     return orm.get_count_req_in_departments(state, worker_id)
 
 
-def update_repairman_worktimes(start_work_day: int, end_work_day: int):
+def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:
     requests = orm.get_technical_requests_by_column(
         TechnicalRequest.state, ApprovalStatus.pending
     )
@@ -648,6 +648,4 @@ def update_repairman_worktimes(start_work_day: int, end_work_day: int):
                 request.repairman_worktime += worktime - (
                     request.open_date.hour - start_work_day
                 )
-    result = orm.update_technical_requests(requests)
-    if result is Exception:
-        logger.error("Updating repairmans worktimes faced with an error: {e}")
+    orm.update_technical_requests(requests)

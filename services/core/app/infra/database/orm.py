@@ -2373,21 +2373,14 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
 
 def update_technical_requests(
     schemas: list[TechnicalRequestSchema],
-) -> Exception | None:
-    try:
-        for schema in schemas:
-            with session.begin() as s:
-                cur_request = (
-                    s.execute(
-                        select(TechnicalRequest).filter(
-                            TechnicalRequest.id == schema.id
-                        )
-                    )
-                    .scalars()
-                    .one()
+) -> None:
+    for schema in schemas:
+        with session.begin() as s:
+            cur_request = (
+                s.execute(
+                    select(TechnicalRequest).filter(TechnicalRequest.id == schema.id)
                 )
-                cur_request.repairman_worktime = schema.repairman_worktime
-    except Exception as e:
-        return e
-    else:
-        return None
+                .scalars()
+                .one()
+            )
+            cur_request.repairman_worktime = schema.repairman_worktime
