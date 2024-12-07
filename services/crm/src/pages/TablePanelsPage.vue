@@ -45,11 +45,13 @@ const loadPanels = () => {
 	}
 };
 const linkChange = async (link: LinkData) => {
-	await router.push({ name: link.routeName });
+	const currentLink = links.value.find((val) => val.active);
 
-	for (const currentLink of links.value) {
-		currentLink.active = currentLink.routeName === link.routeName;
-	}
+	if (currentLink) currentLink.query = route.query;
+	await router.push({ name: link.routeName, query: link.query });
+
+	if (currentLink) currentLink.active = false;
+	link.active = true;
 };
 const syncCurrentLink = async () => {
 	let tableChoosed = false;

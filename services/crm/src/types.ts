@@ -1,4 +1,5 @@
 import { Table } from "@/components/table";
+import { LocationQueryRaw } from "vue-router";
 
 export interface LinkData {
 	label: string;
@@ -6,6 +7,7 @@ export interface LinkData {
 	routeName: string;
 	active: boolean;
 	name?: string;
+	query?: LocationQueryRaw;
 }
 
 export interface PanelData extends LinkData {
