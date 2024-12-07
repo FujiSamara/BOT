@@ -18,11 +18,14 @@ export class TableService {
 			return;
 		}
 
-		await nextTick();
+		let tableElement: HTMLElement;
 
-		const tableElement = this.tableContainer.value.getElementsByClassName(
-			"table",
-		)[0] as HTMLElement;
+		do {
+			tableElement = this.tableContainer.value.getElementsByClassName(
+				"table",
+			)[0] as HTMLElement;
+			await nextTick();
+		} while (!tableElement);
 
 		return tableElement.offsetHeight;
 	}
