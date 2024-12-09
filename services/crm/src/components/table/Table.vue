@@ -153,9 +153,10 @@ onMounted(() => {
 				<TableCell
 					:id="index"
 					class="t-cell"
-					v-for="(column, index) in row.columns"
+					v-for="(cell, index) in row.columns"
 					:key="index"
-					>{{ column.cellLines[0].value }}
+					:cell="cell"
+				>
 				</TableCell>
 			</div>
 		</TransitionGroup>

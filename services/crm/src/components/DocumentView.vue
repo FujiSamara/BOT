@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useNetworkStore } from "@/store/network";
-import { DocumentSchema } from "../../types/index";
+import { DocumentSchema } from "@types";
 import Viewer from "viewerjs";
 import { onMounted, ref, Ref, useTemplateRef } from "vue";
 
@@ -17,7 +17,7 @@ const props = defineProps({
 	},
 });
 
-const emit = defineEmits(["close"]);
+const emits = defineEmits(["close", "ready"]);
 
 const imageContainer = useTemplateRef("image-container");
 const viewer: Ref<Viewer | undefined> = ref();
@@ -40,7 +40,7 @@ const viewerOptions: Viewer.Options = {
 		rotateLeft: true,
 		rotateRight: true,
 	},
-	hidden: () => emit("close"),
+	hidden: () => emits("close"),
 };
 
 const documents: Array<string> = [];
@@ -51,6 +51,7 @@ for (const document of props.documents) {
 	} else {
 		documentData = await network.getFile(document.name);
 	}
+	emits("ready");
 
 	let type = "application/octet-stream";
 	let extension = document.name.split(".").reverse()[0];

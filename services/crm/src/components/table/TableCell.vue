@@ -1,8 +1,94 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { PropType, Ref, ref } from "vue";
+import DocumentView from "@/components/DocumentView.vue";
+
+import { Cell, CellLine } from "@/components/table";
+import { useNetworkStore } from "@/store/network";
+import { DocumentSchema } from "@/types";
+
+const props = defineProps({
+	cell: {
+		type: Object as PropType<Cell>,
+	},
+});
+const networkStore = useNetworkStore();
+
+const documentViewVisible = ref(false);
+const documentLoading = ref(false);
+const documents: Ref<Array<DocumentSchema>> = ref([]);
+const initialDocumentIndex: Ref<number> = ref(1);
+
+const linkClicked = async (cellLine: CellLine) => {
+	if (cellLine.forceHref) {
+		await networkStore.downloadFile(cellLine.value, cellLine.href);
+	} else {
+		await networkStore.downloadFile(cellLine.value);
+	}
+};
+
+const openPhoto = (cell: Cell, index: number) => {
+	const docs: Array<DocumentSchema> = [];
+	for (const [i, cellLine] of cell.cellLines.entries()) {
+		if (cellLine.isImage) {
+			if (index === i) {
+				initialDocumentIndex.value = docs.length;
+			}
+			docs.push({ name: cellLine.value, href: cellLine.href, forceHref: true });
+		}
+	}
+	documentViewVisible.value = true;
+	documentLoading.value = true;
+	documents.value = docs;
+};
+</script>
 
 <template>
 	<div class="cell-wrapper">
-		<div class="cell"><slot></slot></div>
+		<div class="cell">
+			<slot v-if="!props.cell"></slot>
+			<ul class="cell-line-list" v-if="props.cell">
+				<li
+					class="cell-line"
+					v-for="(cellLine, cellLineIndex) in props.cell.cellLines"
+				>
+					<div
+						class="c-link-wrapper"
+						:style="{ color: cellLine.color }"
+						v-if="cellLine.href.length > 0"
+					>
+						<a
+							@click.stop="async () => await linkClicked(cellLine)"
+							class="c-link"
+							>{{ cellLine.value }}</a
+						>
+						<div
+							@click.stop="() => openPhoto(props.cell!, cellLineIndex)"
+							v-if="cellLine.isImage"
+							class="c-image"
+							:class="{ blinking: documentLoading }"
+						></div>
+					</div>
+					<p
+						:style="{ color: cellLine.color }"
+						v-if="cellLine.href.length === 0"
+					>
+						{{ cellLine.value }}
+					</p>
+				</li>
+			</ul>
+		</div>
+
+		<Suspense>
+			<Transition name="fade">
+				<DocumentView
+					v-if="documentViewVisible"
+					:documents="documents"
+					:index="initialDocumentIndex"
+					@close="documentViewVisible = false"
+					@ready="documentLoading = false"
+				></DocumentView>
+			</Transition>
+		</Suspense>
 	</div>
 </template>
 
@@ -24,6 +110,76 @@
 
 	.cell {
 		margin: auto 0;
+
+		.cell-line-list {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+
+			list-style: none;
+			margin: 0;
+			padding: 0;
+
+			p {
+				margin: 0;
+				cursor: default;
+			}
+
+			.c-link-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				cursor: default;
+
+				.c-link {
+					color: $fuji-blue;
+					transition: color 0.25s;
+					text-decoration: underline;
+					user-select: none;
+					cursor: pointer;
+					transition: color 0.25s;
+
+					&:hover {
+						color: $text-color;
+					}
+				}
+
+				.c-image {
+					background-color: currentColor;
+					color: $text-color;
+					width: 20px;
+					height: 20px;
+					fill: currentColor;
+
+					mask-size: contain;
+					mask-image: url("@/assets/icons/image.svg");
+					mask-repeat: no-repeat;
+
+					transition: color 0.25s;
+
+					&:hover {
+						color: $fuji-blue;
+						cursor: pointer;
+					}
+
+					&.blinking {
+						animation-duration: 0.75s;
+						animation-name: blinking;
+						animation-iteration-count: infinite;
+						animation-direction: alternate;
+
+						@keyframes blinking {
+							from {
+								color: $fuji-blue;
+							}
+							to {
+								color: $text-color;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 </style>
