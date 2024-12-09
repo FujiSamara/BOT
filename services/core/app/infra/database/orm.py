@@ -1047,9 +1047,9 @@ def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblem
         )
 
 
-def create_technical_request(record: TechnicalRequestSchema) -> bool:
+def create_technical_request(record: TechnicalRequestSchema) -> int:
     """Creates technical problem
-    Returns: `True` if technical problem request record created, `False` otherwise.
+    Returns: request id
     """
     with session.begin() as s:
         technical_request = TechnicalRequest(
@@ -1077,14 +1077,15 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             )
             s.add(file)
 
-    return True
+        return 
 
-
-def update_technical_request_from_repairman(record: TechnicalRequestSchema):
+def update_technical_request_from_repairman(record: TechnicalRequestSchema) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
@@ -1099,11 +1100,16 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
     return True
 
 
-def update_technical_request_from_territorial_manager(record: TechnicalRequestSchema):
+def update_technical_request_from_territorial_manager(
+    record: TechnicalRequestSchema,
+) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.close_date = record.close_date
@@ -2394,3 +2400,17 @@ def update_technical_requests(
                 .one()
             )
             cur_request.repairman_worktime = schema.repairman_worktime
+
+
+def get_chief_technician(department_id) -> WorkerSchema | None:
+    with session.begin() as s:
+        chief_technician = (
+            s.execute(
+                select(Department.chief_technician).filter(
+                    Department.id == department_id
+                )
+            )
+            .scalars()
+            .first()
+        )
+        return chief_technician
