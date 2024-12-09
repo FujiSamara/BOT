@@ -20,9 +20,6 @@ from app.infra.database.schemas import (
     DocumentSchema,
 )
 
-from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
-from app.adapters.bot import text
-
 
 def counting_date_sla(sla: int):
     deadline_date = datetime.now()
@@ -86,6 +83,9 @@ async def create_technical_request(
     photo_files: list[UploadFile],
     telegram_id: int,
 ) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Create technical request
     Return: repairman telegram id
@@ -170,6 +170,9 @@ async def create_technical_request(
 async def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
 ) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Update technical request
     Notifies territorial manager, chief technician and request of the request
@@ -238,6 +241,9 @@ async def update_technical_request_from_repairman(
 async def update_technical_request_from_territorial_manager(
     mark: int, request_id: int, description: Optional[str]
 ) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Update technical request
     Return repairman telegram id if mark == 1 else None
