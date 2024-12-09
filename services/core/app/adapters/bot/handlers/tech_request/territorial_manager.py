@@ -23,7 +23,6 @@ from app.adapters.bot.handlers.tech_request.utils import (
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.tech_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
-    notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
