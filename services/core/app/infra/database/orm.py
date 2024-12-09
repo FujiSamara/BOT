@@ -1047,9 +1047,9 @@ def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblem
         )
 
 
-def create_technical_request(record: TechnicalRequestSchema) -> int:
+def create_technical_request(record: TechnicalRequestSchema) -> bool:
     """Creates technical problem
-    Returns: request id
+    Returns: True if request is create False otherwise
     """
     with session.begin() as s:
         technical_request = TechnicalRequest(
@@ -1077,7 +1077,8 @@ def create_technical_request(record: TechnicalRequestSchema) -> int:
             )
             s.add(file)
 
-        return 
+    return True
+
 
 def update_technical_request_from_repairman(record: TechnicalRequestSchema) -> bool:
     with session.begin() as s:
