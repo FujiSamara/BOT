@@ -2405,13 +2405,16 @@ def update_technical_requests(
 
 def get_chief_technician(department_id) -> WorkerSchema | None:
     with session.begin() as s:
-        chief_technician = (
-            s.execute(
-                select(Department.chief_technician).filter(
-                    Department.id == department_id
-                )
+        worker_id = s.execute(
+            select(Department.chief_technician_id).filter(
+                Department.id == department_id
             )
-            .scalars()
-            .first()
+        ).scalar()
+        if worker_id is None:
+            return None
+        chief_technician = (
+            s.execute(select(Worker).filter(Worker.id == worker_id)).scalars().all()
         )
-        return chief_technician
+        if chief_technician == []:
+            return None
+        return WorkerSchema.model_validate(chief_technician[0])

@@ -156,11 +156,11 @@ async def create_technical_request(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {last_technical_request_id+1} на проверке ТУ.\nИсполнитель {request.repairman}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {last_technical_request_id+1} передана в исполенние.\nИсполнитель: {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
             )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
-            message=text.notification_repairman_reopen
+            message=text.notification_repairman
             + f"\nНа производстве: {request.department.name}",
         )
 
@@ -232,7 +232,7 @@ async def update_technical_request_from_repairman(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {request_id} на проверке ТУ.\nИсполнитель {request.repairman}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {request_id} на проверке ТУ.\nИсполнитель {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
             )
 
     return True
@@ -301,7 +301,7 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
-                    message=f"Заявка с номером {request_id} отправленна на доработку.\nИсполнитель {request.repairman}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} отправленна на доработку.\nИсполнитель {request.repairman.l_name} {request.repairman.f_name} {request.repairman.o_name}\nПроблема: {request.problem.problem_name}\nПроизводство: {request.department.name}",
                 )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id, message=text.notification_worker
