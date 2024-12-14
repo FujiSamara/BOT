@@ -357,9 +357,9 @@ class EquipmentIncidentSchema(BaseSchemaPK):
 
 
 class TimeSheetSchema(BaseSchema):
-    worker_fullname: str | None = None
-    post_name: str | None = None
-    total_hours: float | None = None
+    worker_fullname: str
+    post_name: str
+    total_hours: float
     duration_per_day: dict[datetime.date, float]
 
 
