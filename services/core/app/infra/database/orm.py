@@ -56,6 +56,7 @@ from app.schemas import (
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
+    TimeSheetSchema,
     WorkTimeSchemaFull,
     WorkerBidSchema,
     WorkerSchema,
@@ -1498,6 +1499,85 @@ def export_models(
 
 
 # endregion
+
+
+def get_timesheets(
+    page: int,
+    records_per_page: int,
+    query_schema: QuerySchema,
+) -> list[TimeSheetSchema]:
+    with session.begin() as s:
+        start = query_schema.date_query.start
+        end = query_schema.date_query.end
+        query_schema.date_query = None
+
+        query_builder = create_query_builder(Worker, query_schema, s)
+        query_builder.select = query_builder.select.offset(
+            (page - 1) * records_per_page
+        ).limit(records_per_page)
+        workers_sel = query_builder.select
+        w_sub = workers_sel.subquery()
+
+        per_day_sel = (
+            select(
+                w_sub.c.id,
+                WorkTime.day,
+                func.sum(WorkTime.work_duration).label("hours"),
+            )
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .group_by(w_sub.c.id, WorkTime.day)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .having(WorkTime.day != null())
+            .order_by(WorkTime.day)
+        )
+
+        total_sel = (
+            select(w_sub.c.id, func.sum(WorkTime.work_duration))
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .group_by(w_sub.c.id)
+        )
+
+        workers: list[Worker] = s.execute(workers_sel).scalars().all()
+        per_days: list[tuple[int, datetime.date, float]] = s.execute(per_day_sel).all()
+        totals = s.execute(total_sel).all()
+
+        total_dict = {total[0]: total[1] for total in totals}
+        per_days_dict: dict[int, dict[datetime.date, float]] = {}
+
+        for worker_id, day, duration in per_days:
+            per_days_dict.setdefault(worker_id, {})[day] = duration
+
+        result: list[TimeSheetSchema] = []
+
+        for worker in workers:
+            worker_fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
+            post_name = worker.post.name
+            total_hours = total_dict.get(worker.id, 0)
+            duration_per_day = per_days_dict.get(worker.id, {})
+
+            timesheet = TimeSheetSchema(
+                worker_fullname=worker_fullname,
+                post_name=post_name,
+                total_hours=total_hours,
+                duration_per_day=duration_per_day,
+            )
+            result.append(timesheet)
+
+        return result
+
 
 # region Bids
 
