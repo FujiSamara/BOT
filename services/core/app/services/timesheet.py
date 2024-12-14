@@ -1,9 +1,6 @@
-from datetime import datetime
 from app.infra.database.models import Worker
 import app.infra.database.orm as orm
-from app.schemas import QuerySchema, TimeSheetSchema, WorkerSchema
-
-from app.services import worktime
+from app.schemas import QuerySchema, TimeSheetSchema
 
 
 def get_timesheet_count(
@@ -23,37 +20,6 @@ def get_timesheets_at_page(
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    interval = query_schema.date_query
-    query_schema.date_query = None
-    workers = orm.get_models(Worker, WorkerSchema, page, records_per_page, query_schema)
+    res = orm.get_timesheets(page, records_per_page, query_schema)
 
-    if interval is not None:
-        return get_timesheets_by_workers_in_month(
-            workers, [interval.start], [interval.end]
-        )
-
-    return get_timesheets_by_workers_in_month(workers)
-
-
-def get_timesheets_by_workers_in_month(
-    workers: list[WorkerSchema],
-    begins: list[datetime] | None = None,
-    ends: list[datetime] | None = None,
-) -> list[TimeSheetSchema]:
-    timesheets: list[TimeSheetSchema] = []
-
-    for worker in workers:
-        hours = 0
-        if begins is None or ends is None:
-            hours = worktime.get_hours_sum_in_month(worker.id)
-        else:
-            hours = worktime.get_hours_sum_in_intervals(worker.id, begins, ends)
-
-        fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
-        timesheet = TimeSheetSchema(
-            worker_fullname=fullname, post_name=worker.post.name, hours=hours
-        )
-
-        timesheets.append(timesheet)
-
-    return timesheets
+    return res

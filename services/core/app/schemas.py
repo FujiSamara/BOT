@@ -17,14 +17,16 @@ from io import BytesIO
 from app.infra.config import settings
 
 
-# region Shemas for models
 class BaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
+
+# region Shemas for models
+class BaseSchemaPK(BaseSchema):
     id: int | None = -1
 
 
-class PostSchema(BaseSchema):
+class PostSchema(BaseSchemaPK):
     name: str
     level: int
     scopes: list[FujiScope]
@@ -42,11 +44,11 @@ class PostSchema(BaseSchema):
         return val
 
 
-class CompanySchema(BaseSchema):
+class CompanySchema(BaseSchemaPK):
     name: str
 
 
-class DepartmentSchema(BaseSchema):
+class DepartmentSchema(BaseSchemaPK):
     name: str
     address: Optional[str]
 
@@ -57,11 +59,11 @@ class DepartmentSchemaFull(DepartmentSchema):
     territorial_manager: Optional["WorkerSchema"]
 
 
-class GroupSchema(BaseSchema):
+class GroupSchema(BaseSchemaPK):
     name: str
 
 
-class WorkerSchema(BaseSchema):
+class WorkerSchema(BaseSchemaPK):
     f_name: str
     l_name: str
     o_name: str
@@ -90,7 +92,7 @@ class WorkerSchema(BaseSchema):
         return val
 
 
-class DocumentSchema(BaseSchema):
+class DocumentSchema(BaseSchemaPK):
     document: UploadFile
 
     @field_validator("document", mode="before")
@@ -104,7 +106,7 @@ class DocumentSchema(BaseSchema):
         return val
 
 
-class BidSchema(BaseSchema):
+class BidSchema(BaseSchemaPK):
     amount: int
     payment_type: str
     department: DepartmentSchema
@@ -135,7 +137,7 @@ class BidSchema(BaseSchema):
     teller_cash_state: ApprovalStatus
 
 
-class WorkTimeSchema(BaseSchema):
+class WorkTimeSchema(BaseSchemaPK):
     worker: Optional[WorkerSchema] = None
     department: Optional[DepartmentSchema] = None
     post: Optional[PostSchema] = None
@@ -153,7 +155,7 @@ class WorkTimeSchemaFull(WorkTimeSchema):
     photo_b64: str | None = None
 
 
-class WorkerBidSchema(BaseSchema):
+class WorkerBidSchema(BaseSchemaPK):
     f_name: str
     l_name: str
     o_name: Optional[str]
@@ -176,7 +178,7 @@ class WorkerBidSchema(BaseSchema):
     comment: Optional[str]
 
 
-class ExpenditureSchema(BaseSchema):
+class ExpenditureSchema(BaseSchemaPK):
     name: str
     chapter: str
     create_date: Optional[datetime.datetime] = datetime.datetime.now()
@@ -186,20 +188,20 @@ class ExpenditureSchema(BaseSchema):
     creator: Optional[WorkerSchema] = None
 
 
-class BudgetRecordSchema(BaseSchema):
+class BudgetRecordSchema(BaseSchemaPK):
     expenditure: ExpenditureSchema
     limit: Optional[float] = None
     last_update: Optional[datetime.datetime] = None
     department: Optional[DepartmentSchema] = None
 
 
-class ProblemITSchema(BaseSchema):
+class ProblemITSchema(BaseSchemaPK):
     name: str
     category: str
     sla: float
 
 
-class BidITSchema(BaseSchema):
+class BidITSchema(BaseSchemaPK):
     problem: ProblemITSchema
     problem_comment: str
     problem_photos: list[DocumentSchema]
@@ -221,13 +223,13 @@ class BidITSchema(BaseSchema):
     reopen_work_comment: Optional[str] = None
 
 
-class TechnicalProblemSchema(BaseSchema):
+class TechnicalProblemSchema(BaseSchemaPK):
     problem_name: str
     executor: Executor
     sla: float
 
 
-class TechnicalRequestSchema(BaseSchema):
+class TechnicalRequestSchema(BaseSchemaPK):
     # Данные при создание
     problem: TechnicalProblemSchema
     description: str
@@ -262,7 +264,7 @@ class TechnicalRequestSchema(BaseSchema):
     repairman_worktime: int | None = 0
 
 
-class AccountLoginsSchema(BaseSchema):
+class AccountLoginsSchema(BaseSchemaPK):
     worker: WorkerSchema
 
     cop_mail_login: Optional[str] = None
@@ -278,7 +280,7 @@ class AccountLoginsSchema(BaseSchema):
     pbi_login: Optional[str] = None
 
 
-class MaterialValuesSchema(BaseSchema):
+class MaterialValuesSchema(BaseSchemaPK):
     worker: WorkerSchema
     item: str
     quanity: int
@@ -288,12 +290,12 @@ class MaterialValuesSchema(BaseSchema):
     return_date: Optional[datetime.datetime] = None
 
 
-class SubordinationSchema(BaseSchema):
+class SubordinationSchema(BaseSchemaPK):
     chief: WorkerSchema
     employee: WorkerSchema
 
 
-class FileSchema(BaseSchema):
+class FileSchema(BaseSchemaPK):
     file: UploadFile
 
     @field_validator("file", mode="before")
@@ -331,7 +333,7 @@ class FileSchema(BaseSchema):
     description: Optional[str] = None
 
 
-class EquipmentStatusSchema(BaseSchema):
+class EquipmentStatusSchema(BaseSchemaPK):
     asterisk_id: str
     status: str
     ip_address: str
@@ -341,13 +343,13 @@ class EquipmentStatusSchema(BaseSchema):
     equipment_name: str
 
 
-class EquipmentStatusSchemaIn(BaseSchema):
+class EquipmentStatusSchemaIn(BaseSchemaPK):
     status: str
     ip_address: str
     latency: float
 
 
-class EquipmentIncidentSchema(BaseSchema):
+class EquipmentIncidentSchema(BaseSchemaPK):
     equipment_status: EquipmentStatusSchema
     incident_time: datetime.datetime
     status: str
@@ -357,7 +359,8 @@ class EquipmentIncidentSchema(BaseSchema):
 class TimeSheetSchema(BaseSchema):
     worker_fullname: str | None = None
     post_name: str | None = None
-    hours: float | None = None
+    total_hours: float | None = None
+    duration_per_day: dict[datetime.date, float]
 
 
 # endregion
@@ -374,7 +377,7 @@ class BudgetRecordWithChapter(BudgetRecordSchema):
     chapter: str
 
 
-class BidOutSchema(BaseSchema):
+class BidOutSchema(BaseSchemaPK):
     """Out version of `BidSchema` for crm api"""
 
     amount: float
@@ -407,7 +410,7 @@ class BidOutSchema(BaseSchema):
         return val
 
 
-class BidInSchema(BaseSchema):
+class BidInSchema(BaseSchemaPK):
     """In version of `BidSchema` for crm api"""
 
     amount: float
