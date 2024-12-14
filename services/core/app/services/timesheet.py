@@ -16,10 +16,14 @@ def get_timesheets_at_page(
     records_per_page: int,
     query_schema: QuerySchema,
 ) -> list[TimeSheetSchema]:
-    """Return budget records with applied instructions.
+    """Return timesheets with applied instructions.
+
+    - Note: instructions applies to table `Workers`.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    res = orm.get_timesheets(page, records_per_page, query_schema)
+    return orm.get_timesheets(page, records_per_page, query_schema)
 
-    return res
+
+def export_timesheets(query_schema: QuerySchema):
+    pass
