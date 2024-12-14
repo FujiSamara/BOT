@@ -144,7 +144,7 @@ from app.services.worktime import (
     update_worktime,
     get_openned_today_worktime,
     get_last_completed_worktimes_by_tg_id,
-    get_sum_hours_in_month,
+    get_sum_hours_in_months,
 )
 
 __all__ = [
@@ -241,7 +241,7 @@ __all__ = [
     "get_request_count_in_departments",
     "get_work_time_record_by_id",
     "get_last_completed_worktimes_by_tg_id",
-    "get_sum_hours_in_month",
+    "get_sum_hours_in_months",
     "get_openned_today_worktime",
     "get_work_time_records_by_day_and_department",
     "get_worker_bid_by_id",

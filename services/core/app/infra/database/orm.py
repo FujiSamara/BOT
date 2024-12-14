@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
@@ -1595,28 +1595,23 @@ def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
         return None
 
 
-def get_sum_duration_for_worker_in_month(
-    worker_id: int,
+def get_sum_duration_for_worker_in_months(
+    worker_id: int, begin_dates: list[datetime], end_dates: list[datetime]
 ) -> float:
     with session.begin() as s:
-        begin_date = datetime.now().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        end_date = begin_date.replace(
-            month=begin_date.month % 12 + 1,
-            day=1,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        ) - timedelta(days=1)
-
         hours = s.execute(
             select(func.sum(WorkTime.work_duration)).filter(
                 WorkTime.work_duration != null(),
-                WorkTime.work_begin >= begin_date,
-                WorkTime.work_begin <= end_date,
                 WorkTime.worker_id == worker_id,
+                or_(
+                    *[
+                        and_(
+                            WorkTime.work_begin >= begin_date,
+                            WorkTime.work_begin <= end_date,
+                        )
+                        for begin_date, end_date in zip(begin_dates, end_dates)
+                    ]
+                ),
             )
         ).scalar()
         if hours is not None:

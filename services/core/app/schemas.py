@@ -221,7 +221,6 @@ class BidITSchema(BaseSchema):
     reopen_work_comment: Optional[str] = None
 
 
-# Technical request
 class TechnicalProblemSchema(BaseSchema):
     problem_name: str
     executor: Executor
@@ -353,6 +352,12 @@ class EquipmentIncidentSchema(BaseSchema):
     incident_time: datetime.datetime
     status: str
     stage: IncidentStage
+
+
+class TimeSheetSchema(BaseSchema):
+    worker_fullname: str | None = None
+    post_name: str | None = None
+    hours: float | None = None
 
 
 # endregion

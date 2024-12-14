@@ -10,6 +10,7 @@ from app.adapters.input.api.crm.routers import department
 from app.adapters.input.api.crm.routers import bid
 from app.adapters.input.api.crm.routers import worktime
 from app.adapters.input.api.crm.routers import post
+from app.adapters.input.api.crm.routers import timesheet
 
 
 def create(api: FastAPI) -> FastAPI:
@@ -33,3 +34,4 @@ def configure(crm: FastAPI):
     crm.include_router(bid.router, prefix="/bid")
     crm.include_router(worktime.router, prefix="/worktime")
     crm.include_router(post.router, prefix="/post")
+    crm.include_router(timesheet.router, prefix="/timesheet")
