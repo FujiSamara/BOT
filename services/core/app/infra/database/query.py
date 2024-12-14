@@ -76,7 +76,7 @@ class Builder(ABC):
             self._schema_to_model[schema]: schema for schema in self._schema_to_model
         }
 
-    def all(self) -> BaseModel:
+    def all(self) -> list[BaseModel]:
         """Returns all entries in database with `self.query`."""
         schema_type = self._model_to_schema[self._model_type]
         rows = self.session.execute(self.select).scalars().all()
