@@ -579,14 +579,17 @@ async def approve_coordinator_bid(
 
 
 async def reject_coordinator_bid(
-    id: int, reason: str, coordinator_field: str, coordinator_id: int
+    id: int, reason: str, coordinator_field: str | list[str], coordinator_id: int
 ):
     """Rejects bid by `id` if coordinator is current coordinator."""
     bid = services.get_bid_by_id(id)
 
+    if isinstance(coordinator_field, str):
+        coordinator_field = [coordinator_field]
+
     current_coordinator_field = get_current_coordinator_field(bid)
 
-    if bid and coordinator_field == current_coordinator_field:
+    if bid and current_coordinator_field in coordinator_field:
         bid.denying_reason = reason
         await services.update_bid_state(
             bid, current_coordinator_field, ApprovalStatus.denied, coordinator_id

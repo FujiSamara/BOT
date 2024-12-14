@@ -124,6 +124,7 @@ from app.services.technical_request import (
     update_technical_request_problem,
     get_departments_names_for_chief_technician,
     get_request_count_in_departments,
+    update_repairman_worktimes,
 )
 from app.services.worker_bid import (
     create_worker_bid,
@@ -278,4 +279,5 @@ __all__ = [
     "set_department_for_worker",
     "update_worktime",
     "find_bid_for_worker",
+    "update_repairman_worktimes",
 ]
