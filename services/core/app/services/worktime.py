@@ -172,7 +172,7 @@ def get_hours_sum_in_intervals(
     return orm.get_sum_duration_for_worker_in_months(worker_id, begins, ends)
 
 
-def get_hours_in_month(worker_id: int, month: datetime | None = None) -> float:
+def get_hours_sum_in_month(worker_id: int, month: datetime | None = None) -> float:
     """Counts sum of work_duration for specified months.
 
     - Note: if months not specified then counts for current month.

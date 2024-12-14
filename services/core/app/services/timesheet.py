@@ -45,7 +45,7 @@ def get_timesheets_by_workers_in_month(
     for worker in workers:
         hours = 0
         if begins is None or ends is None:
-            hours = worktime.get_hours_in_month(worker.id)
+            hours = worktime.get_hours_sum_in_month(worker.id)
         else:
             hours = worktime.get_hours_sum_in_intervals(worker.id, begins, ends)
 
