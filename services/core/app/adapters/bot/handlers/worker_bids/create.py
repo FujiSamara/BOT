@@ -22,7 +22,7 @@ from app.adapters.bot.handlers.bids.utils import (
 import app.adapters.bot.text as text
 
 
-router = Router(name="worker_bid")
+router = Router(name="create_worker_bid")
 
 
 @router.callback_query(F.data == "get_worker_bid_menu")
