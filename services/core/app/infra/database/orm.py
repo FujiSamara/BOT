@@ -2384,3 +2384,15 @@ def update_technical_requests(
                 .one()
             )
             cur_request.repairman_worktime = schema.repairman_worktime
+
+
+def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema] | None:
+    """
+    Returns worker bid in database by `column` with `value`.
+    If worker bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bids = s.execute(select(WorkerBid).filter(column == value)).scalars().all()
+        if not raw_bids:
+            return None
+        return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]

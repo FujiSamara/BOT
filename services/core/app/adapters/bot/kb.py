@@ -536,3 +536,16 @@ monitoring_menu = create_inline_keyboard(
     main_menu_button,
 )
 # endregion
+
+get_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
+)
+
+get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
+)
+
+coordinate_worker_bid_menu = create_inline_keyboard(
+    get_pending_coordinate_worker_bid_btn,
+    main_menu_button,
+)

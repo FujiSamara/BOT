@@ -14,8 +14,11 @@ import app.adapters.bot.kb as kb
 from app.adapters.bot.handlers import utils
 from app.adapters.bot.states import WorkerBidCreating, Base
 from app import services
-from app.adapters.bot.handlers.bids.schemas import BidViewMode, WorkerBidCallbackData
-from app.adapters.bot.handlers.bids.utils import (
+from app.adapters.bot.handlers.worker_bids.schemas import (
+    BidViewMode,
+    WorkerBidCallbackData,
+)
+from app.adapters.bot.handlers.worker_bids.utils import (
     get_worker_bid_list_info,
     get_full_worker_bid_info,
 )

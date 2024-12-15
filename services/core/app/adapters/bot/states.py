@@ -42,6 +42,10 @@ class WorkerBidCreating(StatesGroup):
     work_permission = State()
 
 
+class WorkerBidCoordination(StatesGroup):
+    comment = State()
+
+
 # Rate
 class RateForm(StatesGroup):
     rating = State()

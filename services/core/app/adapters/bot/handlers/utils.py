@@ -36,6 +36,7 @@ from app.adapters.bot.kb import (
     get_it_tm_menu_btn,
     get_personal_cabinet_button,
     get_monitoring_menu_btn,
+    get_coordinate_worker_bid_btn,
 )
 from app.adapters.bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -71,6 +72,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
         FujiScope.bot_personal_cabinet: get_personal_cabinet_button,
         FujiScope.bot_incident_monitoring: get_monitoring_menu_btn,
+        FujiScope.bot_coordinate_worker_bid: get_coordinate_worker_bid_btn,
     }
 
 
