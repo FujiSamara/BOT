@@ -279,7 +279,7 @@ def get_rating_worker_menu(
 
 # Worker bid
 worker_bid_menu_button = InlineKeyboardButton(
-    text="Согласование кандидатов", callback_data="get_worker_bid_menu"
+    text="Подать заявку кандидата", callback_data="get_worker_bid_menu"
 )
 
 create_worker_bid_menu_button = InlineKeyboardButton(
