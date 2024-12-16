@@ -15,7 +15,7 @@ from app.infra.database.models import (
     FujiScope,
     Worker,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BidOutSchema,
     BidSchema,
     FilterSchema,

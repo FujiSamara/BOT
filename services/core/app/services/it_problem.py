@@ -17,7 +17,7 @@ from app.infra.database.models import (
     ProblemIT,
     BidIT,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     DocumentSchema,
     ProblemITSchema,
     BidITSchema,

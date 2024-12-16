@@ -8,7 +8,7 @@ from calendar import timegm
 from pydantic import ValidationError
 
 from app.infra.database.models import FujiScope
-from app.infra.database.schemas import WorkerSchema
+from app.schemas import WorkerSchema
 from app.infra.config import settings
 from app import services
 

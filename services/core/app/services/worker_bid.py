@@ -13,7 +13,7 @@ from app.infra.database.models import (
     Worker,
     WorkerBid,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     WorkerBidSchema,
     DocumentSchema,
 )

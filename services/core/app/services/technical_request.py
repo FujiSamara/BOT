@@ -13,7 +13,7 @@ from app.infra.database.models import (
     TechnicalRequest,
     Worker,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     WorkerSchema,
