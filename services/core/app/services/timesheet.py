@@ -1,7 +1,9 @@
+import calendar
 from io import BytesIO
 from app.infra.database.models import Worker
 import app.infra.database.orm as orm
-from app.schemas import QuerySchema, TimeSheetSchema
+from app.schemas import QuerySchema, TimeSheetSchema, aliases
+from app.adapters.output.file.export import XlSXWriterExporter
 
 
 def get_timesheet_count(
@@ -31,4 +33,16 @@ def get_timesheets_at_page(
 
 
 def export_timesheets(query_schema: QuerySchema) -> BytesIO:
+    start = query_schema.date_query.start
+    _, last_day = calendar.monthrange(start.year, start.month)
     timesheets = orm.get_timesheets(query_schema)
+    for timesheet in timesheets:
+        timesheet.last_day = last_day
+
+    exporter = XlSXWriterExporter(
+        exclude_columns=[],
+        field_formatters=[],
+        aliases=aliases[TimeSheetSchema],
+    )
+
+    return exporter.export(timesheets)

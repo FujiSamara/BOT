@@ -1,4 +1,5 @@
-from fastapi import Security
+from fastapi import Response, Security
+from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 from app.services import timesheet
@@ -39,3 +40,18 @@ async def get_timesheets(
     _: User = Security(get_user, scopes=["authenticated"]),
 ) -> list[TimeSheetSchema]:
     return timesheet.get_timesheets_at_page(page, records_per_page, query)
+
+
+@router.post("/export")
+async def export_worktimes(
+    query: QuerySchema, _: User = Security(get_user, scopes=["crm_worktime"])
+) -> Response:
+    file = timesheet.export_timesheets(query)
+
+    return StreamingResponse(
+        content=file,
+        headers={
+            "Content-Disposition": "filename=timesheets.xlsx",
+        },
+        media_type="application/octet-stream",
+    )

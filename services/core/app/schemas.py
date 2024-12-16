@@ -1,6 +1,6 @@
 from typing import Any, Optional, Type, TypeVar
 from fastapi_storages import StorageFile
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, root_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
@@ -364,6 +364,22 @@ class TimeSheetSchema(BaseSchema):
     post_name: str
     total_hours: float
     duration_per_day: dict[datetime.date, float]
+    last_day: int | None = Field(exclude=True, default=None)
+
+    def model_dump(self, **_) -> dict[str, Any]:
+        data = {
+            "worker_fullname": self.worker_fullname,
+            "post_name": self.post_name,
+            "total_hours": self.total_hours,
+            **{str(day): 0 for day in range(1, self.last_day + 1)},
+        }
+
+        duration_per_day = self.duration_per_day
+
+        for date in duration_per_day:
+            data[str(date.day)] = duration_per_day[date]
+
+        return data
 
 
 # endregion
@@ -559,5 +575,10 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "work_duration": "Длительность",
         "rating": "Оценка",
         "fine": "Штраф",
+    },
+    TimeSheetSchema: {
+        "worker_fullname": "ФИО",
+        "post_name": "Должность",
+        "total_hours": "Суммарно отработано",
     },
 }
