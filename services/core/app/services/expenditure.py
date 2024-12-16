@@ -4,7 +4,7 @@ import app.infra.database.orm as orm
 from app.infra.database.models import (
     Expenditure,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BudgetRecordSchema,
     ExpenditureSchema,
     QuerySchema,

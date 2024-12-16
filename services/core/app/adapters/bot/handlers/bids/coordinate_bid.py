@@ -22,7 +22,7 @@ from app.adapters.bot.kb import (
 from app.adapters.bot import text
 
 from app.infra.database.models import Bid
-from app.infra.database.schemas import ApprovalStatus, BidSchema
+from app.schemas import ApprovalStatus, BidSchema
 from app.services import (
     get_pending_bids_by_column,
     get_pending_bids_for_teller_cash,

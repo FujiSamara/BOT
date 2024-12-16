@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
@@ -6,7 +6,8 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
-from app.infra.database.query import QueryBuilder, XLSXExporter
+from app.infra.database.query import QueryBuilder
+from app.adapters.output.file.export import XlSXWriterExporter
 from app.infra.database.database import Base, engine, session
 from app.infra.database.models import (
     Bid,
@@ -43,7 +44,7 @@ from app.infra.database.models import (
     MaterialValues,
     Company,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
@@ -56,6 +57,7 @@ from app.infra.database.schemas import (
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
+    TimeSheetSchema,
     WorkTimeSchemaFull,
     WorkerBidSchema,
     WorkerSchema,
@@ -1514,14 +1516,92 @@ def export_models(
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
         query_builder = create_query_builder(model_type, query_schema, s, select_query)
-        exporter = XLSXExporter(
-            query_builder.select, s, formatters, exclude_columns, aliases
-        )
+        exporter = XlSXWriterExporter(formatters, exclude_columns, aliases)
 
-        return exporter.export()
+        return query_builder.export(exporter)
 
 
 # endregion
+
+
+def get_timesheets(
+    query_schema: QuerySchema,
+    page: int | None = None,
+    records_per_page: int | None = None,
+) -> list[TimeSheetSchema]:
+    with session.begin() as s:
+        start = query_schema.date_query.start
+        end = query_schema.date_query.end
+        query_schema.date_query = None
+
+        query_builder = create_query_builder(Worker, query_schema, s)
+        if records_per_page is not None and query_schema is not None:
+            query_builder.select = query_builder.select.offset(
+                (page - 1) * records_per_page
+            ).limit(records_per_page)
+        workers_sel = query_builder.select
+        w_sub = workers_sel.subquery()
+
+        per_day_sel = (
+            select(
+                w_sub.c.id,
+                WorkTime.day,
+                func.sum(WorkTime.work_duration).label("hours"),
+            )
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .group_by(w_sub.c.id, WorkTime.day)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .having(WorkTime.day != null())
+            .order_by(WorkTime.day)
+        )
+
+        total_sel = (
+            select(w_sub.c.id, func.sum(WorkTime.work_duration))
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .group_by(w_sub.c.id)
+        )
+
+        workers: list[Worker] = s.execute(workers_sel).scalars().all()
+        per_days: list[tuple[int, datetime.date, float]] = s.execute(per_day_sel).all()
+        totals = s.execute(total_sel).all()
+
+        total_dict = {total[0]: total[1] for total in totals}
+        per_days_dict: dict[int, dict[datetime.date, float]] = {}
+
+        for worker_id, day, duration in per_days:
+            per_days_dict.setdefault(worker_id, {})[day] = duration
+
+        result: list[TimeSheetSchema] = []
+
+        for worker in workers:
+            worker_fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
+            post_name = worker.post.name
+            total_hours = total_dict.get(worker.id, 0)
+            duration_per_day = per_days_dict.get(worker.id, {})
+
+            timesheet = TimeSheetSchema(
+                worker_fullname=worker_fullname,
+                post_name=post_name,
+                total_hours=total_hours,
+                duration_per_day=duration_per_day,
+            )
+            result.append(timesheet)
+
+        return result
+
 
 # region Bids
 
@@ -1619,28 +1699,23 @@ def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
         return None
 
 
-def get_sum_duration_for_worker_in_month(
-    worker_id: int,
+def get_sum_duration_for_worker_in_months(
+    worker_id: int, begin_dates: list[datetime], end_dates: list[datetime]
 ) -> float:
     with session.begin() as s:
-        begin_date = datetime.now().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        end_date = begin_date.replace(
-            month=begin_date.month % 12 + 1,
-            day=1,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        ) - timedelta(days=1)
-
         hours = s.execute(
             select(func.sum(WorkTime.work_duration)).filter(
                 WorkTime.work_duration != null(),
-                WorkTime.work_begin >= begin_date,
-                WorkTime.work_begin <= end_date,
                 WorkTime.worker_id == worker_id,
+                or_(
+                    *[
+                        and_(
+                            WorkTime.work_begin >= begin_date,
+                            WorkTime.work_begin <= end_date,
+                        )
+                        for begin_date, end_date in zip(begin_dates, end_dates)
+                    ]
+                ),
             )
         ).scalar()
         if hours is not None:
