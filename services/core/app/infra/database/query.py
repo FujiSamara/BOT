@@ -1,5 +1,4 @@
 from io import BytesIO
-from datetime import datetime
 from typing import Callable, Type
 import typing
 from abc import ABC
@@ -16,17 +15,14 @@ from sqlalchemy import (
     String,
 )
 from sqlalchemy.orm import InstrumentedAttribute, Session
-from pydantic import BaseModel
-from xlsxwriter import Workbook
 
-from app.infra.config import settings
 from app.infra.logging import logger
-
-from app.adapters.bot.kb import approval_status_dict
-
-import app.schemas as schemas
 import app.infra.database.models as models
 from app.infra.database.database import Base
+
+from app import schemas
+
+from app.contracts.clients import XlSXExporter
 
 
 class Builder(ABC):
@@ -61,7 +57,7 @@ class Builder(ABC):
         self._model_type = entities[0]
 
         # Schema to model dict
-        self._schema_to_model: dict[Type[BaseModel], Type[Base]] = {
+        self._schema_to_model: dict[Type[schemas.BaseSchema], Type[Base]] = {
             schemas.WorkerSchema: models.Worker,
             schemas.DepartmentSchema: models.Department,
             schemas.ExpenditureSchema: models.Expenditure,
@@ -72,11 +68,11 @@ class Builder(ABC):
         }
 
         # Model to schema dict
-        self._model_to_schema: dict[Type[Base], Type[BaseModel]] = {
+        self._model_to_schema: dict[Type[Base], Type[schemas.BaseSchema]] = {
             self._schema_to_model[schema]: schema for schema in self._schema_to_model
         }
 
-    def all(self) -> list[BaseModel]:
+    def all(self) -> list[schemas.BaseSchema]:
         """Returns all entries in database with `self.query`."""
         schema_type = self._model_to_schema[self._model_type]
         rows = self.session.execute(self.select).scalars().all()
@@ -93,12 +89,20 @@ class Builder(ABC):
         """Logs `msg`."""
         self.logger.warning(f"{self.name} {msg}")
 
+    def export(self, exporter: XlSXExporter) -> BytesIO:
+        """Generates xlsx file with data from `Builder.all`.
+
+        :return: Generated xlsx file in `BytesIO` representation.
+        """
+        data = self.all()
+        return exporter.export(data)
+
 
 class QueryBuilder(Builder):
     """Helper for building composite query.
 
     Important:
-    1) Searching can applying for field inherit `BaseModel` and simple field.
+    1) Searching can applying for field inherit `schemas.BaseSchema` and simple field.
     Filtering can applying any field (`str`, `int`, etc...),
     but filtering can applying any deep query, for example `Dog.owner.name`.
     2) Searching supports groups, different groups handles by `or_` statement,
@@ -108,7 +112,7 @@ class QueryBuilder(Builder):
     3) Searching use `ilike('%term%')` syntax.
     Filtering use `column == value` syntax.
     4) Order by can work with up level field (not Dog.owner.name, only Dow.owner).
-    5) Order by can applying for field inherit `BaseModel` and simple field.
+    5) Order by can applying for field inherit `schemas.BaseSchema` and simple field.
     """
 
     name = "|QUERYBUILDER|"
@@ -121,7 +125,7 @@ class QueryBuilder(Builder):
 
         # Order by builders.
         self._order_by_builders: dict[
-            BaseModel, Callable[[InstrumentedAttribute[any], bool], Select]
+            schemas.BaseSchema, Callable[[InstrumentedAttribute[any], bool], Select]
         ] = {
             schemas.WorkerSchema: self._order_by_worker,
             schemas.DepartmentSchema: self._order_by_department,
@@ -130,7 +134,7 @@ class QueryBuilder(Builder):
 
         # Search builders.
         self._search_builders: dict[
-            BaseModel,
+            schemas.BaseSchema,
             Callable[[str], Select],
         ] = {
             schemas.WorkerSchema: self._search_by_worker,
@@ -159,7 +163,7 @@ class QueryBuilder(Builder):
             self._apply_order_by(query_schema.order_by_query)
 
     def _get_schema_column_type(
-        self, schema_type: Type[BaseModel], column_name: str
+        self, schema_type: Type[schemas.BaseSchema], column_name: str
     ) -> Type:
         column_model_hint = typing.get_type_hints(schema_type)[column_name]
 
@@ -190,7 +194,7 @@ class QueryBuilder(Builder):
             builder = self._order_by_builders[column_type]
             self.select = builder(column, is_desc)
         # If column is simple type.
-        elif not issubclass(column_type, BaseModel):
+        elif not issubclass(column_type, schemas.BaseSchema):
             if is_desc:
                 column = desc(column)
             self.select = self.select.order_by(column)
@@ -299,7 +303,7 @@ class QueryBuilder(Builder):
                     search_clause = column.in_(cur_level_select)
 
                 # If column is simple type.
-                elif not issubclass(column_type, BaseModel):
+                elif not issubclass(column_type, schemas.BaseSchema):
                     column: InstrumentedAttribute[any] = getattr(
                         model_type, column_name
                     )
@@ -428,7 +432,7 @@ class QueryBuilder(Builder):
                 column_type = self._get_schema_column_type(schema_type, column_name)
 
                 # If column is pydantic schema.
-                if issubclass(column_type, BaseModel):
+                if issubclass(column_type, schemas.BaseSchema):
                     column: InstrumentedAttribute[any] = getattr(
                         model_type, column_name + "_id"
                     )
@@ -475,127 +479,3 @@ class QueryBuilder(Builder):
         return and_(*group_clauses) if len(group_clauses) > 0 else None
 
     # endregion
-
-
-class XLSXExporter(Builder):
-    """Helper for building xlsx sheets.
-
-    - Note: Worksheet columns based on Schema fields of viewing model
-    (**CatSchema** for **Cat**).
-    """
-
-    name = "|XLSXEXPORTER|"
-
-    def __init__(
-        self,
-        initial_select: Select,
-        session: Session,
-        field_formatters: dict[str, Callable[[any], str]] = {},
-        exclude_columns: list[str] = [],
-        aliases: dict[str, str] = {},
-    ):
-        """
-        :param initial_query: Initially generated query for table `model_type` by `Session`.
-        :param cell_length: Table cell length.
-        :param field_formatters: Special formatters for fields
-        (**column_name**=**formatter**). Overrides default type formatters.
-        :param exclude_columns: Column names for exclude from worksheet.
-        :param aliases: Aliases for column headers (**column_name**=**alias**).
-        """
-        super().__init__(initial_select, session)
-
-        self._field_formatters: dict[str, Callable[[any], str]] = field_formatters
-        self._aliases: dict[str, str] = aliases
-        self._exclude_columns: list[str] = exclude_columns
-        self._type_formatters: dict[Type, Callable[[any], str]] = {
-            schemas.WorkerSchema: self._format_worker,
-            schemas.DepartmentSchema: self._format_department,
-            schemas.ExpenditureSchema: self._format_expenditure,
-            datetime: self._format_datetime,
-            models.ApprovalStatus: self._format_approval_status,
-            schemas.PostSchema: self._format_post,
-        }
-
-    def export(self) -> BytesIO:
-        """Generates xlsx file with data getting by `self.query`.
-
-
-
-        Returns:
-        Generated xlsx file in `BytesIO` representation.
-        """
-        result = BytesIO()
-        workbook = Workbook(result)
-        worksheet = workbook.add_worksheet()
-
-        schema_type = self._model_to_schema[self._model_type]
-        headers: list[str] = []
-        rows_width: list[int] = []
-        data = self.all()
-
-        for field_name in schema_type.model_fields:
-            if field_name not in self._exclude_columns:
-                width = len(field_name)
-                if field_name in self._aliases:
-                    width = max(width, len(self._aliases[field_name]))
-                rows_width.append(width)
-                headers.append(field_name)
-
-        worksheet.write_row(
-            0,
-            0,
-            [
-                self._aliases[header] if header in self._aliases else header
-                for header in headers
-            ],
-        )  # Writes headers
-
-        for index, elem in enumerate(data):
-            vals = []
-            for name_index, name in enumerate(headers):
-                val = getattr(elem, name)
-                formatted = self._format(val, name)
-                vals.append(formatted)
-                if len(formatted) > rows_width[name_index]:
-                    rows_width[name_index] = len(formatted)
-
-            worksheet.write_row(index + 1, 0, vals)  # Index + 1 (header row)
-
-        # Sets columns width
-        for index, row_width in enumerate(rows_width):
-            worksheet.set_column(index, index, row_width)
-
-        workbook.close()
-        result.seek(0)
-
-        return result
-
-    def _format(self, value: any, column_name: str) -> str:
-        """Formats `value`, used exist formatter for each type."""
-        formatter = None
-
-        if type(value) in self._type_formatters:
-            formatter = self._type_formatters[type(value)]
-
-        if column_name in self._field_formatters:
-            formatter = self._field_formatters[column_name]
-
-        return formatter(value) if formatter else str(value)
-
-    def _format_worker(self, value: schemas.WorkerSchema) -> str:
-        return f"{value.l_name} {value.f_name} {value.o_name}"
-
-    def _format_department(self, value: schemas.DepartmentSchema) -> str:
-        return f"{value.name}"
-
-    def _format_expenditure(self, value: schemas.ExpenditureSchema) -> str:
-        return f"{value.name}"
-
-    def _format_datetime(self, value: datetime) -> str:
-        return value.strftime(settings.date_format)
-
-    def _format_approval_status(self, value: models.ApprovalStatus) -> str:
-        return approval_status_dict[value]
-
-    def _format_post(self, value: schemas.PostSchema) -> str:
-        return value.name
