@@ -19,7 +19,7 @@ router = APIRouter()
 async def get_pages_info(
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_user, scopes=["authenticated"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> TalbeInfoSchema:
     record_count = timesheet.get_timesheet_count(query)
     all_record_count = timesheet.get_timesheet_count(QuerySchema())
@@ -37,7 +37,7 @@ async def get_timesheets(
     page: int,
     query: QuerySchema,
     records_per_page: int = 15,
-    _: User = Security(get_user, scopes=["authenticated"]),
+    _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> list[TimeSheetSchema]:
     return timesheet.get_timesheets_at_page(page, records_per_page, query)
 
