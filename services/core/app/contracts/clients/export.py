@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from io import BytesIO
 from typing import Callable, TypeAlias
 
-from app.schemas import SchemaT
+from app.schemas import BaseSchema
 
 
 FormatValue: TypeAlias = Callable[[any], str]
@@ -28,7 +28,7 @@ class XlSXExporter(ABC):
         self._aliases = aliases
 
     @abstractmethod
-    def export(self, data: list[SchemaT]) -> BytesIO:
+    def export(self, data: list[BaseSchema]) -> BytesIO:
         """Generates xlsx file.
 
         :return: Generated xlsx file in `BytesIO` representation.

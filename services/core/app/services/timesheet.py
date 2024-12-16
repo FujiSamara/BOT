@@ -1,3 +1,4 @@
+from io import BytesIO
 from app.infra.database.models import Worker
 import app.infra.database.orm as orm
 from app.schemas import QuerySchema, TimeSheetSchema
@@ -22,8 +23,12 @@ def get_timesheets_at_page(
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    return orm.get_timesheets(page, records_per_page, query_schema)
+    return orm.get_timesheets(
+        query_schema,
+        page,
+        records_per_page,
+    )
 
 
-def export_timesheets(query_schema: QuerySchema):
-    pass
+def export_timesheets(query_schema: QuerySchema) -> BytesIO:
+    timesheets = orm.get_timesheets(query_schema)

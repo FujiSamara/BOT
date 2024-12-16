@@ -1,9 +1,9 @@
 from datetime import datetime
 from io import BytesIO
+from typing import Type
 from xlsxwriter import Workbook
 
-from app.contracts.clients import XlSXExporter
-from app.schemas import SchemaT
+from app.contracts.clients import XlSXExporter, FormatValue
 from app import schemas
 from app.infra.config import settings
 from app.infra.database import models
@@ -11,7 +11,24 @@ from app.adapters.bot.kb import approval_status_dict
 
 
 class XlSXWriterExporter(XlSXExporter):
-    def export(self, data: list[SchemaT]) -> BytesIO:
+    def __init__(self, field_formatters, exclude_columns, aliases):
+        super().__init__(field_formatters, exclude_columns, aliases)
+
+        self._type_formatters: dict[Type, FormatValue] = {
+            schemas.WorkerSchema: self._format_worker,
+            schemas.DepartmentSchema: self._format_department,
+            schemas.ExpenditureSchema: self._format_expenditure,
+            datetime: self._format_datetime,
+            models.ApprovalStatus: self._format_approval_status,
+            schemas.PostSchema: self._format_post,
+        }
+
+    def export(self, data: list[schemas.BaseSchema]) -> BytesIO:
+        item = data[0]
+        if not isinstance(item, schemas.BaseSchema):
+            raise Exception("Data not inherit list[BaseSchema]")
+        item_schema: Type[schemas.BaseSchema] = type(item)
+
         result = BytesIO()
         workbook = Workbook(result)
         worksheet = workbook.add_worksheet()
@@ -19,7 +36,7 @@ class XlSXWriterExporter(XlSXExporter):
         headers: list[str] = []
         rows_width: list[int] = []
 
-        for field_name in SchemaT.model_fields:
+        for field_name in item_schema.model_fields:
             if field_name not in self._exclude_columns:
                 width = len(field_name)
                 if field_name in self._aliases:
@@ -49,7 +66,7 @@ class XlSXWriterExporter(XlSXExporter):
 
         # Sets columns width
         for index, row_width in enumerate(rows_width):
-            worksheet.set_column(index, index, row_width)
+            worksheet.set_column(index, index, row_width + 2)
 
         workbook.close()
         result.seek(0)

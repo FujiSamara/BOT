@@ -6,7 +6,8 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
-from app.infra.database.query import QueryBuilder, XLSXExporter
+from app.infra.database.query import QueryBuilder
+from app.adapters.output.file.export import XlSXWriterExporter
 from app.infra.database.database import Base, engine, session
 from app.infra.database.models import (
     Bid,
@@ -1491,20 +1492,18 @@ def export_models(
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
         query_builder = create_query_builder(model_type, query_schema, s, select_query)
-        exporter = XLSXExporter(
-            query_builder.select, s, formatters, exclude_columns, aliases
-        )
+        exporter = XlSXWriterExporter(formatters, exclude_columns, aliases)
 
-        return exporter.export()
+        return query_builder.export(exporter)
 
 
 # endregion
 
 
 def get_timesheets(
-    page: int,
-    records_per_page: int,
     query_schema: QuerySchema,
+    page: int | None = None,
+    records_per_page: int | None = None,
 ) -> list[TimeSheetSchema]:
     with session.begin() as s:
         start = query_schema.date_query.start
@@ -1512,9 +1511,10 @@ def get_timesheets(
         query_schema.date_query = None
 
         query_builder = create_query_builder(Worker, query_schema, s)
-        query_builder.select = query_builder.select.offset(
-            (page - 1) * records_per_page
-        ).limit(records_per_page)
+        if records_per_page is not None and query_schema is not None:
+            query_builder.select = query_builder.select.offset(
+                (page - 1) * records_per_page
+            ).limit(records_per_page)
         workers_sel = query_builder.select
         w_sub = workers_sel.subquery()
 
