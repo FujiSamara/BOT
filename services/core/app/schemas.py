@@ -1,6 +1,6 @@
 from typing import Any, Optional, Type, TypeVar
 from fastapi_storages import StorageFile
-from pydantic import BaseModel, ConfigDict, Field, field_validator, root_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
