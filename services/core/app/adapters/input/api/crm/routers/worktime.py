@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
 
 import app.services.worktime as services
-from app.infra.database.schemas import (
+from app.schemas import (
     WorkTimeSchema,
     QuerySchema,
     TalbeInfoSchema,

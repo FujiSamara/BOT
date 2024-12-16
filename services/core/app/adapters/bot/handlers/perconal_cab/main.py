@@ -23,7 +23,7 @@ from app.services import (
     get_last_completed_worktimes_by_tg_id,
     get_work_time_record_by_id,
 )
-from app.infra.database.schemas import WorkerSchema
+from app.schemas import WorkerSchema
 from app.infra.database.models import FujiScope
 
 from app.adapters.bot.kb import (

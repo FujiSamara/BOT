@@ -6,7 +6,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.infra.database.schemas import WorkTimeSchema
+from app.schemas import WorkTimeSchema
 from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from app.infra.database.models import ApprovalStatus
 

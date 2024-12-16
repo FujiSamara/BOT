@@ -6,7 +6,7 @@ from fastapi.routing import APIRouter
 from app.infra.database.models import ApprovalStatus
 from app import services
 import app.services.bid as bid_service
-from app.infra.database.schemas import (
+from app.schemas import (
     BidOutSchema,
     QuerySchema,
     TalbeInfoSchema,
