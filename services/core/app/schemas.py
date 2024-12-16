@@ -1,4 +1,4 @@
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, TypeVar
 from fastapi_storages import StorageFile
 from pydantic import BaseModel, ConfigDict, field_validator
 import datetime
@@ -19,6 +19,9 @@ from app.infra.config import settings
 
 class BaseSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+
+SchemaT = TypeVar("SchemaT", bound=BaseSchema)
 
 
 # region Shemas for models
