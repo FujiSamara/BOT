@@ -21,22 +21,24 @@ class XlSXWriterExporter(XlSXExporter):
             datetime: self._format_datetime,
             models.ApprovalStatus: self._format_approval_status,
             schemas.PostSchema: self._format_post,
+            float: self._format_float,
         }
 
-    def export(self, data: list[schemas.BaseSchema]) -> BytesIO:
-        item = data[0]
-        if not isinstance(item, schemas.BaseSchema):
-            raise Exception("Data not inherit list[BaseSchema]")
-        item_schema: Type[schemas.BaseSchema] = type(item)
-
+    def export(self, rows: list[schemas.BaseSchema]) -> BytesIO:
         result = BytesIO()
         workbook = Workbook(result)
         worksheet = workbook.add_worksheet()
 
+        if len(rows) == 0:
+            workbook.close()
+            result.seek(0)
+            return result
+
         headers: list[str] = []
         rows_width: list[int] = []
+        data = [row.model_dump() for row in rows]
 
-        for field_name in item_schema.model_fields:
+        for field_name in data[0]:
             if field_name not in self._exclude_columns:
                 width = len(field_name)
                 if field_name in self._aliases:
@@ -56,7 +58,7 @@ class XlSXWriterExporter(XlSXExporter):
         for index, elem in enumerate(data):
             vals = []
             for name_index, name in enumerate(headers):
-                val = getattr(elem, name)
+                val = elem[name]
                 formatted = self._format(val, name)
                 vals.append(formatted)
                 if len(formatted) > rows_width[name_index]:
@@ -102,3 +104,6 @@ class XlSXWriterExporter(XlSXExporter):
 
     def _format_post(self, value: schemas.PostSchema) -> str:
         return value.name
+
+    def _format_float(self, value: float) -> str:
+        return str(round(value, 2))
