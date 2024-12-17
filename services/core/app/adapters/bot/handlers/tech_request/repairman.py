@@ -48,14 +48,14 @@ router = Router(name="technical_request_repairman")
 async def show_tech_req_format_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.rm_button.text),
         reply_markup=tech_kb.rm_change_department_menu,
     )
 
 
 async def show_tech_rec_format_ms(message: Message):
     await message.answer(
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.rm_button.text),
         reply_markup=tech_kb.rm_change_department_menu,
     )
 
@@ -350,6 +350,6 @@ async def save_repair(
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.rm_button.text),
         reply_markup=tech_kb.rm_change_department_menu,
     )

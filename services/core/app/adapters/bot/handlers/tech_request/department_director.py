@@ -51,7 +51,7 @@ router = Router(name="technical_request_department_director")
 async def show_tech_req_menu_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.dd_button.text),
         reply_markup=tech_kb.dd_change_department_menu,
     )
 
@@ -59,7 +59,7 @@ async def show_tech_req_menu_cb(callback: CallbackQuery):
 async def show_tech_req_menu_ms(message: Message):
     await try_edit_or_answer(
         message=message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.dd_button.text),
         reply_markup=tech_kb.dd_change_department_menu,
     )
 

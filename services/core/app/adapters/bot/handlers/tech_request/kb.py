@@ -13,7 +13,7 @@ from app.schemas import TechnicalRequestSchema
 
 # region Chief technician (CT)
 
-ct_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_CT_TR")
+ct_button = InlineKeyboardButton(text="Технические заявки главный техник", callback_data="get_CT_TR")
 
 ct_change_department_button = InlineKeyboardButton(
     text="Выбрать производство",
@@ -275,7 +275,7 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Тех. заявки", callback_data="get_WR_TR_menu"
+    text="Подать техническую заявку", callback_data="get_WR_TR_menu"
 )
 
 wr_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
@@ -359,7 +359,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
 # region Repairman (RM)
 
-rm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_RM_TR")
+rm_button = InlineKeyboardButton(text="Технические заявки техник", callback_data="get_RM_TR")
 
 rm_change_department_button = InlineKeyboardButton(
     text="Выбрать производство", callback_data="set_RM_TR_department"
@@ -497,7 +497,7 @@ async def rm_repair_rework_kb(
 
 # region Territorial manager (TM)
 
-tm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_TM_TR")
+tm_button = InlineKeyboardButton(text="Технические заявки ТУ", callback_data="get_TM_TR")
 
 tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
 
@@ -616,7 +616,7 @@ async def tm_rate_kb(
 
 # region Department director
 
-dd_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_DD_TR")
+dd_button = InlineKeyboardButton(text="Технические заявки учередитель", callback_data="get_DD_TR")
 
 dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")
 

@@ -43,7 +43,7 @@ router = Router(name="technical_request_territorial_manager")
 async def show_tech_req_menu_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.tm_button.text),
         reply_markup=tech_kb.tm_change_department_menu,
     )
 
@@ -51,7 +51,7 @@ async def show_tech_req_menu_cb(callback: CallbackQuery):
 async def show_tech_req_menu_ms(message: Message):
     await try_edit_or_answer(
         message=message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.tm_button.text),
         reply_markup=tech_kb.tm_change_department_menu,
     )
 
@@ -304,6 +304,6 @@ async def save_rate(
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.tm_button.text),
         reply_markup=tech_kb.tm_change_department_menu,
     )
