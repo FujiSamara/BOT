@@ -1075,7 +1075,7 @@ def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblem
 
 def create_technical_request(record: TechnicalRequestSchema) -> bool:
     """Creates technical problem
-    Returns: True if request is create False otherwise
+    Returns: True if request created False otherwise
     """
     with session.begin() as s:
         technical_request = TechnicalRequest(
