@@ -161,7 +161,7 @@ def get_worktime_photo_by_id(id: int) -> BytesIO:
     return BytesIO(decoded_photo)
 
 
-def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
+def get_opened_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     """Return last open WorkTimeSchema | None by worker id"""
     return orm.get_openned_today_worktime(worker_id=worker_id)
 

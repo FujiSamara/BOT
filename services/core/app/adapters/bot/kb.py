@@ -40,7 +40,7 @@ kru_menu_button = InlineKeyboardButton(
     text="Согласовать платёж КРУ", callback_data="get_kru_menu"
 )
 owner_menu_button = InlineKeyboardButton(
-    text="Согласовать платёж учередитель", callback_data="get_owner_menu"
+    text="Согласовать платёж учредитель", callback_data="get_owner_menu"
 )
 accountant_card_menu_button = InlineKeyboardButton(
     text="Согласовать платёж бухгалтерия", callback_data="get_accountant_card_menu"
