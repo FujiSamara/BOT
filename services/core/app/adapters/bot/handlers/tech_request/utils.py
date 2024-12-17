@@ -237,6 +237,8 @@ async def handle_department(
 def department_names_with_count(
     state: ApprovalStatus, tg_id: int, department_names: list[str]
 ):
+    if department_names == []:
+        return []
     request_count = get_request_count_in_departments(state=state, tg_id=tg_id)
     out_department_names = []
 

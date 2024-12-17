@@ -69,6 +69,7 @@ def create_technical_request(
     description: str,
     photo_files: list[UploadFile],
     telegram_id: int,
+    department_name: str,
 ) -> dict:
     """
     Create technical request
@@ -80,6 +81,11 @@ def create_technical_request(
     if not last_technical_request_id:
         last_technical_request_id = 0
 
+    department = orm.find_departments_by_name(department_name)
+    if len(department) == 0:
+        logger.error(f"Department with name: {department_name} wasn't found")
+    department = department[0]
+
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     if not worker:
         logger.error(f"Worker with telegram id {telegram_id} wasn't found")
@@ -89,20 +95,18 @@ def create_technical_request(
         logger.error(f"Problem with name {problem_name} wasn't found")
 
     repairman = orm.get_repairman_by_department_id_and_executor_type(
-        department_id=worker.department.id, executor_type=problem.executor.name
+        department_id=department.id, executor_type=problem.executor.name
     )
 
     if not repairman:
         logger.error(
-            f"Repairman from department id: {worker.department.id} and responsible by {problem.executor.name} wasn't found"
+            f"Repairman from department id: {department.id} and responsible by {problem.executor.name} wasn't found"
         )
 
-    territorial_manager = orm.get_territorial_manager_by_department_id(
-        worker.department.id
-    )
+    territorial_manager = orm.get_territorial_manager_by_department_id(department.id)
     if not territorial_manager:
         logger.error(
-            f"Territorial manager with department id: {worker.department.id} wasn't found"
+            f"Territorial manager with department id: {department.id} wasn't found"
         )
 
     documents = []
@@ -124,7 +128,7 @@ def create_technical_request(
         worker=worker,
         repairman=repairman,
         territorial_manager=territorial_manager,
-        department=worker.department,
+        department=department,
         repairman_worktime=0,
     )
 
