@@ -197,7 +197,9 @@ def get_hours_sum_in_month(worker_id: int, month: datetime | None = None) -> flo
         microsecond=0,
     ) - timedelta(days=1)
 
-    return orm.get_sum_duration_for_worker_in_months(worker_id, begin_date, end_date)
+    return orm.get_sum_duration_for_worker_in_months(
+        worker_id, [begin_date], [end_date]
+    )
 
 
 def get_last_completed_worktimes_by_tg_id(
