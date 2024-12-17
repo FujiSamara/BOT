@@ -130,6 +130,8 @@ from app.services.worker_bid import (
     create_worker_bid,
     get_worker_bid_by_id,
     update_worker_bid_state,
+    get_pending_approval_bids,
+    update_worker_bid_bot,
 )
 from app.services.worktime import (
     create_worktime,
@@ -280,4 +282,6 @@ __all__ = [
     "update_worktime",
     "find_bid_for_worker",
     "update_repairman_worktimes",
+    "get_pending_approval_bids",
+    "update_worker_bid_bot",
 ]
