@@ -20,12 +20,6 @@ class BidCallbackData(CallbackData, prefix="bid"):
     endpoint_name: str
 
 
-class WorkerBidCallbackData(CallbackData, prefix="worker_bid"):
-    id: int
-    mode: BidViewMode
-    endpoint_name: str
-
-
 class ActionType(str, Enum):
     approving = 1
     declining = 2

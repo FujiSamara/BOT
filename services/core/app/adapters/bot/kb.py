@@ -279,7 +279,7 @@ def get_rating_worker_menu(
 
 # Worker bid
 worker_bid_menu_button = InlineKeyboardButton(
-    text="Согласование кандидатов", callback_data="get_worker_bid_menu"
+    text="Подать заявку кандидата", callback_data="get_worker_bid_menu"
 )
 
 create_worker_bid_menu_button = InlineKeyboardButton(
@@ -536,3 +536,16 @@ monitoring_menu = create_inline_keyboard(
     main_menu_button,
 )
 # endregion
+
+get_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
+)
+
+get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
+)
+
+coordinate_worker_bid_menu = create_inline_keyboard(
+    get_pending_coordinate_worker_bid_btn,
+    main_menu_button,
+)

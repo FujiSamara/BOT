@@ -59,6 +59,7 @@ class FujiScope(enum.Enum):
     bot_personal_cabinet = 25
     bot_incident_monitoring = 29
     bot_bid_fac_cc = 32
+    bot_coordinate_worker_bid = 34
 
 
 class DepartmentType(enum.Enum):
