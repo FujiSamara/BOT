@@ -502,7 +502,7 @@ async def rm_repair_rework_kb(
 # region Territorial manager (TM)
 
 tm_button = InlineKeyboardButton(
-    text="Технические заявки ТУ", callback_data="get_TM_TR"
+    text="Приём технических заявок", callback_data="get_TM_TR"
 )
 
 tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
