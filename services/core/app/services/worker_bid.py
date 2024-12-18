@@ -107,6 +107,8 @@ def create_worker_bid(
     passport: list[UploadFile],
     work_permission: list[UploadFile],
     sender_telegram_id: str,
+    birth_date: datetime,
+    phone_number: str,
 ):
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
@@ -168,6 +170,8 @@ def create_worker_bid(
         state=ApprovalStatus.pending_approval,
         sender=sender,
         comment=None,
+        birth_date=birth_date,
+        phone_number=phone_number,
     )
 
     orm.add_worker_bid(worker_bid)

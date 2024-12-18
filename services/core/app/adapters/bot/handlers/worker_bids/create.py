@@ -8,6 +8,8 @@ from aiogram.types import (
 )
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
+from asyncio import sleep
+from datetime import datetime, timedelta
 
 from fastapi import UploadFile
 import app.adapters.bot.kb as kb
@@ -64,6 +66,8 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     worksheet = data["worksheet"]
     passport = data["passport"]
     work_permission = data.get("work_permission")
+    birth_date = datetime.fromisoformat(data["birth_date"])
+    phone_number = data["phone_number"]
     if not work_permission:
         work_permission = []
 
@@ -88,6 +92,8 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
         passport_files,
         work_permission_files,
         callback.message.chat.id,
+        birth_date,
+        phone_number,
     )
     await state.clear()
     await state.set_state(Base.none)
@@ -224,6 +230,194 @@ async def set_department(message: Message, state: FSMContext):
         return
     await state.update_data(department=message.text)
     await send_create_menu(message, state)
+
+
+@router.callback_query(F.data == "get_worker_bid_birthdate_form")
+async def get_birthday(message: Message | CallbackQuery, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+    await utils.try_edit_or_answer(
+        message=message,
+        text=hbold("Дата рождения"),
+        reply_markup=await kb.get_create_worker_bid_birthdate_menu(state),
+    )
+
+
+@router.callback_query(F.data == "get_worker_bid_birth_year")
+async def get_birth_year(message: Message | CallbackQuery, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+
+    await state.set_state(WorkerBidCreating.birth_year)
+    msg = await utils.try_edit_or_answer(
+        message=message, text=hbold("Введите год рождения"), return_message=True
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.birth_year)
+async def set_birth_year(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    await utils.try_delete_message((await state.get_data()).get("msg"))
+    await utils.try_delete_message(message)
+    try:
+        year = int(message.text)
+        if year >= (datetime.now().year - 15) or year <= (datetime.now().year - 100):
+            raise ValueError
+    except ValueError:
+        msg = await utils.try_edit_or_answer(
+            message=message, text=hbold(text.format_err), return_message=True
+        )
+        await sleep(3)
+        await get_birth_year(msg, state)
+    else:
+        await state.update_data(year=year)
+        await get_birthday(message, state)
+
+
+@router.callback_query(F.data == "get_worker_bid_birth_month")
+async def get_birth_month(message: Message | CallbackQuery, state: FSMContext):
+    await utils.try_delete_message((await state.get_data()).get("msg"))
+    if isinstance(message, CallbackQuery):
+        message = message.message
+
+    await state.set_state(WorkerBidCreating.birth_month)
+    msg = await utils.try_edit_or_answer(
+        message=message, text=hbold("Введите месяц рождения"), return_message=True
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.birth_month)
+async def set_birth_month(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    await utils.try_delete_message((await state.get_data()).get("msg"))
+    await utils.try_delete_message(message)
+
+    try:
+        month = int(message.text)
+        if month > 12 or month < 1:
+            raise ValueError
+    except ValueError:
+        msg = await utils.try_edit_or_answer(
+            message=message, text=hbold(text.format_err), return_message=True
+        )
+        await sleep(3)
+        await get_birth_month(msg, state)
+    else:
+        await state.update_data(month=month)
+        await get_birthday(message, state)
+
+
+@router.callback_query(F.data == "get_worker_bid_birth_day")
+async def get_birth_day(message: Message | CallbackQuery, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+
+    await state.set_state(WorkerBidCreating.birth_day)
+    msg = await utils.try_edit_or_answer(
+        message=message, text=hbold("Введите день рождения"), return_message=True
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.birth_day)
+async def set_birth_day(message: Message, state: FSMContext):
+    await state.set_state(Base.none)
+    data = await state.get_data()
+    await utils.try_delete_message(data.get("msg"))
+    await utils.try_delete_message(message)
+
+    try:
+        day = int(message.text)
+        if (
+            day
+            > (
+                datetime(
+                    year=int(data.get("year")),
+                    month=(int(data.get("month")) % 12) + 1,
+                    day=1,
+                    hour=0,
+                    minute=0,
+                    second=0,
+                    microsecond=0,
+                )
+                - timedelta(days=1)
+            ).day
+            or day < 1
+        ):
+            raise ValueError
+    except ValueError:
+        msg = await utils.try_edit_or_answer(
+            message=message, text=hbold(text.format_err), return_message=True
+        )
+        await sleep(3)
+        await get_birth_day(msg, state)
+    else:
+        await state.update_data(day=day)
+        await get_birthday(message, state)
+
+
+@router.callback_query(F.data == "set_worker_bid_birth_date")
+async def set_worker_bid_birth_date(callback: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    await state.update_data(
+        birth_date=f"{data.get('year')}-{data.get('month')}-{data.get('day')}"
+    )
+    msg = await utils.try_edit_or_answer(
+        message=callback.message, text="Успешно", return_message=True
+    )
+    await send_create_menu(msg, state)
+
+
+@router.callback_query(F.data == "get_worker_bid_phone_number_form")
+async def get_phone_number(message: Message | CallbackQuery, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+    else:
+        await utils.try_delete_message((await state.get_data()).get("msg"))
+
+    await state.set_state(WorkerBidCreating.phone_number)
+    msg = await utils.try_edit_or_answer(
+        message=message, text=hbold("Введите номер телефона"), return_message=True
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.phone_number)
+async def set_phone_number(message: Message, state: FSMContext):
+    await utils.try_delete_message(message)
+    await utils.try_delete_message((await state.get_data()).get("msg"))
+    phone_number = message.text
+    plus_first = False
+    if phone_number[0] == "+":
+        phone_number = phone_number[1:]
+        plus_first = True
+    try:
+        if len(phone_number) == 11 and phone_number[0] in ["7", "8"]:
+            phone_number = int(phone_number)
+            msg = await utils.try_edit_or_answer(
+                message=message, text="Успешно", return_message=True
+            )
+            await state.update_data(
+                msg=msg,
+                phone_number=f"+{phone_number}" if plus_first else str(phone_number),
+            )
+            await send_create_menu(msg, state)
+        else:
+            msg = await utils.try_edit_or_answer(
+                message=message, text=hbold(text.format_err), return_message=True
+            )
+            await sleep(3)
+            await state.update_data(msg=msg)
+            await get_phone_number(message, state)
+
+    except ValueError:
+        msg = await utils.try_edit_or_answer(
+            message=message, text=hbold(text.format_err), return_message=True
+        )
+        await sleep(3)
+        await get_phone_number(message, state)
 
 
 # Documents

@@ -311,6 +311,8 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     worksheet = data.get("worksheet")
     passport = data.get("passport")
     work_permission = data.get("work_permission")
+    birth_date = data.get("birth_date")
+    phone_number = data.get("phone_number")
 
     if not l_name:
         l_name = ""
@@ -358,6 +360,18 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         work_permission = ""
     else:
         work_permission = f"{len(work_permission)}"
+
+    if birth_date is None:
+        birth_date = ""
+        form_complete = False
+    else:
+        birth_date += " ✅"
+
+    if phone_number is None:
+        phone_number = ""
+        form_complete = False
+    else:
+        phone_number += " ✅"
 
     buttons = [
         [
@@ -409,6 +423,26 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
+                text="Дата рождения",
+                callback_data="get_worker_bid_birthdate_form",
+            ),
+            InlineKeyboardButton(
+                text=birth_date,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Номер телефона",
+                callback_data="get_worker_bid_phone_number_form",
+            ),
+            InlineKeyboardButton(
+                text=phone_number,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 text="Анкета",
                 callback_data="get_worker_bid_worksheet_form",
             ),
@@ -454,6 +488,87 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ]
         )
 
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def get_create_worker_bid_birthdate_menu(
+    state: FSMContext,
+) -> InlineKeyboardMarkup:
+    data = await state.get_data()
+    form_complete = True
+    year = data.get("year")
+    month = data.get("month")
+    day = data.get("day")
+
+    if year is None:
+        year = ""
+        form_complete = False
+    else:
+        year = str(year) + " ✅"
+
+    if month is None:
+        month = ""
+        form_complete = False
+    else:
+        month = str(month) + " ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Год",
+                callback_data="get_worker_bid_birth_year",
+            ),
+            InlineKeyboardButton(
+                text=year,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Месяц",
+                callback_data="get_worker_bid_birth_month",
+            ),
+            InlineKeyboardButton(
+                text=month,
+                callback_data="dummy",
+            ),
+        ],
+    ]
+    if form_complete:
+        if day is None:
+            day = ""
+            form_complete = False
+        else:
+            day = str(day) + " ✅"
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="День",
+                    callback_data="get_worker_bid_birth_day",
+                ),
+                InlineKeyboardButton(
+                    text=day,
+                    callback_data="dummy",
+                ),
+            ],
+        )
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data="get_create_worker_bid_menu",
+            )
+        ],
+    )
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Дата верна", callback_data="set_worker_bid_birth_date"
+                )
+            ]
+        )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 

@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.infra.database.database import Base
-from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
+from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum, String
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List, Optional
@@ -518,6 +518,8 @@ class WorkerBid(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="workers_bids"
     )
+    birth_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(12), nullable=True)
 
     worksheet: Mapped[List["WorkerBidWorksheet"]] = relationship(
         "WorkerBidWorksheet", cascade="all,delete", back_populates="worker_bid"

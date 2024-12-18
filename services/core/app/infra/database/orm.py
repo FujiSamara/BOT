@@ -170,7 +170,7 @@ def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     If worker bid not exist return `None`.
     """
     with session.begin() as s:
-        raw_bid = s.query(WorkerBid).filter(column == value).first()
+        raw_bid = s.execute(select(WorkerBid).filter(column == value)).scalars().first()
         if not raw_bid:
             return None
         return WorkerBidSchema.model_validate(raw_bid)
@@ -716,6 +716,8 @@ def add_worker_bid(bid: WorkerBidSchema):
             state=bid.state,
             create_date=bid.create_date,
             sender=sender,
+            birth_day=bid.birth_date,
+            phone_number=bid.phone_number,
         )
 
         s.add(worker_bid)

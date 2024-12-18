@@ -18,6 +18,8 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Имя")}: {bid.f_name}
 {hbold("Фамилия")}: {bid.l_name}
 {hbold("Отчество")}: {bid.o_name}
+{hbold("Дата рождения")}: {bid.birth_date.strftime(settings.date_format) if bid.birth_date is not None else "Отсутствует"}
+{hbold("Номер телефона")}: {bid.phone_number if bid.phone_number is not None else "Отсутствует"}
 {hbold("Предприятие")}: {bid.department.name}
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Должность")}: {bid.post.name}

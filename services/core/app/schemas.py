@@ -1,6 +1,6 @@
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar, Annotated
 from fastapi_storages import StorageFile
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, StringConstraints
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
@@ -167,6 +167,11 @@ class WorkerBidSchema(BaseSchemaPK):
     post: PostSchema
 
     department: DepartmentSchema
+
+    birth_date: datetime.datetime | None = None
+    phone_number: (
+        Annotated[str, StringConstraints(min_length=11, max_length=12)] | None
+    ) = None
 
     worksheet: list[DocumentSchema]
 
