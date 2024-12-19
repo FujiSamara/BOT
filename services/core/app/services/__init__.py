@@ -123,6 +123,7 @@ from app.services.technical_request import (
     update_technical_request_from_territorial_manager,
     update_technical_request_problem,
     get_departments_names_for_chief_technician,
+    get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
     update_repairman_worktimes,
 )
@@ -240,6 +241,7 @@ __all__ = [
     "get_technical_problems",
     "get_technical_request_by_id",
     "get_departments_names_for_chief_technician",
+    "get_request_count_in_departments_by_tg_id",
     "get_request_count_in_departments",
     "get_work_time_record_by_id",
     "get_last_completed_worktimes_by_tg_id",

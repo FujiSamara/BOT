@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from asyncio import sleep
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -22,7 +23,6 @@ from app.adapters.bot.handlers.tech_request.utils import (
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.tech_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
-    notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
@@ -282,28 +282,20 @@ async def save_rate(
     description = data.get("description")
     request_id = callback_data.request_id
 
-    request_data = update_technical_request_from_territorial_manager(
+    message = callback.message
+    if not await update_technical_request_from_territorial_manager(
         mark=mark, request_id=request_id, description=description
-    )
-
-    if mark == 1 and request_data["state"] not in [
-        ApprovalStatus.approved,
-        ApprovalStatus.skipped,
-    ]:
-        await notify_worker_by_telegram_id(
-            id=request_data["repairman_telegram_id"],
-            message=text.notification_repairman_reopen
-            + f"\nНа производстве: {request_data['department_name']}",
+    ):
+        message = await try_edit_or_answer(
+            message=callback.message, text="Упс, произошла ошибка.", return_message=True
         )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["worker_telegram_id"], message=text.notification_worker
-    )
+        await sleep(2)
+        await try_delete_message(message=message)
 
     await state.clear()
     await state.set_state(Base.none)
     await try_edit_or_answer(
-        message=callback.message,
+        message=message,
         text=hbold(tech_kb.tm_button.text),
         reply_markup=tech_kb.tm_change_department_menu,
     )

@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from asyncio import sleep
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -18,7 +19,6 @@ from app.adapters.bot.states import (
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.tech_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
-    notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
     download_file,
@@ -331,20 +331,15 @@ async def save_repair(
     photo_files: list[UploadFile] = []
     for doc in photo:
         photo_files.append(await download_file(doc))
-
-    request_data = update_technical_request_from_repairman(
+    message = callback.message
+    if not await update_technical_request_from_repairman(
         photo_files=photo_files, request_id=callback_data.request_id
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_territorial_manager
-        + f"\n На производстве: {request_data['department_name']}",
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["worker_telegram_id"], message=text.notification_worker
-    )
+    ):
+        message = await try_edit_or_answer(
+            message=callback.message, text="Упс, произошла ошибка.", return_message=True
+        )
+        await sleep(2)
+        await try_delete_message(message=message)
 
     await state.clear()
     await state.set_state(Base.none)
