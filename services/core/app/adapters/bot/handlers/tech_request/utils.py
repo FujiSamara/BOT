@@ -15,7 +15,11 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text
 
 from app.infra.database.models import ApprovalStatus
-from app.services import get_technical_request_by_id, get_request_count_in_departments
+from app.services import (
+    get_technical_request_by_id,
+    get_request_count_in_departments_by_tg_id,
+    get_request_count_in_departments,
+)
 
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
@@ -235,18 +239,23 @@ async def handle_department(
 
 
 def department_names_with_count(
-    state: ApprovalStatus, tg_id: int, department_names: list[str]
+    state: ApprovalStatus, department_names: list[str], tg_id: int | None = None
 ):
     if department_names == []:
         return []
-    request_count = get_request_count_in_departments(state=state, tg_id=tg_id)
+    if tg_id is not None:
+        request_count = get_request_count_in_departments_by_tg_id(
+            state=state, tg_id=tg_id
+        )
+    else:
+        request_count = get_request_count_in_departments(state=state)
     out_department_names = []
+    if len(department_names) > 0:
+        for department_name, count in request_count:
+            out_department_names.append(f"{count} {department_name}")
+            department_names.remove(department_name)
+        for department_name in department_names:
+            out_department_names.append(f"0 {department_name}")
 
-    for department_name, count in request_count:
-        out_department_names.append(f"{count} {department_name}")
-        department_names.remove(department_name)
-    for department_name in department_names:
-        out_department_names.append(f"0 {department_name}")
-
-    out_department_names.sort(reverse=True)
+        out_department_names.sort(reverse=True)
     return out_department_names
