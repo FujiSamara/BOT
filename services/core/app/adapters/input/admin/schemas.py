@@ -24,7 +24,11 @@ from app.infra.database.models import (
     WorkerFingerprint,
     FingerprintAttempt,
 )
-from app.adapters.bot.kb import payment_type_dict, approval_status_dict
+from app.adapters.bot.kb import (
+    payment_type_dict,
+    approval_status_dict,
+    worker_status_dict,
+)
 from app.schemas import FileOutSchema
 from app import services
 from app.adapters.input.api.auth import encrypt_password
@@ -194,6 +198,12 @@ class GroupView(ModelView, model=Group):
 
 
 class WorkerView(ModelView, model=Worker):
+    @staticmethod
+    def worker_status_format(inst, columm):
+        value = getattr(inst, columm)
+
+        return worker_status_dict.get(value)
+
     column_searchable_list = [
         Worker.f_name,
         Worker.l_name,
@@ -205,6 +215,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name,
         Worker.o_name,
         Worker.phone_number,
+        Worker.state,
     ]
 
     column_details_list = [
@@ -212,6 +223,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name,
         Worker.o_name,
         Worker.post,
+        Worker.state,
         Worker.subordination_chief,
         Worker.phone_number,
         Worker.department,
@@ -234,6 +246,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
+        Worker.state: "Статус",
         Worker.subordination_chief: "Руководитель",
         Worker.department: "Производство",
         Worker.group: "Отдел",
@@ -256,6 +269,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name,
         Worker.l_name,
         Worker.o_name,
+        Worker.state,
         Worker.phone_number,
         Worker.department,
         Worker.group,
@@ -299,7 +313,10 @@ class WorkerView(ModelView, model=Worker):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
-    column_formatters = {Worker.gender: gender_format}
+    column_formatters = {
+        Worker.gender: gender_format,
+        Worker.state: worker_status_format,
+    }
     column_formatters_detail = column_formatters
 
 

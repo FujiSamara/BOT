@@ -12,10 +12,12 @@ from app.infra.database.models import (
     Post,
     Worker,
     WorkerBid,
+    WorkerStatus,
 )
 from app.schemas import (
     WorkerBidSchema,
     DocumentSchema,
+    WorkerSchema,
 )
 
 
@@ -181,3 +183,20 @@ def get_pending_approval_bids() -> list[WorkerBidSchema] | None:
     return orm.find_worker_bids_by_column(
         WorkerBid.state, ApprovalStatus.pending_approval
     )
+
+
+def get_candidates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+    chief_id = orm.get_workers_with_post_by_columns([Worker.telegram_id], [tg_id])
+    if chief_id == []:
+        logger.error(f"Worker with id {chief_id} wasn't found")
+    chief_id = chief_id[0].id
+    return orm.get_subordinates(chief_id, limit, offset)
+
+
+def update_worker_state(worker_id: int, state: WorkerStatus) -> bool:
+    worker = get_worker_by_id(worker_id)
+    if worker is None:
+        return False
+    worker.state = state
+    orm.update_worker(worker)
+    return True

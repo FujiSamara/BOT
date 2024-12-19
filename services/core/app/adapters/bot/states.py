@@ -31,6 +31,10 @@ class BidCoordination(StatesGroup):
     search = State()
 
 
+class CandidateCoordination(StatesGroup):
+    state = State()
+
+
 class WorkerBidCreating(StatesGroup):
     f_name = State()
     l_name = State()
@@ -118,7 +122,7 @@ class DepartmentDirectorRequestForm(StatesGroup):
     description = State()
 
 
-# Persconal Cabinet form
-class PersconalCabinet(StatesGroup):
+# Personal Cabinet form
+class PersonalCabinet(StatesGroup):
     department = State()
     menu = State()

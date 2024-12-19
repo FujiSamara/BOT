@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import UploadFile
 from app.infra.database.models import (
     ApprovalStatus,
+    WorkerStatus,
     FujiScope,
     Gender,
     IncidentStage,
@@ -73,7 +74,7 @@ class WorkerSchema(BaseSchemaPK):
     b_date: Optional[datetime.date] = datetime.date(1, 1, 1)
     phone_number: Optional[str]
     telegram_id: Optional[int]
-
+    state: WorkerStatus | None = None
     post: PostSchema
 
     department: DepartmentSchema

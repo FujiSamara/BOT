@@ -188,6 +188,7 @@ def update_worker(worker: WorkerSchema):
         cur_worker.o_name = worker.o_name
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
+        cur_worker.state = worker.state
 
 
 def get_departments_columns(*columns: list[Any]) -> list[DepartmentSchema]:
@@ -765,6 +766,23 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.l_name = bid.l_name
         cur_bid.o_name = bid.o_name
         cur_bid.sender = sender
+
+
+def get_subordinates(chief_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+    """Returns all workers under the guidance of worker with tg_id"""
+    with session.begin() as s:
+        workers_sub = (
+            s.execute(
+                select(Subordination)
+                .where(Subordination.chief_id == chief_id)
+                .offset(offset * limit)
+                .limit(limit)
+            )
+            .scalars()
+            .all()
+        )
+
+        return [WorkerSchema.model_validate(worker.employee) for worker in workers_sub]
 
 
 def get_expenditures() -> list[ExpenditureSchema]:

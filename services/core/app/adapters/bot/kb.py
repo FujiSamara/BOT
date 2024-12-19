@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.schemas import WorkTimeSchema
 from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
-from app.infra.database.models import ApprovalStatus
+from app.infra.database.models import ApprovalStatus, WorkerStatus
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
@@ -206,6 +206,7 @@ approval_status_dict = {
     ApprovalStatus.pending_approval: "Ожидает согласования",
     ApprovalStatus.denied: "Отклонено",
     ApprovalStatus.skipped: "Не требуется",
+    ApprovalStatus.not_relevant: "Не релевантно",
 }
 
 payment_type_menu = InlineKeyboardMarkup(
@@ -297,6 +298,34 @@ worker_bid_menu = InlineKeyboardMarkup(
         [main_menu_button],
     ]
 )
+
+
+get_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
+)
+
+get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
+)
+
+coordinate_worker_bid_menu = create_inline_keyboard(
+    get_pending_coordinate_worker_bid_btn,
+    main_menu_button,
+)
+
+get_candidates_menu_btn = InlineKeyboardButton(
+    text="Сотрудники",
+    callback_data="get_candidates_menu",
+)
+
+worker_status_dict = {
+    WorkerStatus.pending_approval: "На согласовании",
+    WorkerStatus.internship: "На стажировке",
+    WorkerStatus.refusal_internship: "Отказ от стажировки",
+    WorkerStatus.active: "В штате",
+    WorkerStatus.process_dismissal: "В процессе увольнения",
+    WorkerStatus.dismissal: "Уволен",
+}
 
 
 async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
@@ -651,16 +680,3 @@ monitoring_menu = create_inline_keyboard(
     main_menu_button,
 )
 # endregion
-
-get_coordinate_worker_bid_btn = InlineKeyboardButton(
-    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
-)
-
-get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
-)
-
-coordinate_worker_bid_menu = create_inline_keyboard(
-    get_pending_coordinate_worker_bid_btn,
-    main_menu_button,
-)

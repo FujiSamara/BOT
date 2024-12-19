@@ -132,6 +132,8 @@ from app.services.worker_bid import (
     update_worker_bid_state,
     get_pending_approval_bids,
     update_worker_bid_bot,
+    get_candidates,
+    update_worker_state,
 )
 from app.services.worktime import (
     create_worktime,
@@ -284,4 +286,6 @@ __all__ = [
     "update_repairman_worktimes",
     "get_pending_approval_bids",
     "update_worker_bid_bot",
+    "get_candidates",
+    "update_worker_state",
 ]
