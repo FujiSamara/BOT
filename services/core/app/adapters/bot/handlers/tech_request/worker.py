@@ -1,5 +1,5 @@
 from aiogram import Router, F
-
+from asyncio import sleep
 from aiogram.types import (
     CallbackQuery,
     Message,
@@ -16,7 +16,6 @@ from app.adapters.bot.states import (
     WorkerTechnicalRequestForm,
 )
 from app.adapters.bot.handlers.utils import (
-    notify_worker_by_telegram_id,
     try_edit_or_answer,
     try_delete_message,
     download_file,
@@ -223,24 +222,23 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     photo_files: list[UploadFile] = []
     for doc in photo:
         photo_files.append(await download_file(doc))
-
-    ret_data = create_technical_request(
+    message = callback.message
+    if not await create_technical_request(
         problem_name=problem_name,
         description=description,
         photo_files=photo_files,
         telegram_id=callback.message.chat.id,
-    )
-
-    await notify_worker_by_telegram_id(
-        id=ret_data["repairman_telegram_id"],
-        message=text.notification_repairman
-        + f"\nНа производстве: {ret_data['department_name']}",
-    )
+    ):
+        message = await try_edit_or_answer(
+            message=callback.message, text="Упс, произошла ошибка.", return_message=True
+        )
+        await sleep(2)
+        await try_delete_message(message=message)
 
     await state.clear()
     await state.set_state(Base.none)
     await try_edit_or_answer(
-        message=callback.message,
+        message=message,
         text=hbold("Тех. заявки"),
         reply_markup=tech_kb.wr_menu,
     )
