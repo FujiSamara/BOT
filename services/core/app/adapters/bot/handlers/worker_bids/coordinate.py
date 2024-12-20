@@ -115,7 +115,7 @@ async def get_pending_bid(
     if bid.passport != []:
         buttons.append(
             InlineKeyboardButton(
-                text="Пасспорт",
+                text="Паспорт",
                 callback_data=WorkerBidCallbackData(
                     id=callback_data.id,
                     mode=callback_data.mode,

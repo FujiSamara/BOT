@@ -41,7 +41,7 @@ router = Router(name="technical_request_worker")
 async def show_worker_menu(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.wr_menu_button.text),
         reply_markup=tech_kb.wr_menu,
     )
 
@@ -239,6 +239,6 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=message,
-        text=hbold("Тех. заявки"),
+        text=hbold(tech_kb.wr_menu_button.text),
         reply_markup=tech_kb.wr_menu,
     )
