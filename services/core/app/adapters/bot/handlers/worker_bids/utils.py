@@ -1,4 +1,4 @@
-from app.schemas import WorkerBidSchema, WorkerSchema
+from app.schemas import WorkerBidSchema
 from app.infra.database.models import ApprovalStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
