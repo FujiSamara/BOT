@@ -14,7 +14,7 @@ from app.adapters.bot.router import router
 from app.adapters.bot.tasks import (
     TaskScheduler,
     notify_with_unclosed_shift,
-    notify_and_droped_departments_teller_cash,
+    notify_and_dropped_departments_teller_cash,
     update_repairman_worktimes,
 )
 
@@ -54,9 +54,9 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         name="notify_with_unclosed_shift",
     )
     tasks.register_task(
-        task=notify_and_droped_departments_teller_cash,
+        task=notify_and_dropped_departments_teller_cash,
         time=datetime(**YMD, hour=8, minute=0, second=0),
-        name="notify_and_droped_departments_teller_cash",
+        name="notify_and_dropped_departments_teller_cash",
     )
     tasks.register_task(
         task=update_repairman_worktimes,

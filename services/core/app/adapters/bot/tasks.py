@@ -52,27 +52,40 @@ class TaskScheduler:
         self.logger.info("Running tasks are completed.")
 
     async def _run_task(self, task_data: _Task):
+        time = datetime.now()
         await asyncio.sleep(
-            abs(
+            (
                 (
-                    (datetime.now().hour - task_data.time.hour) * 60
-                    + (datetime.now().minute - task_data.time.minute)
+                    24 - time.hour + task_data.time.hour
+                    if task_data.time.hour < time.hour
+                    else task_data.time.hour - time.hour
                 )
                 * 60
-                + (datetime.now().second - task_data.time.second)
+                + (
+                    60 - time.minute + task_data.time.minute
+                    if task_data.time.minute < time.minute
+                    else task_data.time.minute - time.minute
+                )
+            )
+            * 60
+            + (
+                60 - time.second + task_data.time.second
+                if task_data.time.second < time.second
+                else task_data.time.second - time.second
             )
         )
+
         try:
             task_data.task = asyncio.create_task(task_data.callback())
         except Exception as e:
-            self.logger.error(f"Task {task_data.name} didn't runned: {e}")
+            self.logger.error(f"Task {task_data.name} was not started: {e}")
 
     async def stop_tasks(self):
         self.logger.info("Termination tasks.")
-        for runned_task in self.tasks:
+        for running_task in self.tasks:
             try:
-                runned_task.task.cancel()
-                await runned_task.task
+                running_task.task.cancel()
+                await running_task.task
             except Exception as e:
                 self.logger.error(f"Task didn't stopped: {e}")
         self.logger.info("Termination tasks are completed.")
@@ -86,9 +99,9 @@ async def notify_with_unclosed_shift() -> None:
     departments_ids = services.get_departments_ids()
     previous_day = datetime.now().date() - timedelta(days=1)
 
-    for deparment_id in departments_ids:
-        if not shift_closed(previous_day, deparment_id):
-            chef = services.get_chef_by_department_id(deparment_id)
+    for department_id in departments_ids:
+        if not shift_closed(previous_day, department_id):
+            chef = services.get_chef_by_department_id(department_id)
             if chef and chef.telegram_id:
                 try:
                     logger.info(f"Notifying {chef.l_name} {chef.f_name}...")
@@ -115,13 +128,13 @@ async def notify_with_unclosed_shift() -> None:
     seconds=60 * 60 * 24,
     logger=logger,
 )
-async def notify_and_droped_departments_teller_cash() -> None:
+async def notify_and_dropped_departments_teller_cash() -> None:
     """Notify all teller cash to change department"""
     logger.info("Notifying all tellers cash to change department.")
     tellers = services.set_tellers_cash_department()
     for teller in tellers:
         await notify_worker_by_telegram_id(
-            message="Актуализируйте производтсво",
+            message="Актуализируйте производство",
             id=teller.telegram_id,
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[[get_personal_cabinet_button]]
