@@ -8,57 +8,81 @@ from aiogram.types import (
 )
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
-from app.services import get_candidates, get_worker_by_id, update_worker_state
+from app.services import get_workers_subordinate, get_worker_by_id, update_worker_state
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
     create_reply_keyboard,
 )
 from app.adapters.bot.handlers.worker_bids.schemas import (
-    CandidateCoordinationCallbackData,
+    WorkersCoordinationCallbackData,
 )
-from app.adapters.bot.states import CandidateCoordination
+from app.adapters.bot.states import WorkersCoordination
 from app.adapters.bot.kb import (
-    get_candidates_menu_btn,
+    get_workers_coordinate_menu_btn,
     main_menu_button,
     worker_status_dict,
 )
 from app.adapters.bot import text
 
-router = Router(name="workers_menu")
+router = Router(name="workers_subordinate")
 
 
 @router.callback_query(
-    CandidateCoordinationCallbackData.filter(
-        F.endpoint_name == get_candidates_menu_btn.callback_data
+    WorkersCoordinationCallbackData.filter(
+        F.endpoint_name == get_workers_coordinate_menu_btn.callback_data
     )
 )
-@router.callback_query(F.data == get_candidates_menu_btn.callback_data)
+@router.callback_query(F.data == get_workers_coordinate_menu_btn.callback_data)
 async def get_menu(
     message: Message | CallbackQuery,
-    callback_data: CandidateCoordinationCallbackData = CandidateCoordinationCallbackData(),
+    callback_data: WorkersCoordinationCallbackData = WorkersCoordinationCallbackData(),
 ):
     if isinstance(message, CallbackQuery):
         message = message.message
 
-    subordinates = get_candidates(message.chat.id, 10, callback_data.page)
+    subordinates = get_workers_subordinate(message.chat.id, 10, callback_data.page)
     buttons = []
     for subordinate in subordinates:
         buttons.append(
             [
                 InlineKeyboardButton(
                     text=f"{subordinate.l_name} {subordinate.f_name[0]}. {subordinate.o_name[0]}.",
-                    callback_data=CandidateCoordinationCallbackData(
+                    callback_data=WorkersCoordinationCallbackData(
                         id=subordinate.id,
                         page=callback_data.page,
-                        endpoint_name="show_candidate",
+                        endpoint_name="show_worker",
+                    ).pack(),
+                )
+            ]
+        )
+    if callback_data.page > 1:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Предыдущая страница",
+                    callback_data=WorkersCoordinationCallbackData(
+                        page=callback_data.page - 1,
+                        endpoint_name=get_workers_coordinate_menu_btn.callback_data,
+                    ).pack(),
+                )
+            ]
+        )
+    if len(subordinates) == 10:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Следующая страница",
+                    callback_data=WorkersCoordinationCallbackData(
+                        page=callback_data.page + 1,
+                        endpoint_name=get_workers_coordinate_menu_btn.callback_data,
                     ).pack(),
                 )
             ]
         )
     await try_edit_or_answer(
         message=message,
-        text=hbold(get_candidates_menu_btn.text),
+        text=hbold(get_workers_coordinate_menu_btn.text),
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=buttons + [[main_menu_button]]
         ),
@@ -66,10 +90,10 @@ async def get_menu(
 
 
 @router.callback_query(
-    CandidateCoordinationCallbackData.filter(F.endpoint_name == "show_candidate")
+    WorkersCoordinationCallbackData.filter(F.endpoint_name == "show_worker")
 )
-async def show_candidate(
-    message: Message | CallbackQuery, callback_data: CandidateCoordinationCallbackData
+async def show_worker(
+    message: Message | CallbackQuery, callback_data: WorkersCoordinationCallbackData
 ):
     if isinstance(message, CallbackQuery):
         message = message.message
@@ -86,7 +110,7 @@ async def show_candidate(
                 [
                     InlineKeyboardButton(
                         text="Изменить статус",
-                        callback_data=CandidateCoordinationCallbackData(
+                        callback_data=WorkersCoordinationCallbackData(
                             id=callback_data.id,
                             page=callback_data.page,
                             endpoint_name="change_status",
@@ -96,10 +120,10 @@ async def show_candidate(
                 [
                     InlineKeyboardButton(
                         text=text.back,
-                        callback_data=CandidateCoordinationCallbackData(
+                        callback_data=WorkersCoordinationCallbackData(
                             id=callback_data.id,
                             page=callback_data.page,
-                            endpoint_name=get_candidates_menu_btn.callback_data,
+                            endpoint_name=get_workers_coordinate_menu_btn.callback_data,
                         ).pack(),
                     )
                 ],
@@ -109,12 +133,12 @@ async def show_candidate(
 
 
 @router.callback_query(
-    CandidateCoordinationCallbackData.filter(F.endpoint_name == "change_status")
+    WorkersCoordinationCallbackData.filter(F.endpoint_name == "change_status")
 )
 async def get_status(
     message: Message | CallbackQuery,
     state: FSMContext,
-    callback_data: CandidateCoordinationCallbackData | None = None,
+    callback_data: WorkersCoordinationCallbackData | None = None,
 ):
     if isinstance(message, CallbackQuery):
         message = message.message
@@ -127,20 +151,20 @@ async def get_status(
         return_message=True,
     )
     await state.update_data(msg=msg)
-    await state.set_state(CandidateCoordination.state)
+    await state.set_state(WorkersCoordination.state)
 
 
-@router.message(CandidateCoordination.state)
+@router.message(WorkersCoordination.state)
 async def set_status(message: Message, state: FSMContext):
     data = await state.get_data()
     await try_delete_message(data.get("msg"))
     await try_delete_message(message=message)
     if message.text == text.back:
-        await show_candidate(
+        await show_worker(
             message,
-            CandidateCoordinationCallbackData(
+            WorkersCoordinationCallbackData(
                 id=int(data.get("id")),
-                endpoint_name="show_candidate",
+                endpoint_name="show_worker",
                 page=int(data.get("page")),
             ),
         )
@@ -149,11 +173,11 @@ async def set_status(message: Message, state: FSMContext):
             key for key, text in worker_status_dict.items() if message.text == text
         ][0]
         update_worker_state(data.get("id"), state=status)
-        await show_candidate(
+        await show_worker(
             message,
-            CandidateCoordinationCallbackData(
+            WorkersCoordinationCallbackData(
                 id=int(data.get("id")),
-                endpoint_name="show_candidate",
+                endpoint_name="show_worker",
                 page=int(data.get("page")),
             ),
         )

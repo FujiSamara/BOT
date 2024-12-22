@@ -1,6 +1,6 @@
 from aiogram.filters.callback_data import CallbackData
 from enum import Enum
-from app.adapters.bot.kb import get_candidates_menu_btn
+from app.adapters.bot.kb import get_workers_coordinate_menu_btn
 
 
 class BidViewMode(str, Enum):
@@ -17,7 +17,7 @@ class WorkerBidCallbackData(CallbackData, prefix="worker_bid"):
     state: int | None = None
 
 
-class CandidateCoordinationCallbackData(CallbackData, prefix="worker"):
+class WorkersCoordinationCallbackData(CallbackData, prefix="worker_coordination"):
     id: int | None = None
     page: int = 0
-    endpoint_name: str = get_candidates_menu_btn.callback_data
+    endpoint_name: str = get_workers_coordinate_menu_btn.callback_data

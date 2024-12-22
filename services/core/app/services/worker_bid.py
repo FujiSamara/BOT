@@ -185,12 +185,12 @@ def get_pending_approval_bids() -> list[WorkerBidSchema] | None:
     )
 
 
-def get_candidates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+def get_workers_subordinate(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
     chief_id = orm.get_workers_with_post_by_columns([Worker.telegram_id], [tg_id])
     if chief_id == []:
         logger.error(f"Worker with id {chief_id} wasn't found")
     chief_id = chief_id[0].id
-    return orm.get_subordinates(chief_id, limit, offset)
+    return orm.get_workers_subordinate(chief_id, limit, offset)
 
 
 def update_worker_state(worker_id: int, state: WorkerStatus) -> bool:

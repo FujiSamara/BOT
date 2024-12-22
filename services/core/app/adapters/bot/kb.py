@@ -313,7 +313,7 @@ coordinate_worker_bid_menu = create_inline_keyboard(
     main_menu_button,
 )
 
-get_candidates_menu_btn = InlineKeyboardButton(
+get_workers_coordinate_menu_btn = InlineKeyboardButton(
     text="Сотрудники",
     callback_data="get_candidates_menu",
 )

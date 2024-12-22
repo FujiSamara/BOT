@@ -31,7 +31,7 @@ class BidCoordination(StatesGroup):
     search = State()
 
 
-class CandidateCoordination(StatesGroup):
+class WorkersCoordination(StatesGroup):
     state = State()
 
 

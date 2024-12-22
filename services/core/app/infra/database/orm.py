@@ -768,7 +768,9 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.sender = sender
 
 
-def get_subordinates(chief_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+def get_workers_subordinate(
+    chief_id: int, limit: int, offset: int
+) -> list[WorkerSchema]:
     """Returns all workers under the guidance of worker with tg_id"""
     with session.begin() as s:
         workers_sub = (
