@@ -426,6 +426,56 @@ class Worker(Base):
         foreign_keys="[Subordination.chief_id]",
     )
 
+    passport: Mapped[List["WorkerPassport"]] = relationship(
+        "WorkerPassport", cascade="all,delete", back_populates="worker"
+    )
+    snils: Mapped[str] = mapped_column(nullable=True)
+    inn: Mapped[str] = mapped_column(nullable=True)
+    registration: Mapped[str] = mapped_column(nullable=True)
+    actual_residence: Mapped[str] = mapped_column(nullable=True)
+    children: Mapped[bool] = mapped_column(nullable=True)
+    children_born_date: Mapped[List["WorkerChildren"]] = relationship(
+        "WorkerChildren", cascade="all,delete", back_populates="worker"
+    )
+    military_ticket: Mapped[str] = mapped_column(nullable=True)
+
+
+class WorkerPassport(Base):
+    """Паспорта работников"""
+
+    __tablename__ = "workers_passports"
+
+    def __str__(self):
+        return f"id {self.id}"
+
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id", name="worker_id"), nullable=False
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="passport",
+        foreign_keys=[worker_id],
+    )
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
+
+
+class WorkerChildren(Base):
+    """Данные детей работников"""
+
+    def __str__(self):
+        return self.born_date.strftime(settings.date_format)
+
+    __tablename__ = "worker_children"
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id", name="worker_id"), nullable=False
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="children_born_date",
+        foreign_keys=[worker_id],
+    )
+    born_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
 
 class Bid(Base):
     """Заявки"""

@@ -30,6 +30,20 @@ class BaseSchemaPK(BaseSchema):
     id: int | None = -1
 
 
+class DocumentSchema(BaseSchemaPK):
+    document: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
+        return val
+
+
 class PostSchema(BaseSchemaPK):
     name: str
     level: int
@@ -95,19 +109,19 @@ class WorkerSchema(BaseSchemaPK):
             return (val[0],)
         return val
 
+    passport: DocumentSchema | None = None
+    snils: str | None = None
+    inn: str | None = None
+    registration: str | None = None
+    actual_residence: str | None = None
+    children: bool = False
+    children_born_date: list["WorkerChildrenSchema"] = []
+    military_ticket: str | None = None
 
-class DocumentSchema(BaseSchemaPK):
-    document: UploadFile
 
-    @field_validator("document", mode="before")
-    @classmethod
-    def upload_file_validate(cls, val):
-        if isinstance(val, StorageFile):
-            if Path(val.path).is_file():
-                return UploadFile(val.open(), filename=val.name)
-            else:
-                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
-        return val
+class WorkerChildrenSchema(BaseSchemaPK):
+    worker: WorkerSchema
+    born_date: datetime.datetime
 
 
 class BidSchema(BaseSchemaPK):

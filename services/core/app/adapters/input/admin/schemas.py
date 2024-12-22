@@ -23,6 +23,8 @@ from app.infra.database.models import (
     MaterialValues,
     WorkerFingerprint,
     FingerprintAttempt,
+    WorkerPassport,
+    WorkerChildren,
 )
 from app.adapters.bot.kb import (
     payment_type_dict,
@@ -198,12 +200,7 @@ class GroupView(ModelView, model=Group):
 
 
 class WorkerView(ModelView, model=Worker):
-    @staticmethod
-    def worker_status_format(inst, columm):
-        value = getattr(inst, columm)
-
-        return worker_status_dict.get(value)
-
+    details_template = "worker_details.html"
     column_searchable_list = [
         Worker.f_name,
         Worker.l_name,
@@ -237,6 +234,14 @@ class WorkerView(ModelView, model=Worker):
         Worker.medical_records_availability,
         Worker.citizenship,
         Worker.can_use_crm,
+        Worker.passport,
+        Worker.snils,
+        Worker.inn,
+        Worker.registration,
+        Worker.actual_residence,
+        Worker.children,
+        Worker.children_born_date,
+        Worker.military_ticket,
     ]
     can_export = False
 
@@ -263,6 +268,14 @@ class WorkerView(ModelView, model=Worker):
         Worker.citizenship: "Гражданство",
         Worker.can_use_crm: "Может использовать CRM",
         Worker.password: "Пароль",
+        Worker.passport: "Паспорт",
+        Worker.snils: "СНИЛС",
+        Worker.inn: "ИНН",
+        Worker.registration: "Регистрация",
+        Worker.actual_residence: "Фактическое место жительства",
+        Worker.children: "Дети",
+        Worker.children_born_date: "Даты рождения детей",
+        Worker.military_ticket: "Военный билет",
     }
 
     form_columns = [
@@ -283,6 +296,14 @@ class WorkerView(ModelView, model=Worker):
         Worker.citizenship,
         Worker.can_use_crm,
         Worker.password,
+        Worker.passport,
+        Worker.snils,
+        Worker.inn,
+        Worker.registration,
+        Worker.actual_residence,
+        Worker.children,
+        Worker.children_born_date,
+        Worker.military_ticket,
     ]
 
     form_ajax_refs = {
@@ -309,6 +330,23 @@ class WorkerView(ModelView, model=Worker):
         else:
             return "Женщина"
 
+    @staticmethod
+    def worker_status_format(inst, columm):
+        value = getattr(inst, columm)
+
+        return worker_status_dict.get(value)
+
+    @staticmethod
+    def bool_to_str(inst, column):
+        value = getattr(inst, column)
+        if value:
+            return "Да"
+        return "Нет"
+
+    @staticmethod
+    def files_format(inst, column):
+        return WorkerBidView.files_format(inst, column)
+
     async def on_model_change(self, data: dict, model: Worker, is_created, request):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
@@ -316,8 +354,112 @@ class WorkerView(ModelView, model=Worker):
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
+        Worker.children: bool_to_str,
+        Worker.passport: files_format,
     }
     column_formatters_detail = column_formatters
+
+
+class WorkerPassportView(ModelView, model=WorkerPassport):
+    name = "Паспорт работника"
+    name_plural = "Паспорта работников"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerPassport.id,
+        WorkerPassport.worker,
+        WorkerPassport.document,
+    ]
+
+    column_sortable_list = [
+        WorkerPassport.id,
+    ]
+
+    column_labels = {
+        WorkerPassport.worker: "Работник",
+        WorkerPassport.document: "Паспорт",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(WorkerPassport).filter(
+            WorkerPassport.worker_id.in_(workers_id),
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+
+class WorkerChildrenView(ModelView, model=WorkerChildren):
+    name = "Дети работника"
+    name_plural = "Дети работников"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerChildren.id,
+        WorkerChildren.worker,
+        WorkerChildren.born_date,
+    ]
+
+    column_sortable_list = [
+        WorkerChildren.id,
+    ]
+
+    column_labels = {
+        WorkerChildren.worker: "Работник",
+        WorkerChildren.born_date: "Дата рождения",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(WorkerChildren).filter(
+            WorkerChildren.worker_id.in_(workers_id),
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
 
 
 class WorkerBidView(ModelView, model=WorkerBid):
