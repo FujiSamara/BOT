@@ -45,17 +45,17 @@ const mouseEnter = async () => {
 	}
 
 	const hint = hintRef.value as HTMLElement;
+	const cellWrapper = cellWrapperRef.value as HTMLElement;
+	const cellParent = cellWrapper.parentElement as HTMLElement;
 
 	hint.style.right = "100%";
 	hintVisible.value = true;
 
 	await nextTick();
-
-	const container = document.getElementsByClassName("table")[0] as HTMLElement;
 	const rect = hint.getBoundingClientRect();
 
-	if (rect.left < container.offsetLeft) {
-		hint.style.right = `calc(100% - ${container.offsetLeft - rect.left}px)`;
+	if (rect.left < cellParent.offsetLeft) {
+		hint.style.right = `calc(100% - ${cellParent.offsetLeft - rect.left}px)`;
 	}
 };
 
