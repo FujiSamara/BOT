@@ -13,7 +13,7 @@ from fastapi import UploadFile
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import (
     Base,
-    WorkerTechnicalRequestForm,
+    WorkerDepartmentRequestForm,
 )
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
@@ -23,9 +23,11 @@ from app.adapters.bot.handlers.utils import (
     handle_documents,
     create_reply_keyboard,
 )
-from app.adapters.bot.handlers.tech_request.utils import show_form
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
+    show_form,
+)
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request import kb as department_kb
 
 from app.services import (
     get_all_history_technical_requests_for_worker,
@@ -39,16 +41,16 @@ from app.services import (
 router = Router(name="technical_request_worker")
 
 
-@router.callback_query(F.data == tech_kb.wr_menu_button.callback_data)
+@router.callback_query(F.data == department_kb.wr_menu_button.callback_data)
 async def show_worker_menu(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.wr_menu_button.text),
-        reply_markup=tech_kb.wr_menu,
+        text=hbold(department_kb.wr_menu_button.text),
+        reply_markup=department_kb.wr_menu,
     )
 
 
-@router.callback_query(F.data == tech_kb.wr_create.callback_data)
+@router.callback_query(F.data == department_kb.wr_create.callback_data)
 async def show_worker_create_request_format(
     message: Message | CallbackQuery, state: FSMContext
 ):
@@ -58,13 +60,29 @@ async def show_worker_create_request_format(
     await try_edit_or_answer(
         message=message,
         text=hbold("Создать заявку"),
-        reply_markup=await tech_kb.wr_create_kb(state),
+        reply_markup=await department_kb.wr_create_kb(state),
     )
 
 
-@router.callback_query(F.data == "problem_type_WR_TR")
+@router.callback_query(F.data == "problem_group_WR_TR_CR")
+async def get_problem_group(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(WorkerDepartmentRequestForm.problem_group)
+    await try_delete_message(callback.message)
+    msg = await callback.message.answer(
+        text=hbold("Выберите направленность проблемы:"),
+        reply_markup=kb.create_reply_keyboard(text.back, "Техническая", "Клининговая"),
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerDepartmentRequestForm.problem_group)
+async def set_problem_group(message: Message, state: FSMContext):
+    pass
+
+
+@router.callback_query(F.data == "problem_group_WR_TR_CR")
 async def get_problem(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(WorkerTechnicalRequestForm.problem_name)
+    await state.set_state(WorkerDepartmentRequestForm.problem_name)
     problems = get_technical_problem_names()
     problems.sort()
     await try_delete_message(callback.message)
@@ -77,7 +95,7 @@ async def get_problem(callback: CallbackQuery, state: FSMContext):
     await state.update_data(msg=msg)
 
 
-@router.message(WorkerTechnicalRequestForm.problem_name)
+@router.message(WorkerDepartmentRequestForm.problem_name)
 async def set_problem(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -107,13 +125,13 @@ async def set_problem(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "description_WR_TR")
 async def get_description(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(WorkerTechnicalRequestForm.description)
+    await state.set_state(WorkerDepartmentRequestForm.description)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Введите описание проблемы:"))
     await state.update_data(msg=msg)
 
 
-@router.message(WorkerTechnicalRequestForm.description)
+@router.message(WorkerDepartmentRequestForm.description)
 async def set_description(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     data = await state.get_data()
@@ -128,11 +146,11 @@ async def set_description(message: Message, state: FSMContext):
 @router.callback_query(F.data == "photo_WR_TR")
 async def get_worker_photo(callback: CallbackQuery, state: FSMContext):
     await handle_documents_form(
-        callback.message, state, WorkerTechnicalRequestForm.photo
+        callback.message, state, WorkerDepartmentRequestForm.photo
     )
 
 
-@router.message(WorkerTechnicalRequestForm.photo)
+@router.message(WorkerDepartmentRequestForm.photo)
 async def set_worker_photo(message: Message, state: FSMContext):
     await handle_documents(message, state, "photo", show_worker_create_request_format)
     await try_delete_message(message=message)
@@ -143,7 +161,7 @@ async def get_department(message: Message | CallbackQuery, state: FSMContext):
     if isinstance(message, CallbackQuery):
         await try_delete_message(message=message.message)
         message = message.message
-    await state.set_state(WorkerTechnicalRequestForm.department)
+    await state.set_state(WorkerDepartmentRequestForm.department)
     await state.update_data(
         msg=await try_edit_or_answer(
             message=message,
@@ -154,7 +172,7 @@ async def get_department(message: Message | CallbackQuery, state: FSMContext):
     )
 
 
-@router.message(WorkerTechnicalRequestForm.department)
+@router.message(WorkerDepartmentRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
     await try_delete_message((await state.get_data()).get("msg"))
     dep_name = message.text
@@ -176,7 +194,7 @@ async def set_department(message: Message, state: FSMContext):
         await get_department(message, state)
 
 
-@router.callback_query(F.data == tech_kb.wr_waiting.callback_data)
+@router.callback_query(F.data == department_kb.wr_waiting.callback_data)
 async def show_worker_waiting_menu(callback: CallbackQuery):
     requests = get_all_waiting_technical_requests_for_worker(
         telegram_id=callback.message.chat.id
@@ -186,9 +204,9 @@ async def show_worker_waiting_menu(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Ожидающие заявки"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=department_kb.create_kb_with_end_point(
             end_point="WR_TR_show_form_waiting",
-            menu_button=tech_kb.wr_menu_button,
+            menu_button=department_kb.wr_menu_button,
             requests=requests,
         ),
     )
@@ -206,11 +224,11 @@ async def show_worker_waiting_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.wr_waiting,
+        history_or_waiting_button=department_kb.wr_waiting,
     )
 
 
-@router.callback_query(F.data == tech_kb.wr_history.callback_data)
+@router.callback_query(F.data == department_kb.wr_history.callback_data)
 async def show_worker_history_menu(callback: CallbackQuery):
     requests = get_all_history_technical_requests_for_worker(
         telegram_id=callback.message.chat.id
@@ -220,9 +238,9 @@ async def show_worker_history_menu(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=department_kb.create_kb_with_end_point(
             end_point="WR_TR_show_form_history",
-            menu_button=tech_kb.wr_menu_button,
+            menu_button=department_kb.wr_menu_button,
             requests=requests,
         ),
     )
@@ -240,7 +258,7 @@ async def show_worker_history_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.wr_history,
+        history_or_waiting_button=department_kb.wr_history,
     )
 
 
@@ -273,6 +291,6 @@ async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=message,
-        text=hbold(tech_kb.wr_menu_button.text),
-        reply_markup=tech_kb.wr_menu,
+        text=hbold(department_kb.wr_menu_button.text),
+        reply_markup=department_kb.wr_menu,
     )

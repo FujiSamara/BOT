@@ -79,7 +79,8 @@ class TMForm(StatesGroup):
 # Technical Request
 
 
-class WorkerTechnicalRequestForm(StatesGroup):
+class WorkerDepartmentRequestForm(StatesGroup):
+    problem_group = State()
     problem_name = State()
     description = State()
     photo = State()

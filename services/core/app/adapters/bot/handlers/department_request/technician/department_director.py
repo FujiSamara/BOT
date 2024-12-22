@@ -14,13 +14,13 @@ from app.adapters.bot.states import (
     DepartmentDirectorRequestForm,
 )
 
-from app.adapters.bot.handlers.tech_request.utils import (
+from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
     handle_department,
     show_form,
     department_names_with_count,
 )
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     notify_worker_by_telegram_id,
     try_delete_message,

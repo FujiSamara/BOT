@@ -1,6 +1,8 @@
 from aiogram import Router, F
-from app.adapters.bot.handlers.tech_request.utils import send_photos
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.technician.utils import send_photos
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+)
 from aiogram.types import (
     CallbackQuery,
     InputMediaDocument,

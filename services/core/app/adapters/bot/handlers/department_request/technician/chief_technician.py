@@ -11,8 +11,8 @@ from fastapi import UploadFile
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     download_file,
     handle_documents,
@@ -21,7 +21,7 @@ from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from app.adapters.bot.handlers.tech_request.utils import (
+from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
     handle_department,
     show_form,
     department_names_with_count,

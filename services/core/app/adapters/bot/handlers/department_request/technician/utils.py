@@ -26,7 +26,7 @@ from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
 )
 from app.adapters.bot.kb import create_inline_keyboard, create_reply_keyboard
-from app.adapters.bot.handlers.tech_request.schemas import (
+from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
 )
 

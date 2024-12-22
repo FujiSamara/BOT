@@ -277,17 +277,19 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Подать техническую заявку", callback_data="get_WR_TR_menu"
+    text="Подать техническую заявку", callback_data="get_WR_TR_CR_menu"
 )
 
-wr_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
+wr_create = InlineKeyboardButton(
+    text="Создать заявку", callback_data="get_WR_TR_CR_create"
+)
 
 wr_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_WR_TR_waiting"
+    text="Ожидающие заявки", callback_data="get_WR_TR_CR_waiting"
 )
 
 wr_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_WR_TR_history"
+    text="История заявок", callback_data="get_WR_TR_CR_history"
 )
 
 wr_menu = InlineKeyboardMarkup(
@@ -307,6 +309,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     description = data.get("description")
     photo = data.get("photo")
     department_name = data.get("dep_name")
+    problem_type = data.get("problem_type")
 
     if not problem_name:
         problem_name = ""
@@ -338,32 +341,47 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
     buttons = [
         [
-            InlineKeyboardButton(text="Поломка", callback_data="problem_type_WR_TR"),
+            InlineKeyboardButton(
+                text="Проблема", callback_data="problem_group_WR_TR_CR"
+            ),
             InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Комментарий", callback_data="description_WR_TR"),
+            InlineKeyboardButton(
+                text="Комментарий", callback_data="description_WR_TR_CR"
+            ),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Производство", callback_data="department_WR_TR"),
+            InlineKeyboardButton(
+                text="Производство", callback_data="department_WR_TR_CR"
+            ),
             InlineKeyboardButton(text=f"{department_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
+            InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR_CR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
         [wr_menu_button],
     ]
 
     if form_complete:
-        buttons.append(
-            [
-                InlineKeyboardButton(
-                    text="Отправить проблему", callback_data="send_WR_TR"
-                )
-            ]
-        )
+        if problem_type == "CR":
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Отправить заявку", callback_data="save_WR_CR"
+                    )
+                ]
+            )
+        else:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Отправить проблему", callback_data="send_WR_TR"
+                    )
+                ]
+            )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
