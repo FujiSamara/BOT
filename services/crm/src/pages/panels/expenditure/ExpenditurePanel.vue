@@ -9,10 +9,11 @@ import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useSearch } from "@/hooks/searchHook";
+import { PropType } from "vue";
 
 const props = defineProps({
 	table: {
-		type: BaseTable<BaseSchema>,
+		type: Object as PropType<BaseTable<BaseSchema>>,
 		required: true,
 	},
 });
