@@ -43,40 +43,35 @@ const openPhoto = (cell: Cell, index: number) => {
 </script>
 
 <template>
-	<div class="cell-wrapper">
-		<div class="cell">
-			<slot v-if="!props.cell"></slot>
-			<ul class="cell-line-list" v-if="props.cell">
-				<li
-					class="cell-line"
-					v-for="(cellLine, cellLineIndex) in props.cell.cellLines"
+	<div class="cell">
+		<slot v-if="!props.cell"></slot>
+		<ul class="cell-line-list" v-if="props.cell">
+			<li
+				class="cell-line"
+				v-for="(cellLine, cellLineIndex) in props.cell.cellLines"
+			>
+				<div
+					class="c-link-wrapper"
+					:style="{ color: cellLine.color }"
+					v-if="cellLine.href.length > 0"
 				>
+					<a
+						@click.stop="async () => await linkClicked(cellLine)"
+						class="c-link"
+						>{{ cellLine.value }}</a
+					>
 					<div
-						class="c-link-wrapper"
-						:style="{ color: cellLine.color }"
-						v-if="cellLine.href.length > 0"
-					>
-						<a
-							@click.stop="async () => await linkClicked(cellLine)"
-							class="c-link"
-							>{{ cellLine.value }}</a
-						>
-						<div
-							@click.stop="() => openPhoto(props.cell!, cellLineIndex)"
-							v-if="cellLine.isImage"
-							class="c-image"
-							:class="{ blinking: documentLoading }"
-						></div>
-					</div>
-					<p
-						:style="{ color: cellLine.color }"
-						v-if="cellLine.href.length === 0"
-					>
-						{{ cellLine.value }}
-					</p>
-				</li>
-			</ul>
-		</div>
+						@click.stop="() => openPhoto(props.cell!, cellLineIndex)"
+						v-if="cellLine.isImage"
+						class="c-image"
+						:class="{ blinking: documentLoading }"
+					></div>
+				</div>
+				<p :style="{ color: cellLine.color }" v-if="cellLine.href.length === 0">
+					{{ cellLine.value }}
+				</p>
+			</li>
+		</ul>
 
 		<Suspense>
 			<Transition name="fade">
@@ -93,88 +88,72 @@ const openPhoto = (cell: Cell, index: number) => {
 </template>
 
 <style scoped lang="scss">
-.cell-wrapper {
-	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
+.cell {
+	margin: auto 0;
 
-	max-height: 100%;
-	height: 100%;
-	min-height: 100%;
-	width: max-content;
-	max-width: 200px;
+	.cell-line-list {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 
-	background-color: transparent;
+		list-style: none;
+		margin: 0;
+		padding: 0;
 
-	overflow: hidden;
+		p {
+			margin: 0;
+			cursor: default;
+		}
 
-	.cell {
-		margin: auto 0;
-
-		.cell-line-list {
+		.c-link-wrapper {
 			display: flex;
 			align-items: center;
 			gap: 8px;
+			cursor: default;
 
-			list-style: none;
-			margin: 0;
-			padding: 0;
+			.c-link {
+				color: $fuji-blue;
+				transition: color 0.25s;
+				text-decoration: underline;
+				user-select: none;
+				cursor: pointer;
+				transition: color 0.25s;
 
-			p {
-				margin: 0;
-				cursor: default;
+				&:hover {
+					color: $text-color;
+				}
 			}
 
-			.c-link-wrapper {
-				display: flex;
-				align-items: center;
-				gap: 8px;
-				cursor: default;
+			.c-image {
+				background-color: currentColor;
+				color: $text-color;
+				width: 20px;
+				height: 20px;
+				fill: currentColor;
 
-				.c-link {
+				mask-size: contain;
+				mask-image: url("@/assets/icons/image.svg");
+				mask-repeat: no-repeat;
+
+				transition: color 0.25s;
+
+				&:hover {
 					color: $fuji-blue;
-					transition: color 0.25s;
-					text-decoration: underline;
-					user-select: none;
 					cursor: pointer;
-					transition: color 0.25s;
-
-					&:hover {
-						color: $text-color;
-					}
 				}
 
-				.c-image {
-					background-color: currentColor;
-					color: $text-color;
-					width: 20px;
-					height: 20px;
-					fill: currentColor;
+				&.blinking {
+					animation-duration: 0.75s;
+					animation-name: blinking;
+					animation-iteration-count: infinite;
+					animation-direction: alternate;
 
-					mask-size: contain;
-					mask-image: url("@/assets/icons/image.svg");
-					mask-repeat: no-repeat;
-
-					transition: color 0.25s;
-
-					&:hover {
-						color: $fuji-blue;
-						cursor: pointer;
-					}
-
-					&.blinking {
-						animation-duration: 0.75s;
-						animation-name: blinking;
-						animation-iteration-count: infinite;
-						animation-direction: alternate;
-
-						@keyframes blinking {
-							from {
-								color: $fuji-blue;
-							}
-							to {
-								color: $text-color;
-							}
+					@keyframes blinking {
+						from {
+							color: $fuji-blue;
+						}
+						to {
+							color: $text-color;
 						}
 					}
 				}

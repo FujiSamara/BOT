@@ -6,6 +6,7 @@ $fuji-gray-lighter: #47474780;
 $fuji-soft-gray: #f3f6fa;
 $fuji-soft-gray-darker: #cbcbcb;
 $fuji-soft-gray-lighter: #fafbfd;
+$fuji-soft-blue: #2e5ffa08;
 $fuji-white: #ffffff;
 $fuji-white-darker: #f8f8f8;
 $fuji-red: #ce4b67;
@@ -20,6 +21,7 @@ $table-toollbar-height: 48px;
 :root {
   --table-pagination-height: $table-pagination-height;
   --table-toollbar-height: $table-toollbar-height;
+  --max-cell-width: 200px;
 }
 
 // Colors
@@ -28,7 +30,7 @@ $text-color-lighter: $fuji-gray-lighter;
 
 $text-color-white: $fuji-white;
 $logo-color: $fuji-gray-darker;
-$row-bg-color: $fuji-soft-gray-lighter;
+$row-bg-color: $fuji-soft-blue;
 
 $body-background-color: $fuji-soft-gray;
 $sidebar-background-color: $fuji-white;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
-import TableCell from "@/components/table/TableCell.vue";
+import TableCellContainer from "@/components/table/TableCellContainer.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
 import { useRoute, useRouter } from "vue-router";
@@ -23,7 +23,11 @@ const resizeCells = () => {
 		(cell as HTMLElement).style.width = "max-content";
 	}
 
-	const maxGrantedWidth = 200;
+	const maxGrantedWidth = parseInt(
+		window
+			.getComputedStyle(document.documentElement)
+			.getPropertyValue("--max-cell-width"),
+	);
 	const cellsWidth = [...titles.value.map(() => 0), 0];
 
 	for (const cell of cells) {
@@ -108,7 +112,7 @@ onMounted(() => {
 			:duration="{ enter: 1500, leave: 500 }"
 		>
 			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
-				<TableCell id="-1" class="t-cell check">
+				<TableCellContainer id="-1" class="t-cell check">
 					<div
 						class="checkbox"
 						:class="{ checked: props.table.allChecked.value }"
@@ -118,8 +122,8 @@ onMounted(() => {
 					>
 						<div class="icon"></div>
 					</div>
-				</TableCell>
-				<TableCell
+				</TableCellContainer>
+				<TableCellContainer
 					:id="index"
 					class="t-cell"
 					v-for="(title, index) in titles"
@@ -135,10 +139,10 @@ onMounted(() => {
 							></div>
 						</Transition>
 					</div>
-				</TableCell>
+				</TableCellContainer>
 			</div>
 			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
-				<TableCell id="-1" class="t-cell check">
+				<TableCellContainer id="-1" class="t-cell check">
 					<div
 						class="checkbox"
 						:class="{ checked: table.checked.value[index].value }"
@@ -149,15 +153,15 @@ onMounted(() => {
 					>
 						<div class="icon"></div>
 					</div>
-				</TableCell>
-				<TableCell
+				</TableCellContainer>
+				<TableCellContainer
 					:id="index"
 					class="t-cell"
 					v-for="(cell, index) in row.columns"
 					:key="index"
 					:cell="cell"
 				>
-				</TableCell>
+				</TableCellContainer>
 			</div>
 		</TransitionGroup>
 	</div>
