@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, Ref, watch } from "vue";
+import { computed, onMounted, ref, Ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	pageCount: {
@@ -11,6 +12,8 @@ const currentPage = defineModel("currentPage", {
 	required: true,
 	default: 1,
 });
+const router = useRouter();
+const route = useRoute();
 
 const middlePagesCount = computed(() => {
 	return Math.min(props.pageCount - 2, 5);
@@ -19,6 +22,12 @@ const middlePagesCount = computed(() => {
 const middlePages: Ref<Array<number>> = ref([]);
 
 const inputValue = ref(currentPage.value);
+
+const loadPages = () => {
+	if ("page" in route.query) {
+		currentPage.value = parseInt(route.query["page"] as string);
+	}
+};
 
 const updatePages = () => {
 	const result: Array<number> = [];
@@ -43,8 +52,13 @@ const updatePages = () => {
 	inputValue.value = currentPage.value;
 };
 
-watch([currentPage, props], () => {
+watch([currentPage, props], async () => {
 	updatePages();
+	const query = { ...route.query };
+
+	query["page"] = currentPage.value.toString();
+
+	router.replace({ query: query });
 });
 updatePages();
 
@@ -62,6 +76,10 @@ const onInput = (e: Event) => {
 		inputValue.value = intValue;
 	}
 };
+
+onMounted(() => {
+	loadPages();
+});
 </script>
 
 <template>
