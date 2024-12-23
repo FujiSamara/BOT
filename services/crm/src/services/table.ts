@@ -64,7 +64,7 @@ export class TableService {
 		withLoop: boolean = true,
 	) {
 		const table = new CustomTable();
-		table.blockLoop = !withLoop;
+		table.blockLoop.value = !withLoop;
 		this._tables.set(name, table);
 	}
 

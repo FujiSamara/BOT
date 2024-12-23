@@ -77,6 +77,11 @@ const loadOrder = () => {
 	}
 };
 
+const loadTable = () => {
+	props.table.blockLoop.value = false;
+	props.table.forceRefresh();
+};
+
 const titles: Ref<string[]> = computed(() => {
 	if (props.table.orderedHeaders.value.length || !titles.value) {
 		return props.table.visibleHeaders.value;
@@ -105,6 +110,18 @@ onMounted(() => {
 
 <template>
 	<div class="table" ref="table">
+		<Transition name="fade">
+			<div
+				@click="loadTable"
+				class="load-button"
+				v-if="props.table.blockLoop.value"
+			>
+				<div class="tool-icon-wrapper">
+					<div class="tool-icon search"></div>
+				</div>
+				<span>Загрузить</span>
+			</div>
+		</Transition>
 		<TransitionGroup
 			name="table"
 			tag="div"
@@ -183,6 +200,35 @@ onMounted(() => {
 
 	background-color: $table-bg-color;
 
+	.load-button {
+		@include field;
+
+		width: 200px;
+		height: 48px;
+
+		margin: auto;
+
+		.tool-icon-wrapper {
+			.tool-icon {
+				&.search {
+					mask-image: url("@/assets/icons/loop.svg");
+					color: #090c2f99;
+				}
+			}
+		}
+
+		&:hover,
+		&.active {
+			.tool-icon-wrapper {
+				.tool-icon {
+					&.search {
+						color: $fuji-blue;
+					}
+				}
+			}
+		}
+	}
+
 	.t-row {
 		display: flex;
 		flex-direction: row;
@@ -229,20 +275,11 @@ onMounted(() => {
 				}
 
 				.icon {
-					background-color: currentColor;
-					width: 9px;
-					height: 6px;
-					fill: currentColor;
-
-					mask: url("@/assets/icons/arrow.svg") no-repeat;
+					@include arrow();
 
 					transition:
 						transform 0.25s,
 						opacity 0.5s ease;
-
-					&.reversed {
-						transform: rotate(180deg);
-					}
 				}
 			}
 		}

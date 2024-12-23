@@ -120,7 +120,6 @@ export class Table<T extends BaseSchema> {
 	//#region Rows
 	//#region Refreshing
 	public startUpdatingLoop() {
-		if (this.blockLoop) return;
 		let skipLoop = false;
 
 		watch(
@@ -138,6 +137,7 @@ export class Table<T extends BaseSchema> {
 			},
 		);
 
+		if (this.blockLoop.value) return;
 		this.forceRefresh();
 
 		const loop = async () => {
@@ -158,7 +158,7 @@ export class Table<T extends BaseSchema> {
 	 * - If **fromLoop** is **true** and row count changed then force refreshes rows.
 	 */
 	private async refreshInfo(fromLoop: boolean = false) {
-		if (this.blockLoop) return;
+		if (this.blockLoop.value) return;
 		// Info about filtered table.
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._infoQuery.value, this._completedQuery.value),
@@ -182,7 +182,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Updates rows. */
 	private async refreshRows(findNew: boolean = false) {
-		if (this.blockLoop) return;
+		if (this.blockLoop.value) return;
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._rowsQuery.value, this._completedQuery.value),
 		);
@@ -226,7 +226,7 @@ export class Table<T extends BaseSchema> {
 		this._loadedRows.value = rows;
 	}
 	/** Forces updating rows. */
-	protected forceRefresh() {
+	public forceRefresh() {
 		const limit = 3;
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
@@ -485,7 +485,7 @@ export class Table<T extends BaseSchema> {
 		return result;
 	}
 	/** If **true** then block updating. */
-	public blockLoop: boolean = false;
+	public blockLoop: Ref<boolean> = ref(false);
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page. */
