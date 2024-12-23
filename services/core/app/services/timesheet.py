@@ -45,4 +45,4 @@ def export_timesheets(query_schema: QuerySchema) -> BytesIO:
         aliases=aliases[TimeSheetSchema],
     )
 
-    return exporter.export(timesheets)
+    return exporter.export(timesheets, with_dump=True)
