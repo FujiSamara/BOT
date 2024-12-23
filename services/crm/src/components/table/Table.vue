@@ -55,7 +55,7 @@ const resizeCells = () => {
 	return cellsWidth;
 };
 
-const checkOrder = async () => {
+const updateOrder = async () => {
 	const query = { ...route.query };
 
 	query["orderBy"] = props.table.orderBy.value;
@@ -96,7 +96,7 @@ watch([rows, tableRef], async () => {
 	resizeCells();
 });
 
-watch([props.table.orderBy, props.table.desc], checkOrder);
+watch([props.table.orderBy, props.table.desc], updateOrder);
 
 onMounted(() => {
 	loadOrder();
