@@ -146,13 +146,24 @@ onMounted(() => {
 					v-for="(title, index) in titles"
 					:key="title"
 				>
-					<div class="title" @click="props.table.order(title)">
+					<div
+						class="title"
+						@click="
+							if (!props.table.orderDisabled(title)) props.table.order(title);
+						"
+						:class="{ lock: props.table.orderDisabled(title) }"
+					>
 						<p>{{ title }}</p>
 						<Transition name="fade">
 							<div
 								class="icon"
-								:class="{ reversed: props.table.desc.value }"
-								v-show="props.table.ordered(title)"
+								:class="{
+									reversed:
+										props.table.desc.value && !props.table.orderDisabled(title),
+								}"
+								v-show="
+									props.table.ordered(title) || props.table.orderDisabled(title)
+								"
 							></div>
 						</Transition>
 					</div>
@@ -280,6 +291,15 @@ onMounted(() => {
 					transition:
 						transform 0.25s,
 						opacity 0.5s ease;
+				}
+
+				&.lock {
+					cursor: not-allowed;
+					.icon {
+						width: 7px;
+						height: 9px;
+						mask: url("@/assets/icons/lock.svg") no-repeat;
+					}
 				}
 			}
 		}

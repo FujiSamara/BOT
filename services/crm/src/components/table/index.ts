@@ -512,8 +512,8 @@ export class Table<T extends BaseSchema> {
 		return this.getAlias(this.orderBy.value) === header;
 	}
 	/** Return **true** if sorted by this column with **header** is disabled. */
-	public orderDisabled(_: string): boolean {
-		return false;
+	public orderDisabled(header: string): boolean {
+		return !Boolean(header);
 	}
 	/** Sorts columns by specify **header**. */
 	public order(header: string) {
@@ -579,7 +579,7 @@ export class Table<T extends BaseSchema> {
 		return "#ffffff";
 	}
 	/** Returns actual alias for specified **fieldName**. */
-	private getAlias(fieldName: string): string {
+	protected getAlias(fieldName: string): string {
 		let alias = this._aliases.get(fieldName);
 		if (alias === undefined) {
 			alias = fieldName;
