@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { Ref, ref, watch } from "vue";
+import { onMounted, onUnmounted, PropType, Ref, ref, watch } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 
 const props = defineProps({
 	table: {
-		type: Table<BaseSchema>,
+		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
 	style: {
 		type: String,
+	},
+	alignRight: {
+		type: Boolean,
 	},
 });
 
@@ -44,12 +47,23 @@ watch(headersHidden, () => {
 		props.table.columnHidden.value.length ===
 		props.table.orderedHeaders.value.length - 1;
 });
+
+const menuOutsideClicked = () => {
+	menuVisible.value = false;
+};
+
+onMounted(() => {
+	document.addEventListener("click", menuOutsideClicked);
+});
+onUnmounted(() => {
+	document.removeEventListener("click", menuOutsideClicked);
+});
 </script>
 
 <template>
 	<div class="column-filter">
 		<button
-			@click="menuVisible = !menuVisible"
+			@click.stop="menuVisible = !menuVisible"
 			:class="{ active: menuVisible }"
 			:style="props.style"
 			class="cf-switch"
@@ -60,7 +74,12 @@ watch(headersHidden, () => {
 			<span>Фильтр</span>
 		</button>
 		<Transition name="fade">
-			<ul class="cf-menu" v-if="menuVisible">
+			<ul
+				class="cf-menu"
+				@click.stop
+				:class="{ 'align-right': alignRight }"
+				v-if="menuVisible"
+			>
 				<li
 					v-for="(header, index) in props.table.orderedHeaders.value"
 					:key="header"
@@ -87,7 +106,7 @@ watch(headersHidden, () => {
 	position: relative;
 
 	.cf-switch {
-		@include tool;
+		@include field;
 
 		&.active {
 			background-color: $fuji-blue;
@@ -120,11 +139,16 @@ watch(headersHidden, () => {
 		flex-direction: column;
 		align-items: center;
 
-		width: 202px;
+		min-width: 202px;
+		width: fit-content;
+		max-height: 350px;
 		margin: 0;
 
 		position: absolute;
 		z-index: 1;
+		overflow-y: auto;
+
+		white-space: nowrap;
 
 		gap: 16px;
 
@@ -135,6 +159,10 @@ watch(headersHidden, () => {
 		background-color: $table-bg-color;
 
 		transition: opacity 0.5s;
+
+		&.align-right {
+			right: 0;
+		}
 
 		li {
 			display: flex;

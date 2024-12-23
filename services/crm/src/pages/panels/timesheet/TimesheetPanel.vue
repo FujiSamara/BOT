@@ -25,7 +25,7 @@ const searchList = useSearch(
 		schemas: [
 			{
 				pattern: "department",
-				groups: [0],
+				groups: [0, 1, 2],
 			},
 		],
 		placeholder: "Производство",
@@ -35,8 +35,16 @@ const searchList = useSearch(
 	{
 		schemas: [
 			{
-				pattern: "worker",
+				pattern: "l_name",
 				groups: [0],
+			},
+			{
+				pattern: "f_name",
+				groups: [1],
+			},
+			{
+				pattern: "o_name",
+				groups: [2],
 			},
 		],
 		placeholder: "Поиск",
@@ -44,8 +52,7 @@ const searchList = useSearch(
 		name: "general",
 	},
 );
-
-const dateInterval = await useDateInterval(props.table, "day");
+const dateInterval = await useDateInterval(props.table, "");
 </script>
 
 <template>
@@ -67,6 +74,7 @@ const dateInterval = await useDateInterval(props.table, "day");
 						:to="dateInterval.to"
 						@unset="dateInterval.unset"
 						@submit="dateInterval.submit"
+						:block-unset="!props.table.blockLoop.value"
 					></DateFilter>
 				</div>
 			</div>
@@ -79,11 +87,16 @@ const dateInterval = await useDateInterval(props.table, "day");
 					<ExportToExcel
 						:table="props.table"
 						style="width: 187px; height: 48px"
+						:disabled="!dateInterval.exist.value"
 					></ExportToExcel>
 				</div>
 			</div>
 		</div>
-		<Table class="table" :table="props.table"></Table>
+		<Table
+			class="table"
+			:table="props.table"
+			:blockLoading="!dateInterval.exist.value"
+		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"

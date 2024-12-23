@@ -10,6 +10,9 @@ const props = defineProps({
 		type: Table<BaseSchema>,
 		required: true,
 	},
+	blockLoading: {
+		type: Boolean,
+	},
 });
 
 const router = useRouter();
@@ -77,6 +80,11 @@ const loadOrder = () => {
 	}
 };
 
+const loadTable = () => {
+	props.table.blockLoop.value = false;
+	props.table.forceRefresh();
+};
+
 const titles: Ref<string[]> = computed(() => {
 	if (props.table.orderedHeaders.value.length || !titles.value) {
 		return props.table.visibleHeaders.value;
@@ -105,6 +113,19 @@ onMounted(() => {
 
 <template>
 	<div class="table" ref="table">
+		<Transition name="fade">
+			<div
+				@click="if (!props.blockLoading) loadTable();"
+				class="load-button"
+				v-if="props.table.blockLoop.value"
+				:class="{ disabled: props.blockLoading }"
+			>
+				<div class="tool-icon-wrapper">
+					<div class="tool-icon search"></div>
+				</div>
+				<span>Загрузить</span>
+			</div>
+		</Transition>
 		<TransitionGroup
 			name="table"
 			tag="div"
@@ -129,13 +150,24 @@ onMounted(() => {
 					v-for="(title, index) in titles"
 					:key="title"
 				>
-					<div class="title" @click="props.table.order(title)">
+					<div
+						class="title"
+						@click="
+							if (!props.table.orderDisabled(title)) props.table.order(title);
+						"
+						:class="{ lock: props.table.orderDisabled(title) }"
+					>
 						<p>{{ title }}</p>
 						<Transition name="fade">
 							<div
 								class="icon"
-								:class="{ reversed: props.table.desc.value }"
-								v-show="props.table.ordered(title)"
+								:class="{
+									reversed:
+										props.table.desc.value && !props.table.orderDisabled(title),
+								}"
+								v-show="
+									props.table.ordered(title) || props.table.orderDisabled(title)
+								"
 							></div>
 						</Transition>
 					</div>
@@ -183,6 +215,35 @@ onMounted(() => {
 
 	background-color: $table-bg-color;
 
+	.load-button {
+		@include field;
+
+		width: 200px;
+		height: 48px;
+
+		margin: auto;
+
+		.tool-icon-wrapper {
+			.tool-icon {
+				&.search {
+					mask-image: url("@/assets/icons/loop.svg");
+					color: #090c2f99;
+				}
+			}
+		}
+
+		&:hover,
+		&.active {
+			.tool-icon-wrapper {
+				.tool-icon {
+					&.search {
+						color: $fuji-blue;
+					}
+				}
+			}
+		}
+	}
+
 	.t-row {
 		display: flex;
 		flex-direction: row;
@@ -229,19 +290,19 @@ onMounted(() => {
 				}
 
 				.icon {
-					background-color: currentColor;
-					width: 9px;
-					height: 6px;
-					fill: currentColor;
-
-					mask: url("@/assets/icons/arrow.svg") no-repeat;
+					@include arrow();
 
 					transition:
 						transform 0.25s,
 						opacity 0.5s ease;
+				}
 
-					&.reversed {
-						transform: rotate(180deg);
+				&.lock {
+					cursor: not-allowed;
+					.icon {
+						width: 7px;
+						height: 9px;
+						mask: url("@/assets/icons/lock.svg") no-repeat;
 					}
 				}
 			}

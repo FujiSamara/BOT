@@ -33,6 +33,12 @@ const routes = [
 						component: async () =>
 							await import("@/pages/panels/worktime/WorktimePanel.vue"),
 					},
+					{
+						name: "table-timesheets",
+						path: "timesheet",
+						component: async () =>
+							await import("@/pages/panels/timesheet/TimesheetPanel.vue"),
+					},
 				],
 			},
 			{

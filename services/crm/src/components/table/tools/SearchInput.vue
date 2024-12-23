@@ -66,7 +66,7 @@ const onInput = (event: Event) => {
 
 <style scoped lang="scss">
 .search-input {
-	@include tool;
+	@include field;
 
 	.tool-icon-wrapper {
 		.tool-icon {

@@ -10,11 +10,16 @@ const props = defineProps({
 		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
+	disabled: {
+		type: Boolean,
+	},
 });
 
 const loading = ref(false);
 
 const onClick = async () => {
+	if (props.disabled) return;
+
 	loading.value = true;
 	await props.table.export();
 	loading.value = false;
@@ -22,7 +27,11 @@ const onClick = async () => {
 </script>
 
 <template>
-	<button @click="onClick" class="export-button">
+	<button
+		@click="onClick"
+		class="export-button"
+		:class="{ disabled: props.disabled }"
+	>
 		<div class="tool-icon-wrapper">
 			<Transition name="fade">
 				<PulseSpinner v-if="loading" class="spinner"></PulseSpinner>
@@ -37,7 +46,7 @@ const onClick = async () => {
 
 <style scoped lang="scss">
 .export-button {
-	@include tool;
+	@include field;
 
 	span {
 		color: $fuji-green;

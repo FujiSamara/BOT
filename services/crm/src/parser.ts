@@ -4,7 +4,7 @@ import {
 	ExpenditureSchema,
 	PostSchema,
 	WorkerSchema,
-} from "../types/index";
+} from "@types";
 import * as config from "@/config";
 import { Cell, CellLine } from "@/table";
 
@@ -141,4 +141,8 @@ export function formatMultilineString(multilineString: string): Cell {
 	}
 
 	return new Cell(...cellLines);
+}
+
+export function capitalize(val: string) {
+	return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }

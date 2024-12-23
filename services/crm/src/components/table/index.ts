@@ -137,6 +137,7 @@ export class Table<T extends BaseSchema> {
 			},
 		);
 
+		if (this.blockLoop.value) return;
 		this.forceRefresh();
 
 		const loop = async () => {
@@ -157,6 +158,7 @@ export class Table<T extends BaseSchema> {
 	 * - If **fromLoop** is **true** and row count changed then force refreshes rows.
 	 */
 	private async refreshInfo(fromLoop: boolean = false) {
+		if (this.blockLoop.value) return;
 		// Info about filtered table.
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._infoQuery.value, this._completedQuery.value),
@@ -180,6 +182,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Updates rows. */
 	private async refreshRows(findNew: boolean = false) {
+		if (this.blockLoop.value) return;
 		const resp = await this._network.withAuthChecking(
 			axios.post(this._rowsQuery.value, this._completedQuery.value),
 		);
@@ -223,7 +226,7 @@ export class Table<T extends BaseSchema> {
 		this._loadedRows.value = rows;
 	}
 	/** Forces updating rows. */
-	protected forceRefresh() {
+	public forceRefresh() {
 		const limit = 3;
 		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
 	}
@@ -481,6 +484,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	}
+	/** If **true** then block updating. */
+	public blockLoop: Ref<boolean> = ref(false);
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page. */
@@ -507,8 +512,8 @@ export class Table<T extends BaseSchema> {
 		return this.getAlias(this.orderBy.value) === header;
 	}
 	/** Return **true** if sorted by this column with **header** is disabled. */
-	public orderDisabled(_: string): boolean {
-		return false;
+	public orderDisabled(header: string): boolean {
+		return !Boolean(header);
 	}
 	/** Sorts columns by specify **header**. */
 	public order(header: string) {
@@ -574,7 +579,7 @@ export class Table<T extends BaseSchema> {
 		return "#ffffff";
 	}
 	/** Returns actual alias for specified **fieldName**. */
-	private getAlias(fieldName: string): string {
+	protected getAlias(fieldName: string): string {
 		let alias = this._aliases.get(fieldName);
 		if (alias === undefined) {
 			alias = fieldName;

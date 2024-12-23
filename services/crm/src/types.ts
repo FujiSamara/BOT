@@ -14,6 +14,7 @@ export interface PanelData extends LinkData {
 	accesses: Access[];
 	name: string;
 	create: { new (): Table<BaseSchema> };
+	withUpdatingLoop?: boolean;
 }
 
 export interface Token {
@@ -53,7 +54,19 @@ export const accessesDict: any = {
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
 
-// Schemas
+export enum DateType {
+	Interval = "Интервал",
+	Month = "Месяц",
+	Day = "День",
+}
+
+export enum CalendarType {
+	Day,
+	Month,
+	Year,
+}
+
+// #region Schemas
 
 export interface BaseSchema {
 	id: number;
@@ -154,3 +167,10 @@ export interface QuerySchema {
 	date_query?: DateSchema;
 	filter_query?: Array<FilterSchema>;
 }
+
+export interface TimesheetSchema extends BaseSchema {
+	worker_fullname: string;
+	post_name: string;
+	total_hours: number;
+}
+// #endregion
