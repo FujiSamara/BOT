@@ -87,6 +87,7 @@ const dateInterval = await useDateInterval(props.table, "");
 					<ExportToExcel
 						:table="props.table"
 						style="width: 187px; height: 48px"
+						:disabled="!dateInterval.exist.value"
 					></ExportToExcel>
 				</div>
 			</div>

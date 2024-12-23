@@ -157,6 +157,10 @@
     .tool-icon-wrapper > .tool-icon {
       color: #cdcdcd99 !important;
     }
+
+    span {
+      color: $text-color !important;
+    }
   }
 
   &.error {
