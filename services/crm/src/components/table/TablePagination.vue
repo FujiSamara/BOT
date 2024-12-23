@@ -23,10 +23,12 @@ const middlePages: Ref<Array<number>> = ref([]);
 
 const inputValue = ref(currentPage.value);
 
-const loadPages = () => {
+const loadPages = (): boolean => {
 	if ("page" in route.query) {
 		currentPage.value = parseInt(route.query["page"] as string);
+		return true;
 	}
+	return false;
 };
 
 const updatePages = () => {
@@ -61,7 +63,6 @@ const updatePages = () => {
 watch([currentPage, props], async () => {
 	updatePages();
 });
-updatePages();
 
 const onInput = (e: Event) => {
 	const intValue = parseInt((e.target as HTMLInputElement).value);
@@ -79,7 +80,7 @@ const onInput = (e: Event) => {
 };
 
 onMounted(() => {
-	loadPages();
+	if (!loadPages()) updatePages();
 });
 </script>
 
