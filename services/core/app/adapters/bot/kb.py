@@ -6,7 +6,7 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.infra.database.schemas import WorkTimeSchema
+from app.schemas import WorkTimeSchema
 from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
 from app.infra.database.models import ApprovalStatus
 
@@ -19,7 +19,7 @@ settings_bid_menu_button = InlineKeyboardButton(
 )
 
 create_bid_menu_button = InlineKeyboardButton(
-    text="Заявки на оплату платежей", callback_data="get_create_bid_menu"
+    text="Подать платёжную заявку", callback_data="get_create_bid_menu"
 )
 
 
@@ -34,25 +34,25 @@ bid_create_search_button = InlineKeyboardButton(
 )
 
 fac_cc_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_fac_menu"
+    text="Согласовать платёж ЦФО/ЦЗ", callback_data="get_fac_menu"
 )
 kru_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_kru_menu"
+    text="Согласовать платёж КРУ", callback_data="get_kru_menu"
 )
 owner_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_owner_menu"
+    text="Согласовать платёж учредитель", callback_data="get_owner_menu"
 )
 accountant_card_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_accountant_card_menu"
+    text="Согласовать платёж бухгалтерия", callback_data="get_accountant_card_menu"
 )
 accountant_cash_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_accountant_cash_menu"
+    text="Согласовать платёж бухгалтерия", callback_data="get_accountant_cash_menu"
 )
 teller_card_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_teller_card_menu"
+    text="Выплата денежных средств", callback_data="get_teller_card_menu"
 )
 teller_cash_menu_button = InlineKeyboardButton(
-    text="Заявки на согласования платежей", callback_data="get_teller_cash_menu"
+    text="Выдача денежных средств", callback_data="get_teller_cash_menu"
 )
 
 
@@ -279,7 +279,7 @@ def get_rating_worker_menu(
 
 # Worker bid
 worker_bid_menu_button = InlineKeyboardButton(
-    text="Согласование кандидатов", callback_data="get_worker_bid_menu"
+    text="Подать заявку кандидата", callback_data="get_worker_bid_menu"
 )
 
 create_worker_bid_menu_button = InlineKeyboardButton(
@@ -536,3 +536,16 @@ monitoring_menu = create_inline_keyboard(
     main_menu_button,
 )
 # endregion
+
+get_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
+)
+
+get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
+)
+
+coordinate_worker_bid_menu = create_inline_keyboard(
+    get_pending_coordinate_worker_bid_btn,
+    main_menu_button,
+)

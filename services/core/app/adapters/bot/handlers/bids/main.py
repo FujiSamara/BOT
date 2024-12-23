@@ -4,7 +4,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 from app.adapters.bot.handlers.bids import create_bid
 from app.adapters.bot.handlers.bids import coordinate_bid
-from app.adapters.bot.handlers.bids import worker_bid
 
 # bot imports
 from app.adapters.bot.kb import bid_menu
@@ -31,4 +30,4 @@ async def get_menu(message: CallbackQuery | Message, state: FSMContext):
 # Create section
 coordinate_bid.build_coordinations()
 
-router.include_routers(create_bid.router, coordinate_bid.router, worker_bid.router)
+router.include_routers(create_bid.router, coordinate_bid.router)

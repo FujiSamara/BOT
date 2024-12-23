@@ -22,7 +22,7 @@ from app.adapters.bot.kb import (
 from app.adapters.bot import text
 
 from app.infra.database.models import Bid
-from app.infra.database.schemas import ApprovalStatus, BidSchema
+from app.schemas import ApprovalStatus, BidSchema
 from app.services import (
     get_pending_bids_by_column,
     get_pending_bids_for_teller_cash,
@@ -343,12 +343,11 @@ class CoordinationFactory:
                 bids = get_pending_bids_by_column(self.state_column)
         else:
             if self.state_column == Bid.teller_cash_state:
-                bids = get_history_bids_for_teller_cash(tg_id)
+                bids = get_history_bids_for_teller_cash(tg_id, 10)
             elif self.state_column == Bid.fac_state:
-                bids = get_history_bids_for_cc_fac(tg_id)
+                bids = get_history_bids_for_cc_fac(tg_id, 10)
             else:
-                bids = get_history_bids_by_column(self.state_column)
-        bids = sorted(bids, key=lambda bid: bid.create_date)[:10]
+                bids = get_history_bids_by_column(self.state_column, 10)
         return create_inline_keyboard(
             *(
                 InlineKeyboardButton(

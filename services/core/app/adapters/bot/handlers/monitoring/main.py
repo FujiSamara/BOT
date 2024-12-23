@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardBut
 from aiogram.utils.markdown import hbold
 
 from app.infra.database.models import IncidentStage
-import app.services.equipment_status_service as es_service
+import app.services.equipment_status as es_service
 
 import app.adapters.bot.kb as kb
 from app.adapters.bot.handlers.utils import (

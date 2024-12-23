@@ -15,7 +15,7 @@ from app.infra.database.models import (
     FujiScope,
     Worker,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BidOutSchema,
     BidSchema,
     FilterSchema,
@@ -217,7 +217,7 @@ def remove_bid(id: int) -> None:
     orm.remove_bid(id)
 
 
-def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
+def get_bids_by_worker_telegram_id(id: str, limit: int) -> list[BidSchema]:
     """
     Returns all bids own to worker with specified telegram id.
     """
@@ -226,7 +226,7 @@ def get_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
     if not worker:
         return []
 
-    return orm.get_bids_by_worker(worker)
+    return orm.get_bids_by_worker(worker, limit)
 
 
 def get_workers_bids_by_sender_telegram_id(id: str) -> list[BidSchema]:
@@ -279,22 +279,22 @@ def get_pending_bids_for_cc_fac(tg_id) -> list[BidSchema]:
     return orm.get_pending_bids_for_cc_fac(tg_id)
 
 
-def get_history_bids_by_column(column: Any) -> list[BidSchema]:
+def get_history_bids_by_column(column: Any, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database past through worker with `column`.
     """
-    return orm.get_specified_history_bids(column)
+    return orm.get_specified_history_bids(column, limit)
 
 
-def get_history_bids_for_teller_cash(tg_id: int) -> list[BidSchema]:
+def get_history_bids_for_teller_cash(tg_id: int, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database with pending approval state at column.
     """
-    return orm.get_specified_history_bids_in_department(tg_id)
+    return orm.get_specified_history_bids_in_department(tg_id, limit)
 
 
-def get_history_bids_for_cc_fac(tg_id) -> list[BidSchema]:
-    return orm.get_history_bids_for_cc_fac(tg_id)
+def get_history_bids_for_cc_fac(tg_id, limit: int) -> list[BidSchema]:
+    return orm.get_history_bids_for_cc_fac(tg_id, limit)
 
 
 async def update_bid_state(
@@ -349,7 +349,9 @@ async def update_bid_state(
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
             bid.worker.telegram_id,
-            "Ваша заявка отклонена!\nПричина: " + bid.denying_reason,
+            "Ваша заявка отклонена!\nПричина: "
+            + bid.denying_reason
+            + f"\nНомер заявки: {bid.id}",
         )
         bid.close_date = datetime.now()
 

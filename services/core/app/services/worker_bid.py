@@ -13,7 +13,7 @@ from app.infra.database.models import (
     Worker,
     WorkerBid,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     WorkerBidSchema,
     DocumentSchema,
 )
@@ -30,6 +30,41 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     if not worker_bid:
         return
 
+    worker_bid.state = state
+    orm.update_worker_bid(worker_bid)
+
+    from app.adapters.bot.handlers.utils import (
+        notify_worker_by_telegram_id,
+        send_menu_by_scopes,
+    )
+
+    worker = get_worker_by_id(worker_bid.sender.id)
+    if not worker:
+        return
+    msg = None
+    if state == ApprovalStatus.approved:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id, f"Кандидат согласован!\nНомер заявки: {worker_bid.id}."
+        )
+    elif state == ApprovalStatus.denied:
+        msg = await notify_worker_by_telegram_id(
+            worker.telegram_id,
+            f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
+        )
+    if msg is not None:
+        await send_menu_by_scopes(msg)
+
+
+async def update_worker_bid_bot(bid_id, state: ApprovalStatus, comment: str):
+    """
+    Updates worker bid state and comment to specified `state` by `bid_id` if bid exist.
+    Use only in bot
+    """
+    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+
+    if not worker_bid:
+        logger.error(f"Worker bid with id: {bid_id} not found.")
+    worker_bid.comment = comment
     worker_bid.state = state
     orm.update_worker_bid(worker_bid)
 
@@ -136,3 +171,9 @@ def create_worker_bid(
     )
 
     orm.add_worker_bid(worker_bid)
+
+
+def get_pending_approval_bids() -> list[WorkerBidSchema] | None:
+    return orm.find_worker_bids_by_column(
+        WorkerBid.state, ApprovalStatus.pending_approval
+    )

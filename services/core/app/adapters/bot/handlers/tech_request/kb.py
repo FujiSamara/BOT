@@ -8,12 +8,14 @@ from app.services import get_technical_problem_by_id, get_technical_request_by_i
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.kb import main_menu_button
 
-from app.infra.database.schemas import TechnicalRequestSchema
+from app.schemas import TechnicalRequestSchema
 
 
 # region Chief technician (CT)
 
-ct_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_CT_TR")
+ct_button = InlineKeyboardButton(
+    text="Технические заявки главный техник", callback_data="get_CT_TR"
+)
 
 ct_change_department_button = InlineKeyboardButton(
     text="Выбрать производство",
@@ -275,7 +277,7 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Тех. заявки", callback_data="get_WR_TR_menu"
+    text="Подать техническую заявку", callback_data="get_WR_TR_menu"
 )
 
 wr_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
@@ -304,6 +306,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     problem_name = data.get("problem_name")
     description = data.get("description")
     photo = data.get("photo")
+    department_name = data.get("dep_name")
 
     if not problem_name:
         problem_name = ""
@@ -327,6 +330,12 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     else:
         photo = f"{len(photo)}"
 
+    if not department_name:
+        department_name = ""
+        form_complete = False
+    else:
+        department_name += " ✅"
+
     buttons = [
         [
             InlineKeyboardButton(text="Поломка", callback_data="problem_type_WR_TR"),
@@ -335,6 +344,10 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text="Комментарий", callback_data="description_WR_TR"),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(text="Производство", callback_data="department_WR_TR"),
+            InlineKeyboardButton(text=f"{department_name}", callback_data="dummy"),
         ],
         [
             InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
@@ -359,7 +372,9 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
 # region Repairman (RM)
 
-rm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_RM_TR")
+rm_button = InlineKeyboardButton(
+    text="Технические заявки техник", callback_data="get_RM_TR"
+)
 
 rm_change_department_button = InlineKeyboardButton(
     text="Выбрать производство", callback_data="set_RM_TR_department"
@@ -497,7 +512,9 @@ async def rm_repair_rework_kb(
 
 # region Territorial manager (TM)
 
-tm_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_TM_TR")
+tm_button = InlineKeyboardButton(
+    text="Приём технических заявок", callback_data="get_TM_TR"
+)
 
 tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
 
@@ -616,7 +633,9 @@ async def tm_rate_kb(
 
 # region Department director
 
-dd_button = InlineKeyboardButton(text="Тех. заявки", callback_data="get_DD_TR")
+dd_button = InlineKeyboardButton(
+    text="Технические заявки учредитель", callback_data="get_DD_TR"
+)
 
 dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")
 

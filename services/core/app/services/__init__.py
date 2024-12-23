@@ -123,12 +123,16 @@ from app.services.technical_request import (
     update_technical_request_from_territorial_manager,
     update_technical_request_problem,
     get_departments_names_for_chief_technician,
+    get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
+    update_repairman_worktimes,
 )
 from app.services.worker_bid import (
     create_worker_bid,
     get_worker_bid_by_id,
     update_worker_bid_state,
+    get_pending_approval_bids,
+    update_worker_bid_bot,
 )
 from app.services.worktime import (
     create_worktime,
@@ -141,9 +145,9 @@ from app.services.worktime import (
     remove_worktime,
     update_work_time_record,
     update_worktime,
-    get_openned_today_worktime,
+    get_opened_today_worktime,
     get_last_completed_worktimes_by_tg_id,
-    get_sum_hours_in_month,
+    get_hours_sum_in_month,
 )
 
 __all__ = [
@@ -237,11 +241,12 @@ __all__ = [
     "get_technical_problems",
     "get_technical_request_by_id",
     "get_departments_names_for_chief_technician",
+    "get_request_count_in_departments_by_tg_id",
     "get_request_count_in_departments",
     "get_work_time_record_by_id",
     "get_last_completed_worktimes_by_tg_id",
-    "get_sum_hours_in_month",
-    "get_openned_today_worktime",
+    "get_hours_sum_in_month",
+    "get_opened_today_worktime",
     "get_work_time_records_by_day_and_department",
     "get_worker_bid_by_id",
     "get_worker_by_id",
@@ -278,4 +283,7 @@ __all__ = [
     "set_department_for_worker",
     "update_worktime",
     "find_bid_for_worker",
+    "update_repairman_worktimes",
+    "get_pending_approval_bids",
+    "update_worker_bid_bot",
 ]

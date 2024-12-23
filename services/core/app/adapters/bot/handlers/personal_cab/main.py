@@ -23,7 +23,7 @@ from app.services import (
     get_last_completed_worktimes_by_tg_id,
     get_work_time_record_by_id,
 )
-from app.infra.database.schemas import WorkerSchema
+from app.schemas import WorkerSchema
 from app.infra.database.models import FujiScope
 
 from app.adapters.bot.kb import (
@@ -38,7 +38,7 @@ from app.adapters.bot.kb import (
     create_reply_keyboard,
 )
 from app.adapters.bot import text as text_imp
-from app.adapters.bot.states import PersconalCabinet, Base
+from app.adapters.bot.states import PersonalCabinet, Base
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
@@ -46,8 +46,8 @@ from app.adapters.bot.handlers.utils import (
     handle_documents,
     download_file,
 )
-from app.adapters.bot.handlers.perconal_cab import utils
-from app.adapters.bot.handlers.perconal_cab.schemas import (
+from app.adapters.bot.handlers.personal_cab import utils
+from app.adapters.bot.handlers.personal_cab.schemas import (
     ShowLoginCallbackData,
     ShowWorkTimeCallbackData,
 )
@@ -139,7 +139,7 @@ async def get_mat_val(callback: CallbackQuery, callback_data: ShowLoginCallbackD
 
 @router.callback_query(F.data == set_per_cab_department_button.callback_data)
 async def get_department(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(PersconalCabinet.department)
+    await state.set_state(PersonalCabinet.department)
 
     department_names = get_departments_names()
     department_names.sort()
@@ -152,7 +152,7 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
     await state.update_data(msg=msg)
 
 
-@router.message(PersconalCabinet.department)
+@router.message(PersonalCabinet.department)
 async def set_department(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -196,10 +196,10 @@ async def set_department(message: Message, state: FSMContext):
 # Documents
 @router.callback_query(F.data == get_menu_changing_form_button.callback_data)
 async def get_menu_changing_form(callback: CallbackQuery, state: FSMContext):
-    await handle_documents_form(callback.message, state, PersconalCabinet.menu)
+    await handle_documents_form(callback.message, state, PersonalCabinet.menu)
 
 
-@router.message(PersconalCabinet.menu)
+@router.message(PersonalCabinet.menu)
 async def set_documents(message: Message, state: FSMContext):
     def condition(documents: list[Document | PhotoSize]) -> str | None:
         if len(documents) > 1:
@@ -316,7 +316,7 @@ async def show_worktime(
     text += f"{hbold('Производство:')} {worktime.department.name if worktime.department is not None else 'Отсутствует'}\n"
     text += f"{hbold('Начало смены:')} {worktime.work_begin.strftime(settings.time_format) if worktime.work_begin is not None else 'Отсутствует'}\n"
     text += f"{hbold('Конец смены:')} {worktime.work_end.strftime(settings.time_format) if worktime.work_end is not None else 'Отсутствует'}\n"
-    text += f"{hbold('Отработанно часов:')} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}\n"
+    text += f"{hbold('Отработано часов:')} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}\n"
     text += f"{hbold('Оценка:')} {worktime.rating if worktime.rating is not None else 'Отсутствует'}\n"
     if worktime.fine is not None:
         text += f"{hbold('Штраф:')} {worktime.fine} р."

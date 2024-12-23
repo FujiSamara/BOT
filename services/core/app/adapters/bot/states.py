@@ -42,6 +42,10 @@ class WorkerBidCreating(StatesGroup):
     work_permission = State()
 
 
+class WorkerBidCoordination(StatesGroup):
+    comment = State()
+
+
 # Rate
 class RateForm(StatesGroup):
     rating = State()
@@ -79,6 +83,7 @@ class WorkerTechnicalRequestForm(StatesGroup):
     problem_name = State()
     description = State()
     photo = State()
+    department = State()
 
 
 class RepairmanTechnicalRequestForm(StatesGroup):
@@ -111,6 +116,6 @@ class DepartmentDirectorRequestForm(StatesGroup):
 
 
 # Persconal Cabinet form
-class PersconalCabinet(StatesGroup):
+class PersonalCabinet(StatesGroup):
     department = State()
     menu = State()

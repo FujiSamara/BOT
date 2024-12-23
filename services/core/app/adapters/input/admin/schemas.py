@@ -25,7 +25,7 @@ from app.infra.database.models import (
     FingerprintAttempt,
 )
 from app.adapters.bot.kb import payment_type_dict, approval_status_dict
-from app.infra.database.schemas import FileOutSchema
+from app.schemas import FileOutSchema
 from app import services
 from app.adapters.input.api.auth import encrypt_password
 

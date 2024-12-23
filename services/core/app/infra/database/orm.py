@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
@@ -6,7 +6,8 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
 
-from app.infra.database.query import QueryBuilder, XLSXExporter
+from app.infra.database.query import QueryBuilder
+from app.adapters.output.file.export import XlSXWriterExporter
 from app.infra.database.database import Base, engine, session
 from app.infra.database.models import (
     Bid,
@@ -43,7 +44,7 @@ from app.infra.database.models import (
     MaterialValues,
     Company,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     BidSchema,
     BudgetRecordSchema,
     DepartmentSchema,
@@ -56,6 +57,7 @@ from app.infra.database.schemas import (
     QuerySchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
+    TimeSheetSchema,
     WorkTimeSchemaFull,
     WorkerBidSchema,
     WorkerSchema,
@@ -268,12 +270,21 @@ def add_bid(bid: BidSchema) -> BidSchema:
         return bid
 
 
-def get_bids_by_worker(worker: WorkerSchema) -> list[BidSchema]:
+def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database by worker.
     """
     with session.begin() as s:
-        raw_bids = s.query(Bid).filter(Bid.worker_id == worker.id).all()
+        raw_bids = (
+            s.execute(
+                select(Bid)
+                .filter(Bid.worker_id == worker.id)
+                .limit(limit)
+                .order_by(Bid.id.desc())
+            )
+            .scalars()
+            .all()
+        )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
@@ -384,27 +395,32 @@ def get_pending_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_history_bids(pending_column) -> list[BidSchema]:
+def get_specified_history_bids(pending_column, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database with approval or
     denied state in `pending_column`.
     """
     with session.begin() as s:
         raw_bids = (
-            s.query(Bid)
-            .filter(
-                or_(
-                    pending_column == ApprovalStatus.denied,
-                    pending_column == ApprovalStatus.approved,
+            s.execute(
+                select(Bid)
+                .filter(
+                    or_(
+                        pending_column == ApprovalStatus.denied,
+                        pending_column == ApprovalStatus.approved,
+                    )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
-            .order_by(Bid.id.desc())
+            .scalars()
             .all()
         )
+
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
+def get_specified_history_bids_in_department(tg_id: int, limit: int) -> list[BidSchema]:
     """
     Returns all bids in database with approval or
     denied state in teller_cash_state collumn.
@@ -412,26 +428,33 @@ def get_specified_history_bids_in_department(tg_id: int) -> list[BidSchema]:
 
     with session.begin() as s:
         department_id = (
-            s.query(Worker).filter(Worker.telegram_id == tg_id).first().department_id
+            s.execute(select(Worker).filter(Worker.telegram_id == tg_id))
+            .scalars()
+            .first()
+            .department_id
         )
         raw_bids = (
-            s.query(Bid)
-            .filter(
-                and_(
-                    or_(
-                        Bid.teller_cash_state == ApprovalStatus.denied,
-                        Bid.teller_cash_state == ApprovalStatus.approved,
-                    ),
-                    Bid.paying_department_id == department_id,
+            s.execute(
+                select(Bid)
+                .filter(
+                    and_(
+                        or_(
+                            Bid.teller_cash_state == ApprovalStatus.denied,
+                            Bid.teller_cash_state == ApprovalStatus.approved,
+                        ),
+                        Bid.paying_department_id == department_id,
+                    )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
-            .order_by(Bid.id.desc())
+            .scalars()
             .all()
         )
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
+def get_history_bids_for_cc_fac(tg_id: int, limit) -> list[BidSchema]:
     with session.begin() as s:
         worker_id = s.execute(
             select(Worker.id).filter(Worker.telegram_id == tg_id)
@@ -448,7 +471,8 @@ def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
         )
         raw_bids = (
             s.execute(
-                select(Bid).filter(
+                select(Bid)
+                .filter(
                     or_(
                         and_(
                             Bid.expenditure_id.in_(cc_expenditures_ids),
@@ -466,6 +490,8 @@ def get_history_bids_for_cc_fac(tg_id: int) -> list[BidSchema]:
                         ),
                     )
                 )
+                .limit(limit)
+                .order_by(Bid.id.desc())
             )
             .scalars()
             .all()
@@ -1049,7 +1075,7 @@ def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblem
 
 def create_technical_request(record: TechnicalRequestSchema) -> bool:
     """Creates technical problem
-    Returns: `True` if technical problem request record created, `False` otherwise.
+    Returns: True if request created False otherwise
     """
     with session.begin() as s:
         technical_request = TechnicalRequest(
@@ -1067,6 +1093,7 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             territorial_manager_id=record.territorial_manager.id,
             repairman_id=record.repairman.id,
             department_id=record.department.id,
+            repairman_worktime=0,
         )
         s.add(technical_request)
 
@@ -1079,15 +1106,18 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
     return True
 
 
-def update_technical_request_from_repairman(record: TechnicalRequestSchema):
+def update_technical_request_from_repairman(record: TechnicalRequestSchema) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
         cur_request.reopen_repair_date = record.reopen_repair_date
+        cur_request.repairman_worktime = record.repairman_worktime
 
         for doc in record.repair_photos:
             file = TechnicalRequestRepairPhoto(
@@ -1097,11 +1127,16 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
     return True
 
 
-def update_technical_request_from_territorial_manager(record: TechnicalRequestSchema):
+def update_technical_request_from_territorial_manager(
+    record: TechnicalRequestSchema,
+) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.close_date = record.close_date
@@ -1391,31 +1426,41 @@ def close_request(
 
 
 def get_count_req_in_departments(
-    state: ApprovalStatus, worker_id: int
+    state: ApprovalStatus, worker_id: int | None = None
 ) -> tuple[str, int]:
     """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        match state:
-            case ApprovalStatus.pending:
-                condition = and_(
-                    TechnicalRequest.repairman_id == worker_id,
-                    TechnicalRequest.state == state,
+        stm = select(Department.name, func.count(TechnicalRequest.id)).join(Department)
+
+        if worker_id is not None:
+            match state:
+                case ApprovalStatus.pending:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.repairman_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+                case ApprovalStatus.pending_approval:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.territorial_manager_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+        else:
+            stm = stm.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.pending,
+                    TechnicalRequest.state == ApprovalStatus.pending_approval,
                 )
-            case ApprovalStatus.pending_approval:
-                condition = and_(
-                    TechnicalRequest.territorial_manager_id == worker_id,
-                    TechnicalRequest.state == state,
-                )
-        departments_ids_counts = s.execute(
-            select(Department.name, func.count(TechnicalRequest.id))
-            .join(Department)
-            .filter(
-                condition,
             )
-            .group_by(Department.name)
-            .order_by(Department.name)
+
+        departments_names_counts = s.execute(
+            stm.group_by(Department.name).order_by(Department.name)
         ).all()
-        return departments_ids_counts
+
+        return departments_names_counts
 
 
 # endregion
@@ -1488,14 +1533,92 @@ def export_models(
     """Returns xlsx file with `model_type` records filtered by `query_schema`."""
     with session.begin() as s:
         query_builder = create_query_builder(model_type, query_schema, s, select_query)
-        exporter = XLSXExporter(
-            query_builder.select, s, formatters, exclude_columns, aliases
-        )
+        exporter = XlSXWriterExporter(formatters, exclude_columns, aliases)
 
-        return exporter.export()
+        return query_builder.export(exporter)
 
 
 # endregion
+
+
+def get_timesheets(
+    query_schema: QuerySchema,
+    page: int | None = None,
+    records_per_page: int | None = None,
+) -> list[TimeSheetSchema]:
+    with session.begin() as s:
+        start = query_schema.date_query.start
+        end = query_schema.date_query.end
+        query_schema.date_query = None
+
+        query_builder = create_query_builder(Worker, query_schema, s)
+        if records_per_page is not None and query_schema is not None:
+            query_builder.select = query_builder.select.offset(
+                (page - 1) * records_per_page
+            ).limit(records_per_page)
+        workers_sel = query_builder.select
+        w_sub = workers_sel.subquery()
+
+        per_day_sel = (
+            select(
+                w_sub.c.id,
+                WorkTime.day,
+                func.sum(WorkTime.work_duration).label("hours"),
+            )
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .group_by(w_sub.c.id, WorkTime.day)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .having(WorkTime.day != null())
+            .order_by(WorkTime.day)
+        )
+
+        total_sel = (
+            select(w_sub.c.id, func.sum(WorkTime.work_duration))
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .group_by(w_sub.c.id)
+        )
+
+        workers: list[Worker] = s.execute(workers_sel).scalars().all()
+        per_days: list[tuple[int, datetime.date, float]] = s.execute(per_day_sel).all()
+        totals = s.execute(total_sel).all()
+
+        total_dict = {total[0]: total[1] for total in totals}
+        per_days_dict: dict[int, dict[datetime.date, float]] = {}
+
+        for worker_id, day, duration in per_days:
+            per_days_dict.setdefault(worker_id, {})[day] = duration
+
+        result: list[TimeSheetSchema] = []
+
+        for worker in workers:
+            worker_fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
+            post_name = worker.post.name
+            total_hours = total_dict.get(worker.id, 0)
+            duration_per_day = per_days_dict.get(worker.id, {})
+
+            timesheet = TimeSheetSchema(
+                worker_fullname=worker_fullname,
+                post_name=post_name,
+                total_hours=total_hours,
+                duration_per_day=duration_per_day,
+            )
+            result.append(timesheet)
+
+        return result
+
 
 # region Bids
 
@@ -1593,23 +1716,23 @@ def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
         return None
 
 
-def get_sum_duration_for_worker_in_month(
-    worker_id: int,
+def get_sum_duration_for_worker_in_months(
+    worker_id: int, begin_dates: list[datetime], end_dates: list[datetime]
 ) -> float:
     with session.begin() as s:
-        begin_date = datetime.now().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-        end_date = begin_date.replace(
-            month=begin_date.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
-        ) - timedelta(days=1)
-
         hours = s.execute(
             select(func.sum(WorkTime.work_duration)).filter(
                 WorkTime.work_duration != null(),
-                WorkTime.work_begin >= begin_date,
-                WorkTime.work_begin <= end_date,
                 WorkTime.worker_id == worker_id,
+                or_(
+                    *[
+                        and_(
+                            WorkTime.work_begin >= begin_date,
+                            WorkTime.work_begin <= end_date,
+                        )
+                        for begin_date, end_date in zip(begin_dates, end_dates)
+                    ]
+                ),
             )
         ).scalar()
         if hours is not None:
@@ -2362,3 +2485,47 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(coordinator.coordinator)
             for coordinator in coordinators
         ]
+
+
+def update_technical_requests(
+    schemas: list[TechnicalRequestSchema],
+) -> None:
+    for schema in schemas:
+        with session.begin() as s:
+            cur_request = (
+                s.execute(
+                    select(TechnicalRequest).filter(TechnicalRequest.id == schema.id)
+                )
+                .scalars()
+                .one()
+            )
+            cur_request.repairman_worktime = schema.repairman_worktime
+
+
+def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema] | None:
+    """
+    Returns worker bid in database by `column` with `value`.
+    If worker bid not exist return `None`.
+    """
+    with session.begin() as s:
+        raw_bids = s.execute(select(WorkerBid).filter(column == value)).scalars().all()
+        if not raw_bids:
+            return None
+        return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_chief_technician(department_id) -> WorkerSchema | None:
+    with session.begin() as s:
+        worker_id = s.execute(
+            select(Department.chief_technician_id).filter(
+                Department.id == department_id
+            )
+        ).scalar()
+        if worker_id is None:
+            return None
+        chief_technician = (
+            s.execute(select(Worker).filter(Worker.id == worker_id)).scalars().all()
+        )
+        if chief_technician == []:
+            return None
+        return WorkerSchema.model_validate(chief_technician[0])

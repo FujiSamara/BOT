@@ -11,11 +11,11 @@ from app.services import (
     get_worker_by_telegram_id,
     get_material_values,
     get_logins,
-    get_openned_today_worktime,
-    get_sum_hours_in_month,
+    get_opened_today_worktime,
+    get_hours_sum_in_month,
 )
-from app.infra.database.schemas import WorkerSchema
-from app.adapters.bot.handlers.perconal_cab.schemas import ShowLoginCallbackData
+from app.schemas import WorkerSchema
+from app.adapters.bot.handlers.personal_cab.schemas import ShowLoginCallbackData
 
 
 def menu_text(worker: WorkerSchema) -> str:
@@ -40,11 +40,11 @@ def menu_text(worker: WorkerSchema) -> str:
         )
     else:
         text += "Не найден"
-    worktime = get_openned_today_worktime(worker.id)
-    text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найденна'}
+    worktime = get_opened_today_worktime(worker.id)
+    text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найдена'}
 
 Открытая смена: {worktime.work_begin.strftime(settings.time_format) if worktime is not None else 'Отсутствует'}
-Отработанно за месяц: {get_sum_hours_in_month(worker_id=worker.id)} ч."""
+Отработано за месяц: {get_hours_sum_in_month(worker_id=worker.id)} ч."""
     return text
 
 

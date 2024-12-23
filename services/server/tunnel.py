@@ -6,6 +6,7 @@ from dotenv import load_dotenv, find_dotenv, set_key, get_key
 
 def run():
     load_dotenv(override=True)
+    print("Started tunnel")
     dotenv_path = find_dotenv()
     port = get_key(dotenv_path, "PORT")
     domain = get_key(dotenv_path, "DOMAIN")

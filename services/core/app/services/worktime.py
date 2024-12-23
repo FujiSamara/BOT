@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta
 from io import BytesIO
 import base64
 
@@ -8,7 +8,7 @@ import app.infra.database.orm as orm
 from app.infra.database.models import (
     WorkTime,
 )
-from app.infra.database.schemas import (
+from app.schemas import (
     QuerySchema,
     WorkTimeSchema,
     WorkTimeSchemaFull,
@@ -161,14 +161,45 @@ def get_worktime_photo_by_id(id: int) -> BytesIO:
     return BytesIO(decoded_photo)
 
 
-def get_openned_today_worktime(worker_id: int) -> WorkTimeSchema | None:
+def get_opened_today_worktime(worker_id: int) -> WorkTimeSchema | None:
     """Return last open WorkTimeSchema | None by worker id"""
     return orm.get_openned_today_worktime(worker_id=worker_id)
 
 
-def get_sum_hours_in_month(worker_id) -> float:
-    """Return sum of work_durration in current month"""
-    return orm.get_sum_duration_for_worker_in_month(worker_id=worker_id)
+def get_hours_sum_in_intervals(
+    worker_id: int, begins: list[datetime], ends: list[datetime]
+) -> float:
+    return orm.get_sum_duration_for_worker_in_months(worker_id, begins, ends)
+
+
+def get_hours_sum_in_month(worker_id: int, month: datetime | None = None) -> float:
+    """Counts sum of work_duration for specified months.
+
+    - Note: if months not specified then counts for current month.
+
+    :return: Counted sum.
+    """
+    if month is None:
+        month = datetime.now()
+
+    begin_date = month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    month = begin_date.month % 12 + 1
+    year = begin_date.year + 1 if begin_date.month // 12 == 1 else begin_date.year
+
+    end_date = begin_date.replace(
+        month=begin_date.month % 12 + 1,
+        year=year,
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0,
+    ) - timedelta(days=1)
+
+    return orm.get_sum_duration_for_worker_in_months(
+        worker_id, [begin_date], [end_date]
+    )
 
 
 def get_last_completed_worktimes_by_tg_id(
