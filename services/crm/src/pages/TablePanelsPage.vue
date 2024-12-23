@@ -24,7 +24,7 @@ const loadPanels = () => {
 		grantedLinks.push({
 			label: "Нет таблиц",
 			routeName: "table-default",
-			iconURL: "/src/assets/icons/logout.svg",
+			iconURL: "/img/logout.svg",
 			active: false,
 		});
 	}
@@ -32,7 +32,7 @@ const loadPanels = () => {
 	grantedLinks.push({
 		label: "Выход",
 		routeName: "logout",
-		iconURL: "/src/assets/icons/logout.svg",
+		iconURL: "/img/logout.svg",
 		active: false,
 	});
 

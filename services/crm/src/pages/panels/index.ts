@@ -6,7 +6,7 @@ const panels: Array<PanelData> = [
 	{
 		label: "Статьи",
 		routeName: "table-expenditures",
-		iconURL: "/src/assets/icons/expenditure.svg",
+		iconURL: "/img/expenditure.svg",
 		active: false,
 		name: "expenditure",
 		create: ExpenditureTable,
@@ -15,7 +15,7 @@ const panels: Array<PanelData> = [
 	{
 		label: "Явки",
 		routeName: "table-worktimes",
-		iconURL: "/src/assets/icons/watch.svg",
+		iconURL: "/img/watch.svg",
 		active: false,
 		name: "worktime",
 		create: WorktimeTable,
