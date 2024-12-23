@@ -45,7 +45,7 @@ const searchList = useSearch(
 	},
 );
 
-const dateInterval = useDateInterval(props.table, "day");
+const dateInterval = await useDateInterval(props.table, "day");
 </script>
 
 <template>
@@ -63,6 +63,8 @@ const dateInterval = useDateInterval(props.table, "day");
 						:id="index"
 					></SearchInput>
 					<DateFilter
+						:from="dateInterval.from"
+						:to="dateInterval.to"
 						@unset="dateInterval.unset"
 						@submit="dateInterval.submit"
 					></DateFilter>

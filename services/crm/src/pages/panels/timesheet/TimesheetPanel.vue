@@ -52,7 +52,7 @@ const searchList = useSearch(
 		name: "general",
 	},
 );
-const dateInterval = useDateInterval(props.table, "");
+const dateInterval = await useDateInterval(props.table, "");
 </script>
 
 <template>
@@ -69,7 +69,12 @@ const dateInterval = useDateInterval(props.table, "");
 						@submit="search.onInput"
 						:id="index"
 					></SearchInput>
-					<DateFilter @submit="dateInterval.submit"></DateFilter>
+					<DateFilter
+						:from="dateInterval.from"
+						:to="dateInterval.to"
+						@unset="dateInterval.unset"
+						@submit="dateInterval.submit"
+					></DateFilter>
 				</div>
 			</div>
 			<div class="tb-outer-group">

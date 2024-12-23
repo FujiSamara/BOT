@@ -9,6 +9,12 @@ const props = defineProps({
 		type: String as PropType<DateType>,
 		default: DateType.Month,
 	},
+	from: {
+		type: Date,
+	},
+	to: {
+		type: Date,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", from: Date, to: Date): void;
@@ -17,8 +23,8 @@ const emits = defineEmits<{
 
 const calendarVisible = ref(false);
 
-const from = ref();
-const to = ref();
+const from = ref(props.from);
+const to = ref(props.to);
 
 const unset = () => {
 	calendarVisible.value = false;
@@ -30,7 +36,7 @@ const unset = () => {
 const monthChanged = (date: Date) => {
 	calendarVisible.value = false;
 	setIntervalFromDay(date);
-	emits("submit", from.value, to.value);
+	emits("submit", from.value!, to.value!);
 };
 const toMonth = (date: Date | undefined): string => {
 	if (date) {
