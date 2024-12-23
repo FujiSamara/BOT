@@ -1610,6 +1610,7 @@ def get_timesheets(
             duration_per_day = per_days_dict.get(worker.id, {})
 
             timesheet = TimeSheetSchema(
+                id=worker.id,
                 worker_fullname=worker_fullname,
                 post_name=post_name,
                 total_hours=total_hours,
