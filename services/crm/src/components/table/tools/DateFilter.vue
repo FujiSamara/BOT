@@ -13,7 +13,7 @@ const emits = defineEmits<{
 	(e: "submit", from: Date, to: Date): void;
 }>();
 
-const calendarVisible = ref(true);
+const calendarVisible = ref(false);
 
 const from = ref(new Date());
 const to = ref(new Date());
@@ -36,6 +36,7 @@ const calendarOutsideClicked = () => {
 
 onMounted(() => {
 	setIntervalFromDay(new Date());
+	emits("submit", from.value, to.value);
 
 	document.addEventListener("click", calendarOutsideClicked);
 });
