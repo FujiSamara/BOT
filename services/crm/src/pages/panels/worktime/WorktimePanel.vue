@@ -62,10 +62,7 @@ const dateInterval = useDateInterval(props.table, "day");
 						@submit="search.onInput"
 						:id="index"
 					></SearchInput>
-					<DateFilter
-						@submit="dateInterval.submit"
-						style="width: 245px; height: 48px"
-					></DateFilter>
+					<DateFilter @submit="dateInterval.submit"></DateFilter>
 				</div>
 			</div>
 			<div class="tb-outer-group">
