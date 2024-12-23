@@ -52,3 +52,7 @@ personal_cabinet_logins_dict = {
     "check_office_login": "CheckOffice",
     "pbi_login": "PBI",
 }
+
+
+problem_groups = ["Техническая", "Клининговая"]
+problem_groups_dict = {"Техническая": "TR", "Клининговая": "CR"}

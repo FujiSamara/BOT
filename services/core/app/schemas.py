@@ -382,6 +382,31 @@ class TimeSheetSchema(BaseSchema):
         return data
 
 
+class CleaningProblemSchema(BaseSchemaPK):
+    problem_name: str
+
+
+class CleaningRequestSchema(BaseSchemaPK):
+    problem: CleaningProblemSchema
+    description: str
+    state: ApprovalStatus
+    score: int
+    worker: WorkerSchema
+
+    problem_photos: list[DocumentSchema]
+    cleaning_photos: list[DocumentSchema]
+    cleaner: WorkerSchema
+    territorial_manager: WorkerSchema
+    department: DepartmentSchema
+
+    open_date: datetime.datetime
+    cleaning_date: datetime.datetime | None = None
+    confirmation_date: datetime.datetime | None = None
+    confirmation_description: str | None = None
+    close_date: datetime.datetime | None = None
+    close_description: str | None = None
+
+
 # endregion
 
 

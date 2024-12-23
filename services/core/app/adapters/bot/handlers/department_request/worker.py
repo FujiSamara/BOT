@@ -1,3 +1,4 @@
+from app.infra.logging.logger import logger
 from asyncio import sleep
 from aiogram import Router, F
 from aiogram.types import (
@@ -33,7 +34,9 @@ from app.services import (
     get_all_history_technical_requests_for_worker,
     get_all_waiting_technical_requests_for_worker,
     get_technical_problem_names,
+    get_cleaning_problem_names,
     create_technical_request,
+    create_cleaning_request,
     get_departments_names,
 )
 
@@ -70,23 +73,47 @@ async def get_problem_group(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите направленность проблемы:"),
-        reply_markup=kb.create_reply_keyboard(text.back, "Техническая", "Клининговая"),
+        reply_markup=kb.create_reply_keyboard(text.back, *text.problem_groups),
     )
     await state.update_data(msg=msg)
 
 
 @router.message(WorkerDepartmentRequestForm.problem_group)
 async def set_problem_group(message: Message, state: FSMContext):
-    pass
+    data = await state.get_data()
+    msg = data.get("msg")
+    if msg:
+        await try_delete_message(msg)
+    await try_delete_message(message)
+
+    if message.text == text.back:
+        await state.set_state(Base.none)
+        await show_worker_create_request_format(message, state)
+    else:
+        if message.text not in text.problem_groups:
+            msg = await message.answer(
+                text=text.format_err,
+                reply_markup=kb.create_reply_keyboard(text.back, *text.problem_groups),
+            )
+            await state.update_data(msg=msg)
+            return
+
+        await state.update_data(problem_group=text.problem_groups_dict[message.text])
+        await state.set_state(Base.none)
+        await get_problem(message, state)
 
 
-@router.callback_query(F.data == "problem_group_WR_TR_CR")
-async def get_problem(callback: CallbackQuery, state: FSMContext):
+async def get_problem(message: Message, state: FSMContext):
     await state.set_state(WorkerDepartmentRequestForm.problem_name)
-    problems = get_technical_problem_names()
+    data = await state.get_data()
+    problems = (
+        get_technical_problem_names()
+        if data["problem_group"] == "TR"
+        else get_cleaning_problem_names()
+    )
     problems.sort()
-    await try_delete_message(callback.message)
-    msg = await callback.message.answer(
+    await try_delete_message(message)
+    msg = await message.answer(
         text=hbold("Выберите проблему:"),
         reply_markup=kb.create_reply_keyboard(
             text.back, *[problem for problem in problems]
@@ -107,7 +134,11 @@ async def set_problem(message: Message, state: FSMContext):
         await state.set_state(Base.none)
         await show_worker_create_request_format(message, state)
     else:
-        problems = get_technical_problem_names()
+        problems = (
+            get_technical_problem_names()
+            if data["problem_group"] == "TR"
+            else get_cleaning_problem_names()
+        )
         if message.text not in problems:
             problems.sort()
             msg = await message.answer(
@@ -262,30 +293,53 @@ async def show_worker_history_form(
     )
 
 
-@router.callback_query(F.data == "send_WR_TR")
+@router.callback_query(F.data == "send_WR_TR_CR")
 async def save_worker_request(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    problem_name = data["problem_name"]
-    description = data["description"]
-    department_name = data["dep_name"]
+    problem_name = data.get("problem_name")
+    description = data.get("description")
+    department_name = data.get("dep_name")
+    problem_group = data.get("problem_group")
 
-    photo = data["photo"]
-    photo_files: list[UploadFile] = []
-    for doc in photo:
-        photo_files.append(await download_file(doc))
-    message = callback.message
-    if not await create_technical_request(
-        problem_name=problem_name,
-        description=description,
-        photo_files=photo_files,
-        telegram_id=callback.message.chat.id,
-        department_name=department_name,
-    ):
-        message = await try_edit_or_answer(
-            message=callback.message, text="Упс, произошла ошибка.", return_message=True
-        )
-        await sleep(2)
-        await try_delete_message(message=message)
+    if problem_group is None:
+        logger.error("Problem group in department request is None")
+    else:
+        photo = data["photo"]
+        photo_files: list[UploadFile] = []
+        for doc in photo:
+            photo_files.append(await download_file(doc))
+        message = callback.message
+
+    if problem_group == "TR":
+        if not await create_technical_request(
+            problem_name=problem_name,
+            description=description,
+            photo_files=photo_files,
+            telegram_id=callback.message.chat.id,
+            department_name=department_name,
+        ):
+            message = await try_edit_or_answer(
+                message=callback.message,
+                text=text.err,
+                return_message=True,
+            )
+            await sleep(2)
+            await try_delete_message(message=message)
+    else:
+        if not await create_cleaning_request(
+            problem_name=problem_name,
+            description=description,
+            photo_files=photo_files,
+            telegram_id=callback.message.chat.id,
+            department_name=department_name,
+        ):
+            message = await try_edit_or_answer(
+                message=callback.message,
+                text=text.err,
+                return_message=True,
+            )
+            await sleep(2)
+            await try_delete_message(message=message)
 
     await state.clear()
     await state.set_state(Base.none)

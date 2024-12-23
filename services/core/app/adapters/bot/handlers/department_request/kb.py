@@ -366,22 +366,13 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     ]
 
     if form_complete:
-        if problem_type == "CR":
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text="Отправить заявку", callback_data="save_WR_CR"
-                    )
-                ]
-            )
-        else:
-            buttons.append(
-                [
-                    InlineKeyboardButton(
-                        text="Отправить проблему", callback_data="send_WR_TR"
-                    )
-                ]
-            )
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить проблему", callback_data="send_WR_TR_CR"
+                )
+            ]
+        )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
