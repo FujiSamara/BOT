@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, useId } from "vue";
 
 const props = defineProps({
 	placeholder: {
@@ -48,6 +48,7 @@ const onInput = (event: Event) => {
 			:placeholder="props.placeholder"
 			@input="onInput"
 			:value="value"
+			:id="useId()"
 		/>
 		<Transition name="fade">
 			<div v-show="error !== undefined" class="tool-icon-wrapper">

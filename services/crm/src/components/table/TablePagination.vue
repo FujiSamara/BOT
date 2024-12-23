@@ -127,6 +127,7 @@ onMounted(() => {
 		<div class="pag-to-page">
 			<span>Перейти к странице</span>
 			<input
+				id="page-input"
 				type="number"
 				step="1"
 				min="0"
