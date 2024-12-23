@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { Ref, ref, watch } from "vue";
+import { PropType, Ref, ref, watch } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 
 const props = defineProps({
 	table: {
-		type: Table<BaseSchema>,
+		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
 	style: {
 		type: String,
+	},
+	alignRight: {
+		type: Boolean,
 	},
 });
 
@@ -60,7 +63,11 @@ watch(headersHidden, () => {
 			<span>Фильтр</span>
 		</button>
 		<Transition name="fade">
-			<ul class="cf-menu" v-if="menuVisible">
+			<ul
+				class="cf-menu"
+				:class="{ 'align-right': alignRight }"
+				v-if="menuVisible"
+			>
 				<li
 					v-for="(header, index) in props.table.orderedHeaders.value"
 					:key="header"
@@ -121,10 +128,12 @@ watch(headersHidden, () => {
 		align-items: center;
 
 		width: 202px;
+		max-height: 350px;
 		margin: 0;
 
 		position: absolute;
 		z-index: 1;
+		overflow-y: auto;
 
 		gap: 16px;
 
@@ -135,6 +144,10 @@ watch(headersHidden, () => {
 		background-color: $table-bg-color;
 
 		transition: opacity 0.5s;
+
+		&.align-right {
+			right: 0;
+		}
 
 		li {
 			display: flex;

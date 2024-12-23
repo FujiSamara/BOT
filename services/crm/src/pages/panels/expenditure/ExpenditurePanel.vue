@@ -74,6 +74,7 @@ const searchList = useSearch(
 					<ColumnFilter
 						:style="'width: 126px; height: 48px'"
 						:table="props.table"
+						:alignRight="true"
 					></ColumnFilter>
 				</div>
 			</div>
