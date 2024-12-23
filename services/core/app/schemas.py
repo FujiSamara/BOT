@@ -359,7 +359,7 @@ class EquipmentIncidentSchema(BaseSchemaPK):
     stage: IncidentStage
 
 
-class TimeSheetSchema(BaseSchema):
+class TimeSheetSchema(BaseSchemaPK):
     worker_fullname: str
     post_name: str
     total_hours: float
@@ -368,6 +368,7 @@ class TimeSheetSchema(BaseSchema):
 
     def model_dump(self, **_) -> dict[str, Any]:
         data = {
+            "id": self.id,
             "worker_fullname": self.worker_fullname,
             "post_name": self.post_name,
             "total_hours": self.total_hours,
@@ -377,7 +378,7 @@ class TimeSheetSchema(BaseSchema):
         duration_per_day = self.duration_per_day
 
         for date in duration_per_day:
-            data[str(date.day)] = duration_per_day[date]
+            data[str(date.day)] = f"{duration_per_day[date]:2f}"
 
         return data
 
