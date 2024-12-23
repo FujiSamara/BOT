@@ -378,7 +378,7 @@ class TimeSheetSchema(BaseSchemaPK):
         duration_per_day = self.duration_per_day
 
         for date in duration_per_day:
-            data[str(date.day)] = f"{duration_per_day[date]:2f}"
+            data[str(date.day)] = f"{duration_per_day[date]:.2f}"
 
         return data
 
