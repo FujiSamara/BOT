@@ -4,9 +4,9 @@ from app.adapters.bot.handlers.worker_bids import (
 )
 from aiogram import Router
 
-from services.core.app.adapters.bot.handlers.worker_bids import workers_subordinate
+from app.adapters.bot.handlers.worker_bids import workers_subordinate
 
-router = Router(name="bid_main")
+router = Router(name="workers_bids")
 
 router.include_routers(
     create.router,

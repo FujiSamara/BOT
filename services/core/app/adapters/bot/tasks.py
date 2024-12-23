@@ -115,7 +115,7 @@ async def notify_with_unclosed_shift() -> None:
     seconds=60 * 60 * 24,
     logger=logger,
 )
-async def notify_and_droped_departments_teller_cash() -> None:
+async def notify_and_dropped_departments_teller_cash() -> None:
     """Notify all teller cash to change department"""
     logger.info("Notifying all tellers cash to change department.")
     tellers = services.set_tellers_cash_department()
