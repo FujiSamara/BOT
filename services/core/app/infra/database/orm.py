@@ -1493,6 +1493,7 @@ def get_model_count(
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
+        query_schema.order_by_query = None
         query_builder = create_query_builder(model_type, query_schema, s, select_query)
 
         return query_builder.count()
