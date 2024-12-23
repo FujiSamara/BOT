@@ -21,7 +21,6 @@ const panels: Array<PanelData> = [
 		name: "worktime",
 		create: WorktimeTable,
 		accesses: [Access.Worktime],
-		withUpdatingLoop: false,
 	},
 	{
 		label: "Табель",
