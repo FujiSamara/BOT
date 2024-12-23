@@ -76,7 +76,10 @@ const searchList = useSearch(
 						:style="'width: 126px; height: 48px'"
 						:table="props.table"
 					></ColumnFilter>
-					<ExportToExcel style="width: 187px; height: 48px"></ExportToExcel>
+					<ExportToExcel
+						:table="props.table"
+						style="width: 187px; height: 48px"
+					></ExportToExcel>
 				</div>
 			</div>
 		</div>
