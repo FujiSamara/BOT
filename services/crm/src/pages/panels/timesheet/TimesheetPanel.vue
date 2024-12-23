@@ -74,6 +74,7 @@ const dateInterval = await useDateInterval(props.table, "");
 						:to="dateInterval.to"
 						@unset="dateInterval.unset"
 						@submit="dateInterval.submit"
+						:block-unset="!props.table.blockLoop.value"
 					></DateFilter>
 				</div>
 			</div>

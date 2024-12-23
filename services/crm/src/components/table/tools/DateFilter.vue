@@ -15,6 +15,9 @@ const props = defineProps({
 	to: {
 		type: Date,
 	},
+	blockUnset: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", from: Date, to: Date): void;
@@ -99,6 +102,7 @@ onUnmounted(() => {
 				@submit="monthChanged"
 				@click.stop
 				@unset="unset"
+				:block-unset="props.blockUnset"
 			></DateCalendar>
 		</Transition>
 	</div>

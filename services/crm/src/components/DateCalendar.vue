@@ -10,6 +10,9 @@ const props = defineProps({
 	date: {
 		type: Date,
 	},
+	blockUnset: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: Date): void;
@@ -63,6 +66,7 @@ const toMonth = (month: number): string => {
 
 const monthChoosed = (month: number) => {
 	if (date.value && month === date.value.getMonth()) {
+		if (props.blockUnset) return;
 		date.value = undefined;
 		emits("unset");
 		return;
