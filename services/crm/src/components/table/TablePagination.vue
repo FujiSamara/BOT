@@ -50,15 +50,16 @@ const updatePages = () => {
 
 	middlePages.value = result;
 	inputValue.value = currentPage.value;
-};
 
-watch([currentPage, props], async () => {
-	updatePages();
 	const query = { ...route.query };
 
 	query["page"] = currentPage.value.toString();
 
 	router.replace({ query: query });
+};
+
+watch([currentPage, props], async () => {
+	updatePages();
 });
 updatePages();
 
