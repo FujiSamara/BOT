@@ -90,7 +90,11 @@ const dateInterval = await useDateInterval(props.table, "");
 				</div>
 			</div>
 		</div>
-		<Table class="table" :table="props.table"></Table>
+		<Table
+			class="table"
+			:table="props.table"
+			:blockLoading="!dateInterval.exist.value"
+		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"

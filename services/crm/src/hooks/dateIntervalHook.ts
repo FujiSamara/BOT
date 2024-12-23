@@ -1,3 +1,4 @@
+import { ref, Ref } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useRoute, useRouter } from "vue-router";
@@ -10,16 +11,21 @@ export const useDateInterval = async (
 	unset: () => void;
 	from: Date | undefined;
 	to: Date | undefined;
+	exist: Ref<boolean>;
 }> => {
 	const router = useRouter();
 	const route = useRoute();
 
+	const exist = ref(false);
+
 	const submit = async (from: Date, to: Date, silent: boolean = false) => {
 		await change({ from, to }, silent);
+		exist.value = true;
 	};
 
 	const unset = async (silent: boolean = false) => {
 		await change(undefined, silent);
+		exist.value = false;
 	};
 
 	const change = async (
@@ -70,5 +76,6 @@ export const useDateInterval = async (
 		unset,
 		from,
 		to,
+		exist,
 	};
 };

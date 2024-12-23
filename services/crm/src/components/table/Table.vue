@@ -10,6 +10,9 @@ const props = defineProps({
 		type: Table<BaseSchema>,
 		required: true,
 	},
+	blockLoading: {
+		type: Boolean,
+	},
 });
 
 const router = useRouter();
@@ -112,9 +115,10 @@ onMounted(() => {
 	<div class="table" ref="table">
 		<Transition name="fade">
 			<div
-				@click="loadTable"
+				@click="if (!props.blockLoading) loadTable();"
 				class="load-button"
 				v-if="props.table.blockLoop.value"
+				:class="{ disabled: props.blockLoading }"
 			>
 				<div class="tool-icon-wrapper">
 					<div class="tool-icon search"></div>

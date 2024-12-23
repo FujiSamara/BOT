@@ -149,11 +149,13 @@
   }
 
   &.disabled {
-    background-color: #eeeeee;
-    border-color: #cdcdcd;
+    background-color: #eeeeee !important;
+    border-color: #cdcdcd !important;
+
+    cursor: not-allowed !important;
 
     .tool-icon-wrapper > .tool-icon {
-      color: #cdcdcd99;
+      color: #cdcdcd99 !important;
     }
   }
 
