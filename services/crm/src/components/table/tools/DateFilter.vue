@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, PropType, ref } from "vue";
 import { CalendarType, DateType } from "@/types";
+import { capitalize } from "@/parser";
 import DateCalendar from "@/components/DateCalendar.vue";
 
 const props = defineProps({
@@ -11,17 +12,31 @@ const props = defineProps({
 });
 const emits = defineEmits<{
 	(e: "submit", from: Date, to: Date): void;
+	(e: "unset"): void;
 }>();
 
 const calendarVisible = ref(false);
 
-const from = ref(new Date());
-const to = ref(new Date());
+const from = ref();
+const to = ref();
+
+const unset = () => {
+	calendarVisible.value = false;
+	from.value = undefined;
+	to.value = undefined;
+	emits("unset");
+};
 
 const monthChanged = (date: Date) => {
 	calendarVisible.value = false;
 	setIntervalFromDay(date);
 	emits("submit", from.value, to.value);
+};
+const toMonth = (date: Date | undefined): string => {
+	if (date) {
+		return date.toLocaleString("ru", { month: "long" });
+	}
+	return "Не указано";
 };
 // TODO: Complete for day and year
 
@@ -35,9 +50,6 @@ const calendarOutsideClicked = () => {
 };
 
 onMounted(() => {
-	setIntervalFromDay(new Date());
-	emits("submit", from.value, to.value);
-
 	document.addEventListener("click", calendarOutsideClicked);
 });
 
@@ -67,7 +79,7 @@ onUnmounted(() => {
 		<Transition name="fade">
 			<div v-if="props.mode === DateType.Month" class="df-value">
 				<span @click.stop="calendarVisible = !calendarVisible">{{
-					from.toLocaleString("ru", { month: "long" })
+					capitalize(toMonth(from))
 				}}</span>
 			</div>
 		</Transition>
@@ -80,6 +92,7 @@ onUnmounted(() => {
 				:date="from"
 				@submit="monthChanged"
 				@click.stop
+				@unset="unset"
 			></DateCalendar>
 		</Transition>
 	</div>
@@ -148,8 +161,6 @@ onUnmounted(() => {
 			font-weight: 500;
 			font-size: 14px;
 			color: $text-color;
-
-			text-transform: capitalize;
 		}
 	}
 

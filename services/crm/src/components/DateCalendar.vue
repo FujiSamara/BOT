@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, PropType, ref } from "vue";
 import { CalendarType } from "@/types";
+import { capitalize } from "@/parser";
 
 const props = defineProps({
 	lockMode: {
@@ -12,18 +13,22 @@ const props = defineProps({
 });
 const emits = defineEmits<{
 	(e: "submit", value: Date): void;
+	(e: "unset"): void;
 }>();
 
 const step = ref(
 	props.lockMode !== undefined ? props.lockMode : CalendarType.Month,
 );
 
-const date = ref(props.date ? props.date : new Date());
+const date = ref(props.date);
 
 const header = computed(() => {
+	if (!date.value) {
+		return "";
+	}
 	switch (step.value) {
 		case CalendarType.Year:
-			return date.value.getFullYear();
+			return date.value.getFullYear().toString();
 		default:
 			return date.value.toLocaleString("ru", { month: "long" });
 	}
@@ -44,13 +49,31 @@ const getMonths = (): number[][] => {
 	return result;
 };
 
+const toMonth = (month: number): string => {
+	if (date.value) {
+		return new Date(date.value.getFullYear(), month).toLocaleString("ru", {
+			month: "long",
+		});
+	} else {
+		return new Date(new Date().getFullYear(), month).toLocaleString("ru", {
+			month: "long",
+		});
+	}
+};
+
 const monthChoosed = (month: number) => {
+	if (date.value && month === date.value.getMonth()) {
+		date.value = undefined;
+		emits("unset");
+		return;
+	}
+
+	if (!date.value) date.value = new Date();
+
 	const temp = new Date(date.value);
 	temp.setMonth(month);
 	date.value = temp;
-	if (props.lockMode) {
-		emits("submit", date.value);
-	}
+	if (props.lockMode) emits("submit", date.value);
 	step.value = CalendarType.Day;
 };
 </script>
@@ -60,7 +83,7 @@ const monthChoosed = (month: number) => {
 			<div class="switch">
 				<span class="arrow"></span>
 			</div>
-			<span class="header">{{ header }}</span>
+			<span class="header">{{ capitalize(header) }}</span>
 			<div class="switch">
 				<span class="arrow reversed"></span>
 			</div>
@@ -69,16 +92,12 @@ const monthChoosed = (month: number) => {
 			<div v-if="step === CalendarType.Month" class="months c-body">
 				<div class="c-line" v-for="line in getMonths()">
 					<div
-						@click="if (month !== date.getMonth()) monthChoosed(month);"
+						@click="monthChoosed(month)"
 						class="c-element"
 						v-for="month in line"
-						:class="{ choosed: month === date.getMonth() }"
+						:class="{ choosed: date && month === date.getMonth() }"
 					>
-						<span>{{
-							new Date(date.getFullYear(), month).toLocaleString("ru", {
-								month: "long",
-							})
-						}}</span>
+						<span>{{ capitalize(toMonth(month)) }}</span>
 					</div>
 				</div>
 			</div>
@@ -101,7 +120,6 @@ const monthChoosed = (month: number) => {
 	padding: 16px;
 	gap: 16px;
 
-	text-transform: capitalize;
 	font-family: Wix Madefor Display;
 	font-weight: 500;
 	font-size: 14px;
