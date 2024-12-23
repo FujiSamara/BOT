@@ -13,6 +13,6 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("worker_fullname", 1);
 		this._columsOrder.set("post_name", 2);
-		this._columsOrder.set("total_hours", 2);
+		this._columsOrder.set("total_hours", 3);
 	}
 }
