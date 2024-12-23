@@ -3,7 +3,6 @@ import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/table/tools/SearchInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
-import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 // import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
@@ -76,10 +75,6 @@ const searchList = useSearch(
 						:style="'width: 126px; height: 48px'"
 						:table="props.table"
 					></ColumnFilter>
-					<ExportToExcel
-						:table="props.table"
-						style="width: 187px; height: 48px"
-					></ExportToExcel>
 				</div>
 			</div>
 		</div>
