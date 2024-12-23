@@ -54,7 +54,19 @@ export const accessesDict: any = {
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
 
-// Schemas
+export enum DateType {
+	Interval = "Интервал",
+	Month = "Месяц",
+	Day = "День",
+}
+
+export enum CalendarType {
+	Day,
+	Month,
+	Year,
+}
+
+// #region Schemas
 
 export interface BaseSchema {
 	id: number;
@@ -161,3 +173,4 @@ export interface TimesheetSchema extends BaseSchema {
 	post_name: string;
 	total_hours: number;
 }
+// #endregion
