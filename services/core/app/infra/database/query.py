@@ -130,6 +130,7 @@ class QueryBuilder(Builder):
             schemas.WorkerSchema: self._order_by_worker,
             schemas.DepartmentSchema: self._order_by_department,
             schemas.ExpenditureSchema: self._order_by_expenditure,
+            schemas.PostSchema: self._order_by_post,
         }
 
         # Search builders.
@@ -224,6 +225,14 @@ class QueryBuilder(Builder):
         self, column: InstrumentedAttribute[any], is_desc: bool = False
     ) -> Select:
         columns = [models.Expenditure.name, models.Expenditure.chapter]
+        if is_desc:
+            columns = [desc(w_column) for w_column in columns]
+        return self.select.join(column).order_by(*columns)
+
+    def _order_by_post(
+        self, column: InstrumentedAttribute[any], is_desc: bool = False
+    ) -> Select:
+        columns = [models.Post.name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
         return self.select.join(column).order_by(*columns)
