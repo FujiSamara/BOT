@@ -1551,6 +1551,11 @@ def get_timesheets(
         end = query_schema.date_query.end
         query_schema.date_query = None
 
+        if query_schema.order_by_query.column == "worker_name":
+            query_schema.order_by_query.column = "l_name"
+        elif query_schema.order_by_query.column == "post_name":
+            query_schema.order_by_query.column = "post"
+
         query_builder = create_query_builder(Worker, query_schema, s)
         if records_per_page is not None and query_schema is not None:
             query_builder.select = query_builder.select.offset(
@@ -1604,7 +1609,7 @@ def get_timesheets(
         result: list[TimeSheetSchema] = []
 
         for worker in workers:
-            worker_fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
+            worker_fullname = f"{worker.l_name} {worker.f_name} {worker.o_name}"
             post_name = worker.post.name
             total_hours = total_dict.get(worker.id, 0)
             duration_per_day = per_days_dict.get(worker.id, {})
