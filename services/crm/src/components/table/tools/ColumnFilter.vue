@@ -87,7 +87,7 @@ watch(headersHidden, () => {
 	position: relative;
 
 	.cf-switch {
-		@include tool;
+		@include field;
 
 		&.active {
 			background-color: $fuji-blue;

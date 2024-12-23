@@ -26,7 +26,7 @@ const currentMode = ref(0);
 
 <style scoped lang="scss">
 .date-filter {
-	@include tool;
+	@include field;
 
 	width: fit-content !important;
 

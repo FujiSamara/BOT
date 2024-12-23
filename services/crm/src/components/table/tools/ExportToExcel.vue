@@ -37,7 +37,7 @@ const onClick = async () => {
 
 <style scoped lang="scss">
 .export-button {
-	@include tool;
+	@include field;
 
 	span {
 		color: $fuji-green;
