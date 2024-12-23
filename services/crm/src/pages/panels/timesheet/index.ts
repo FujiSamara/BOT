@@ -15,4 +15,14 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._columsOrder.set("post_name", 2);
 		this._columsOrder.set("total_hours", 3);
 	}
+
+	public orderDisabled(header: string): boolean {
+		let status = this.getAlias("total_hours") === header;
+
+		for (let index = 1; index < 32; index++) {
+			status ||= index.toString() === header;
+		}
+
+		return status;
+	}
 }
