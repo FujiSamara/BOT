@@ -1,6 +1,6 @@
 from datetime import datetime
 from io import BytesIO
-from typing import Type
+from typing import Generator, Type
 from xlsxwriter import Workbook
 
 from app.contracts.clients import XlSXExporter, FormatValue
@@ -24,7 +24,42 @@ class XlSXWriterExporter(XlSXExporter):
             float: self._format_float,
         }
 
-    def export(self, rows: list[schemas.BaseSchema]) -> BytesIO:
+    def _get_headers(
+        self, rows: list[schemas.BaseSchema | dict], dumped: bool = False
+    ) -> list[str]:
+        result = []
+        row = rows[0]
+
+        if not dumped:
+            row = row.model_fields
+
+        for field_name in row:
+            if field_name not in self._exclude_columns:
+                result.append(field_name)
+
+        return result
+
+    def _format_rows(
+        self,
+        rows: list[schemas.BaseSchema | dict],
+        headers: list[str],
+        dumped: bool = False,
+    ) -> Generator[list[str], None, None]:
+        result = []
+        for elem in rows:
+            vals = []
+            for name in headers:
+                val = elem[name] if dumped else getattr(elem, name)
+                formatted = self._format(val, name)
+                vals.append(formatted)
+
+            yield vals
+
+        return result
+
+    def export(
+        self, rows: list[schemas.BaseSchema], with_dump: bool = False
+    ) -> BytesIO:
         result = BytesIO()
         workbook = Workbook(result)
         worksheet = workbook.add_worksheet()
@@ -34,17 +69,16 @@ class XlSXWriterExporter(XlSXExporter):
             result.seek(0)
             return result
 
-        headers: list[str] = []
-        rows_width: list[int] = []
-        data = [row.model_dump() for row in rows]
+        data = [row.model_dump() for row in rows] if with_dump else rows
 
-        for field_name in data[0]:
-            if field_name not in self._exclude_columns:
-                width = len(field_name)
-                if field_name in self._aliases:
-                    width = max(width, len(self._aliases[field_name]))
-                rows_width.append(width)
-                headers.append(field_name)
+        headers: list[str] = self._get_headers(data, with_dump)
+        rows_width: list[int] = []
+
+        for field_name in headers:
+            width = len(field_name)
+            if field_name in self._aliases:
+                width = max(width, len(self._aliases[field_name]))
+            rows_width.append(width)
 
         worksheet.write_row(
             0,
@@ -55,16 +89,14 @@ class XlSXWriterExporter(XlSXExporter):
             ],
         )  # Writes headers
 
-        for index, elem in enumerate(data):
-            vals = []
-            for name_index, name in enumerate(headers):
-                val = elem[name]
-                formatted = self._format(val, name)
-                vals.append(formatted)
-                if len(formatted) > rows_width[name_index]:
-                    rows_width[name_index] = len(formatted)
+        formatted_data = self._format_rows(data, headers, with_dump)
 
-            worksheet.write_row(index + 1, 0, vals)  # Index + 1 (header row)
+        for index, row in enumerate(formatted_data):
+            for name_index in range(len(headers)):
+                if len(row[name_index]) > rows_width[name_index]:
+                    rows_width[name_index] = len(row[name_index])
+
+            worksheet.write_row(index + 1, 0, row)  # Index + 1 (header row)
 
         # Sets columns width
         for index, row_width in enumerate(rows_width):
