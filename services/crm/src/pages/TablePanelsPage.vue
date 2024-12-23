@@ -41,7 +41,11 @@ const loadPanels = () => {
 	// Calcs table height
 
 	for (const panel of panels) {
-		tableService.register(panel.name, panel.create);
+		tableService.register(
+			panel.name,
+			panel.create,
+			panel.withUpdatingLoop !== false,
+		);
 	}
 };
 const linkChange = async (link: LinkData) => {

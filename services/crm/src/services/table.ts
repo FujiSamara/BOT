@@ -58,8 +58,13 @@ export class TableService {
 		}
 	}
 
-	public register(name: string, CustomTable: { new (): Table<BaseSchema> }) {
+	public register(
+		name: string,
+		CustomTable: { new (): Table<BaseSchema> },
+		withLoop: boolean = true,
+	) {
 		const table = new CustomTable();
+		table.blockUpdatingLoop = !withLoop;
 		this._tables.set(name, table);
 	}
 

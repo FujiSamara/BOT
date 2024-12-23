@@ -120,6 +120,7 @@ export class Table<T extends BaseSchema> {
 	//#region Rows
 	//#region Refreshing
 	public startUpdatingLoop() {
+		if (this.blockUpdatingLoop) return;
 		let skipLoop = false;
 
 		watch(
@@ -481,6 +482,8 @@ export class Table<T extends BaseSchema> {
 		}
 		return result;
 	}
+	/** If **true** then block updating loop. */
+	public blockUpdatingLoop: boolean = false;
 	/** Table update timeout in second. */
 	public updateTimeout: number = 20;
 	/** Indicates current page. */
