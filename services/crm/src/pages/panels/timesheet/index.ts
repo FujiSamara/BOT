@@ -1,11 +1,16 @@
+import Holidays from "date-holidays";
+
 import { Table } from "@/components/table";
+import { colors } from "@/config";
 import { TimesheetSchema } from "@/types";
 
 export class TimesheetTable extends Table<TimesheetSchema> {
+	private holidays: Holidays = new Holidays("RU");
+
 	constructor() {
 		super("timesheet");
 
-		this._aliases.set("id", "Айди работника");
+		this._aliases.set("id", "ID работника");
 		this._aliases.set("worker_fullname", "Работник");
 		this._aliases.set("post_name", "Должность");
 		this._aliases.set("total_hours", "Всего отработано");
@@ -24,5 +29,15 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		}
 
 		return status;
+	}
+
+	public getHeaderColor(alias: string): string | undefined {
+		let num = parseInt(alias);
+
+		if (isNaN(num)) return;
+		const start = this.byDate.value!.start;
+		const date = new Date(start.getFullYear(), start.getMonth(), num, 10);
+		if (this.holidays.isHoliday(date) || date.getDay() % 6 === 0)
+			return colors.holiday;
 	}
 }

@@ -24,3 +24,7 @@ export const accessesDict: any = {
 	crm_worktime: Access.Worktime,
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
+
+export const colors = {
+	holiday: "#519BCA",
+};

@@ -155,9 +155,13 @@ onMounted(() => {
 						@click="
 							if (!props.table.orderDisabled(title)) props.table.order(title);
 						"
-						:class="{ lock: props.table.orderDisabled(title) }"
+						:class="{
+							lock: props.table.orderDisabled(title),
+						}"
 					>
-						<p>{{ title }}</p>
+						<p :style="{ color: props.table.getHeaderColor(title) }">
+							{{ title }}
+						</p>
 						<Transition name="fade">
 							<div
 								class="icon"

@@ -578,6 +578,11 @@ export class Table<T extends BaseSchema> {
 	protected color(_: T): string {
 		return "#ffffff";
 	}
+	/** Returns hex color of header by alias. */
+	// @ts-ignore
+	public getHeaderColor(alias: string): string | undefined {
+		return;
+	}
 	/** Returns actual alias for specified **fieldName**. */
 	protected getAlias(fieldName: string): string {
 		let alias = this._aliases.get(fieldName);
