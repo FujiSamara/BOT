@@ -362,6 +362,7 @@ class EquipmentIncidentSchema(BaseSchemaPK):
 class TimeSheetSchema(BaseSchemaPK):
     worker_fullname: str
     post_name: str
+    department_name: str
     total_hours: float
     duration_per_day: dict[datetime.date, float]
     last_day: int | None = Field(exclude=True, default=None)
@@ -370,6 +371,7 @@ class TimeSheetSchema(BaseSchemaPK):
         data = {
             "id": self.id,
             "worker_fullname": self.worker_fullname,
+            "department_name": self.department_name,
             "post_name": self.post_name,
             "total_hours": self.total_hours,
             **{str(day): 0 for day in range(1, self.last_day + 1)},
@@ -581,5 +583,6 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "worker_fullname": "ФИО",
         "post_name": "Должность",
         "total_hours": "Суммарно отработано",
+        "department_name": "Предприятие",
     },
 }

@@ -1556,6 +1556,8 @@ def get_timesheets(
             query_schema.order_by_query.column = "l_name"
         elif query_schema.order_by_query.column == "post_name":
             query_schema.order_by_query.column = "post"
+        elif query_schema.order_by_query.column == "department_name":
+            query_schema.order_by_query.column = "department"
 
         query_builder = create_query_builder(Worker, query_schema, s)
         if records_per_page is not None and query_schema is not None:
@@ -1619,6 +1621,7 @@ def get_timesheets(
                 id=worker.id,
                 worker_fullname=worker_fullname,
                 post_name=post_name,
+                department_name=worker.department.name,
                 total_hours=total_hours,
                 duration_per_day=duration_per_day,
             )

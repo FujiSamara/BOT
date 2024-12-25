@@ -25,7 +25,7 @@ const searchList = useSearch(
 		schemas: [
 			{
 				pattern: "department",
-				groups: [0, 1, 2],
+				groups: [0, 1, 2, 3],
 			},
 		],
 		placeholder: "Производство",
@@ -45,6 +45,10 @@ const searchList = useSearch(
 			{
 				pattern: "o_name",
 				groups: [2],
+			},
+			{
+				pattern: "post",
+				groups: [3],
 			},
 		],
 		placeholder: "Поиск",
