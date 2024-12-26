@@ -162,3 +162,10 @@ export function formatMultilineString(multilineString: string): Cell {
 export function capitalize(val: string) {
 	return String(val).charAt(0).toUpperCase() + String(val).slice(1);
 }
+
+export function formatFloat(val: number): Cell {
+	if (!val) {
+		return new Cell(new CellLine("0"));
+	}
+	return new Cell(new CellLine(Math.abs(val).toFixed(2).toString()));
+}
