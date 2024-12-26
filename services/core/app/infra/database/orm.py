@@ -1552,12 +1552,13 @@ def get_timesheets(
         end = query_schema.date_query.end
         query_schema.date_query = None
 
-        if query_schema.order_by_query.column == "worker_fullname":
-            query_schema.order_by_query.column = "l_name"
-        elif query_schema.order_by_query.column == "post_name":
-            query_schema.order_by_query.column = "post"
-        elif query_schema.order_by_query.column == "department_name":
-            query_schema.order_by_query.column = "department"
+        if query_schema.order_by_query:
+            if query_schema.order_by_query.column == "worker_fullname":
+                query_schema.order_by_query.column = "l_name"
+            elif query_schema.order_by_query.column == "post_name":
+                query_schema.order_by_query.column = "post"
+            elif query_schema.order_by_query.column == "department_name":
+                query_schema.order_by_query.column = "department"
 
         query_builder = create_query_builder(Worker, query_schema, s)
         if records_per_page is not None and query_schema is not None:
