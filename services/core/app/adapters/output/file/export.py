@@ -138,4 +138,4 @@ class XlSXWriterExporter(XlSXExporter):
         return value.name
 
     def _format_float(self, value: float) -> str:
-        return str(round(value, 2))
+        return f"{value:.2f}"
