@@ -167,5 +167,5 @@ export function formatFloat(val: number): Cell {
 	if (!val) {
 		return new Cell(new CellLine("0"));
 	}
-	return new Cell(new CellLine(Math.abs(val).toFixed(2).toString()));
+	return new Cell(new CellLine(val.toFixed(2).toString()));
 }
