@@ -373,8 +373,8 @@ class TimeSheetSchema(BaseSchemaPK):
             "worker_fullname": self.worker_fullname,
             "department_name": self.department_name,
             "post_name": self.post_name,
-            "total_hours": self.total_hours,
-            **{str(day): 0 for day in range(1, self.last_day + 1)},
+            "total_hours": f"{self.total_hours:.2f}"
+            ** {str(day): 0 for day in range(1, self.last_day + 1)},
         }
 
         duration_per_day = self.duration_per_day
