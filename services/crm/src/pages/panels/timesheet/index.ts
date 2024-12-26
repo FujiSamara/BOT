@@ -3,12 +3,18 @@ import Holidays from "date-holidays";
 import { Table } from "@/components/table";
 import { colors } from "@/config";
 import { TimesheetSchema } from "@/types";
+import * as parser from "@/parser";
 
 export class TimesheetTable extends Table<TimesheetSchema> {
 	private holidays: Holidays = new Holidays("RU");
 
 	constructor() {
 		super("timesheet");
+
+		this._formatters.set("total_hours", parser.formatFloat);
+		for (let index = 1; index < 32; index++) {
+			this._formatters.set(index.toString(), parser.formatFloat);
+		}
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker_fullname", "Работник");

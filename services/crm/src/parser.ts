@@ -51,6 +51,22 @@ export function formatDate(dateString: string): Cell {
 	return new Cell(new CellLine(formattedDate));
 }
 
+export function formatTime(dateString: string): Cell {
+	if (!dateString) {
+		return new Cell(new CellLine());
+	}
+
+	const date = new Date(dateString);
+	const formattedDate =
+		date.getHours().toString().padStart(2, "0") +
+		":" +
+		date.getMinutes().toString().padStart(2, "0") +
+		":" +
+		date.getSeconds().toString().padStart(2, "0");
+
+	return new Cell(new CellLine(formattedDate));
+}
+
 export function formatExpenditure(expenditure: ExpenditureSchema): Cell {
 	return new Cell(new CellLine(expenditure.name));
 }
@@ -145,4 +161,11 @@ export function formatMultilineString(multilineString: string): Cell {
 
 export function capitalize(val: string) {
 	return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+
+export function formatFloat(val: number): Cell {
+	if (!val) {
+		return new Cell(new CellLine("0"));
+	}
+	return new Cell(new CellLine(val.toFixed(2).toString()));
 }

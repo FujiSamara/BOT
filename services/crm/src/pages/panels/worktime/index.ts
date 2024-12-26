@@ -16,10 +16,11 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 		this._formatters.set("worker", parser.formatWorker);
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("post", parser.formatPost);
-		this._formatters.set("work_begin", parser.formatDateTime);
-		this._formatters.set("work_end", parser.formatDateTime);
-		this._formatters.set("day", parser.formatDateTime);
+		this._formatters.set("work_begin", parser.formatTime);
+		this._formatters.set("work_end", parser.formatTime);
+		this._formatters.set("day", parser.formatDate);
 		this._formatters.set("photo_b64", parser.formatWorkTimePhoto);
+		this._formatters.set("work_duration", parser.formatFloat);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
