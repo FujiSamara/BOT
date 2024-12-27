@@ -130,6 +130,7 @@ class QueryBuilder(Builder):
             schemas.WorkerSchema: self._order_by_worker,
             schemas.DepartmentSchema: self._order_by_department,
             schemas.ExpenditureSchema: self._order_by_expenditure,
+            schemas.PostSchema: self._order_by_post,
         }
 
         # Search builders.
@@ -140,6 +141,7 @@ class QueryBuilder(Builder):
             schemas.WorkerSchema: self._search_by_worker,
             schemas.DepartmentSchema: self._search_by_department,
             schemas.ExpenditureSchema: self._search_by_expenditure,
+            schemas.PostSchema: self._search_by_post,
         }
 
     def apply(self, query_schema: schemas.QuerySchema):
@@ -224,6 +226,14 @@ class QueryBuilder(Builder):
         self, column: InstrumentedAttribute[any], is_desc: bool = False
     ) -> Select:
         columns = [models.Expenditure.name, models.Expenditure.chapter]
+        if is_desc:
+            columns = [desc(w_column) for w_column in columns]
+        return self.select.join(column).order_by(*columns)
+
+    def _order_by_post(
+        self, column: InstrumentedAttribute[any], is_desc: bool = False
+    ) -> Select:
+        columns = [models.Post.name]
         if is_desc:
             columns = [desc(w_column) for w_column in columns]
         return self.select.join(column).order_by(*columns)
@@ -356,6 +366,16 @@ class QueryBuilder(Builder):
             search_clauses.append(search_column.ilike(f"%{term}%"))
 
         return select(models.Department.id).filter(or_(*search_clauses))
+
+    def _search_by_post(self, term: str) -> Select:
+        search_columns = [models.Post.name]
+
+        search_clauses = []
+
+        for search_column in search_columns:
+            search_clauses.append(search_column.ilike(f"%{term}%"))
+
+        return select(models.Post.id).filter(or_(*search_clauses))
 
     def _search_by_expenditure(self, term: str) -> Select:
         search_columns = [models.Expenditure.name, models.Expenditure.chapter]

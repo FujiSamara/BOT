@@ -1087,7 +1087,7 @@ def get_technical_problem_by_problem_name(problem_name: str) -> TechnicalProblem
 
 def create_technical_request(record: TechnicalRequestSchema) -> bool:
     """Creates technical problem
-    Returns: `True` if technical problem request record created, `False` otherwise.
+    Returns: True if request created False otherwise
     """
     with session.begin() as s:
         technical_request = TechnicalRequest(
@@ -1118,11 +1118,13 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
     return True
 
 
-def update_technical_request_from_repairman(record: TechnicalRequestSchema):
+def update_technical_request_from_repairman(record: TechnicalRequestSchema) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.repair_date = record.repair_date
@@ -1137,11 +1139,16 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema):
     return True
 
 
-def update_technical_request_from_territorial_manager(record: TechnicalRequestSchema):
+def update_technical_request_from_territorial_manager(
+    record: TechnicalRequestSchema,
+) -> bool:
     with session.begin() as s:
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == record.id).first()
         )
+
+        if cur_request is None:
+            return False
 
         cur_request.state = record.state
         cur_request.close_date = record.close_date
@@ -1431,31 +1438,41 @@ def close_request(
 
 
 def get_count_req_in_departments(
-    state: ApprovalStatus, worker_id: int
+    state: ApprovalStatus, worker_id: int | None = None
 ) -> tuple[str, int]:
     """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        match state:
-            case ApprovalStatus.pending:
-                condition = and_(
-                    TechnicalRequest.repairman_id == worker_id,
-                    TechnicalRequest.state == state,
+        stm = select(Department.name, func.count(TechnicalRequest.id)).join(Department)
+
+        if worker_id is not None:
+            match state:
+                case ApprovalStatus.pending:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.repairman_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+                case ApprovalStatus.pending_approval:
+                    stm = stm.filter(
+                        and_(
+                            TechnicalRequest.territorial_manager_id == worker_id,
+                            TechnicalRequest.state == state,
+                        )
+                    )
+        else:
+            stm = stm.filter(
+                or_(
+                    TechnicalRequest.state == ApprovalStatus.pending,
+                    TechnicalRequest.state == ApprovalStatus.pending_approval,
                 )
-            case ApprovalStatus.pending_approval:
-                condition = and_(
-                    TechnicalRequest.territorial_manager_id == worker_id,
-                    TechnicalRequest.state == state,
-                )
-        departments_ids_counts = s.execute(
-            select(Department.name, func.count(TechnicalRequest.id))
-            .join(Department)
-            .filter(
-                condition,
             )
-            .group_by(Department.name)
-            .order_by(Department.name)
+
+        departments_names_counts = s.execute(
+            stm.group_by(Department.name).order_by(Department.name)
         ).all()
-        return departments_ids_counts
+
+        return departments_names_counts
 
 
 # endregion
@@ -1488,6 +1505,7 @@ def get_model_count(
 ) -> int:
     """Return count of `model` in bd."""
     with session.begin() as s:
+        query_schema.order_by_query = None
         query_builder = create_query_builder(model_type, query_schema, s, select_query)
 
         return query_builder.count()
@@ -1546,6 +1564,14 @@ def get_timesheets(
         end = query_schema.date_query.end
         query_schema.date_query = None
 
+        if query_schema.order_by_query:
+            if query_schema.order_by_query.column == "worker_fullname":
+                query_schema.order_by_query.column = "l_name"
+            elif query_schema.order_by_query.column == "post_name":
+                query_schema.order_by_query.column = "post"
+            elif query_schema.order_by_query.column == "department_name":
+                query_schema.order_by_query.column = "department"
+
         query_builder = create_query_builder(Worker, query_schema, s)
         if records_per_page is not None and query_schema is not None:
             query_builder.select = query_builder.select.offset(
@@ -1599,14 +1625,16 @@ def get_timesheets(
         result: list[TimeSheetSchema] = []
 
         for worker in workers:
-            worker_fullname = f"{worker.f_name} {worker.l_name} {worker.o_name}"
+            worker_fullname = f"{worker.l_name} {worker.f_name} {worker.o_name}"
             post_name = worker.post.name
             total_hours = total_dict.get(worker.id, 0)
             duration_per_day = per_days_dict.get(worker.id, {})
 
             timesheet = TimeSheetSchema(
+                id=worker.id,
                 worker_fullname=worker_fullname,
                 post_name=post_name,
+                department_name=worker.department.name,
                 total_hours=total_hours,
                 duration_per_day=duration_per_day,
             )
@@ -2507,6 +2535,23 @@ def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema]
         if not raw_bids:
             return None
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_chief_technician(department_id) -> WorkerSchema | None:
+    with session.begin() as s:
+        worker_id = s.execute(
+            select(Department.chief_technician_id).filter(
+                Department.id == department_id
+            )
+        ).scalar()
+        if worker_id is None:
+            return None
+        chief_technician = (
+            s.execute(select(Worker).filter(Worker.id == worker_id)).scalars().all()
+        )
+        if chief_technician == []:
+            return None
+        return WorkerSchema.model_validate(chief_technician[0])
 
 
 def add_worker(record: WorkerSchema) -> bool:

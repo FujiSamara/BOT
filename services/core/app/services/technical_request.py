@@ -48,6 +48,19 @@ def counting_date_sla(sla: int):
     return deadline_date
 
 
+def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
+    """
+    Return TechnicalRequestSchema by id
+    """
+    try:
+        request = orm.get_technical_requests_by_column(TechnicalRequest.id, request_id)[
+            0
+        ]
+        return request
+    except IndexError:
+        logger.error(f"Request with id: {request_id} wasn't founds")
+
+
 def get_technical_problem_names() -> list[TechnicalProblemSchema]:
     return [problem.problem_name for problem in orm.get_technical_problems()]
 
@@ -64,12 +77,16 @@ def get_technical_problem_by_id(problem_id) -> TechnicalProblemSchema:
     return orm.get_technical_problem_by_id(problem_id=problem_id)
 
 
-def create_technical_request(
+async def create_technical_request(
     problem_name: str,
     description: str,
     photo_files: list[UploadFile],
     telegram_id: int,
-) -> dict:
+    department_name: str,
+) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Create technical request
     Return: repairman telegram id
@@ -80,6 +97,11 @@ def create_technical_request(
     if not last_technical_request_id:
         last_technical_request_id = 0
 
+    department = orm.find_departments_by_name(department_name)
+    if len(department) == 0:
+        logger.error(f"Department with name: {department_name} wasn't found")
+    department = department[0]
+
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
     if not worker:
         logger.error(f"Worker with telegram id {telegram_id} wasn't found")
@@ -89,20 +111,18 @@ def create_technical_request(
         logger.error(f"Problem with name {problem_name} wasn't found")
 
     repairman = orm.get_repairman_by_department_id_and_executor_type(
-        department_id=worker.department.id, executor_type=problem.executor.name
+        department_id=department.id, executor_type=problem.executor.name
     )
 
     if not repairman:
         logger.error(
-            f"Repairman from department id: {worker.department.id} and responsible by {problem.executor.name} wasn't found"
+            f"Repairman from department id: {department.id} and responsible by {problem.executor.name} wasn't found"
         )
 
-    territorial_manager = orm.get_territorial_manager_by_department_id(
-        worker.department.id
-    )
+    territorial_manager = orm.get_territorial_manager_by_department_id(department.id)
     if not territorial_manager:
         logger.error(
-            f"Territorial manager with department id: {worker.department.id} wasn't found"
+            f"Territorial manager with department id: {department.id} wasn't found"
         )
 
     documents = []
@@ -124,29 +144,46 @@ def create_technical_request(
         worker=worker,
         repairman=repairman,
         territorial_manager=territorial_manager,
-        department=worker.department,
+        department=department,
         repairman_worktime=0,
     )
 
     if not orm.create_technical_request(request):
         logger.error("Technical problem record wasn't created")
+        return False
+    else:
+        chief_technician = orm.get_chief_technician(request.department.id)
+        if chief_technician is None:
+            logger.error(
+                f"The chief technician wasn't found at department {request.department.id}"
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=chief_technician.telegram_id,
+                message=f"Заявка с номером {last_technical_request_id+1} передана в исполенние.\nПроизводство: {request.department.name}",
+            )
+        await notify_worker_by_telegram_id(
+            id=request.repairman.telegram_id,
+            message=text.notification_repairman
+            + f"\nНа производстве: {request.department.name}",
+        )
 
-    return {
-        "repairman_telegram_id": repairman.telegram_id,
-        "department_name": request.department.name,
-    }
+    return True
 
 
-def update_technical_request_from_repairman(
+async def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
-) -> dict:
+) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Update technical request
-    Return territorial manager telegram id and department name on dictionary
+    Notifies territorial manager, chief technician and request of the request
     """
     cur_date = datetime.now()
 
-    request = get_technical_request_by_id(request_id=request_id)
+    request: TechnicalRequestSchema = get_technical_request_by_id(request_id=request_id)
 
     if request.reopen_date:
         request.reopen_repair_date = cur_date
@@ -180,18 +217,37 @@ def update_technical_request_from_repairman(
 
     if not orm.update_technical_request_from_repairman(request):
         logger.error(f"Technical problem with id {request.id} record wasn't updated")
-    return_dict = {
-        "territorial_manager_telegram_id": request.territorial_manager.telegram_id,
-        "worker_telegram_id": request.worker.telegram_id,
-        "department_name": request.department.name,
-    }
+        return False
+    else:
+        await notify_worker_by_telegram_id(
+            id=request.territorial_manager.telegram_id,
+            message=text.notification_territorial_manager
+            + f"\n На производстве: {request.department.name}",
+        )
+        await notify_worker_by_telegram_id(
+            id=request.worker.telegram_id, message=text.notification_worker
+        )
 
-    return return_dict
+        chief_technician = orm.get_chief_technician(request.department.id)
+        if chief_technician is None:
+            logger.error(
+                f"The chief technician wasn't found at department {request.department.id}"
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=chief_technician.telegram_id,
+                message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+            )
+
+    return True
 
 
-def update_technical_request_from_territorial_manager(
+async def update_technical_request_from_territorial_manager(
     mark: int, request_id: int, description: Optional[str]
-) -> Optional[dict]:
+) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+
     """
     Update technical request
     Return repairman telegram id if mark == 1 else None
@@ -233,13 +289,29 @@ def update_technical_request_from_territorial_manager(
 
     if not orm.update_technical_request_from_territorial_manager(request):
         logger.error(f"Technical problem with id {request.id} record wasn't updated")
+        return False
+    else:
+        if mark == 1 and request.state == ApprovalStatus.pending:
+            await notify_worker_by_telegram_id(
+                id=request.repairman.telegram_id,
+                message=text.notification_repairman_reopen
+                + f"\nНа производстве: {request.department.name}",
+            )
+            chief_technician = orm.get_chief_technician(request.department.id)
+            if chief_technician is None:
+                logger.error(
+                    f"The chief technician wasn't found at department {request.department.id}"
+                )
+            else:
+                await notify_worker_by_telegram_id(
+                    id=chief_technician.telegram_id,
+                    message=f"Заявка с номером {request_id} отправленна на доработку.\nПроизводство: {request.department.name}",
+                )
+        await notify_worker_by_telegram_id(
+            id=request.worker.telegram_id, message=text.notification_worker
+        )
 
-    return {
-        "repairman_telegram_id": request.repairman.telegram_id,
-        "worker_telegram_id": request.worker.telegram_id,
-        "department_name": request.department.name,
-        "state": request.state,
-    }
+    return True
 
 
 def update_tech_request_executor(
@@ -495,19 +567,6 @@ def get_all_history_technical_requests_for_department_director(
         return requests
 
 
-def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
-    """
-    Return TechnicalRequestSchema by id
-    """
-    try:
-        request = orm.get_technical_requests_by_column(TechnicalRequest.id, request_id)[
-            0
-        ]
-        return request
-    except IndexError:
-        logger.error(f"Request with id: {request_id} wasn't founds")
-
-
 def _get_departments_names_for_employee(
     telegram_id: int, worker_column: Any
 ) -> list[str]:
@@ -608,7 +667,7 @@ def close_request(
     return tg_id
 
 
-def get_request_count_in_departments(
+def get_request_count_in_departments_by_tg_id(
     state: ApprovalStatus, tg_id: int
 ) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
@@ -617,7 +676,11 @@ def get_request_count_in_departments(
     else:
         worker_id = worker_id[0].id
 
-    return orm.get_count_req_in_departments(state, worker_id)
+    return orm.get_count_req_in_departments(state=state, worker_id=worker_id)
+
+
+def get_request_count_in_departments(state: ApprovalStatus) -> tuple[str, int]:
+    return orm.get_count_req_in_departments(state)
 
 
 def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:

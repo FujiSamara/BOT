@@ -92,6 +92,7 @@ class WorkerTechnicalRequestForm(StatesGroup):
     problem_name = State()
     description = State()
     photo = State()
+    department = State()
 
 
 class RepairmanTechnicalRequestForm(StatesGroup):
@@ -123,7 +124,7 @@ class DepartmentDirectorRequestForm(StatesGroup):
     description = State()
 
 
-# Personal Cabinet form
+# Persconal Cabinet form
 class PersonalCabinet(StatesGroup):
     department = State()
     menu = State()

@@ -18,18 +18,24 @@ def get_timesheets_at_page(
     page: int,
     records_per_page: int,
     query_schema: QuerySchema,
-) -> list[TimeSheetSchema]:
+) -> list[dict]:
     """Return timesheets with applied instructions.
 
     - Note: instructions applies to table `Workers`.
 
     See `QueryBuilder.apply` for more info applied instructions.
     """
-    return orm.get_timesheets(
+    start = query_schema.date_query.start
+    _, last_day = calendar.monthrange(start.year, start.month)
+    timesheets = orm.get_timesheets(
         query_schema,
         page,
         records_per_page,
     )
+    for timesheet in timesheets:
+        timesheet.last_day = last_day
+
+    return [timesheet.model_dump() for timesheet in timesheets]
 
 
 def export_timesheets(query_schema: QuerySchema) -> BytesIO:
@@ -45,4 +51,4 @@ def export_timesheets(query_schema: QuerySchema) -> BytesIO:
         aliases=aliases[TimeSheetSchema],
     )
 
-    return exporter.export(timesheets)
+    return exporter.export(timesheets, with_dump=True)
