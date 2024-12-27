@@ -4,12 +4,15 @@ from app.adapters.bot.handlers.worker_bids import (
 )
 from aiogram import Router
 
-from app.adapters.bot.handlers.worker_bids import workers_subordinate
+from app.adapters.bot.handlers.worker_bids import candidates_subordinate
 
 router = Router(name="workers_bids")
+
+
+coordinate.build_coordinations()
 
 router.include_routers(
     create.router,
     coordinate.router,
-    workers_subordinate.router,
+    candidates_subordinate.router,
 )

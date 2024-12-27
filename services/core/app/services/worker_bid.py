@@ -13,6 +13,7 @@ from app.infra.database.models import (
     Worker,
     WorkerBid,
     WorkerStatus,
+    FujiScope,
 )
 from app.schemas import (
     WorkerBidSchema,
@@ -57,39 +58,126 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
         await send_menu_by_scopes(msg)
 
 
-async def update_worker_bid_bot(bid_id, state: ApprovalStatus, comment: str):
+def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
+    """Creates and add worker from worker bid in database.
+
+    Returns:
+        `bool`: True if worker was created successfully else False
+    """
+    last_worker_id = orm.get_last_worker_id()
+    passport = []
+    for index, doc in enumerate(worker_bid.passport):
+        doc = doc.document
+        suffix = Path(doc.filename).suffix
+        filename = f"photo_worker_passport_{last_worker_id + 1}_{index + 1}{suffix}"
+        doc.filename = filename
+        passport.append(DocumentSchema(document=doc))
+    worker = WorkerSchema(
+        f_name=worker_bid.f_name,
+        l_name=worker_bid.l_name,
+        o_name=worker_bid.o_name,
+        b_date=worker_bid.birth_date,
+        phone_number=worker_bid.phone_number,
+        telegram_id=None,
+        state=WorkerStatus.internship,
+        post=worker_bid.post,
+        department=worker_bid.department,
+        gender=None,
+        employment_date=datetime.now().date(),
+        dismissal_date=None,
+        medical_records_availability=None,
+        citizenship=None,
+        password=None,
+        can_use_crm=False,
+        passport=passport,
+        snils=None,
+        inn=None,
+        registration=None,
+        actual_residence=None,
+        children=False,
+        children_born_date=[],
+        military_ticket=None,
+    )
+    if orm.add_worker(worker):
+        return True
+    return False
+
+
+async def notify_next_coordinator(bid_id, state_column):
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+
+    match state_column:
+        case "security_service":
+            for worker in orm.get_workers_with_scope(
+                scope=FujiScope.bot_worker_bid_security_coordinate
+            ):
+                if worker.telegram_id is not None:
+                    await notify_worker_by_telegram_id(
+                        id=worker.telegram_id,
+                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid_id}.",
+                    )
+        case "accounting_service":
+            return
+
+
+async def update_worker_bid_bot(
+    bid_id,
+    state_column_name: str,
+    state: ApprovalStatus,
+    comment: str,
+) -> bool:
     """
     Updates worker bid state and comment to specified `state` by `bid_id` if bid exist.
     Use only in bot
     """
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+
     worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
 
     if not worker_bid:
         logger.error(f"Worker bid with id: {bid_id} not found.")
-    worker_bid.comment = comment
-    worker_bid.state = state
-    orm.update_worker_bid(worker_bid)
+        return False
 
-    from app.adapters.bot.handlers.utils import (
-        notify_worker_by_telegram_id,
-        send_menu_by_scopes,
-    )
+    if state == ApprovalStatus.denied:
+        worker_bid.state = state
+
+    match state_column_name:
+        case "security_service":
+            stage = "службой безопасности"
+            worker_bid.security_service_state = state
+            worker_bid.security_service_comment = comment
+            if state != ApprovalStatus.denied:
+                worker_bid.accounting_service_state = ApprovalStatus.pending_approval
+        case "accounting_service":
+            stage = "бухгалтерией"
+            worker_bid.state = state
+            worker_bid.comment = comment
+        case _:
+            logger.error("State for worker bid not found")
+
+    orm.update_worker_bid(worker_bid)
+    if worker_bid.state == ApprovalStatus.approved:
+        create_and_add_worker(worker_bid)
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
-        return
-    msg = None
+        logger.error(f"Worker with id: {worker_bid.sender.id} not found.")
+        return False
+
     if state == ApprovalStatus.approved:
-        msg = await notify_worker_by_telegram_id(
-            worker.telegram_id, f"Кандидат согласован!\nНомер заявки: {worker_bid.id}."
-        )
-    elif state == ApprovalStatus.denied:
-        msg = await notify_worker_by_telegram_id(
+        await notify_worker_by_telegram_id(
             worker.telegram_id,
-            f"Кандидат не согласован!\n{worker_bid.comment}\nНомер заявки: {worker_bid.id}.",
+            f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
         )
-    if msg is not None:
-        await send_menu_by_scopes(msg)
+        await notify_next_coordinator(bid_id, state_column_name)
+
+    elif state == ApprovalStatus.denied:
+        await notify_worker_by_telegram_id(
+            worker.telegram_id,
+            f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
+        )
+
+    return True
 
 
 def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
@@ -99,7 +187,7 @@ def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
     return orm.find_worker_bid_by_column(WorkerBid.id, id)
 
 
-def create_worker_bid(
+async def create_worker_bid(
     f_name: str,
     l_name: str,
     o_name: str,
@@ -170,6 +258,9 @@ def create_worker_bid(
         work_permission=work_permission_insts,
         create_date=datetime.now(),
         state=ApprovalStatus.pending_approval,
+        security_service_state=ApprovalStatus.pending_approval,
+        accounting_service_state=ApprovalStatus.pending,
+        security_service_comment=None,
         sender=sender,
         comment=None,
         birth_date=birth_date,
@@ -177,20 +268,66 @@ def create_worker_bid(
     )
 
     orm.add_worker_bid(worker_bid)
+    await notify_next_coordinator(last_bid_id + 1, "security_service")
 
 
-def get_pending_approval_bids() -> list[WorkerBidSchema] | None:
-    return orm.find_worker_bids_by_column(
-        WorkerBid.state, ApprovalStatus.pending_approval
-    )
+def get_pending_approval_bids(state_column) -> list[WorkerBidSchema] | None:
+    return orm.find_worker_bids_by_column(state_column, ApprovalStatus.pending_approval)
 
 
-def get_workers_subordinate(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
-    chief_id = orm.get_workers_with_post_by_columns([Worker.telegram_id], [tg_id])
-    if chief_id == []:
-        logger.error(f"Worker with id {chief_id} wasn't found")
-    chief_id = chief_id[0].id
-    return orm.get_workers_subordinate(chief_id, limit, offset)
+def get_subordinates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+    chief = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if chief == []:
+        logger.error(f"Worker with id {chief} wasn't found")
+    chief = chief[0]
+    scopes = []
+    if FujiScope.bot_technical_request_territorial_manager in chief.post.scopes:
+        scopes += [
+            FujiScope.bot_bid_create,
+            FujiScope.bot_bid_kru,
+            FujiScope.bot_bid_teller_cash,
+            FujiScope.bot_bid_teller_card,
+            FujiScope.bot_bid_accountant_cash,
+            FujiScope.bot_bid_accountant_card,
+            FujiScope.bot_worker_bid,
+            FujiScope.bot_technical_request_worker,
+            FujiScope.bot_technical_request_repairman,
+            FujiScope.bot_technical_request_chief_technician,
+            FujiScope.bot_bid_it_worker,
+            FujiScope.bot_bid_it_repairman,
+            FujiScope.bot_personal_cabinet,
+        ]
+    if FujiScope.bot_technical_request_department_director in chief.post.scopes:
+        scopes += [
+            FujiScope.bot_technical_request_territorial_manager,
+            FujiScope.bot_bid_it_tm,
+        ]
+
+    workers = []
+    if scopes != []:
+        workers = orm.get_subordinates_in_departments(
+            chief_id=chief.id,
+            scopes=scopes,
+        )
+    workers += orm.get_subordinates(chief_id=chief.id)
+    return workers[offset * limit : (offset + 1) * limit]
+
+
+def search_subordinate(tg_id: int, l_name: str) -> int | None:
+    chief = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if chief == []:
+        logger.error(f"Worker with id {chief} wasn't found")
+    chief = chief[0]
+
+    worker = orm.get_subordinates(chief_id=chief.id, l_name=l_name)
+    if worker != []:
+        return worker[0].id
+
+    worker = orm.get_subordinates_in_departments(chief_id=chief.id, l_name=l_name)
+    if worker != []:
+        return worker[0].id
+
+    return None
 
 
 def update_worker_state(worker_id: int, state: WorkerStatus) -> bool:

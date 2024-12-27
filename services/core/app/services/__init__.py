@@ -77,6 +77,7 @@ from app.services.extra import (
     set_department_for_worker,
     get_companies_names,
     set_tellers_cash_department,
+    get_last_worker_passport_id,
 )
 from app.services.it_problem import (
     create_bid_it,
@@ -132,8 +133,9 @@ from app.services.worker_bid import (
     update_worker_bid_state,
     get_pending_approval_bids,
     update_worker_bid_bot,
-    get_workers_subordinate,
+    get_subordinates,
     update_worker_state,
+    search_subordinate,
 )
 from app.services.worktime import (
     create_worktime,
@@ -286,6 +288,8 @@ __all__ = [
     "update_repairman_worktimes",
     "get_pending_approval_bids",
     "update_worker_bid_bot",
-    "get_workers_subordinate",
+    "get_subordinates",
     "update_worker_state",
+    "search_subordinate",
+    "get_last_worker_passport_id",
 ]

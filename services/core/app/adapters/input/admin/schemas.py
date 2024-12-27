@@ -207,6 +207,10 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name,
         Worker.phone_number,
     ]
+    column_sortable_list = [
+        Worker.state,
+        Worker.id,
+    ]
     column_list = [
         Worker.l_name,
         Worker.f_name,
@@ -230,7 +234,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.telegram_id,
         Worker.gender,
         Worker.employment_date,
+        Worker.official_employment_date,
         Worker.dismissal_date,
+        Worker.official_dismissal_date,
         Worker.medical_records_availability,
         Worker.citizenship,
         Worker.can_use_crm,
@@ -242,6 +248,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children,
         Worker.children_born_date,
         Worker.military_ticket,
+        Worker.patent,
     ]
     can_export = False
 
@@ -261,8 +268,10 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number: "Номер телефона",
         Worker.company: "Компания",
         Worker.telegram_id: "ID телеграмм",
-        Worker.employment_date: "Дата приема",
+        Worker.employment_date: "Дата приёма",
+        Worker.official_employment_date: "Официальная дата приёма",
         Worker.dismissal_date: "Дата увольнения",
+        Worker.official_dismissal_date: "Официальная дата увольнения",
         Worker.medical_records_availability: "Наличие медицинской книжки",
         Worker.gender: "Пол",
         Worker.citizenship: "Гражданство",
@@ -276,6 +285,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children: "Дети",
         Worker.children_born_date: "Даты рождения детей",
         Worker.military_ticket: "Военный билет",
+        Worker.patent: "Патент",
     }
 
     form_columns = [
@@ -290,7 +300,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.post,
         Worker.b_date,
         Worker.employment_date,
+        Worker.official_employment_date,
         Worker.dismissal_date,
+        Worker.official_dismissal_date,
         Worker.medical_records_availability,
         Worker.gender,
         Worker.citizenship,
@@ -304,6 +316,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children,
         Worker.children_born_date,
         Worker.military_ticket,
+        Worker.patent,
     ]
 
     form_ajax_refs = {
@@ -337,13 +350,6 @@ class WorkerView(ModelView, model=Worker):
         return worker_status_dict.get(value)
 
     @staticmethod
-    def bool_to_str(inst, column):
-        value = getattr(inst, column)
-        if value:
-            return "Да"
-        return "Нет"
-
-    @staticmethod
     def files_format(inst, column):
         return WorkerBidView.files_format(inst, column)
 
@@ -354,7 +360,6 @@ class WorkerView(ModelView, model=Worker):
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
-        Worker.children: bool_to_str,
         Worker.passport: files_format,
     }
     column_formatters_detail = column_formatters
@@ -403,6 +408,21 @@ class WorkerPassportView(ModelView, model=WorkerPassport):
         return select(WorkerPassport).filter(
             WorkerPassport.worker_id.in_(workers_id),
         )
+
+    async def on_model_change(
+        self, data: dict, model: WorkerPassport, is_created, request
+    ):
+        from pathlib import Path
+
+        if "document" in data and "worker" in data:
+            worker_id = int(data["worker"])
+            document = data["document"]
+            filename = f"photo_worker_passport_{worker_id}"
+            filename += (
+                f"_{services.get_last_worker_passport_id(worker_id=worker_id)+1}"
+            )
+            filename += f"{Path(document.filename).suffix}"
+            data["document"].filename = filename
 
     column_searchable_list = [
         "Фамилия",

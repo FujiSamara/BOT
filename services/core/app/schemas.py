@@ -95,7 +95,9 @@ class WorkerSchema(BaseSchemaPK):
 
     gender: Optional[Gender]
     employment_date: Optional[datetime.date]
+    official_employment_date: datetime.date | None = None
     dismissal_date: Optional[datetime.date]
+    official_dismissal_date: datetime.date | None = None
     medical_records_availability: Optional[bool]
     citizenship: Optional[str]
 
@@ -109,7 +111,7 @@ class WorkerSchema(BaseSchemaPK):
             return (val[0],)
         return val
 
-    passport: DocumentSchema | None = None
+    passport: list[DocumentSchema] | None = None
     snils: str | None = None
     inn: str | None = None
     registration: str | None = None
@@ -117,10 +119,10 @@ class WorkerSchema(BaseSchemaPK):
     children: bool = False
     children_born_date: list["WorkerChildrenSchema"] = []
     military_ticket: str | None = None
+    patent: str | None = None
 
 
 class WorkerChildrenSchema(BaseSchemaPK):
-    worker: WorkerSchema
     born_date: datetime.datetime
 
 
@@ -195,10 +197,13 @@ class WorkerBidSchema(BaseSchemaPK):
     work_permission: list[DocumentSchema]
 
     state: ApprovalStatus
+    security_service_state: ApprovalStatus | None = None
+    accounting_service_state: ApprovalStatus | None = None
 
     sender: WorkerSchema
 
-    comment: Optional[str]
+    comment: str | None = None
+    security_service_comment: str | None = None
 
 
 class ExpenditureSchema(BaseSchemaPK):

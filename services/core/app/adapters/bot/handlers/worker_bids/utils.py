@@ -2,6 +2,9 @@ from app.schemas import WorkerBidSchema
 from app.infra.database.models import ApprovalStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
+from app.services import get_worker_by_id
+from app.infra.database.models import FujiScope
+from app.adapters.bot.handlers.utils import notify_workers_by_scope
 
 
 def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
@@ -24,6 +27,12 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Должность")}: {bid.post.name}
 {hbold("Статус")}: {stage}
+
+{hbold('Данные заявителя')}
+{hbold("Имя")}: {bid.sender.f_name}
+{hbold("Фамилия")}: {bid.sender.l_name}
+{hbold("Отчество")}: {bid.sender.o_name}
+{hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
 
     return bid_info
@@ -32,4 +41,12 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 def get_worker_bid_list_info(bid: WorkerBidSchema) -> str:
     return (
         f"{bid.id}: {bid.l_name} " + f"{bid.create_date.strftime(settings.date_format)}"
+    )
+
+
+async def notify_accounting(worker_id: int):
+    worker = get_worker_by_id(worker_id)
+    notify_workers_by_scope(
+        FujiScope.bot_worker_bid_accounting_coordinate,
+        message=f"{worker.l_name} {worker.f_name} {worker.o_name} успешно прошёл стажировку",
     )

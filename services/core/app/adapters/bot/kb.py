@@ -300,20 +300,17 @@ worker_bid_menu = InlineKeyboardMarkup(
 )
 
 
-get_coordinate_worker_bid_btn = InlineKeyboardButton(
-    text="Согласование кандидатов", callback_data="get_coordinate_worker_bids"
+get_coordinate_worker_bids_AS_btn = InlineKeyboardButton(
+    text="Согласование кандидатов",
+    callback_data="get_coordinate_worker_bids_AS",  # Accounting service
 )
 
-get_pending_coordinate_worker_bid_btn = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_pending_coordinate_worker_bids"
+get_coordinate_worker_bids_SS_btn = InlineKeyboardButton(
+    text="Согласование кандидатов",
+    callback_data="get_coordinate_worker_bids_SS",  # Security service
 )
 
-coordinate_worker_bid_menu = create_inline_keyboard(
-    get_pending_coordinate_worker_bid_btn,
-    main_menu_button,
-)
-
-get_workers_coordinate_menu_btn = InlineKeyboardButton(
+get_candidates_coordinate_menu_btn = InlineKeyboardButton(
     text="Сотрудники",
     callback_data="get_candidates_menu",
 )

@@ -66,7 +66,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     worksheet = data["worksheet"]
     passport = data["passport"]
     work_permission = data.get("work_permission")
-    birth_date = datetime.fromisoformat(data["birth_date"])
+    birth_date = datetime.strptime(data["birth_date"], "%Y-%m-%d")
     phone_number = data["phone_number"]
     if not work_permission:
         work_permission = []
@@ -82,7 +82,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     for doc in work_permission:
         work_permission_files.append(await utils.download_file(doc))
 
-    services.create_worker_bid(
+    await services.create_worker_bid(
         f_name,
         l_name,
         o_name,
@@ -271,7 +271,7 @@ async def set_birth_year(message: Message, state: FSMContext):
         await sleep(3)
         await get_birth_year(msg, state)
     else:
-        await state.update_data(year=year)
+        await state.update_data(year=str(year))
         await get_birthday(message, state)
 
 
@@ -305,7 +305,7 @@ async def set_birth_month(message: Message, state: FSMContext):
         await sleep(3)
         await get_birth_month(msg, state)
     else:
-        await state.update_data(month=month)
+        await state.update_data(month=str(month) if month // 10 != 0 else f"0{month}")
         await get_birthday(message, state)
 
 
@@ -354,7 +354,7 @@ async def set_birth_day(message: Message, state: FSMContext):
         await sleep(3)
         await get_birth_day(msg, state)
     else:
-        await state.update_data(day=day)
+        await state.update_data(day=str(day) if day // 10 != 0 else f"0{day}")
         await get_birthday(message, state)
 
 
@@ -362,7 +362,7 @@ async def set_birth_day(message: Message, state: FSMContext):
 async def set_worker_bid_birth_date(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     await state.update_data(
-        birth_date=f"{data.get('year')}-{data.get('month')}-{data.get('day')}"
+        birth_date=data.get("year") + "-" + data.get("month") + "-" + data.get("day")
     )
     msg = await utils.try_edit_or_answer(
         message=callback.message, text="Успешно", return_message=True

@@ -68,8 +68,9 @@ class FujiScope(enum.Enum):
     bot_personal_cabinet = 25
     bot_incident_monitoring = 29
     bot_bid_fac_cc = 32
-    bot_coordinate_worker_bid = 34
-    bot_subordinates_menu = 35
+    bot_subordinates_menu = 34
+    bot_worker_bid_security_coordinate = 35
+    bot_worker_bid_accounting_coordinate = 36
 
 
 class DepartmentType(enum.Enum):
@@ -361,7 +362,9 @@ class Worker(Base):
 
     gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
     employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    official_employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
     dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    official_dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
     medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
     citizenship: Mapped[str] = mapped_column(nullable=True)
 
@@ -435,9 +438,12 @@ class Worker(Base):
     actual_residence: Mapped[str] = mapped_column(nullable=True)
     children: Mapped[bool] = mapped_column(nullable=True)
     children_born_date: Mapped[List["WorkerChildren"]] = relationship(
-        "WorkerChildren", cascade="all,delete", back_populates="worker"
+        "WorkerChildren",
+        cascade="all,delete",
+        back_populates="worker",
     )
     military_ticket: Mapped[str] = mapped_column(nullable=True)
+    patent: Mapped[str] = mapped_column(nullable=True)
 
 
 class WorkerPassport(Base):
@@ -449,7 +455,8 @@ class WorkerPassport(Base):
         return f"id {self.id}"
 
     worker_id: Mapped[int] = mapped_column(
-        ForeignKey("workers.id", name="worker_id"), nullable=False
+        ForeignKey("workers.id", name="worker_id"),
+        nullable=False,
     )
     worker: Mapped["Worker"] = relationship(
         "Worker",
@@ -598,11 +605,14 @@ class WorkerBid(Base):
     )
 
     state: Mapped[approvalstatus]
+    security_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
+    accounting_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
 
     comment: Mapped[str] = mapped_column(nullable=True, default="")
+    security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
 
 
 class WorkerBidDocument(Base):
