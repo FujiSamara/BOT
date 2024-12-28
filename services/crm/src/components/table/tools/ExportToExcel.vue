@@ -3,7 +3,7 @@ import { PropType, ref } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 
-import PulseSpinner from "@/components/UI/PulseSpinner.vue";
+import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 
 const props = defineProps({
 	table: {
