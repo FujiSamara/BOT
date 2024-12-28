@@ -9,7 +9,7 @@ import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/searchHook";
+import { useSearch } from "@/hooks/tableSearchHook";
 import { PropType } from "vue";
 import { useDateInterval } from "@/hooks/dateIntervalHook";
 

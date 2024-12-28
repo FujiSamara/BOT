@@ -7,7 +7,7 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/searchHook";
+import { useSearch } from "@/hooks/tableSearchHook";
 import { PropType } from "vue";
 
 const props = defineProps({
