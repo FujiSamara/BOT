@@ -72,7 +72,7 @@ const searchList = useSearch(
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<ColumnFilter
-						:style="'width: 126px; height: 48px'"
+						:style="'height: 48px'"
 						:table="props.table"
 						:alignRight="true"
 					></ColumnFilter>
