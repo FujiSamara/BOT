@@ -3,6 +3,7 @@ import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/table/tools/SearchInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
+import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
 
@@ -21,17 +22,17 @@ const props = defineProps({
 
 const searchList = useSearch(
 	props.table,
-	{
-		schemas: [
-			{
-				pattern: "department",
-				groups: [0],
-			},
-		],
-		placeholder: "Производство",
-		style: "height: 100%; width: 215px",
-		name: "department",
-	},
+	// {
+	// 	schemas: [
+	// 		{
+	// 			pattern: "department",
+	// 			groups: [0],
+	// 		},
+	// 	],
+	// 	placeholder: "Производство",
+	// 	style: "height: 100%; width: 215px",
+	// 	name: "department",
+	// },
 	{
 		schemas: [
 			{
@@ -73,9 +74,13 @@ const dateInterval = await useDateInterval(props.table, "day");
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<ColumnFilter
-						:style="'width: 126px; height: 48px'"
+						:style="'height: 48px'"
 						:table="props.table"
 					></ColumnFilter>
+					<SearchFilter
+						:style="'height: 48px'"
+						:table="props.table"
+					></SearchFilter>
 					<ExportToExcel
 						:table="props.table"
 						style="width: 187px; height: 48px"
