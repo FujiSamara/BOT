@@ -301,12 +301,12 @@ worker_bid_menu = InlineKeyboardMarkup(
 
 
 get_coordinate_worker_bids_AS_btn = InlineKeyboardButton(
-    text="Согласование кандидатов",
+    text="Согласование кандидатов бухгалтерия",
     callback_data="get_coordinate_worker_bids_AS",  # Accounting service
 )
 
 get_coordinate_worker_bids_SS_btn = InlineKeyboardButton(
-    text="Согласование кандидатов",
+    text="Согласование кандидатов СБ",
     callback_data="get_coordinate_worker_bids_SS",  # Security service
 )
 
