@@ -393,8 +393,8 @@ class CleaningRequestSchema(BaseSchemaPK):
     score: int
     worker: WorkerSchema
 
-    problem_photos: list[DocumentSchema]
-    cleaning_photos: list[DocumentSchema]
+    problem_photos: list[DocumentSchema] | None = None
+    cleaning_photos: list[DocumentSchema] | None = None
     cleaner: WorkerSchema
     territorial_manager: WorkerSchema
     department: DepartmentSchema

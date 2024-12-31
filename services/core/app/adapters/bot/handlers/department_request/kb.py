@@ -5,7 +5,7 @@ from aiogram.types import (
 from aiogram.fsm.context import FSMContext
 
 from app.services import get_technical_problem_by_id, get_technical_request_by_id
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.kb import main_menu_button
 
 from app.schemas import TechnicalRequestSchema
@@ -277,7 +277,7 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Подать техническую заявку", callback_data="get_WR_TR_CR_menu"
+    text="Проблемы на производстве", callback_data="get_WR_TR_CR_menu"
 )
 
 wr_create = InlineKeyboardButton(

@@ -38,7 +38,7 @@ from app.adapters.bot.kb import (
     get_monitoring_menu_btn,
     get_coordinate_worker_bid_btn,
 )
-from app.adapters.bot.handlers.tech_request.kb import (
+from app.adapters.bot.handlers.department_request.kb import (
     wr_menu_button,  # worker
     rm_button,  # repairman
     ct_button,  # chief technician

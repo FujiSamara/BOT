@@ -61,7 +61,7 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         logger.error(f"Request with id: {request_id} wasn't founds")
 
 
-def get_technical_problem_names() -> list[TechnicalProblemSchema]:
+def get_technical_problem_names() -> list[str]:
     return [problem.problem_name for problem in orm.get_technical_problems()]
 
 
@@ -89,7 +89,7 @@ async def create_technical_request(
 
     """
     Create technical request
-    Return: repairman telegram id
+    Return: bool
     """
     cur_date = datetime.now()
 
@@ -149,7 +149,7 @@ async def create_technical_request(
     )
 
     if not orm.create_technical_request(request):
-        logger.error("Technical problem record wasn't created")
+        logger.error("Technical request record wasn't created")
         return False
     else:
         chief_technician = orm.get_chief_technician(request.department.id)

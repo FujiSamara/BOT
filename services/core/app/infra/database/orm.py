@@ -43,6 +43,10 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
+    CleaningProblem,
+    CleaningRequest,
+    CleaningRequestCleaningPhoto,
+    CleaningRequestProblemPhoto,
 )
 from app.schemas import (
     BidSchema,
@@ -68,6 +72,8 @@ from app.schemas import (
     AccountLoginsSchema,
     MaterialValuesSchema,
     CompanySchema,
+    CleaningProblemSchema,
+    CleaningRequestSchema,
 )
 
 
@@ -2529,3 +2535,56 @@ def get_chief_technician(department_id) -> WorkerSchema | None:
         if chief_technician == []:
             return None
         return WorkerSchema.model_validate(chief_technician[0])
+
+
+# region Cleaning requests
+def get_cleaning_problems() -> list[CleaningProblemSchema]:
+    with session.begin() as s:
+        raw_problems = s.execute(select(CleaningProblem)).scalars().all()
+        return [
+            CleaningProblemSchema.model_validate(raw_problem)
+            for raw_problem in raw_problems
+        ]
+
+
+def get_last_cleaning_request_id() -> int:
+    with session.begin() as s:
+        return s.execute(select(func.max(CleaningRequest.id))).scalar()
+
+
+def get_cleaning_problem_by_problem_name(name: str) -> CleaningProblemSchema:
+    with session.begin() as s:
+        raw_problem = (
+            s.execute(
+                select(CleaningProblem).filter(CleaningProblem.problem_name == name)
+            )
+            .scalars()
+            .first()
+        )
+        if raw_problem is None:
+            return None
+        return CleaningProblemSchema.model_validate(raw_problem)
+
+
+def create_cleaning_request(record: CleaningRequestSchema) -> bool:
+    with session.begin() as s:
+        cleaning_request = CleaningRequest(
+            problem=record.problem,
+            description=record.description,
+            state=record.state,
+            score=record.score,
+            worker=record.worker,
+            cleaner=record.cleaner,
+            territorial_manager=record.territorial_manager,
+            department=record.department,
+            open_date=record.open_date,
+        )
+
+        for doc in record.problem_photos:
+            file = CleaningRequestProblemPhoto(
+                cleaning_request=cleaning_request, document=doc.document
+            )
+            s.add(file)
+
+
+# endregion
