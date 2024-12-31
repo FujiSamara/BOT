@@ -1172,17 +1172,14 @@ class CleaningRequest(Base):
     )
 
     open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
-    deadline_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
     cleaning_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     confirmation_description: Mapped[str] = mapped_column(nullable=True)
 
     reopen_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-    reopen_deadline_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
     reopen_cleaning_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     reopen_confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
-
     close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
     close_description: Mapped[str] = mapped_column(nullable=True)

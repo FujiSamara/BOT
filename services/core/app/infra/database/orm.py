@@ -2572,12 +2572,20 @@ def create_cleaning_request(record: CleaningRequestSchema) -> bool:
             problem=record.problem,
             description=record.description,
             state=record.state,
-            score=record.score,
+            score=None,
+            open_date=record.open_date,
+            cleaning_date=None,
+            confirmation_date=None,
+            confirmation_description=None,
+            close_description=None,
+            reopen_date=None,
+            close_date=None,
+            reopen_confirmation_date=None,
+            reopen_cleaning_date=None,
             worker=record.worker,
             cleaner=record.cleaner,
             territorial_manager=record.territorial_manager,
             department=record.department,
-            open_date=record.open_date,
         )
 
         for doc in record.problem_photos:
@@ -2585,6 +2593,22 @@ def create_cleaning_request(record: CleaningRequestSchema) -> bool:
                 cleaning_request=cleaning_request, document=doc.document
             )
             s.add(file)
+
+
+def get_cleaner_in_department(department_id: int) -> WorkerSchema | None:
+    with session.begin() as s:
+        raw_worker = (
+            s.execute(
+                select(Worker)
+                .join(Department, onclause=Department.cleaner_id == Worker.id)
+                .filter(Department.id == department_id)
+            )
+            .scalars()
+            .first()
+        )
+        if raw_worker is None:
+            return None
+        return WorkerSchema.model_validate(raw_worker)
 
 
 # endregion

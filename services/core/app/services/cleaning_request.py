@@ -58,7 +58,6 @@ def create_cleaning_request(
         logger.error(f"Problem with name {problem_name} wasn't found")
 
     cleaner = orm.get_cleaner_in_department(department_id=department.id)
-
     if cleaner is None:
         logger.error(f"Cleaner from department id: {department.id} wasn't found")
 
@@ -85,7 +84,6 @@ def create_cleaning_request(
         cleaner=cleaner,
         territorial_manager=territorial_manager,
         department=department,
-        repairman_worktime=0,
     )
 
     if not orm.create_cleaning_request(request):
