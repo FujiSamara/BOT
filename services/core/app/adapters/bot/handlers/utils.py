@@ -40,9 +40,11 @@ from app.adapters.bot.kb import (
 )
 from app.adapters.bot.handlers.department_request.kb import (
     wr_menu_button,  # worker
-    rm_button,  # repairman
+    repairman_button,
+    cleaner_button,
     ct_button,  # chief technician
-    tm_button,  # territorial manager
+    TM_TR_button,  # territorial manager tech req
+    TM_CR_button,  # territorial manager cleaning req
     dd_button,  # department director
 )
 import asyncio
@@ -63,9 +65,9 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_worker_bid: worker_bid_menu_button,
         FujiScope.bot_bid_create: create_bid_menu_button,
         FujiScope.bot_technical_request_worker: wr_menu_button,
-        FujiScope.bot_technical_request_repairman: rm_button,
+        FujiScope.bot_technical_request_repairman: repairman_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_territorial_manager: tm_button,
+        FujiScope.bot_technical_request_territorial_manager: TM_TR_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
@@ -73,6 +75,8 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_personal_cabinet: get_personal_cabinet_button,
         FujiScope.bot_incident_monitoring: get_monitoring_menu_btn,
         FujiScope.bot_coordinate_worker_bid: get_coordinate_worker_bid_btn,
+        FujiScope.bot_cleaning_request_cleaner: cleaner_button,
+        FujiScope.bot_cleaning_request_territorial_manager: TM_CR_button,
     }
 
 
@@ -300,6 +304,7 @@ async def handle_documents(
             documents.append(message.document)
         if not msgs:
             msgs = []
+        msgs.append(message)
 
         if condition is not None:
             error = condition(documents)

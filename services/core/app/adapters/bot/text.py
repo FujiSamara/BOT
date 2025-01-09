@@ -35,9 +35,9 @@ back = "⏪ Назад"
 notification_repairman = "У Вас новая техническая заявка!"
 notification_repairman_reopen = "У Вас новая техническая заявка на доработку!"
 
-notification_territorial_manager = "У Вас новая техническая заявка для оценки!"
+notification_territorial_manager_TR = "У Вас новая техническая заявка для оценки!"
 
-notification_worker = "Статус технической заявки обновлён!"
+notification_worker_TR = "Статус технической заявки обновлён!"
 
 notification_it_worker = "Статус IT заявки обновлён!"
 notification_it_territorial_manager = "У Вас новая IT заявка для оценки!"
@@ -56,3 +56,11 @@ personal_cabinet_logins_dict = {
 
 problem_groups = ["Техническая", "Клининговая"]
 problem_groups_dict = {"Техническая": "TR", "Клининговая": "CR"}
+
+
+notification_cleaner = "У Вас новая заявка на клининг!"
+notification_cleaner_reopen = "У Вас новая заявка на доработку по клинингу!"
+
+notification_territorial_manager_CR = "У Вас новая заявка для оценки клининга!"
+
+notification_worker_CR = "Статус заявки в клининг обновлён!"

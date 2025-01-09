@@ -60,6 +60,8 @@ class FujiScope(enum.Enum):
     bot_incident_monitoring = 29
     bot_bid_fac_cc = 32
     bot_coordinate_worker_bid = 34
+    bot_cleaning_request_cleaner = 35
+    bot_cleaning_request_territorial_manager = 36
 
 
 class DepartmentType(enum.Enum):
@@ -423,7 +425,7 @@ class Worker(Base):
         back_populates="worker",
         foreign_keys="[CleaningRequest.worker_id]",
     )
-    cleaner_cleaning_request: Mapped[List["CleaningRequest"]] = relationship(
+    cleaner_cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
         "CleaningRequest",
         back_populates="cleaner",
         foreign_keys="[CleaningRequest.cleaner_id]",
@@ -1081,9 +1083,7 @@ class CleaningRequestDocument(Base):
     __abstract__ = True
 
     document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
-    cleaning_request_id: Mapped[int] = mapped_column(
-        ForeignKey("technical_requests.id")
-    )
+    cleaning_request_id: Mapped[int] = mapped_column(ForeignKey("cleaning_requests.id"))
 
 
 class CleaningRequestProblemPhoto(CleaningRequestDocument):
@@ -1099,10 +1099,10 @@ class CleaningRequestProblemPhoto(CleaningRequestDocument):
 class CleaningRequestCleaningPhoto(CleaningRequestDocument):
     """Фото ремонта для тех заявок"""
 
-    __tablename__ = "cleaning_requests_repair_photos"
+    __tablename__ = "cleaning_requests_photos_work"
 
     cleaning_request: Mapped["CleaningRequest"] = relationship(
-        "CleaningRequest", back_populates="repair_photos"
+        "CleaningRequest", back_populates="cleaning_photos"
     )
 
 
@@ -1124,13 +1124,13 @@ class CleaningRequest(Base):
     problem_photos: Mapped[List["CleaningRequestProblemPhoto"]] = relationship(
         "CleaningRequestProblemPhoto",
         cascade="all,delete",
-        back_populates="technical_request",
+        back_populates="cleaning_request",
     )
 
     cleaning_photos: Mapped[List["CleaningRequestCleaningPhoto"]] = relationship(
         "CleaningRequestCleaningPhoto",
         cascade="all,delete",
-        back_populates="technical_request",
+        back_populates="cleaning_request",
     )
 
     cleaner_id: Mapped[int] = mapped_column(

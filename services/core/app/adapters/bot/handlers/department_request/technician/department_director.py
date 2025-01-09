@@ -14,9 +14,9 @@ from app.adapters.bot.states import (
     DepartmentDirectorRequestForm,
 )
 
-from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
+from app.adapters.bot.handlers.department_request.utils import (
     handle_department,
-    show_form,
+    show_form_technician,
     department_names_with_count,
 )
 from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
@@ -119,7 +119,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="DD_TR_show_form_history",
             menu_button=tech_kb.dd_menu_button,
             requests=requests,
@@ -134,7 +134,7 @@ async def show_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -154,7 +154,7 @@ async def show_active_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Активные заявки"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="DD_TR_show_form_active",
             menu_button=tech_kb.dd_menu_button,
             requests=requests,
@@ -199,7 +199,7 @@ async def show_active_request_form(
         ],
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -546,7 +546,7 @@ async def save_close_request(
     if creator_tg_id:
         await notify_worker_by_telegram_id(
             id=creator_tg_id,
-            message=text.notification_worker,
+            message=text.notification_worker_TR,
         )
     await show_active_menu(
         callback=callback,

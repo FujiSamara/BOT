@@ -15,7 +15,7 @@ router.include_routers(
     handlers.bid_router,
     handlers.rate_router,
     handlers.bids_it_router,
-    handlers.tech_request_router,
+    handlers.department_request_router,
     handlers.personal_cabinet_router,
     handlers.monitoring_router,
     handlers.worker_bid_router,

@@ -24,15 +24,18 @@ from app.adapters.bot.handlers.utils import (
     handle_documents,
     create_reply_keyboard,
 )
-from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
-    show_form,
+from app.adapters.bot.handlers.department_request.utils import (
+    show_form_technician,
+    show_form_cleaning,
 )
 from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.department_request import kb as department_kb
 
 from app.services import (
     get_all_history_technical_requests_for_worker,
+    get_all_history_cleaning_requests_for_worker,
     get_all_waiting_technical_requests_for_worker,
+    get_all_waiting_cleaning_requests_for_worker,
     get_technical_problem_names,
     get_cleaning_problem_names,
     create_technical_request,
@@ -154,7 +157,7 @@ async def set_problem(message: Message, state: FSMContext):
         await state.set_state(Base.none)
 
 
-@router.callback_query(F.data == "description_WR_TR")
+@router.callback_query(F.data == "description_WR_TR_CR")
 async def get_description(callback: CallbackQuery, state: FSMContext):
     await state.set_state(WorkerDepartmentRequestForm.description)
     await try_delete_message(callback.message)
@@ -174,7 +177,7 @@ async def set_description(message: Message, state: FSMContext):
     await show_worker_create_request_format(message, state)
 
 
-@router.callback_query(F.data == "photo_WR_TR")
+@router.callback_query(F.data == "photo_WR_TR_CR")
 async def get_worker_photo(callback: CallbackQuery, state: FSMContext):
     await handle_documents_form(
         callback.message, state, WorkerDepartmentRequestForm.photo
@@ -184,10 +187,9 @@ async def get_worker_photo(callback: CallbackQuery, state: FSMContext):
 @router.message(WorkerDepartmentRequestForm.photo)
 async def set_worker_photo(message: Message, state: FSMContext):
     await handle_documents(message, state, "photo", show_worker_create_request_format)
-    await try_delete_message(message=message)
 
 
-@router.callback_query(F.data == "department_WR_TR")
+@router.callback_query(F.data == "department_WR_TR_CR")
 async def get_department(message: Message | CallbackQuery, state: FSMContext):
     if isinstance(message, CallbackQuery):
         await try_delete_message(message=message.message)
@@ -226,31 +228,84 @@ async def set_department(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == department_kb.wr_waiting.callback_data)
-async def show_worker_waiting_menu(callback: CallbackQuery):
-    requests = get_all_waiting_technical_requests_for_worker(
-        telegram_id=callback.message.chat.id
+async def change_waiting_type(callback: CallbackQuery):
+    buttons = [
+        InlineKeyboardButton(
+            text="Технические заявки",
+            callback_data=ShowRequestCallbackData(
+                request_id=-1,
+                end_point="WR_DR_waiting_menu",
+                last_end_point="tech",
+            ).pack(),
+        ),
+        InlineKeyboardButton(
+            text="Заявки в клининг",
+            callback_data=ShowRequestCallbackData(
+                request_id=-1,
+                end_point="WR_DR_waiting_menu",
+                last_end_point="clean",
+            ).pack(),
+        ),
+        InlineKeyboardButton(
+            text=text.back,
+            callback_data=department_kb.wr_menu_button.callback_data,
+        ),
+    ]
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Тип заявок") + "\nОжидающие ",
+        reply_markup=kb.create_inline_keyboard(*buttons),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "WR_DR_waiting_menu")
+)
+async def show_worker_waiting_menu(
+    callback: CallbackQuery,
+    callback_data: ShowRequestCallbackData,
+):
+    reply_markup = (
+        department_kb.create_kb_with_end_point_TR(
+            end_point="WR_DR_show_form_waiting",
+            menu_button=department_kb.wr_waiting,
+            requests=get_all_waiting_technical_requests_for_worker(
+                telegram_id=callback.message.chat.id,
+            ),
+        )
+        if callback_data.last_end_point == "tech"
+        else department_kb.create_kb_with_end_point_CR(
+            end_point="WR_DR_show_form_waiting",
+            menu_button=department_kb.wr_waiting,
+            requests=get_all_waiting_cleaning_requests_for_worker(
+                tg_id=callback.message.chat.id
+            ),
+            last_end_point="clean",
+        )
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Ожидающие заявки"),
-        reply_markup=department_kb.create_kb_with_end_point(
-            end_point="WR_TR_show_form_waiting",
-            menu_button=department_kb.wr_menu_button,
-            requests=requests,
-        ),
+        reply_markup=reply_markup,
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "WR_TR_show_form_waiting")
+    ShowRequestCallbackData.filter(F.end_point == "WR_DR_show_form_waiting")
 )
 async def show_worker_waiting_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
+        callback=callback,
+        callback_data=callback_data,
+        state=state,
+        buttons=buttons,
+        history_or_waiting_button=department_kb.wr_waiting,
+    ) if callback_data.last_end_point != "clean" else await show_form_cleaning(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -260,31 +315,84 @@ async def show_worker_waiting_form(
 
 
 @router.callback_query(F.data == department_kb.wr_history.callback_data)
-async def show_worker_history_menu(callback: CallbackQuery):
-    requests = get_all_history_technical_requests_for_worker(
-        telegram_id=callback.message.chat.id
+async def change_history_type(callback: CallbackQuery):
+    buttons = [
+        InlineKeyboardButton(
+            text="Технические заявки",
+            callback_data=ShowRequestCallbackData(
+                request_id=-1,
+                end_point="WR_DR_history_menu",
+                last_end_point="tech",
+            ).pack(),
+        ),
+        InlineKeyboardButton(
+            text="Заявки в клининг",
+            callback_data=ShowRequestCallbackData(
+                request_id=-1,
+                end_point="WR_DR_history_menu",
+                last_end_point="clean",
+            ).pack(),
+        ),
+        InlineKeyboardButton(
+            text=text.back,
+            callback_data=department_kb.wr_menu_button.callback_data,
+        ),
+    ]
+    await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Тип заявок") + "\nИстория",
+        reply_markup=kb.create_inline_keyboard(*buttons),
+    )
+
+
+@router.callback_query(
+    ShowRequestCallbackData.filter(F.end_point == "WR_DR_history_menu")
+)
+async def show_worker_history_menu(
+    callback: CallbackQuery,
+    callback_data: ShowRequestCallbackData,
+):
+    reply_markup = (
+        department_kb.create_kb_with_end_point_TR(
+            end_point="WR_DR_show_form_history",
+            menu_button=department_kb.wr_history,
+            requests=get_all_history_technical_requests_for_worker(
+                telegram_id=callback.message.chat.id,
+            ),
+        )
+        if callback_data.last_end_point == "tech"
+        else department_kb.create_kb_with_end_point_CR(
+            end_point="WR_DR_show_form_history",
+            menu_button=department_kb.wr_history,
+            requests=get_all_history_cleaning_requests_for_worker(
+                tg_id=callback.message.chat.id
+            ),
+            last_end_point="clean",
+        )
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=department_kb.create_kb_with_end_point(
-            end_point="WR_TR_show_form_history",
-            menu_button=department_kb.wr_menu_button,
-            requests=requests,
-        ),
+        reply_markup=reply_markup,
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "WR_TR_show_form_history")
+    ShowRequestCallbackData.filter(F.end_point == "WR_DR_show_form_history")
 )
 async def show_worker_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
+        callback=callback,
+        callback_data=callback_data,
+        state=state,
+        buttons=buttons,
+        history_or_waiting_button=department_kb.wr_history,
+    ) if callback_data.last_end_point != "clean" else await show_form_cleaning(
         callback=callback,
         callback_data=callback_data,
         state=state,

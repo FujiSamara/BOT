@@ -87,7 +87,7 @@ class WorkerDepartmentRequestForm(StatesGroup):
     department = State()
 
 
-class RepairmanTechnicalRequestForm(StatesGroup):
+class ExecutorDepartmentRequestForm(StatesGroup):
     department = State()
     photo_waiting = State()
     photo_rework = State()

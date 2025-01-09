@@ -4,7 +4,7 @@ from app.adapters.bot.handlers.department_request import (
     worker,
     territorial_manager,
     local_handlers,
-    executor,
+    executors,
 )
 from app.adapters.bot.handlers.department_request.technician import (
     chief_technician,
@@ -13,9 +13,12 @@ from app.adapters.bot.handlers.department_request.technician import (
 
 router = Router(name="department_request_main")
 
+executors.build_coordinations()
+territorial_manager.build_coordinations()
+
 router.include_routers(
     worker.router,
-    executor.router,
+    executors.router,
     chief_technician.router,
     territorial_manager.router,
     local_handlers.router,

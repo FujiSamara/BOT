@@ -11,6 +11,7 @@ from app.infra.database.models import (
     Department,
     ApprovalStatus,
     TechnicalRequest,
+    CleaningRequest,
     Worker,
 )
 from app.schemas import (
@@ -221,11 +222,11 @@ async def update_technical_request_from_repairman(
     else:
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
-            message=text.notification_territorial_manager
+            message=text.notification_territorial_manager_TR
             + f"\n На производстве: {request.department.name}",
         )
         await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
+            id=request.worker.telegram_id, message=text.notification_worker_TR
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -305,10 +306,10 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
-                    message=f"Заявка с номером {request_id} отправленна на доработку.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
                 )
         await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
+            id=request.worker.telegram_id, message=text.notification_worker_TR
         )
 
     return True
@@ -499,19 +500,17 @@ def get_all_history_technical_requests_for_repairman(
 
 
 def get_all_history_technical_requests_for_territorial_manager(
-    telegram_id: int, department_name: str
+    tg_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for territorial_manager
     """
     try:
         territorial_manager = orm.get_workers_with_post_by_column(
-            Worker.telegram_id, telegram_id
+            Worker.telegram_id, tg_id
         )[0]
     except IndexError:
-        logger.error(
-            f"Territorial manager with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Territorial manager with telegram id: {tg_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -531,15 +530,15 @@ def get_all_history_technical_requests_for_territorial_manager(
 
 
 def get_all_history_technical_requests_for_worker(
-    telegram_id: int,
+    tg_id: int,
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
     """
     try:
-        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Worker with telegram id: {telegram_id} wasn't found")
+        logger.error(f"Worker with telegram id: {tg_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id], [worker.id], history=True
@@ -668,7 +667,7 @@ def close_request(
 
 
 def get_request_count_in_departments_by_tg_id(
-    state: ApprovalStatus, tg_id: int
+    state: ApprovalStatus, tg_id: int, model: TechnicalRequest | CleaningRequest
 ) -> tuple[str, int]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
@@ -676,11 +675,15 @@ def get_request_count_in_departments_by_tg_id(
     else:
         worker_id = worker_id[0].id
 
-    return orm.get_count_req_in_departments(state=state, worker_id=worker_id)
+    return orm.get_count_req_in_departments(
+        state=state, worker_id=worker_id, model=model
+    )
 
 
-def get_request_count_in_departments(state: ApprovalStatus) -> tuple[str, int]:
-    return orm.get_count_req_in_departments(state)
+def get_request_count_in_departments(
+    state: ApprovalStatus, model: TechnicalRequest | CleaningRequest
+) -> tuple[str, int]:
+    return orm.get_count_req_in_departments(state, model=model)
 
 
 def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:

@@ -21,9 +21,9 @@ from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from services.core.app.adapters.bot.handlers.department_request.technician.utils import (
+from app.adapters.bot.handlers.department_request.utils import (
     handle_department,
-    show_form,
+    show_form_technician,
     department_names_with_count,
 )
 
@@ -119,7 +119,7 @@ async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(tech_kb.ct_own_waiting.text + f"\nПроизводство: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_waiting",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
@@ -145,7 +145,7 @@ async def show_own_waiting_form_format_cb(
         ]
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -216,7 +216,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
@@ -241,7 +241,7 @@ async def show_rework_form_format_cb(
             )
         ]
     ]
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -321,12 +321,12 @@ async def save_repair(
 
     await notify_worker_by_telegram_id(
         id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_territorial_manager
+        message=text.notification_territorial_manager_TR
         + f"\n На производстве: {request_data['department_name']}",
     )
 
     await notify_worker_by_telegram_id(
-        id=request_data["worker_telegram_id"], message=text.notification_worker
+        id=request_data["worker_telegram_id"], message=text.notification_worker_TR
     )
 
     await state.set_state(Base.none)
@@ -347,7 +347,7 @@ async def show_own_history(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(tech_kb.ct_own_history.text + f"\nПроизводство: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="show_CT_TR_own_history_form",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
@@ -362,7 +362,7 @@ async def show_own_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -385,7 +385,7 @@ async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         callback.message,
         text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="show_CT_TR_admin_form",
             menu_button=tech_kb.ct_button,
             requests=requests,
@@ -426,7 +426,7 @@ async def show_admin_form(
         ],
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -679,7 +679,7 @@ async def save_close_request(
     if creator_tg_id:
         await notify_worker_by_telegram_id(
             id=creator_tg_id,
-            message=text.notification_worker,
+            message=text.notification_worker_TR,
         )
     await show_admin_menu(
         callback=callback,

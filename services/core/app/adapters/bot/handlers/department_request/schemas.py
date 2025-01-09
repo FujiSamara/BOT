@@ -1,8 +1,14 @@
 from typing import Optional
 from aiogram.filters.callback_data import CallbackData
+from enum import Enum
 
 
-class ShowRequestCallbackData(CallbackData, prefix="tech_req"):
+class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
     request_id: int
     end_point: str
     last_end_point: Optional[str] = None
+
+
+class ProblemType(Enum):
+    Tech = 1
+    Clean = 2

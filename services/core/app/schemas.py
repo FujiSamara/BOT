@@ -390,7 +390,7 @@ class CleaningRequestSchema(BaseSchemaPK):
     problem: CleaningProblemSchema
     description: str
     state: ApprovalStatus
-    score: int
+    score: int | None = None
     worker: WorkerSchema
 
     problem_photos: list[DocumentSchema] | None = None
@@ -402,17 +402,17 @@ class CleaningRequestSchema(BaseSchemaPK):
     open_date: datetime.datetime
     cleaning_date: datetime.datetime | None = None
 
-    confirmation_date: Optional[datetime.datetime] = None
-    confirmation_description: Optional[str] = None
+    confirmation_date: datetime.datetime | None = None
+    confirmation_description: str | None = None
 
-    reopen_date: Optional[datetime.datetime] = None
-    reopen_deadline_date: Optional[datetime.datetime] = None
+    reopen_date: datetime.datetime | None = None
+    reopen_cleaning_date: datetime.datetime | None = None
 
-    reopen_repair_date: Optional[datetime.datetime] = None
-    reopen_confirmation_date: Optional[datetime.datetime] = None
+    reopen_cleaning_date: datetime.datetime | None = None
+    reopen_confirmation_date: datetime.datetime | None = None
 
-    close_date: Optional[datetime.datetime] = None
-    close_description: Optional[str] = None
+    close_date: datetime.datetime | None = None
+    close_description: str | None = None
 
 
 # endregion
