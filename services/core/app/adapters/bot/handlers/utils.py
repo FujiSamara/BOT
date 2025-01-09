@@ -304,7 +304,6 @@ async def handle_documents(
             documents.append(message.document)
         if not msgs:
             msgs = []
-        msgs.append(message)
 
         if condition is not None:
             error = condition(documents)

@@ -1,22 +1,18 @@
 from pathlib import Path
 from sqlalchemy import null
-from datetime import datetime, timedelta
+from datetime import datetime
 from fastapi import UploadFile
-from typing import Any, Optional
 
 from app.infra.logging import logger
 
 import app.infra.database.orm as orm
 from app.infra.database.models import (
-    Department,
     CleaningRequest,
     ApprovalStatus,
     Worker,
 )
 from app.schemas import (
-    CleaningProblemSchema,
     CleaningRequestSchema,
-    WorkerSchema,
     DocumentSchema,
 )
 

@@ -24,7 +24,7 @@ class BaseSchema(BaseModel):
 SchemaT = TypeVar("SchemaT", bound=BaseSchema)
 
 
-# region Shemas for models
+# region Schemas for models
 class BaseSchemaPK(BaseSchema):
     id: int | None = -1
 

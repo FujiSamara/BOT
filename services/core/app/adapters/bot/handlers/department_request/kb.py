@@ -312,7 +312,6 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     description = data.get("description")
     photo = data.get("photo")
     department_name = data.get("dep_name")
-    problem_type = data.get("problem_type")
 
     if not problem_name:
         problem_name = ""
@@ -345,7 +344,8 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
     buttons = [
         [
             InlineKeyboardButton(
-                text="Проблема", callback_data="problem_group_WR_TR_CR"
+                text="Проблема",
+                callback_data="problem_group_WR_TR_CR",
             ),
             InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
         ],
@@ -362,7 +362,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text=f"{department_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR_CR"),
+            InlineKeyboardButton(text="Фото проблемы", callback_data="photo_WR_TR_CR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
         [wr_menu_button],
