@@ -161,7 +161,7 @@ async def create_technical_request(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {last_technical_request_id+1} передана в исполнение.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
