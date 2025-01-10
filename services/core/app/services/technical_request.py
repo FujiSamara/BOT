@@ -162,11 +162,12 @@ async def create_technical_request(
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id+1}\nНа производстве: {request.department.name}",
         )
 
     return True
@@ -223,7 +224,7 @@ async def update_technical_request_from_repairman(
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
             message=text.notification_territorial_manager_TR
-            + f"\n На производстве: {request.department.name}",
+            + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
         )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id, message=text.notification_worker_TR
@@ -296,7 +297,7 @@ async def update_technical_request_from_territorial_manager(
             await notify_worker_by_telegram_id(
                 id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
-                + f"\nНа производстве: {request.department.name}",
+                + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
             )
             chief_technician = orm.get_chief_technician(request.department.id)
             if chief_technician is None:

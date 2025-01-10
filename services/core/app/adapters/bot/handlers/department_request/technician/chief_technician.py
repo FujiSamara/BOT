@@ -86,7 +86,6 @@ async def set_department(message: Message, state: FSMContext):
         state=state,
         departments_names=department_names_with_count(
             state=ApprovalStatus.pending,
-            tg_id=message.chat.id,
             department_names=get_departments_names_for_chief_technician(
                 message.chat.id
             ),
@@ -573,8 +572,7 @@ async def save_CT_TR_admin_form(
     data = await state.get_data()
     await notify_worker_by_telegram_id(
         id=repairman_TG_id,
-        message="Вас назначили на заявку"
-        + f"\n На производстве: {data.get('department_name')}",
+        message=f"Вас назначили на заявку {request_id}\nНа производстве: {data.get('department_name')}",
     )
     await state.clear()
     await state.set_state(Base.none)

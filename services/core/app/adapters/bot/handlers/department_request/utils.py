@@ -424,7 +424,8 @@ def department_names_with_count(
     if len(department_names) > 0:
         for department_name, count in request_count:
             out_department_names.append(f"{count} {department_name}")
-            department_names.remove(department_name)
+            if department_name in department_names:
+                department_names.remove(department_name)
         for department_name in department_names:
             out_department_names.append(f"0 {department_name}")
 

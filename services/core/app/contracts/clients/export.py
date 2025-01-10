@@ -28,8 +28,9 @@ class XlSXExporter(ABC):
         self._aliases = aliases
 
     @abstractmethod
-    def export(self, data: list[BaseSchema]) -> BytesIO:
+    def export(self, data: list[BaseSchema], with_dump: bool = False) -> BytesIO:
         """Generates xlsx file.
 
+        :param with_dump: If `True` then row will dump by `BaseModel.dump_model` before format.
         :return: Generated xlsx file in `BytesIO` representation.
         """

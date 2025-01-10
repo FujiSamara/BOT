@@ -4,7 +4,6 @@ from fastapi.routing import APIRouter
 
 from app.services import timesheet
 from app.schemas import (
-    TimeSheetSchema,
     QuerySchema,
     TalbeInfoSchema,
 )
@@ -38,7 +37,7 @@ async def get_timesheets(
     query: QuerySchema,
     records_per_page: int = 15,
     _: User = Security(get_user, scopes=["crm_worktime"]),
-) -> list[TimeSheetSchema]:
+) -> list[dict]:
     return timesheet.get_timesheets_at_page(page, records_per_page, query)
 
 

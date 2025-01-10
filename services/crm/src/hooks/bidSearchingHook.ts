@@ -13,7 +13,7 @@ export const useBidSearchingHook = (
 			result.push({
 				column: "department",
 				term: departmentSearchString.value,
-				groups: [0, 1, 2],
+				groups: [0, 1, 2, 3],
 			});
 		}
 
@@ -33,6 +33,11 @@ export const useBidSearchingHook = (
 					column: "id",
 					term: searchString.value,
 					groups: [2],
+				},
+				{
+					column: "amount",
+					term: searchString.value,
+					groups: [3],
 				},
 			);
 		}
