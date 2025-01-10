@@ -419,7 +419,7 @@ class WorkerPassportView(ModelView, model=WorkerPassport):
             document = data["document"]
             filename = f"photo_worker_passport_{worker_id}"
             filename += (
-                f"_{services.get_last_worker_passport_id(worker_id=worker_id)+1}"
+                f"_{services.get_last_worker_passport_id(worker_id=worker_id) + 1}"
             )
             filename += f"{Path(document.filename).suffix}"
             data["document"].filename = filename

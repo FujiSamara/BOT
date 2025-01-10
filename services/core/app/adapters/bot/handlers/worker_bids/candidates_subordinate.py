@@ -118,10 +118,10 @@ async def show_worker(
     await try_edit_or_answer(
         message=message,
         text=f"""{worker.l_name} {worker.f_name} {worker.o_name}
-{hbold('Должность:')} {worker.post.name}
-{hbold('Предприятие:')} {worker.department.name}
-{hbold('Номер телефона:')} {worker.phone_number}
-{hbold('Статус:')} {worker_status_dict[worker.state]}""",
+{hbold("Должность:")} {worker.post.name}
+{hbold("Предприятие:")} {worker.department.name}
+{hbold("Номер телефона:")} {worker.phone_number}
+{hbold("Статус:")} {worker_status_dict[worker.state]}""",
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 [

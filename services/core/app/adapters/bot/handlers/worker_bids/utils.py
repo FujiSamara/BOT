@@ -28,7 +28,7 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Должность")}: {bid.post.name}
 {hbold("Статус")}: {stage}
 
-{hbold('Данные заявителя')}
+{hbold("Данные заявителя")}
 {hbold("Имя")}: {bid.sender.f_name}
 {hbold("Фамилия")}: {bid.sender.l_name}
 {hbold("Отчество")}: {bid.sender.o_name}

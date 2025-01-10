@@ -15,10 +15,18 @@ def get_monitoring_list() -> str:
     sep = "\n"
 
     return f"""{hbold("Статусы оборудования:")}
-{str.join(sep, (hcode(f'''Предприятие: {equipment_status.department.name}
+{
+        str.join(
+            sep,
+            (
+                hcode(f'''Предприятие: {equipment_status.department.name}
 Тип оборудования: {equipment_status.equipment_name}
 Статус: {equipment_status.status}
-''') for equipment_status in statuses))}
+''')
+                for equipment_status in statuses
+            ),
+        )
+    }
 """
 
 
@@ -78,8 +86,16 @@ def get_incidents_history_list() -> str:
     sep = "\n"
 
     return f"""{hbold("История инцидентов:")}
-{str.join(sep, (hcode(f'''Предприятие: {incident.department.name}
+{
+        str.join(
+            sep,
+            (
+                hcode(f'''Предприятие: {incident.department.name}
 Тип оборудования: {incident.equipment_name}
 Статус: {incident.status}
-''') for incident in incidents))}
+''')
+                for incident in incidents
+            ),
+        )
+    }
 """
