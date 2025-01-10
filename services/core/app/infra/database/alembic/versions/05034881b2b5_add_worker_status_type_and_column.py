@@ -76,21 +76,21 @@ def upgrade() -> None:
     op.add_column(
         "worker_bids", sa.Column("phone_number", sa.String(length=12), nullable=True)
     )
-
+    enum = ENUM(
+        "pending_approval",
+        "internship",
+        "refusal_internship",
+        "active",
+        "process_dismissal",
+        "dismissal",
+        name="workerstatus",
+    )
+    enum.create(op.get_bind(), checkfirst=True)
     op.add_column(
         "workers",
         sa.Column(
             "state",
-            ENUM(
-                "pending_approval",
-                "internship",
-                "refusal_internship",
-                "active",
-                "process_dismissal",
-                "dismissal",
-                name="workerstatus",
-                create_type=True,
-            ),
+            enum,
             nullable=True,
         ),
     )
