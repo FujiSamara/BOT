@@ -2787,8 +2787,7 @@ def get_all_waiting_cleaning_requests_for_worker(
                 select(CleaningRequest)
                 .filter(
                     CleaningRequest.worker_id == worker_id,
-                    CleaningRequest.state == ApprovalStatus.pending_approval,
-                    CleaningRequest.state == ApprovalStatus.pending,
+                    CleaningRequest.close_date == null(),
                 )
                 .limit(limit)
                 .order_by(CleaningRequest.id.desc())

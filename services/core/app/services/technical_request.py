@@ -162,12 +162,11 @@ async def create_technical_request(
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
-                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id+1}\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа производстве: {request.department.name}",
         )
 
     return True

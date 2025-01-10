@@ -494,7 +494,7 @@ class CoordinationFactory:
         await state.set_state(Base.none)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(department_kb.repairman_button.text),
+            text=hbold(self.executor_menu_button.text),
             reply_markup=self.change_department_menu,
         )
 

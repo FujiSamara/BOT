@@ -280,7 +280,6 @@ async def show_worker_waiting_menu(
             requests=get_all_waiting_cleaning_requests_for_worker(
                 tg_id=callback.message.chat.id
             ),
-            last_end_point="clean",
         )
     )
 
@@ -305,7 +304,7 @@ async def show_worker_waiting_form(
         state=state,
         buttons=buttons,
         history_or_waiting_button=department_kb.wr_waiting,
-    ) if callback_data.last_end_point != "clean" else await show_form_cleaning(
+    ) if callback_data.req_type != 2 else await show_form_cleaning(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -320,9 +319,7 @@ async def change_history_type(callback: CallbackQuery):
         InlineKeyboardButton(
             text="Технические заявки",
             callback_data=ShowRequestCallbackData(
-                request_id=-1,
-                end_point="WR_DR_history_menu",
-                last_end_point="tech",
+                request_id=-1, end_point="WR_DR_history_menu", req_type=21
             ).pack(),
         ),
         InlineKeyboardButton(
@@ -330,7 +327,7 @@ async def change_history_type(callback: CallbackQuery):
             callback_data=ShowRequestCallbackData(
                 request_id=-1,
                 end_point="WR_DR_history_menu",
-                last_end_point="clean",
+                req_type=2,
             ).pack(),
         ),
         InlineKeyboardButton(
@@ -357,7 +354,7 @@ async def show_worker_history_menu(
             end_point="WR_DR_show_form_history",
             menu_button=department_kb.wr_history,
             requests=get_all_history_technical_requests_for_worker(
-                telegram_id=callback.message.chat.id,
+                tg_id=callback.message.chat.id,
             ),
         )
         if callback_data.last_end_point == "tech"
@@ -367,7 +364,6 @@ async def show_worker_history_menu(
             requests=get_all_history_cleaning_requests_for_worker(
                 tg_id=callback.message.chat.id
             ),
-            last_end_point="clean",
         )
     )
 
@@ -392,7 +388,7 @@ async def show_worker_history_form(
         state=state,
         buttons=buttons,
         history_or_waiting_button=department_kb.wr_history,
-    ) if callback_data.last_end_point != "clean" else await show_form_cleaning(
+    ) if callback_data.req_type != 2 else await show_form_cleaning(
         callback=callback,
         callback_data=callback_data,
         state=state,

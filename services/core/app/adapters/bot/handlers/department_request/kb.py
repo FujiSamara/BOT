@@ -829,7 +829,7 @@ def create_kb_with_end_point_TR(
 {request.reopen_deadline_date.strftime('%d.%m') if request.reopen_deadline_date else request.deadline_date.strftime('%d.%m')} до\
  {request.reopen_deadline_date.strftime('%H') if request.reopen_deadline_date else request.deadline_date.strftime('%H')}",
                         callback_data=ShowRequestCallbackData(
-                            request_id=request.id, end_point=end_point
+                            request_id=request.id, end_point=end_point, req_type=1
                         ).pack(),
                     )
                 ]
@@ -843,7 +843,6 @@ def create_kb_with_end_point_CR(
     requests: list[CleaningRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
-    last_end_point: str = "",
 ) -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
     try:
@@ -855,7 +854,7 @@ def create_kb_with_end_point_CR(
                         callback_data=ShowRequestCallbackData(
                             request_id=request.id,
                             end_point=end_point,
-                            last_end_point=last_end_point,
+                            req_type=2,
                         ).pack(),
                     )
                 ]

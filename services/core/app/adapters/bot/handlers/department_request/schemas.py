@@ -7,6 +7,7 @@ class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
     request_id: int
     end_point: str
     last_end_point: Optional[str] = None
+    req_type: int | None = None
 
 
 class ProblemType(Enum):
