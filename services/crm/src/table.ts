@@ -2,8 +2,18 @@ import { computed, ref, Ref, watch } from "vue";
 import * as config from "@/config";
 import * as parser from "@/parser";
 import axios from "axios";
-import { BaseSchema, BudgetSchema, ExpenditureSchema } from "@types";
+import {
+	BaseSchema,
+	BudgetSchema,
+	ExpenditureSchema,
+	FilterSchema,
+	QuerySchema,
+	DateSchema,
+	SearchSchema,
+	OrderBySchema,
+} from "@types";
 import { useNetworkStore } from "./store/network";
+import EntityService from "./services/entity";
 
 class TableElementObserver<T> {
 	constructor(
@@ -67,38 +77,6 @@ interface TableData {
 	headers: Array<string>;
 }
 
-interface OrderBySchema {
-	column: string;
-	desc: boolean;
-}
-
-interface SearchSchema {
-	column: string;
-	term: string;
-	dependencies?: Array<SearchSchema>;
-	groups?: Array<number>;
-}
-
-interface DateSchema {
-	column: string;
-	start: Date;
-	end: Date;
-}
-
-export interface FilterSchema {
-	column: string;
-	value: any;
-	dependencies?: Array<FilterSchema>;
-	groups?: Array<number>;
-}
-
-interface QuerySchema {
-	search_query?: Array<SearchSchema>;
-	order_by_query?: OrderBySchema;
-	date_query?: DateSchema;
-	filter_query?: Array<FilterSchema>;
-}
-
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
@@ -107,12 +85,13 @@ export class Table<T extends BaseSchema> {
 	private _refreshKey: Ref<number> = ref(0);
 	protected _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
+	protected _service: EntityService<T>;
 
 	/**
-	 * @param endpoint Endpoint name for api.
+	 * @param entityName Endpoint name for api.
 	 */
 	constructor(
-		endpoint: string,
+		entityName: string,
 		options?: {
 			getEndpoint?: string;
 			infoEndpoint?: string;
@@ -124,7 +103,8 @@ export class Table<T extends BaseSchema> {
 			exportEndpoint?: string;
 		},
 	) {
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${entityName}`;
+		this._service = new EntityService(entityName);
 
 		//#region endpoints
 		this._getEndpoint =
@@ -152,7 +132,7 @@ export class Table<T extends BaseSchema> {
 		let skipLoop = false;
 
 		watch(
-			[this._completedQuery, this._rowsQuery, this._refreshKey],
+			[this._completedQuery, this.currentPage, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
 				this._refreshingCount++;
@@ -187,33 +167,34 @@ export class Table<T extends BaseSchema> {
 	 */
 	private async refreshInfo(fromLoop: boolean = false) {
 		// Info about filtered table.
-		const resp = await this._network.withAuthChecking(
-			axios.post(this._infoQuery.value, this._completedQuery.value),
+		const info = await this._service.getEntitiesInfo(
+			this._completedQuery.value,
+			this._rowsPerPage,
 		);
 
-		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
+		if (fromLoop && this.rowCountWithFilters.value !== info.record_count) {
 			if (this._loadedRows.value.length !== this._rowsPerPage) {
 				this.isLoading.value = true;
 			}
 
 			await this.refreshRows(
-				this.rowCount.value !== resp.data.all_record_count &&
+				this.rowCount.value !== info.all_record_count &&
 					this.rowCount.value !== 0,
 			);
 			this.isLoading.value = false;
 		}
 
-		this.pageCount.value = resp.data.page_count;
-		this.rowCountWithFilters.value = resp.data.record_count;
-		this.rowCount.value = resp.data.all_record_count;
+		this.pageCount.value = info.page_count;
+		this.rowCountWithFilters.value = info.record_count;
+		this.rowCount.value = info.all_record_count;
 	}
 	/** Updates rows. */
 	private async refreshRows(findNew: boolean = false) {
-		const resp = await this._network.withAuthChecking(
-			axios.post(this._rowsQuery.value, this._completedQuery.value),
+		const rows: Array<T> = await this._service.getEntities(
+			this._completedQuery.value,
+			this.currentPage.value,
+			this._rowsPerPage,
 		);
-
-		const rows: Array<T> = resp.data;
 
 		const rowsLength = rows.length;
 
@@ -259,9 +240,6 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Generating query
-	private _query = computed(() => {
-		return `records_per_page=${this._rowsPerPage}`;
-	});
 	private _searchedQuery = computed((): Array<SearchSchema> => {
 		return this.searchQuery.value;
 	});
@@ -284,12 +262,6 @@ export class Table<T extends BaseSchema> {
 			date_query: this._datedQuery.value,
 			filter_query: this._filteredQuery.value,
 		};
-	});
-	private _infoQuery = computed(() => {
-		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
-	});
-	private _rowsQuery = computed(() => {
-		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
 	});
 	//#endregion
 
@@ -631,19 +603,7 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Exports table with current query. */
 	public async export() {
-		const url = `${this._endpoint}${this._exportEndpoint}/export`;
-		const resp = await this._network.withAuthChecking(
-			axios.post(url, this._completedQuery.value, {
-				responseType: "blob",
-				withCredentials: true,
-			}),
-		);
-
-		const filename = (resp.headers["content-disposition"] as string).split(
-			"=",
-		)[1];
-
-		this._network.saveFile(filename, resp.data);
+		await this._service.exportEntities(this._completedQuery.value);
 	}
 	// Endpoints.
 	protected _endpoint: string = "";
@@ -659,11 +619,7 @@ export class Table<T extends BaseSchema> {
 
 	//#region CRUD
 	public async create(model: T): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
-			)
-			.catch((_) => {});
+		await this._service.createEntity(model);
 
 		this.forceRefresh();
 	}
@@ -671,27 +627,14 @@ export class Table<T extends BaseSchema> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
-			await this._network
-				.withAuthChecking(
-					axios.patch(
-						`${this._endpoint}${this._updateEndpoint}/`,
-						this._loadedRows.value[index],
-					),
-				)
-				.catch((_) => {});
+			await this._service.updateEntity(this._loadedRows.value[index]);
 		}
 	}
 	public async delete(
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.delete(
-					`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
-				),
-			)
-			.catch((_) => {});
+		await this._service.deleteEntity(this._loadedRows.value[index].id);
 
 		if (needRefresh) {
 			this.forceRefresh();

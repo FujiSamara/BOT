@@ -22,6 +22,12 @@ export interface Token {
 	token_type: string;
 }
 
+export interface InfoSchema {
+	record_count: number;
+	all_record_count: number;
+	page_count: number;
+}
+
 export enum Access {
 	Bid,
 	BidReadOnly,
@@ -172,5 +178,39 @@ export interface TimesheetSchema extends BaseSchema {
 	worker_fullname: string;
 	post_name: string;
 	total_hours: number;
+}
+// #endregion
+
+// #region Query
+export interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+export interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
+}
+
+export interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
+export interface FilterSchema {
+	column: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
+}
+
+export interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
 }
 // #endregion
