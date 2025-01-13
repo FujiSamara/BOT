@@ -3,6 +3,8 @@ import { PropType } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 import DropDownMenu from "@/components/DropDownMenu.vue";
+import EntitySelect from "@/components/entity/EntitySelect.vue";
+import { DepartmentEntity } from "@/components/entity";
 
 const props = defineProps({
 	table: {
@@ -24,7 +26,9 @@ const props = defineProps({
 			<div class="tool-icon-wrapper"><div class="tool-icon filter"></div></div>
 			<span>Фильтры</span>
 		</template>
-		<template #menu> </template>
+		<template #menu>
+			<EntitySelect :entity="new DepartmentEntity()"></EntitySelect>
+		</template>
 	</DropDownMenu>
 </template>
 
