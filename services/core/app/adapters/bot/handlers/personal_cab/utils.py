@@ -41,9 +41,9 @@ def menu_text(worker: WorkerSchema) -> str:
     else:
         text += "Не найден"
     worktime = get_opened_today_worktime(worker.id)
-    text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else 'Не найдена'}
+    text += f"""\nДата приема на работу: {worker.employment_date if worker.employment_date is not None else "Не найдена"}
 
-Открытая смена: {worktime.work_begin.strftime(settings.time_format) if worktime is not None else 'Отсутствует'}
+Открытая смена: {worktime.work_begin.strftime(settings.time_format) if worktime is not None else "Отсутствует"}
 Отработано за месяц: {get_hours_sum_in_month(worker_id=worker.id)} ч."""
     return text
 

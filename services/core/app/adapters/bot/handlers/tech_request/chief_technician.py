@@ -572,8 +572,7 @@ async def save_CT_TR_admin_form(
     data = await state.get_data()
     await notify_worker_by_telegram_id(
         id=repairman_TG_id,
-        message="Вас назначили на заявку"
-        + f"\n На производстве: {data.get('department_name')}",
+        message=f"Вас назначили на заявку {request_id}\nНа производстве: {data.get('department_name')}",
     )
     await state.clear()
     await state.set_state(Base.none)

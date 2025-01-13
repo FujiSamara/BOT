@@ -252,3 +252,7 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
         orm.create_department(name=department_name, address=None, company=company)
 
     return orm.set_tellers_cash_department()
+
+
+def get_last_worker_passport_id(worker_id: int) -> int:
+    return orm.get_last_worker_passport_id(worker_id)
