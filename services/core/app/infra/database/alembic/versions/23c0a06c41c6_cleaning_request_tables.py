@@ -50,6 +50,8 @@ old_options = (
     "bot_incident_monitoring",
     "bot_bid_fac_cc",
     "bot_coordinate_worker_bid",
+    "bot_worker_bid_security_coordinate",
+    "bot_worker_bid_accounting_coordinate",
 )
 new_options = sorted(
     old_options
@@ -62,7 +64,7 @@ table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "23c0a06c41c6"
-down_revision: Union[str, None] = "7373aeb0e65f"
+down_revision: Union[str, None] = "05034881b2b5"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
