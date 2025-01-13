@@ -13,6 +13,8 @@ from app.adapters.input.admin.schemas import (
     SubordinationView,
     WorkerFingerprintView,
     FingerprintAttemptView,
+    WorkerPassportView,
+    WorkerChildrenView,
 )
 
 
@@ -28,6 +30,8 @@ def configure(admin: FujiAdmin):
     admin.add_view(PostScopeView)
     admin.add_view(PostView)
     admin.add_view(WorkerView)
+    admin.add_view(WorkerPassportView)
+    admin.add_view(WorkerChildrenView)
     admin.add_view(WorkerBidView)
     admin.add_view(TechnicalRequestView)
     admin.add_view(WorkTimeAdminView)

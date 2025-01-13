@@ -1,5 +1,6 @@
 from aiogram.filters.callback_data import CallbackData
 from enum import Enum
+from app.adapters.bot.kb import get_candidates_coordinate_menu_btn
 
 
 class BidViewMode(str, Enum):
@@ -14,3 +15,9 @@ class WorkerBidCallbackData(CallbackData, prefix="worker_bid"):
     endpoint_name: str
     doc_type: str = "0"
     state: int | None = None
+
+
+class CandidatesCoordinationCallbackData(CallbackData, prefix="worker_coordination"):
+    id: int | None = None
+    page: int = 0
+    endpoint_name: str = get_candidates_coordinate_menu_btn.callback_data
