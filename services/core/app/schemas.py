@@ -1,11 +1,12 @@
-from typing import Any, Optional, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar, Annotated
 from fastapi_storages import StorageFile
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, StringConstraints
 import datetime
 from pathlib import Path
 from fastapi import UploadFile
 from app.infra.database.models import (
     ApprovalStatus,
+    WorkerStatus,
     FujiScope,
     Gender,
     IncidentStage,
@@ -27,6 +28,20 @@ SchemaT = TypeVar("SchemaT", bound=BaseSchema)
 # region Schemas for models
 class BaseSchemaPK(BaseSchema):
     id: int | None = -1
+
+
+class DocumentSchema(BaseSchemaPK):
+    document: UploadFile
+
+    @field_validator("document", mode="before")
+    @classmethod
+    def upload_file_validate(cls, val):
+        if isinstance(val, StorageFile):
+            if Path(val.path).is_file():
+                return UploadFile(val.open(), filename=val.name)
+            else:
+                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
+        return val
 
 
 class PostSchema(BaseSchemaPK):
@@ -73,14 +88,16 @@ class WorkerSchema(BaseSchemaPK):
     b_date: Optional[datetime.date] = datetime.date(1, 1, 1)
     phone_number: Optional[str]
     telegram_id: Optional[int]
-
+    state: WorkerStatus | None = None
     post: PostSchema
 
     department: DepartmentSchema
 
     gender: Optional[Gender]
     employment_date: Optional[datetime.date]
+    official_employment_date: datetime.date | None = None
     dismissal_date: Optional[datetime.date]
+    official_dismissal_date: datetime.date | None = None
     medical_records_availability: Optional[bool]
     citizenship: Optional[str]
 
@@ -94,19 +111,19 @@ class WorkerSchema(BaseSchemaPK):
             return (val[0],)
         return val
 
+    passport: list[DocumentSchema] | None = None
+    snils: str | None = None
+    inn: str | None = None
+    registration: str | None = None
+    actual_residence: str | None = None
+    children: bool = False
+    children_born_date: list["WorkerChildrenSchema"] = []
+    military_ticket: str | None = None
+    patent: str | None = None
 
-class DocumentSchema(BaseSchemaPK):
-    document: UploadFile
 
-    @field_validator("document", mode="before")
-    @classmethod
-    def upload_file_validate(cls, val):
-        if isinstance(val, StorageFile):
-            if Path(val.path).is_file():
-                return UploadFile(val.open(), filename=val.name)
-            else:
-                return UploadFile(BytesIO(b"File not exist"), filename=val.name)
-        return val
+class WorkerChildrenSchema(BaseSchemaPK):
+    born_date: datetime.datetime
 
 
 class BidSchema(BaseSchemaPK):
@@ -168,6 +185,11 @@ class WorkerBidSchema(BaseSchemaPK):
 
     department: DepartmentSchema
 
+    birth_date: datetime.datetime | None = None
+    phone_number: (
+        Annotated[str, StringConstraints(min_length=11, max_length=12)] | None
+    ) = None
+
     worksheet: list[DocumentSchema]
 
     passport: list[DocumentSchema]
@@ -175,10 +197,13 @@ class WorkerBidSchema(BaseSchemaPK):
     work_permission: list[DocumentSchema]
 
     state: ApprovalStatus
+    security_service_state: ApprovalStatus | None = None
+    accounting_service_state: ApprovalStatus | None = None
 
     sender: WorkerSchema
 
-    comment: Optional[str]
+    comment: str | None = None
+    security_service_comment: str | None = None
 
 
 class ExpenditureSchema(BaseSchemaPK):

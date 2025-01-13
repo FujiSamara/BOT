@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.infra.database.database import Base
-from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum
+from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum, String
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List, Optional
@@ -17,6 +17,15 @@ class ApprovalStatus(enum.Enum):
     pending_approval = 4
     skipped = 5
     not_relevant = 6
+
+
+class WorkerStatus(enum.Enum):
+    pending_approval = 1
+    internship = 2
+    refusal_internship = 3
+    active = 4
+    process_dismissal = 5
+    dismissal = 6
 
 
 class Gender(enum.Enum):
@@ -59,9 +68,11 @@ class FujiScope(enum.Enum):
     bot_personal_cabinet = 25
     bot_incident_monitoring = 29
     bot_bid_fac_cc = 32
-    bot_coordinate_worker_bid = 34
-    bot_cleaning_request_cleaner = 35
-    bot_cleaning_request_territorial_manager = 36
+    bot_subordinates_menu = 34
+    bot_worker_bid_security_coordinate = 35
+    bot_worker_bid_accounting_coordinate = 36
+    bot_cleaning_request_cleaner = 37
+    bot_cleaning_request_territorial_manager = 38
 
 
 class DepartmentType(enum.Enum):
@@ -84,6 +95,10 @@ class IncidentStage(enum.Enum):
 
 approvalstatus = Annotated[
     ApprovalStatus, mapped_column(Enum(ApprovalStatus), default=ApprovalStatus.pending)
+]
+workerstatus = Annotated[
+    WorkerStatus,
+    mapped_column(Enum(WorkerStatus), default=WorkerStatus.pending_approval),
 ]
 
 
@@ -318,7 +333,7 @@ class Worker(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="workers", foreign_keys=[department_id]
     )
-
+    state: Mapped[workerstatus] = mapped_column(nullable=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), nullable=True)
     group: Mapped["Group"] = relationship(
         "Group", back_populates="workers", foreign_keys=[group_id]
@@ -356,7 +371,9 @@ class Worker(Base):
 
     gender: Mapped[Gender] = mapped_column(Enum(Gender), nullable=True)
     employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    official_employment_date: Mapped[datetime.date] = mapped_column(nullable=True)
     dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
+    official_dismissal_date: Mapped[datetime.date] = mapped_column(nullable=True)
     medical_records_availability: Mapped[bool] = mapped_column(nullable=True)
     citizenship: Mapped[str] = mapped_column(nullable=True)
 
@@ -438,6 +455,60 @@ class Worker(Base):
         )
     )
 
+    passport: Mapped[List["WorkerPassport"]] = relationship(
+        "WorkerPassport", cascade="all,delete", back_populates="worker"
+    )
+    snils: Mapped[str] = mapped_column(nullable=True)
+    inn: Mapped[str] = mapped_column(nullable=True)
+    registration: Mapped[str] = mapped_column(nullable=True)
+    actual_residence: Mapped[str] = mapped_column(nullable=True)
+    children: Mapped[bool] = mapped_column(nullable=True)
+    children_born_date: Mapped[List["WorkerChildren"]] = relationship(
+        "WorkerChildren",
+        cascade="all,delete",
+        back_populates="worker",
+    )
+    military_ticket: Mapped[str] = mapped_column(nullable=True)
+    patent: Mapped[str] = mapped_column(nullable=True)
+
+
+class WorkerPassport(Base):
+    """Паспорта работников"""
+
+    __tablename__ = "workers_passports"
+
+    def __str__(self):
+        return f"id {self.id}"
+
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id", name="worker_id"),
+        nullable=False,
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="passport",
+        foreign_keys=[worker_id],
+    )
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
+
+
+class WorkerChildren(Base):
+    """Данные детей работников"""
+
+    def __str__(self):
+        return self.born_date.strftime(settings.date_format)
+
+    __tablename__ = "worker_children"
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id", name="worker_id"), nullable=False
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="children_born_date",
+        foreign_keys=[worker_id],
+    )
+    born_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
 
 class Bid(Base):
     """Заявки"""
@@ -504,7 +575,7 @@ class Bid(Base):
 
 
 class BidCoordinator(Base):
-    """Таблица, покащывающая - кто согласовывал заявки."""
+    """Таблица, показывающая - кто согласовывал заявки."""
 
     __tablename__ = "bid_coordinators"
 
@@ -544,6 +615,8 @@ class WorkerBid(Base):
     department: Mapped["Department"] = relationship(
         "Department", back_populates="workers_bids"
     )
+    birth_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(12), nullable=True)
 
     worksheet: Mapped[List["WorkerBidWorksheet"]] = relationship(
         "WorkerBidWorksheet", cascade="all,delete", back_populates="worker_bid"
@@ -558,11 +631,14 @@ class WorkerBid(Base):
     )
 
     state: Mapped[approvalstatus]
+    security_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
+    accounting_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
 
     comment: Mapped[str] = mapped_column(nullable=True, default="")
+    security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
 
 
 class WorkerBidDocument(Base):
