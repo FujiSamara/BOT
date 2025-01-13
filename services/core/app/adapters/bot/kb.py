@@ -208,6 +208,14 @@ approval_status_dict = {
     ApprovalStatus.skipped: "Не требуется",
 }
 
+approval_status_Technical_Request_dict = {
+    ApprovalStatus.approved: "Выполнено",
+    ApprovalStatus.pending: "Ожидает поступления",
+    ApprovalStatus.pending_approval: "Ожидает согласования",
+    ApprovalStatus.denied: "Отклонено",
+    ApprovalStatus.skipped: "Не требуется",
+}
+
 payment_type_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [

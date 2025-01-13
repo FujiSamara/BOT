@@ -455,6 +455,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.territorial_manager: "Территориальный менеджер",
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
+        TechnicalRequest.repairman_worktime: "Заявка в исполнение",
     }
 
     column_list = [
@@ -475,9 +476,17 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.territorial_manager_id,
         TechnicalRequest.acceptor_post_id,
     ]
+    form_excluded_columns = [
+        TechnicalRequest.problem_photos,
+        TechnicalRequest.repair_photos,
+        TechnicalRequest.repairman_worktime,
+    ]
 
     column_sortable_list = [
         TechnicalRequest.id,
+        TechnicalRequest.state,
+        TechnicalRequest.department,
+        TechnicalRequest.repairman,
     ]
 
     @staticmethod
@@ -499,7 +508,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     column_searchable_list = [TechnicalRequest.department, TechnicalRequest.problem]
 
     can_create = False
-    can_edit = False
+    can_edit = True
     can_export = False
     name_plural = "Технические заявки"
     name = "Техническая заявка"
@@ -508,8 +517,23 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     def files_format(inst, column):
         return WorkerBidView.files_format(inst, column)
 
+    @staticmethod
+    def approval_status_format(inst, column):
+        value = getattr(inst, column)
+        match value:
+            case ApprovalStatus.approved:
+                return "Выполнено"
+            case ApprovalStatus.pending:
+                return "В процессе выполнения"
+            case ApprovalStatus.pending_approval:
+                return "Ожидание оценки от ТУ"
+            case ApprovalStatus.skipped:
+                return "Не выполнено"
+            case ApprovalStatus.not_relevant:
+                return "Не актуально"
+
     column_formatters = {
-        TechnicalRequest.state: WorkerBidView.approval_status_format,
+        TechnicalRequest.state: approval_status_format,
         TechnicalRequest.repair_photos: files_format,
         TechnicalRequest.problem_photos: files_format,
         TechnicalRequest.open_date: WorkerBidView.datetime_format,
@@ -524,6 +548,31 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     }
 
     column_formatters_detail = column_formatters
+    column_default_sort = "state"
+
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "repairman" or sort_field == "department":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
 
 
 class WorkTimeAdminView(ModelView, model=WorkTime):
