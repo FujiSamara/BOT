@@ -12,6 +12,7 @@ from app.infra.database.models import (
     ApprovalStatus,
     TechnicalRequest,
     Worker,
+    FujiScope,
 )
 from app.schemas import (
     TechnicalProblemSchema,
@@ -162,18 +163,19 @@ async def create_technical_request(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
-        territorial_director = orm.get_territorial_director(
-            department_id=request.department.id
+        directors_extensive_development = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_department_director
         )
-        if territorial_director is None:
+        if directors_extensive_development == []:
             logger.error(
-                f"The territorial director wasn't found at department {request.department.id}"
+                f"The Director of Extensive Development wasn't found at department {request.department.id}"
             )
         else:
-            await notify_worker_by_telegram_id(
-                id=territorial_director.telegram_id,
-                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
-            )
+            for director_extensive_development in directors_extensive_development:
+                await notify_worker_by_telegram_id(
+                    id=director_extensive_development.telegram_id,
+                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
@@ -250,18 +252,19 @@ async def update_technical_request_from_repairman(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
             )
-        territorial_director = orm.get_territorial_director(
-            department_id=request.department.id
+        directors_extensive_development = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_department_director
         )
-        if territorial_director is None:
+        if directors_extensive_development == []:
             logger.error(
-                f"The territorial director wasn't found at department {request.department.id}"
+                f"The Director of Extensive Development wasn't found at department {request.department.id}"
             )
         else:
-            await notify_worker_by_telegram_id(
-                id=territorial_director.telegram_id,
-                message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
-            )
+            for director_extensive_development in directors_extensive_development:
+                await notify_worker_by_telegram_id(
+                    id=director_extensive_development.telegram_id,
+                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                )
 
     return True
 
@@ -332,18 +335,19 @@ async def update_technical_request_from_territorial_manager(
                     message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
                 )
 
-            territorial_director = orm.get_territorial_director(
-                department_id=request.department.id
+            directors_extensive_development = orm.get_workers_with_scope(
+                FujiScope.bot_technical_request_department_director
             )
-            if territorial_director is None:
+            if directors_extensive_development == []:
                 logger.error(
-                    f"The chief technician wasn't found at department {request.department.id}"
+                    f"The Director of Extensive Development wasn't found at department {request.department.id}"
                 )
             else:
-                await notify_worker_by_telegram_id(
-                    id=territorial_director.telegram_id,
-                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
-                )
+                for director_extensive_development in directors_extensive_development:
+                    await notify_worker_by_telegram_id(
+                        id=director_extensive_development.telegram_id,
+                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                    )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id, message=text.notification_worker
         )
