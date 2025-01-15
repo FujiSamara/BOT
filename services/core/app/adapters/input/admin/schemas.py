@@ -29,6 +29,7 @@ from app.infra.database.models import (
 from app.adapters.bot.kb import (
     payment_type_dict,
     approval_status_dict,
+    approval_status_technical_request_dict,
     worker_status_dict,
 )
 from app.schemas import FileOutSchema
@@ -699,17 +700,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-        match value:
-            case ApprovalStatus.approved:
-                return "Выполнено"
-            case ApprovalStatus.pending:
-                return "В процессе выполнения"
-            case ApprovalStatus.pending_approval:
-                return "Ожидание оценки от ТУ"
-            case ApprovalStatus.skipped:
-                return "Не выполнено"
-            case ApprovalStatus.not_relevant:
-                return "Не актуально"
+        return approval_status_technical_request_dict[value]
 
     column_formatters = {
         TechnicalRequest.state: approval_status_format,
