@@ -10,7 +10,7 @@
 				<ToolSeparator></ToolSeparator>
 				<SeacrhTool
 					id="topDepartmentSearch"
-					placeholder="Производство"
+					placeholder="Предприятие"
 					@input="(val) => (departmentSearchString = val)"
 				></SeacrhTool>
 				<SeacrhTool

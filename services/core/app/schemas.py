@@ -595,7 +595,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
     WorkTimeSchema: {
         "id": "ID",
         "worker": "Работник",
-        "department": "Производство",
+        "department": "Предприятие",
         "post": "Должность",
         "work_begin": "Начало смены",
         "work_end": "Конец смены",

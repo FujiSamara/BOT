@@ -204,7 +204,7 @@ class CoordinationFactory:
         msg = await callback.message.answer(
             message=callback.message,
             text=hbold(
-                f"Выберите производство на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+                f"Выберите предприятие на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
             ),
             reply_markup=create_reply_keyboard(
                 text.back,
@@ -495,7 +495,7 @@ async def set_department(message: Message, state: FSMContext):
 
         msg = await message.answer(
             text=hbold(
-                f"\nВыберите производство на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+                f"\nВыберите предприятие на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
             ),
             reply_markup=create_reply_keyboard(
                 text.back,
