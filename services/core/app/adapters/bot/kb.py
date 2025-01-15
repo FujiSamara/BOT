@@ -209,7 +209,7 @@ approval_status_dict = {
     ApprovalStatus.not_relevant: "Не релевантно",
 }
 
-approval_status_Technical_Request_dict = {
+approval_status_technical_request_dict = {
     ApprovalStatus.approved: "Выполнено",
     ApprovalStatus.pending: "Ожидает поступления",
     ApprovalStatus.pending_approval: "Ожидает согласования",
