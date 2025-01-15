@@ -2537,7 +2537,7 @@ def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema]
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_chief_technician(department_id) -> WorkerSchema | None:
+def get_chief_technician(department_id: int) -> WorkerSchema | None:
     with session.begin() as s:
         worker_id = s.execute(
             select(Department.chief_technician_id).filter(
@@ -2552,6 +2552,20 @@ def get_chief_technician(department_id) -> WorkerSchema | None:
         if chief_technician == []:
             return None
         return WorkerSchema.model_validate(chief_technician[0])
+
+
+def get_territorial_director(department_id: int) -> WorkerSchema | None:
+    with session.begin() as s:
+        raw_department = (
+            s.execute(select(Department).filter(Department.id == department_id))
+            .scalars()
+            .first()
+        )
+        if raw_department is None:
+            return None
+        if raw_department.territorial_director is None:
+            return None
+        return WorkerSchema.model_validate(raw_department.territorial_director)
 
 
 def add_worker(record: WorkerSchema) -> bool:

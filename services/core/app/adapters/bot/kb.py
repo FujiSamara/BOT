@@ -40,7 +40,7 @@ kru_menu_button = InlineKeyboardButton(
     text="Согласовать платёж КРУ", callback_data="get_kru_menu"
 )
 owner_menu_button = InlineKeyboardButton(
-    text="Согласовать платёж учредитель", callback_data="get_owner_menu"
+    text="Согласовать платёж директор", callback_data="get_owner_menu"
 )
 accountant_card_menu_button = InlineKeyboardButton(
     text="Согласовать платёж бухгалтерия", callback_data="get_accountant_card_menu"
@@ -203,6 +203,15 @@ payment_type_dict = {
 approval_status_dict = {
     ApprovalStatus.approved: "Согласовано",
     ApprovalStatus.pending: "Ожидает поступления",
+    ApprovalStatus.pending_approval: "Ожидает согласования",
+    ApprovalStatus.denied: "Отклонено",
+    ApprovalStatus.skipped: "Не требуется",
+    ApprovalStatus.not_relevant: "Не релевантно",
+}
+
+approval_status_technical_request_dict = {
+    ApprovalStatus.approved: "Выполнено",
+    ApprovalStatus.pending: "Ожидает выполнения",
     ApprovalStatus.pending_approval: "Ожидает согласования",
     ApprovalStatus.denied: "Отклонено",
     ApprovalStatus.skipped: "Не требуется",
