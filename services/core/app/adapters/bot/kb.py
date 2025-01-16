@@ -8,7 +8,6 @@ from aiogram.fsm.context import FSMContext
 
 from app.schemas import WorkTimeSchema
 from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
-from app.infra.database.models import ApprovalStatus, WorkerStatus
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
@@ -88,6 +87,12 @@ bid_menu = InlineKeyboardMarkup(
         [main_menu_button],
     ]
 )
+
+payment_type_dict = {
+    "cash": "Наличная",
+    "card": "Безналичная",
+    "taxi": "Требуется такси",
+}
 
 
 async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
@@ -192,31 +197,6 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-
-payment_type_dict = {
-    "cash": "Наличная",
-    "card": "Безналичная",
-    "taxi": "Требуется такси",
-}
-
-
-approval_status_dict = {
-    ApprovalStatus.approved: "Согласовано",
-    ApprovalStatus.pending: "Ожидает поступления",
-    ApprovalStatus.pending_approval: "Ожидает согласования",
-    ApprovalStatus.denied: "Отклонено",
-    ApprovalStatus.skipped: "Не требуется",
-    ApprovalStatus.not_relevant: "Не релевантно",
-}
-
-approval_status_technical_request_dict = {
-    ApprovalStatus.approved: "Выполнено",
-    ApprovalStatus.pending: "Ожидает выполнения",
-    ApprovalStatus.pending_approval: "Ожидает согласования",
-    ApprovalStatus.denied: "Отклонено",
-    ApprovalStatus.skipped: "Не требуется",
-    ApprovalStatus.not_relevant: "Не релевантно",
-}
 
 payment_type_menu = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -323,15 +303,6 @@ get_candidates_coordinate_menu_btn = InlineKeyboardButton(
     text="Сотрудники",
     callback_data="get_candidates_menu",
 )
-
-worker_status_dict = {
-    WorkerStatus.pending_approval: "На согласовании",
-    WorkerStatus.internship: "На стажировке",
-    WorkerStatus.refusal_internship: "Отказ от стажировки",
-    WorkerStatus.active: "В штате",
-    WorkerStatus.process_dismissal: "В процессе увольнения",
-    WorkerStatus.dismissal: "Уволен",
-}
 
 
 async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
