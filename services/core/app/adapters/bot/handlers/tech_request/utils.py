@@ -108,18 +108,20 @@ async def show_form(
                 + request.reopen_confirmation_date.date().strftime(settings.date_format)
                 + "\n"
             )
-            if request.close_description:
-                text_form += "Комментарий ТУ: " + request.close_description + "\n \n"
-
-        if request.close_date:
-            text_form += (
-                "Дата закрытия заявки: "
-                + request.close_date.date().strftime(settings.date_format)
-                + "\n"
-            )
-
         if request.score:
             text_form += f"\nОценка проделанной работы: {request.score}\n"
+
+    if request.close_description:
+        text_form += (
+            "Комментарий при закрытие заявки: " + request.close_description + "\n \n"
+        )
+
+    if request.close_date:
+        text_form += (
+            "Дата закрытия заявки: "
+            + request.close_date.date().strftime(settings.date_format)
+            + "\n"
+        )
 
     buttons.append(
         [
