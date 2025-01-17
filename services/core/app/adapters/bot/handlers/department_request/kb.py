@@ -600,7 +600,7 @@ async def tm_rate_kb(
 # region Department director
 
 dd_button = InlineKeyboardButton(
-    text="Технические заявки учредитель", callback_data="get_DD_TR"
+    text="Технические заявки директор", callback_data="get_DD_TR"
 )
 
 dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")

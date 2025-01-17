@@ -69,7 +69,6 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
-        tg_id=callback.message.chat.id,
         department_names=get_departments_names(callback.message.chat.id),
     )
 
@@ -85,7 +84,6 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 async def set_department(message: Message, state: FSMContext):
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
-        tg_id=message.chat.id,
         department_names=get_departments_names(message.chat.id),
     )
 

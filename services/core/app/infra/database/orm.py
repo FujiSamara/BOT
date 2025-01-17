@@ -43,6 +43,7 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
+    WorkerPassport,
     CleaningProblem,
     CleaningRequest,
     CleaningRequestCleaningPhoto,
@@ -2539,7 +2540,7 @@ def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema]
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_chief_technician(department_id) -> WorkerSchema | None:
+def get_chief_technician(department_id: int) -> WorkerSchema | None:
     with session.begin() as s:
         worker_id = s.execute(
             select(Department.chief_technician_id).filter(
@@ -2554,6 +2555,73 @@ def get_chief_technician(department_id) -> WorkerSchema | None:
         if chief_technician == []:
             return None
         return WorkerSchema.model_validate(chief_technician[0])
+
+
+# region Cleaning requests
+def get_territorial_director(department_id: int) -> WorkerSchema | None:
+    with session.begin() as s:
+        raw_department = (
+            s.execute(select(Department).filter(Department.id == department_id))
+            .scalars()
+            .first()
+        )
+        if raw_department is None:
+            return None
+        if raw_department.territorial_director is None:
+            return None
+        return WorkerSchema.model_validate(raw_department.territorial_director)
+
+
+def add_worker(record: WorkerSchema) -> bool:
+    """
+    Add worker to database
+
+    Returns:
+        `bool`: True if worker was created successfully else False
+    """
+    with session.begin() as s:
+        post = (
+            s.execute(select(Post).where(Post.id == record.post.id)).scalars().first()
+        )
+        department = (
+            s.execute(select(Department).where(Department.id == record.department.id))
+            .scalars()
+            .first()
+        )
+        worker = Worker(
+            f_name=record.f_name,
+            l_name=record.l_name,
+            o_name=record.o_name,
+            b_date=record.b_date,
+            phone_number=record.phone_number,
+            telegram_id=record.telegram_id,
+            state=record.state,
+            post=post,
+            department=department,
+            gender=record.gender,
+            employment_date=record.employment_date,
+            dismissal_date=record.dismissal_date,
+            medical_records_availability=record.medical_records_availability,
+            citizenship=record.citizenship,
+            password=record.password,
+            can_use_crm=record.can_use_crm,
+            snils=record.snils,
+            inn=record.inn,
+            registration=record.registration,
+            actual_residence=record.actual_residence,
+            children=record.children,
+            military_ticket=record.military_ticket,
+        )
+        s.add(worker)
+
+        for doc in record.passport:
+            file = WorkerPassport(
+                worker=worker,
+                document=doc.document,
+            )
+            s.add(file)
+
+        return True
 
 
 # region Cleaning requests

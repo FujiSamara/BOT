@@ -163,6 +163,18 @@ async def create_technical_request(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
+        territorial_director = orm.get_territorial_director(
+            department_id=request.department.id
+        )
+        if territorial_director is None:
+            logger.error(
+                f"The territorial director wasn't found at department {request.department.id}"
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=territorial_director.telegram_id,
+                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+            )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
@@ -239,6 +251,18 @@ async def update_technical_request_from_repairman(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
             )
+        territorial_director = orm.get_territorial_director(
+            department_id=request.department.id
+        )
+        if territorial_director is None:
+            logger.error(
+                f"The territorial director wasn't found at department {request.department.id}"
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=territorial_director.telegram_id,
+                message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+            )
 
     return True
 
@@ -306,6 +330,19 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
+                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                )
+
+            territorial_director = orm.get_territorial_director(
+                department_id=request.department.id
+            )
+            if territorial_director is None:
+                logger.error(
+                    f"The chief technician wasn't found at department {request.department.id}"
+                )
+            else:
+                await notify_worker_by_telegram_id(
+                    id=territorial_director.telegram_id,
                     message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
                 )
         await notify_worker_by_telegram_id(
