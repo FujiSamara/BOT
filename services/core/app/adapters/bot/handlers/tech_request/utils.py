@@ -50,7 +50,7 @@ async def show_form(
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(settings.date_format)
         + f"\nОписание:\n{request.description}\n\
-Адрес: {request.worker.department.address}\n\
+Адрес: {request.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
 Номер телефона: {request.worker.phone_number}\n\
 Должность: {request.worker.post.name}\n\
