@@ -313,7 +313,7 @@ async def show_worktime(
     text += (
         f"{hbold('Сотрудник: ')} {worktime.worker.l_name} {worktime.worker.f_name}\n"
     )
-    text += f"{hbold('Производство:')} {worktime.department.name if worktime.department is not None else 'Отсутствует'}\n"
+    text += f"{hbold('Предприятие:')} {worktime.department.name if worktime.department is not None else 'Отсутствует'}\n"
     text += f"{hbold('Начало смены:')} {worktime.work_begin.strftime(settings.time_format) if worktime.work_begin is not None else 'Отсутствует'}\n"
     text += f"{hbold('Конец смены:')} {worktime.work_end.strftime(settings.time_format) if worktime.work_end is not None else 'Отсутствует'}\n"
     text += f"{hbold('Отработано часов:')} {'1<' if round(worktime.work_duration, 0) < 1 else round(worktime.work_duration, 0)}\n"

@@ -58,7 +58,7 @@ class CoordinationFactory:
         self.problem_type = problem_type
         self.department_menu_button = menu_button
         change_department_button = InlineKeyboardButton(
-            text="Выбрать производство",
+            text="Выбрать предприятие",
             callback_data=f"set_{self.problem_type.name}_department_TM",
         )
         self.change_department_menu = kb.create_inline_keyboard(
@@ -166,7 +166,7 @@ class CoordinationFactory:
 
         await try_delete_message(callback.message)
         msg = await callback.message.answer(
-            text=hbold("Выберите производство:"),
+            text=hbold("Выберите предприятие:"),
             reply_markup=kb.create_reply_keyboard(text.back, *department_names),
         )
         await state.update_data(msg=msg)
@@ -175,7 +175,7 @@ class CoordinationFactory:
         department_name = (await state.get_data()).get("department_name")
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Производство: {department_name}"),
+            text=hbold(f"Предприятие: {department_name}"),
             reply_markup=self.menu_markup,
         )
 

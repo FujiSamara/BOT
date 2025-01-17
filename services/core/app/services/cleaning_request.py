@@ -93,7 +93,7 @@ async def create_cleaning_request(
     await notify_worker_by_telegram_id(
         id=cleaner.telegram_id,
         message=t.notification_cleaner
-        + f"\n На производстве: {request.department.name}",
+        + f"\n На предприятие: {request.department.name}",
     )
 
     return True
@@ -390,7 +390,7 @@ async def update_cleaning_request_from_territorial_manager(
             await notify_worker_by_telegram_id(
                 id=request.cleaner.telegram_id,
                 message=text.notification_cleaner_reopen
-                + f"\nНа производстве: {request.department.name}",
+                + f"\nНа предприятие: {request.department.name}",
             )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id, message=text.notification_worker_CR

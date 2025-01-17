@@ -2448,7 +2448,7 @@ def update_company_for_department(
 
 
 def set_tellers_cash_department() -> list[WorkerSchema]:
-    """Set department 'Нет производства' for teller cash.
+    """Set department 'Нет предприятия' for teller cash.
     Return true if all done, false if department wasn't found"""
     with session.begin() as s:
         post_id = (
@@ -2466,7 +2466,7 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
         )
 
         department: Optional[Department] = (
-            s.execute(select(Department).filter(Department.name == "Нет производства"))
+            s.execute(select(Department).filter(Department.name == "Нет предприятия"))
             .scalars()
             .first()
         )

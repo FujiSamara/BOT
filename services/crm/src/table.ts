@@ -786,7 +786,7 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._aliases.set("limit", "Лимит");
 		this._aliases.set("expenditure", "Статья");
 		this._aliases.set("last_update", "Последние обновление");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("chapter", "Раздел");
 
 		this._columsOrder.set("id", 0);
@@ -825,7 +825,7 @@ export class BidTable extends Table<BidSchema> {
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("worker", "Работник");
 		this._aliases.set("purpose", "Цель");
 		this._aliases.set("create_date", "Дата создания");
@@ -978,7 +978,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("post", "Должность");
 		this._aliases.set("work_begin", "Начало смены");
 		this._aliases.set("work_end", "Конец смены");

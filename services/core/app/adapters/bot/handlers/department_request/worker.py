@@ -198,7 +198,7 @@ async def get_department(message: Message | CallbackQuery, state: FSMContext):
     await state.update_data(
         msg=await try_edit_or_answer(
             message=message,
-            text=hbold("Выберите производство:"),
+            text=hbold("Выберите предприятие:"),
             reply_markup=create_reply_keyboard(text.back, *get_departments_names()),
             return_message=True,
         )

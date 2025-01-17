@@ -397,7 +397,7 @@ async def handle_department(
         department_name = " ".join(message.text.split(" ")[1:])
         await state.update_data(department_name=department_name)
         await message.answer(
-            text=hbold(f"Производство: {department_name}"),
+            text=hbold(f"Предприятие: {department_name}"),
             reply_markup=reply_markup,
         )
         await state.set_state(Base.none)

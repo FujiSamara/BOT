@@ -21,7 +21,7 @@ ct_button = InlineKeyboardButton(
 )
 
 ct_change_department_button = InlineKeyboardButton(
-    text="Выбрать производство",
+    text="Выбрать предприятие",
     callback_data="set_CT_TR_department",
 )
 
@@ -280,7 +280,7 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Проблемы на производстве", callback_data="get_WR_TR_CR_menu"
+    text="Проблемы на предприятие", callback_data="get_WR_TR_CR_menu"
 )
 
 wr_create = InlineKeyboardButton(
@@ -357,7 +357,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="Производство", callback_data="department_WR_TR_CR"
+                text="Предприятие", callback_data="department_WR_TR_CR"
             ),
             InlineKeyboardButton(text=f"{department_name}", callback_data="dummy"),
         ],
@@ -614,7 +614,7 @@ dd_history = InlineKeyboardButton(
 )
 
 dd_change_department_button = InlineKeyboardButton(
-    text="Выбрать производство",
+    text="Выбрать предприятие",
     callback_data="set_DD_TR_department",
 )
 

@@ -62,7 +62,7 @@ class CoordinationFactory:
         self.name = problem_type.name
         self.executor_menu_button = executor_menu_button
         change_department_button = InlineKeyboardButton(
-            text="Выбрать производство",
+            text="Выбрать предприятие",
             callback_data=f"set_executor_{self.name}_department",
         )
         self.change_department_menu = kb.create_inline_keyboard(
@@ -183,7 +183,7 @@ class CoordinationFactory:
 
         await try_delete_message(callback.message)
         msg = await callback.message.answer(
-            text=hbold("Выберите производство:"),
+            text=hbold("Выберите предприятие:"),
             reply_markup=kb.create_reply_keyboard(text.back, *department_names),
         )
         await state.update_data(msg=msg)
@@ -192,7 +192,7 @@ class CoordinationFactory:
         department_name = (await state.get_data()).get("department_name")
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Производство: {department_name}"),
+            text=hbold(f"Предприятие: {department_name}"),
             reply_markup=self.menu_markup,
         )
 
@@ -225,7 +225,7 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"История заявок.\nПроизводство: {department_name}"),
+            text=hbold(f"История заявок.\nПредприятие: {department_name}"),
             reply_markup=reply_markup,
         )
 
@@ -282,7 +282,7 @@ class CoordinationFactory:
 
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Ожидающие заявки\nПроизводство: {department_name}"),
+            text=hbold(f"Ожидающие заявки\nПредприятие: {department_name}"),
             reply_markup=reply_markup,
         )
 
@@ -383,7 +383,7 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
+            text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
             reply_markup=reply_markup,
         )
 

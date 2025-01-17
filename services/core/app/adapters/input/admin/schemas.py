@@ -84,7 +84,7 @@ class CompanyView(ModelView, model=Company):
     name = "Компания"
     column_labels = {
         Company.name: "Название",
-        Company.departments: "Производства",
+        Company.departments: "Предприятия",
         Company.workers: "Работники",
     }
 
@@ -122,8 +122,8 @@ class DepartmentView(ModelView, model=Department):
     ]
     can_export = False
 
-    name_plural = "Производства"
-    name = "Производство"
+    name_plural = "Предприятия"
+    name = "Предприятие"
     column_labels = {
         Department.name: "Название",
         Department.address: "Адрес",
@@ -269,7 +269,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.o_name: "Отчество",
         Worker.state: "Статус",
         Worker.subordination_chief: "Руководитель",
-        Worker.department: "Производство",
+        Worker.department: "Предприятие",
         Worker.group: "Отдел",
         Worker.post: "Должность",
         Worker.b_date: "Дата рождения",
@@ -638,7 +638,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.repair_photos: "Фотографии ремонта",
         TechnicalRequest.problem_photos: "Фотографии проблемы",
         TechnicalRequest.repairman: "Исполнитель",
-        TechnicalRequest.department: "Производство",
+        TechnicalRequest.department: "Предприятие",
         TechnicalRequest.problem: "Проблема",
         TechnicalRequest.territorial_manager: "Территориальный менеджер",
         TechnicalRequest.worker: "Создатель",
