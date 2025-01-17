@@ -135,7 +135,7 @@ async def generate_worker_menu(message: Message, record_id: int) -> None:
         message=message,
         text=f"""{worker_info}
 На смену вышел в: {time_begin} {record.day}
-На смене был: {record.work_duration} часов.""",
+На смене был: {round(record.work_duration, 2)} часов.""",
         reply_markup=keyboard,
     )
 
