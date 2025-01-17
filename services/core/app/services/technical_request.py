@@ -239,7 +239,8 @@ async def update_technical_request_from_repairman(
             + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
         )
         await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
+            id=request.worker.telegram_id,
+            message=text.notification_worker + f"\nЗаявка {request_id} на проверке ТУ.",
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -348,9 +349,16 @@ async def update_technical_request_from_territorial_manager(
                         id=director_extensive_development.telegram_id,
                         message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
                     )
-        await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
-        )
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker
+                + f"\nЗаявка {request_id} отправлена на доработку.",
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker + f"\nЗаявка {request_id} закрыта.",
+            )
 
     return True
 
