@@ -120,7 +120,6 @@ async def generate_worker_menu(message: Message, record_id: int) -> None:
     rating = record.rating or 0
 
     worker_info = "Работник не найден"
-    print(((record.work_duration - int(record.work_duration // 1)) * 60) // 100)
     if record.worker:
         worker_info = (
             f"{record.worker.l_name} "
