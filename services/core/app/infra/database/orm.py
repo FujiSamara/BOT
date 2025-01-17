@@ -43,6 +43,7 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
+    WorkerPassport,
 )
 from app.schemas import (
     BidSchema,
@@ -170,7 +171,7 @@ def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     If worker bid not exist return `None`.
     """
     with session.begin() as s:
-        raw_bid = s.query(WorkerBid).filter(column == value).first()
+        raw_bid = s.execute(select(WorkerBid).filter(column == value)).scalars().first()
         if not raw_bid:
             return None
         return WorkerBidSchema.model_validate(raw_bid)
@@ -188,6 +189,7 @@ def update_worker(worker: WorkerSchema):
         cur_worker.o_name = worker.o_name
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
+        cur_worker.state = worker.state
 
 
 def get_departments_columns(*columns: list[Any]) -> list[DepartmentSchema]:
@@ -573,17 +575,18 @@ def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchem
 
 
 def get_workers_with_post_by_columns(
-    columns: list[Any], values: list[Any]
+    columns: list[Any],
+    values: list[Any],
 ) -> list[WorkerSchema]:
     """
     Returns all `Worker` as `WorkerSchema` in database
     by `columns` with `values`.
     """
     with session.begin() as s:
-        query = s.query(Worker).join(Worker.post)
+        stmt = select(Worker).join(Worker.post)
         for column, value in zip(columns, values):
-            query = query.filter(column == value)
-        raw_models = query.all()
+            stmt = stmt.filter(column == value)
+        raw_models = s.execute(stmt).scalars().all()
         return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
@@ -696,9 +699,11 @@ def get_posts() -> list[PostSchema]:
         return [PostSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-def add_worker_bid(bid: WorkerBidSchema):
+def add_worker_bid(bid: WorkerBidSchema) -> bool:
     """
     Adds `bid` to database.
+
+    Returns: `bool`
     """
     with session.begin() as s:
         department = (
@@ -714,8 +719,12 @@ def add_worker_bid(bid: WorkerBidSchema):
             post=post,
             department=department,
             state=bid.state,
+            security_service_state=bid.security_service_state,
+            accounting_service_state=bid.accounting_service_state,
             create_date=bid.create_date,
             sender=sender,
+            birth_date=bid.birth_date,
+            phone_number=bid.phone_number,
         )
 
         s.add(worker_bid)
@@ -731,6 +740,7 @@ def add_worker_bid(bid: WorkerBidSchema):
         for doc in bid.work_permission:
             file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
             s.add(file)
+        return True
 
 
 def update_worker_bid(bid: WorkerBidSchema):
@@ -763,6 +773,8 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.l_name = bid.l_name
         cur_bid.o_name = bid.o_name
         cur_bid.sender = sender
+        cur_bid.security_service_state = bid.security_service_state
+        cur_bid.accounting_service_state = bid.accounting_service_state
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
@@ -2540,3 +2552,134 @@ def get_chief_technician(department_id) -> WorkerSchema | None:
         if chief_technician == []:
             return None
         return WorkerSchema.model_validate(chief_technician[0])
+
+
+def add_worker(record: WorkerSchema) -> bool:
+    """
+    Add worker to database
+
+    Returns:
+        `bool`: True if worker was created successfully else False
+    """
+    with session.begin() as s:
+        post = (
+            s.execute(select(Post).where(Post.id == record.post.id)).scalars().first()
+        )
+        department = (
+            s.execute(select(Department).where(Department.id == record.department.id))
+            .scalars()
+            .first()
+        )
+        worker = Worker(
+            f_name=record.f_name,
+            l_name=record.l_name,
+            o_name=record.o_name,
+            b_date=record.b_date,
+            phone_number=record.phone_number,
+            telegram_id=record.telegram_id,
+            state=record.state,
+            post=post,
+            department=department,
+            gender=record.gender,
+            employment_date=record.employment_date,
+            dismissal_date=record.dismissal_date,
+            medical_records_availability=record.medical_records_availability,
+            citizenship=record.citizenship,
+            password=record.password,
+            can_use_crm=record.can_use_crm,
+            snils=record.snils,
+            inn=record.inn,
+            registration=record.registration,
+            actual_residence=record.actual_residence,
+            children=record.children,
+            military_ticket=record.military_ticket,
+        )
+        s.add(worker)
+
+        for doc in record.passport:
+            file = WorkerPassport(
+                worker=worker,
+                document=doc.document,
+            )
+            s.add(file)
+
+        return True
+
+
+def get_last_worker_id() -> int:
+    """Return last worker id"""
+    with session.begin() as s:
+        return s.execute(select(Worker.id).order_by(Worker.id.desc())).scalar()
+
+
+def get_subordinates_in_departments(
+    chief_id: int,
+    scopes: list[FujiScope] = [],
+    l_name: str | None = None,
+) -> list[WorkerSchema]:
+    with session.begin() as s:
+        departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    or_(
+                        Department.territorial_manager_id == chief_id,
+                        Department.territorial_director_id == chief_id,
+                    )
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        stmt = select(Worker).join(
+            PostScope, onclause=Worker.post_id == PostScope.post_id
+        )
+
+        if l_name is not None:
+            stmt = stmt.filter(Worker.l_name.like(l_name))
+        else:
+            or_filter = False
+            for scope in scopes:
+                or_filter = or_(PostScope.scope == scope, or_filter)
+            stmt = stmt.filter(or_filter)
+
+        or_filter = False
+        for department in departments:
+            or_filter = or_(or_filter, Worker.department_id == department.id)
+
+        stmt = stmt.filter(or_filter)
+        raw_workers = (
+            s.execute(stmt.group_by(Worker.id).order_by(Worker.id)).scalars().all()
+        )
+        return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
+
+
+def get_subordinates(
+    chief_id: int,
+    l_name: str | None = None,
+) -> list[WorkerSchema]:
+    with session.begin() as s:
+        stmt = (
+            select(Subordination)
+            .join(Worker, onclause=Subordination.employee_id == Worker.id)
+            .filter(
+                Subordination.chief_id == chief_id,
+            )
+        )
+        if l_name is not None:
+            stmt = stmt.filter(Worker.l_name.like(l_name))
+        subs = s.execute(stmt.order_by(Worker.id)).scalars().all()
+
+        return [WorkerSchema.model_validate(sub.employee) for sub in subs]
+
+
+def get_last_worker_passport_id(worker_id: int) -> int:
+    with session.begin() as s:
+        raw_worker = (
+            s.execute(select(Worker).filter(Worker.id == worker_id)).scalars().first()
+        )
+        if raw_worker is None:
+            return 0
+        return len(WorkerSchema.model_validate(raw_worker).passport)
