@@ -725,6 +725,28 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     form_converter = TechnicalRequestConverter
 
     column_default_sort = "state"
+    form_ajax_refs = {
+        "repairman": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "department": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "problem": {
+            "fields": ("problem_name",),
+            "order_by": "name",
+        },
+        "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
 
     def sort_query(self, stmt, request: Request):
         from sqlalchemy import asc, desc
