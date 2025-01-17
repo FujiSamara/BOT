@@ -116,7 +116,7 @@ class WorkerSchema(BaseSchemaPK):
     inn: str | None = None
     registration: str | None = None
     actual_residence: str | None = None
-    children: bool = False
+    children: bool | None = None
     children_born_date: list["WorkerChildrenSchema"] = []
     military_ticket: str | None = None
     patent: str | None = None
