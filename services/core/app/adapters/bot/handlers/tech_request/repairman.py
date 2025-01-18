@@ -71,7 +71,7 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите производство:"),
+        text=hbold("Выберите предприятие:"),
         reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
@@ -97,7 +97,7 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Производство: {department_name}"),
+        text=hbold(f"Предприятие: {department_name}"),
         reply_markup=tech_kb.rm_menu_markup,
     )
 
@@ -112,7 +112,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"История заявок.\nПроизводство: {department_name}"),
+        text=hbold(f"История заявок.\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="RM_TR_show_form_history",
             menu_button=tech_kb.rm_menu_button,
@@ -146,7 +146,7 @@ async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Ожидающие заявки\nПроизводство: {department_name}"),
+        text=hbold(f"Ожидающие заявки\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="RM_TR_show_form_waiting",
             menu_button=tech_kb.rm_menu_button,
@@ -237,7 +237,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
+        text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="RM_TR_show_form_rework",
             menu_button=tech_kb.rm_menu_button,

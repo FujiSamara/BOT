@@ -69,13 +69,12 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.set_state(DepartmentDirectorRequestForm.department)
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
-        tg_id=callback.message.chat.id,
         department_names=get_departments_names(callback.message.chat.id),
     )
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите производство:"),
+        text=hbold("Выберите предприятие:"),
         reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
@@ -85,7 +84,6 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 async def set_department(message: Message, state: FSMContext):
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
-        tg_id=message.chat.id,
         department_names=get_departments_names(message.chat.id),
     )
 
@@ -103,7 +101,7 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Производство: {department_name}"),
+        text=hbold(f"Предприятие: {department_name}"),
         reply_markup=tech_kb.dd_menu_markup,
     )
 

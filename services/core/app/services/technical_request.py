@@ -12,6 +12,7 @@ from app.infra.database.models import (
     ApprovalStatus,
     TechnicalRequest,
     Worker,
+    FujiScope,
 )
 from app.schemas import (
     TechnicalProblemSchema,
@@ -162,6 +163,19 @@ async def create_technical_request(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
             )
+        directors_extensive_development = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_department_director
+        )
+        if directors_extensive_development == []:
+            logger.error(
+                f"The Director of Extensive Development wasn't found at department {request.department.id}"
+            )
+        else:
+            for director_extensive_development in directors_extensive_development:
+                await notify_worker_by_telegram_id(
+                    id=director_extensive_development.telegram_id,
+                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
@@ -225,7 +239,8 @@ async def update_technical_request_from_repairman(
             + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
         )
         await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
+            id=request.worker.telegram_id,
+            message=text.notification_worker + f"\nЗаявка {request_id} на проверке ТУ.",
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -238,6 +253,19 @@ async def update_technical_request_from_repairman(
                 id=chief_technician.telegram_id,
                 message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
             )
+        directors_extensive_development = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_department_director
+        )
+        if directors_extensive_development == []:
+            logger.error(
+                f"The Director of Extensive Development wasn't found at department {request.department.id}"
+            )
+        else:
+            for director_extensive_development in directors_extensive_development:
+                await notify_worker_by_telegram_id(
+                    id=director_extensive_development.telegram_id,
+                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                )
 
     return True
 
@@ -305,11 +333,32 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
-                    message=f"Заявка с номером {request_id} отправленна на доработку.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
                 )
-        await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker
-        )
+
+            directors_extensive_development = orm.get_workers_with_scope(
+                FujiScope.bot_technical_request_department_director
+            )
+            if directors_extensive_development == []:
+                logger.error(
+                    f"The Director of Extensive Development wasn't found at department {request.department.id}"
+                )
+            else:
+                for director_extensive_development in directors_extensive_development:
+                    await notify_worker_by_telegram_id(
+                        id=director_extensive_development.telegram_id,
+                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                    )
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker
+                + f"\nЗаявка {request_id} отправлена на доработку.",
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker + f"\nЗаявка {request_id} закрыта.",
+            )
 
     return True
 

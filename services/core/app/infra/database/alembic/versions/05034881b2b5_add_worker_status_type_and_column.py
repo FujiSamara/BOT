@@ -190,6 +190,7 @@ def downgrade() -> None:
     op.drop_column("worker_bids", "security_service_comment")
     op.drop_column("worker_bids", "accounting_service_state")
     op.drop_column("worker_bids", "security_service_state")
+    op.drop_column("worker_bids", "phone_number")
 
     op.drop_column("workers", "patent")
     op.drop_column("workers", "official_dismissal_date")

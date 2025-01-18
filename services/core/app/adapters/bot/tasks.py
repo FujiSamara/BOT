@@ -134,7 +134,7 @@ async def notify_and_dropped_departments_teller_cash() -> None:
     tellers = services.set_tellers_cash_department()
     for teller in tellers:
         await notify_worker_by_telegram_id(
-            message="Актуализируйте производство",
+            message="Актуализируйте предприятие",
             id=teller.telegram_id,
             reply_markup=InlineKeyboardMarkup(
                 inline_keyboard=[[get_personal_cabinet_button]]

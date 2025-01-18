@@ -66,7 +66,7 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
     if len(tellers_cash) != 0:
         teller_cash_text = sep + teller_cash_text
 
-    return f"""Производство: {hcode(department_name)}
+    return f"""Предприятие: {hcode(department_name)}
 Время инцидента: {hcode(date_time)}
 Территориальный: {hcode(territorial_manager_text)}
 Кассиры: {teller_cash_text}

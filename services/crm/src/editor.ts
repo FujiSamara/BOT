@@ -278,7 +278,7 @@ export class BudgetEditor extends Editor {
 				chapterField,
 			),
 			new DepartmentSmartField(
-				"Производство",
+				"Предприятие",
 				"department",
 				_instance?.department,
 			),
@@ -292,7 +292,7 @@ export class WorkTimeEditor extends Editor {
 		this.fields = [
 			new WorkerSmartField("Работник", "worker", _instance?.worker, true, true),
 			new DepartmentSmartField(
-				"Производство",
+				"Предприятие",
 				"department",
 				_instance?.department,
 				true,
@@ -354,7 +354,7 @@ export class BidEditor extends Editor {
 			),
 			new BoolSmartField("Счет в ЭДО", "need_edm", "Нет"),
 			new DepartmentSmartField(
-				"Производство",
+				"Предприятие",
 				"department",
 				undefined,
 				true,

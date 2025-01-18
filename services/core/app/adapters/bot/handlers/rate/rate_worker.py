@@ -120,7 +120,6 @@ async def generate_worker_menu(message: Message, record_id: int) -> None:
     rating = record.rating or 0
 
     worker_info = "Работник не найден"
-
     if record.worker:
         worker_info = (
             f"{record.worker.l_name} "
@@ -135,7 +134,7 @@ async def generate_worker_menu(message: Message, record_id: int) -> None:
         message=message,
         text=f"""{worker_info}
 На смену вышел в: {time_begin} {record.day}
-На смене был: {record.work_duration} часов.""",
+На смене был: {int(record.work_duration // 1)} часов {int(((record.work_duration - int(record.work_duration // 1)) * 60) // 1)} минут""",
         reply_markup=keyboard,
     )
 
