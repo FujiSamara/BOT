@@ -97,7 +97,7 @@ async def get_tm_department_menu(callback: CallbackQuery, state: FSMContext):
     dep = get_departments_names_by_tm_telegram_id(callback.message.chat.id)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        hbold("Выберите производство:"),
+        hbold("Выберите предприятие:"),
         reply_markup=create_reply_keyboard_resize("⏪ Назад", *dep),
     )
     await state.update_data(msg=msg)
@@ -163,7 +163,7 @@ async def show_pending_bids_it_tm(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     dep = (await state.get_data()).get("department")
     await callback.message.answer(
-        f"Производство: {dep}\nОжидающие заявки:", reply_markup=keyboard
+        f"Предприятие: {dep}\nОжидающие заявки:", reply_markup=keyboard
     )
 
 
@@ -331,7 +331,7 @@ async def get_history_bids_for_tm(callback: CallbackQuery, state: FSMContext):
     )
     await try_delete_message(callback.message)
     await callback.message.answer(
-        f"Производство: {dep}\nИстория заявок:", reply_markup=keyboard
+        f"Предприятие: {dep}\nИстория заявок:", reply_markup=keyboard
     )
 
 

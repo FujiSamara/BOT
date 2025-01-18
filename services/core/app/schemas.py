@@ -68,7 +68,7 @@ class CompanySchema(BaseSchemaPK):
 
 class DepartmentSchema(BaseSchemaPK):
     name: str
-    address: Optional[str]
+    address: str | None
 
     company: CompanySchema
 
@@ -116,7 +116,7 @@ class WorkerSchema(BaseSchemaPK):
     inn: str | None = None
     registration: str | None = None
     actual_residence: str | None = None
-    children: bool = False
+    children: bool | None = None
     children_born_date: list["WorkerChildrenSchema"] = []
     military_ticket: str | None = None
     patent: str | None = None
@@ -595,7 +595,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
     WorkTimeSchema: {
         "id": "ID",
         "worker": "Работник",
-        "department": "Производство",
+        "department": "Предприятие",
         "post": "Должность",
         "work_begin": "Начало смены",
         "work_end": "Конец смены",

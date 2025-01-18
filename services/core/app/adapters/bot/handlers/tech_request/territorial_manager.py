@@ -69,7 +69,7 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите производство:"),
+        text=hbold("Выберите предприятие:"),
         reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
@@ -97,7 +97,7 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Производство: {department_name}"),
+        text=hbold(f"Предприятие: {department_name}"),
         reply_markup=tech_kb.tm_menu_markup,
     )
 

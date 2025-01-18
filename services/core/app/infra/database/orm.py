@@ -1400,7 +1400,7 @@ def get_all_active_requests_in_department(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.close_date == null(),
             )
-            .order_by()
+            .order_by(TechnicalRequest.id.desc())
             .all()
         )
         return [

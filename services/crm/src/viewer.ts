@@ -76,7 +76,7 @@ export class BidViewer extends Viewer<BidSchema> {
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("worker", "Работник");
 		this._aliases.set("purpose", "Цель");
 		this._aliases.set("create_date", "Дата создания");
