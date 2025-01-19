@@ -241,7 +241,8 @@ async def update_technical_request_from_repairman(
         )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id,
-            message=text.notification_worker_TR + f"\nЗаявка {request_id} на проверке ТУ.",
+            message=text.notification_worker_TR
+            + f"\nЗаявка {request_id} на проверке ТУ.",
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
