@@ -67,7 +67,7 @@ async def show_form_technician(
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(settings.date_format)
         + f"\nОписание:\n{request.description}\n\
-Адрес: {request.worker.department.address}\n\
+Адрес: {request.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
 Номер телефона: {request.worker.phone_number}\n\
 Должность: {request.worker.post.name}\n\
@@ -125,18 +125,20 @@ async def show_form_technician(
                 + request.reopen_confirmation_date.date().strftime(settings.date_format)
                 + "\n"
             )
-            if request.close_description:
-                text_form += "Комментарий ТУ: " + request.close_description + "\n \n"
-
-        if request.close_date:
-            text_form += (
-                "Дата закрытия заявки: "
-                + request.close_date.date().strftime(settings.date_format)
-                + "\n"
-            )
-
         if request.score:
             text_form += f"\nОценка проделанной работы: {request.score}\n"
+
+    if request.close_description:
+        text_form += (
+            "Комментарий при закрытие заявки: " + request.close_description + "\n \n"
+        )
+
+    if request.close_date:
+        text_form += (
+            "Дата закрытия заявки: "
+            + request.close_date.date().strftime(settings.date_format)
+            + "\n"
+        )
 
     buttons.append(
         [

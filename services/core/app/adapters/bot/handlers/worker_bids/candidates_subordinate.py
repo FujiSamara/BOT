@@ -14,6 +14,7 @@ from app.services import (
     update_worker_state,
     search_subordinate,
 )
+from app.infra.database.converters import worker_status_dict
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
@@ -27,7 +28,6 @@ from app.adapters.bot.states import CandidatesCoordination, Base
 from app.adapters.bot.kb import (
     get_candidates_coordinate_menu_btn,
     main_menu_button,
-    worker_status_dict,
 )
 from app.adapters.bot import text
 

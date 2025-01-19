@@ -7,7 +7,7 @@ from app.contracts.clients import XlSXExporter, FormatValue
 from app import schemas
 from app.infra.config import settings
 from app.infra.database import models
-from app.adapters.bot.kb import approval_status_dict
+from app.infra.database.converters import approval_status_dict
 
 
 class XlSXWriterExporter(XlSXExporter):

@@ -215,7 +215,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point_TR(
+        reply_markup=tech_kb.create_kb_with_end_point(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.ct_own_button,
             requests=requests,

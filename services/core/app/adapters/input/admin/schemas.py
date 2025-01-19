@@ -14,7 +14,6 @@ from app.infra.database.models import (
     WorkerBid,
     WorkerBidDocument,
     ApprovalStatus,
-    Gender,
     TechnicalRequest,
     Group,
     WorkTime,
@@ -26,12 +25,18 @@ from app.infra.database.models import (
     WorkerPassport,
     WorkerChildren,
 )
-from app.adapters.bot.kb import (
-    payment_type_dict,
+from app.adapters.input.admin.converters import (
+    TechnicalRequestConverter,
+    PostScopeConverter,
+    WorkerConverter,
+)
+from app.infra.database.converters import (
     approval_status_dict,
     approval_status_technical_request_dict,
     worker_status_dict,
+    gender_decode_dict,
 )
+from app.adapters.bot.kb import payment_type_dict
 from app.schemas import FileOutSchema
 from app import services
 from app.adapters.input.api.auth import encrypt_password
@@ -44,7 +49,7 @@ class PostScopeView(ModelView, model=PostScope):
     column_details_exclude_list = [PostScope.post_id, PostScope.id]
     can_export = False
     can_edit = False
-
+    form_converter = PostScopeConverter
     name_plural = "Доступы"
     name = "Доступ"
     column_labels = {
@@ -344,17 +349,14 @@ class WorkerView(ModelView, model=Worker):
     }
 
     @staticmethod
-    def gender_format(inst, columm):
-        value = getattr(inst, columm)
+    def gender_format(inst, column):
+        value = getattr(inst, column)
 
-        if value == Gender.man:
-            return "Мужчина"
-        else:
-            return "Женщина"
+        return gender_decode_dict[value]
 
     @staticmethod
-    def worker_status_format(inst, columm):
-        value = getattr(inst, columm)
+    def worker_status_format(inst, column):
+        value = getattr(inst, column)
 
         return worker_status_dict.get(value)
 
@@ -372,6 +374,8 @@ class WorkerView(ModelView, model=Worker):
         Worker.passport: files_format,
     }
     column_formatters_detail = column_formatters
+
+    form_converter = WorkerConverter
 
 
 class WorkerPassportView(ModelView, model=WorkerPassport):
@@ -548,9 +552,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
     form_columns = [WorkerBid.comment]
 
     @staticmethod
-    def datetime_format(inst, columm):
+    def datetime_format(inst, column):
         format = "%H:%M %d.%m.%y"
-        value = getattr(inst, columm)
+        value = getattr(inst, column)
         if value:
             return value.strftime(format)
         else:
@@ -563,8 +567,8 @@ class WorkerBidView(ModelView, model=WorkerBid):
         return payment_type_dict.get(value)
 
     @staticmethod
-    def approval_status_format(inst, columm):
-        value = getattr(inst, columm)
+    def approval_status_format(inst, column):
+        value = getattr(inst, column)
 
         return approval_status_dict.get(value)
 
@@ -726,7 +730,31 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     }
 
     column_formatters_detail = column_formatters
+    form_converter = TechnicalRequestConverter
+
     column_default_sort = "state"
+    form_ajax_refs = {
+        "repairman": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "department": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "problem": {
+            "fields": ("problem_name",),
+            "order_by": "name",
+        },
+        "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
 
     def sort_query(self, stmt, request: Request):
         from sqlalchemy import asc, desc

@@ -68,7 +68,7 @@ class CompanySchema(BaseSchemaPK):
 
 class DepartmentSchema(BaseSchemaPK):
     name: str
-    address: Optional[str]
+    address: str | None
 
     company: CompanySchema
 
