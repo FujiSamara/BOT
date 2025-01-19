@@ -29,21 +29,21 @@ from app.adapters.bot.handlers.utils import (
 from app.adapters.bot.kb import create_inline_keyboard, create_reply_keyboard
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
-    ProblemType,
+    RequestType,
 )
 
 from app.schemas import DepartmentSchema
 
 
 def get_departments_names_executor(
-    tg_id: int, type: ProblemType
+    tg_id: int, type: RequestType
 ) -> list[DepartmentSchema]:
     import app.services as s
 
     match type.name:
-        case ProblemType.Tech.name:
+        case RequestType.TR.name:
             return s.get_departments_names_for_repairman(tg_id)
-        case ProblemType.Clean.name:
+        case RequestType.CR.name:
             return s.get_departments_names_for_cleaner(tg_id)
     return []
 
@@ -294,7 +294,7 @@ async def show_form_cleaning(
                 text="Фотографии проблемы",
                 callback_data=ShowRequestCallbackData(
                     request_id=request.id,
-                    end_point=f"{ProblemType.Clean.name}_problem_docs",
+                    end_point=f"{RequestType.CR.name}_problem_docs",
                     last_end_point=callback_data.end_point,
                 ).pack(),
             )
@@ -308,7 +308,7 @@ async def show_form_cleaning(
                     text="Фотографии клининга",
                     callback_data=ShowRequestCallbackData(
                         request_id=request.id,
-                        end_point=f"{ProblemType.Clean.name}_repair_docs",
+                        end_point=f"{RequestType.CR.name}_repair_docs",
                         last_end_point=callback_data.end_point,
                     ).pack(),
                 )
@@ -322,7 +322,7 @@ async def show_form_cleaning(
                     text="Фотографии повторного клининга",
                     callback_data=ShowRequestCallbackData(
                         request_id=request.id,
-                        end_point=f"{ProblemType.Clean.name}_reopen_docs",
+                        end_point=f"{RequestType.CR.name}_reopen_docs",
                         last_end_point=callback_data.end_point,
                     ).pack(),
                 )
@@ -409,11 +409,11 @@ def department_names_with_count(
     state: ApprovalStatus,
     department_names: list[str],
     tg_id: int | None = None,
-    type: ProblemType = ProblemType.Tech,
+    type: RequestType = RequestType.TR,
 ) -> list[str]:
     from app.infra.database.models import TechnicalRequest, CleaningRequest
 
-    model = TechnicalRequest if type == ProblemType.Tech else CleaningRequest
+    model = TechnicalRequest if type == RequestType.TR else CleaningRequest
     if department_names == []:
         return []
     if tg_id is not None:

@@ -2772,7 +2772,7 @@ def get_all_rework_cleaning_requests_for_cleaner(
                     CleaningRequest.cleaner_id == cleaner_id,
                     CleaningRequest.department_id == department_id,
                     CleaningRequest.state == ApprovalStatus.pending,
-                    CleaningRequest.reopen_cleaning_date == null(),
+                    CleaningRequest.reopen_date != null(),
                 )
                 .limit(limit)
                 .order_by(CleaningRequest.id.desc())

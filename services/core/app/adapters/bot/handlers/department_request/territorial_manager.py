@@ -25,7 +25,7 @@ from app.adapters.bot.handlers.department_request.utils import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
-    ProblemType,
+    RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
 from app.adapters.bot.handlers.utils import (
@@ -52,7 +52,7 @@ class CoordinationFactory:
     def __init__(
         self,
         router: Router,
-        problem_type: ProblemType,
+        problem_type: RequestType,
         menu_button: InlineKeyboardButton,
     ):
         self.problem_type = problem_type
@@ -182,7 +182,7 @@ class CoordinationFactory:
     async def show_history_menu(self, callback: CallbackQuery, state: FSMContext):
         department_name = (await state.get_data()).get("department_name")
         match self.problem_type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 reply_markup = (
                     department_kb.create_kb_with_end_point_TR(
                         end_point=f"{self.problem_type.name}_show_form_history_TM",
@@ -195,7 +195,7 @@ class CoordinationFactory:
                         ),
                     ),
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.problem_type.name}_show_form_history_TM",
                     menu_button=self.menu_button,
@@ -222,7 +222,7 @@ class CoordinationFactory:
     ):
         buttons: list[list[InlineKeyboardButton]] = []
         match self.problem_type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 await show_form_technician(
                     callback=callback,
                     callback_data=callback_data,
@@ -230,7 +230,7 @@ class CoordinationFactory:
                     buttons=buttons,
                     history_or_waiting_button=self.history_button,
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 await show_form_cleaning(
                     callback=callback,
                     callback_data=callback_data,
@@ -243,7 +243,7 @@ class CoordinationFactory:
         department_name = (await state.get_data()).get("department_name")
 
         match self.problem_type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 reply_markup = department_kb.create_kb_with_end_point_TR(
                     end_point=f"{self.problem_type.name}_show_waiting_form_TM",
                     menu_button=self.menu_button,
@@ -252,7 +252,7 @@ class CoordinationFactory:
                         department_name=department_name,
                     ),
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.problem_type.name}_show_waiting_form_TM",
                     menu_button=self.menu_button,
@@ -289,7 +289,7 @@ class CoordinationFactory:
             ]
         ]
         match self.problem_type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 await show_form_technician(
                     callback=callback,
                     callback_data=callback_data,
@@ -297,7 +297,7 @@ class CoordinationFactory:
                     buttons=buttons,
                     history_or_waiting_button=self.waiting_button,
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 await show_form_cleaning(
                     callback=callback,
                     callback_data=callback_data,
@@ -373,9 +373,9 @@ class CoordinationFactory:
 
         message = callback.message
         match self.problem_type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 update: Callable = update_technical_request_from_territorial_manager
-            case ProblemType.Clean:
+            case RequestType.CR:
                 update: Callable = update_cleaning_request_from_territorial_manager
 
         if not await update(mark=mark, request_id=request_id, description=description):
@@ -405,7 +405,7 @@ async def set_department(message: Message, state: FSMContext):
         raise KeyError("generator in department request not exist")
     if "problem_type" not in data:
         raise KeyError("generator in department request not exist")
-    problem_type: ProblemType = data.get("problem_type")
+    problem_type: RequestType = data.get("problem_type")
     show_department_menu: Callable = data.get("generator")
     menu_markup: InlineKeyboardMarkup = data.get("menu_markup")
     department_names = department_names_with_count(
@@ -471,11 +471,11 @@ async def set_mark(message: Message, state: FSMContext):
 def build_coordinations():
     CoordinationFactory(
         router=router,
-        problem_type=ProblemType.Tech,
+        problem_type=RequestType.TR,
         menu_button=department_kb.TM_TR_button,
     )
     CoordinationFactory(
         router=router,
-        problem_type=ProblemType.Clean,
+        problem_type=RequestType.CR,
         menu_button=department_kb.TM_CR_button,
     )

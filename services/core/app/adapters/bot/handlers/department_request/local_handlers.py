@@ -2,7 +2,7 @@ from aiogram import Router, F
 from app.adapters.bot.handlers.department_request.utils import send_photos
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
-    ProblemType,
+    RequestType,
 )
 from aiogram.types import (
     CallbackQuery,
@@ -65,9 +65,7 @@ async def repair_documents(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(
-        F.end_point == f"{ProblemType.Clean.name}_problem_docs"
-    )
+    ShowRequestCallbackData.filter(F.end_point == f"{RequestType.CR.name}_problem_docs")
 )
 async def cleaning_problem_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -92,9 +90,7 @@ async def cleaning_problem_documents(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(
-        F.end_point == f"{ProblemType.Clean.name}_repair_docs"
-    )
+    ShowRequestCallbackData.filter(F.end_point == f"{RequestType.CR.name}_repair_docs")
 )
 async def cleaning_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -149,7 +145,7 @@ async def reopen_repair_documents(
 
 @router.callback_query(
     ShowRequestCallbackData.filter(
-        F.end_point == f"{ProblemType.Clean.name}_reopen_docs",
+        F.end_point == f"{RequestType.CR.name}_reopen_docs",
     )
 )
 async def cleaning_reopen_documents(

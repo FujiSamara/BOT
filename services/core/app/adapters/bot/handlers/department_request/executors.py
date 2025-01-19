@@ -19,7 +19,7 @@ from app.adapters.bot.states import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
-    ProblemType,
+    RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
 from app.adapters.bot.handlers.utils import (
@@ -55,7 +55,7 @@ class CoordinationFactory:
     def __init__(
         self,
         router: Router,
-        problem_type: ProblemType,
+        problem_type: RequestType,
         executor_menu_button: InlineKeyboardButton,
     ):
         self.type = problem_type
@@ -199,7 +199,7 @@ class CoordinationFactory:
     async def show_history_menu(self, callback: CallbackQuery, state: FSMContext):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 reply_markup = (
                     department_kb.create_kb_with_end_point_TR(
                         end_point=f"{self.name}_show_history_form",
@@ -210,7 +210,7 @@ class CoordinationFactory:
                         ),
                     ),
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.name}_show_history_form",
                     menu_button=self.menu_button,
@@ -237,7 +237,7 @@ class CoordinationFactory:
     ):
         buttons: list[list[InlineKeyboardButton]] = []
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 await show_form_technician(
                     callback=callback,
                     callback_data=callback_data,
@@ -245,7 +245,7 @@ class CoordinationFactory:
                     buttons=buttons,
                     history_or_waiting_button=self.history_button,
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 await show_form_cleaning(
                     callback=callback,
                     callback_data=callback_data,
@@ -257,7 +257,7 @@ class CoordinationFactory:
     async def show_waiting_menu(self, callback: CallbackQuery, state: FSMContext):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 reply_markup = department_kb.create_kb_with_end_point_TR(
                     end_point=f"{self.name}_show_waiting_form",
                     menu_button=self.menu_button,
@@ -266,7 +266,7 @@ class CoordinationFactory:
                         department_name=department_name,
                     ),
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.name}_show_waiting_form",
                     menu_button=self.menu_button,
@@ -304,7 +304,7 @@ class CoordinationFactory:
             ]
         ]
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 await show_form_technician(
                     callback=callback,
                     callback_data=callback_data,
@@ -312,7 +312,7 @@ class CoordinationFactory:
                     buttons=buttons,
                     history_or_waiting_button=self.waiting_button,
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 await show_form_cleaning(
                     callback=callback,
                     callback_data=callback_data,
@@ -359,7 +359,7 @@ class CoordinationFactory:
     async def show_rework_menu(self, callback: CallbackQuery, state: FSMContext):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 reply_markup = department_kb.create_kb_with_end_point_TR(
                     end_point=f"{self.name}_show_rework_form",
                     menu_button=self.menu_button,
@@ -368,7 +368,7 @@ class CoordinationFactory:
                         department_name=department_name,
                     ),
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.name}_show_rework_form",
                     menu_button=self.menu_button,
@@ -405,7 +405,7 @@ class CoordinationFactory:
             ]
         ]
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 await show_form_technician(
                     callback=callback,
                     callback_data=callback_data,
@@ -413,7 +413,7 @@ class CoordinationFactory:
                     buttons=buttons,
                     history_or_waiting_button=self.rework_button,
                 )
-            case ProblemType.Clean:
+            case RequestType.CR:
                 await show_form_cleaning(
                     callback=callback,
                     callback_data=callback_data,
@@ -474,9 +474,9 @@ class CoordinationFactory:
             photo_files.append(await download_file(doc))
 
         match self.type:
-            case ProblemType.Tech:
+            case RequestType.TR:
                 update = update_technical_request_from_repairman
-            case ProblemType.Clean:
+            case RequestType.CR:
                 update = update_cleaning_request_from_cleaner
 
         if not await update(
@@ -509,7 +509,7 @@ async def set_department(message: Message, state: FSMContext):
     if "menu_data" not in data:
         raise KeyError("Menu button in department request not exist")
 
-    type: ProblemType = data.get("type")
+    type: RequestType = data.get("type")
     menu_data: InlineKeyboardButton = data.get("menu_data")
 
     if await handle_department(
@@ -563,11 +563,11 @@ async def set_rework_photo(message: Message, state: FSMContext):
 def build_coordinations():
     CoordinationFactory(
         router=router,
-        problem_type=ProblemType.Tech,
+        problem_type=RequestType.TR,
         executor_menu_button=department_kb.repairman_button,
     )
     CoordinationFactory(
         router=router,
-        problem_type=ProblemType.Clean,
+        problem_type=RequestType.CR,
         executor_menu_button=department_kb.cleaner_button,
     )

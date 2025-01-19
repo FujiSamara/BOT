@@ -7,9 +7,10 @@ from aiogram.fsm.context import FSMContext
 from app.services import get_technical_problem_by_id, get_technical_request_by_id
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
-    ProblemType,
+    RequestType,
 )
 from app.adapters.bot.kb import main_menu_button
+from app.adapters.bot import text
 
 from app.schemas import TechnicalRequestSchema, CleaningRequestSchema
 
@@ -365,7 +366,11 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото проблемы", callback_data="photo_WR_TR_CR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [wr_menu_button],
+        [
+            InlineKeyboardButton(
+                text=text.back, callback_data=wr_menu_button.callback_data
+            ),
+        ],
     ]
 
     if form_complete:
@@ -399,7 +404,7 @@ async def executer_repair_kb(
     callback_data: ShowRequestCallbackData,
     back_button: list[InlineKeyboardButton],
     photo_button: InlineKeyboardButton,
-    executor_type: ProblemType,
+    executor_type: RequestType,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
@@ -437,7 +442,7 @@ async def executer_repair_kb(
 async def executer_work_waiting_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
-    executor_type: ProblemType,
+    executor_type: RequestType,
 ) -> InlineKeyboardMarkup:
     photo_button = InlineKeyboardButton(
         text="Фото проделанной работы",
@@ -469,7 +474,7 @@ async def executer_work_waiting_kb(
 async def executor_repair_rework_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
-    executor_type: ProblemType,
+    executor_type: RequestType,
 ) -> InlineKeyboardMarkup:
     photo_button = InlineKeyboardButton(
         text="Фото проделанной работы",
@@ -514,7 +519,7 @@ TM_CR_button = InlineKeyboardButton(
 async def tm_rate_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
-    problem_type: ProblemType,
+    problem_type: RequestType,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True

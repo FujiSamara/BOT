@@ -269,7 +269,9 @@ async def update_cleaning_request_from_cleaner(
             message=text.notification_territorial_manager_CR,
         )
         await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker_CR
+            id=request.worker.telegram_id,
+            message=text.notification_worker_CR
+            + f"\nЗаявка {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
         )
     return True
 
@@ -392,9 +394,17 @@ async def update_cleaning_request_from_territorial_manager(
                 message=text.notification_cleaner_reopen
                 + f"\nНа предприятие: {request.department.name}",
             )
-        await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id, message=text.notification_worker_CR
-        )
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker_CR
+                + f"\nЗаявка {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
+            )
+        else:
+            await notify_worker_by_telegram_id(
+                id=request.worker.telegram_id,
+                message=text.notification_worker_CR
+                + f"\nЗаявка {request_id} закрыта.\nПредприятие: {request.department.name}",
+            )
 
     return True
 

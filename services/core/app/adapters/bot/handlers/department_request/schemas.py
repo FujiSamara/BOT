@@ -10,6 +10,6 @@ class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
     req_type: int | None = None
 
 
-class ProblemType(Enum):
-    Tech = 1
-    Clean = 2
+class RequestType(Enum):
+    TR = 1  # Technical
+    CR = 2  # Cleaning
