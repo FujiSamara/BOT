@@ -461,16 +461,20 @@ async def rm_repair_waiting_kb(
             last_end_point=callback_data.last_end_point,
         ).pack(),
     )
-    back_button = [
-        InlineKeyboardButton(
-            text="К заявке",
-            callback_data=ShowRequestCallbackData(
-                request_id=callback_data.request_id,
-                end_point="RM_TR_show_form_waiting",
-                last_end_point=callback_data.last_end_point,
-            ).pack(),
-        )
-    ]
+    data = await state.get_data()
+    if "department_name" in data:
+        back_button = [
+            InlineKeyboardButton(
+                text="К заявке",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="RM_TR_show_form_waiting",
+                    last_end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ]
+    else:
+        back_button = main_menu_button
     return await rm_repair_kb(
         state=state,
         callback_data=callback_data,

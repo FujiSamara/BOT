@@ -410,36 +410,55 @@ async def notify_next_coordinator(bid: BidSchema):
         and bid.expenditure.cc.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.cc.telegram_id, message=message
+            bid.expenditure.cc.telegram_id,
+            message=message,
+            reply_markup=reply_markup,
         )
     elif (
         bid.paralegal_state == ApprovalStatus.pending_approval
         and bid.expenditure.paralegal.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.paralegal.telegram_id, message=message
+            bid.expenditure.paralegal.telegram_id,
+            message=message,
+            reply_markup=reply_markup,
         )
     elif bid.kru_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(scope=FujiScope.bot_bid_kru, message=message)
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_kru,
+            message=message,
+            reply_markup=reply_markup,
+        )
     elif bid.owner_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(scope=FujiScope.bot_bid_owner, message=message)
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner,
+            message=message,
+            reply_markup=reply_markup,
+        )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_card, message=message
+            scope=FujiScope.bot_bid_accountant_card,
+            message=message,
+            reply_markup=reply_markup,
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_cash, message=message
+            scope=FujiScope.bot_bid_accountant_cash,
+            message=message,
+            reply_markup=reply_markup,
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_card, message=message
+            scope=FujiScope.bot_bid_teller_card,
+            message=message,
+            reply_markup=reply_markup,
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_in_department_by_scope(
             scope=FujiScope.bot_bid_teller_cash,
             department_id=bid.paying_department.id,
             message=message,
+            reply_markup=reply_markup,
         )
 
 
