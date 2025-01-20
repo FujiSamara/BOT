@@ -218,15 +218,35 @@ async def update_worker_bid_bot(
 
     if state == ApprovalStatus.approved:
         await notify_worker_by_telegram_id(
-            worker.telegram_id,
-            f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
+            id=worker.telegram_id,
+            message=f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full,
+                        endpoint_name="bid",
+                    ).pack(),
+                ),
+            ),
         )
         await notify_next_coordinator(worker_bid)
 
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
-            worker.telegram_id,
-            f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
+            id=worker.telegram_id,
+            message=f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full,
+                        endpoint_name="bid",
+                    ).pack(),
+                ),
+            ),
         )
 
     return True
