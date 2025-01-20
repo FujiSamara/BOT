@@ -438,7 +438,7 @@ async def update_technical_request_from_territorial_manager(
                                 text=text.view,
                                 callback_data=ShowRequestCallbackData(
                                     request_id=request_id,
-                                    end_point="DD_TR_show_form_active", 
+                                    end_point="DD_TR_show_form_active",
                                 ).pack(),
                             )
                         ),
