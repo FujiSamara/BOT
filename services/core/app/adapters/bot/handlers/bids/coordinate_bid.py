@@ -313,7 +313,7 @@ class CoordinationFactory:
                     ).pack(),
                 )
             )
-            if not self.without_decline:
+            if not self.without_decline or not callback_data.without_decline:
                 buttons.append(
                     InlineKeyboardButton(
                         text="Отказать",
@@ -328,7 +328,7 @@ class CoordinationFactory:
             message=message,
             text=caption,
             reply_markup=create_inline_keyboard(*buttons),
-        )
+        )1
 
     def get_specified_bids_keyboard(
         self, type: str, tg_id: int

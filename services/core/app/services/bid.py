@@ -307,6 +307,9 @@ async def update_bid_state(
         notify_worker_by_telegram_id,
     )
 
+    if getattr(bid, state_name) != ApprovalStatus.pending_approval:
+        return
+
     if state == ApprovalStatus.approved:
         skip_repeating_bid_state(bid, state_name)
 
@@ -389,15 +392,18 @@ async def notify_next_coordinator(bid: BidSchema):
         notify_workers_in_department_by_scope,
         notify_worker_by_telegram_id,
     )
+    from app.adapters.bot.kb import create_inline_keyboard
+    from aiogram.types import InlineKeyboardButton
 
     message = f"У вас новая заявка!\nНомер заявки: {bid.id}\nЗаявитель: {bid.worker.l_name} {bid.worker.f_name}"
-
     if (
         bid.fac_state == ApprovalStatus.pending_approval
         and bid.expenditure.fac.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.fac.telegram_id, message=message
+            bid.expenditure.fac.telegram_id,
+            message=message,
+            reply_markup=create_inline_keyboard(),
         )
     elif (
         bid.cc_state == ApprovalStatus.pending_approval
