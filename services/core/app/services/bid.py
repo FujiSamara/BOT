@@ -342,7 +342,7 @@ async def update_bid_state(
                 stage = "Ваша заявка согласована бухгалтерией!"
             case "accountant_cash_state":
                 if bid.paying_department is not None:
-                    stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа производстве {bid.paying_department.name}."
+                    stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа предприятие {bid.paying_department.name}."
                 else:
                     stage = "Денежные средства по вашей заявке готовы к выдачи!"
             case "teller_card_state":

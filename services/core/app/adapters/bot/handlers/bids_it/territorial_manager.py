@@ -76,7 +76,7 @@ async def get_tm_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f'IT заявки ТУ на производстве "{department_name}"'),
+        text=hbold(f'IT заявки ТУ на предприятие "{department_name}"'),
         reply_markup=tm_bids_it_menu,
     )
 
@@ -130,7 +130,7 @@ async def set_department_type(message: Message, state: FSMContext):
         await state.update_data(department=message.text)
         await try_edit_or_answer(
             message=message,
-            text=hbold(f'IT заявки ТУ на производстве "{message.text}"'),
+            text=hbold(f'IT заявки ТУ на предприятие "{message.text}"'),
             reply_markup=tm_bids_it_menu,
         )
     else:
@@ -293,7 +293,7 @@ async def send_bid_it_tm(callback: CallbackQuery, state: FSMContext):
     await state.update_data(department=data.get("department"))
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f'IT заявки ТУ на производстве "{data.get("department")}"'),
+        text=hbold(f'IT заявки ТУ на предприятие "{data.get("department")}"'),
         reply_markup=tm_bids_it_menu,
     )
 

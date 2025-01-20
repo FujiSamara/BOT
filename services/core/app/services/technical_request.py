@@ -165,7 +165,7 @@ async def create_technical_request(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
                 reply_markup=create_inline_keyboard(
                     InlineKeyboardButton(
                         text=text.view,
@@ -187,7 +187,7 @@ async def create_technical_request(
             for director_extensive_development in directors_extensive_development:
                 await notify_worker_by_telegram_id(
                     id=director_extensive_development.telegram_id,
-                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
                     reply_markup=create_inline_keyboard(
                         InlineKeyboardButton(
                             text=text.view,
@@ -201,7 +201,7 @@ async def create_technical_request(
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=text.view,
@@ -267,7 +267,7 @@ async def update_technical_request_from_repairman(
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
             message=text.notification_territorial_manager
-            + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=text.view,
@@ -300,7 +300,7 @@ async def update_technical_request_from_repairman(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
                 reply_markup=create_inline_keyboard(
                     InlineKeyboardButton(
                         text=text.view,
@@ -322,7 +322,7 @@ async def update_technical_request_from_repairman(
             for director_extensive_development in directors_extensive_development:
                 await notify_worker_by_telegram_id(
                     id=director_extensive_development.telegram_id,
-                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
                     reply_markup=create_inline_keyboard(
                         InlineKeyboardButton(
                             text=text.view,
@@ -390,7 +390,7 @@ async def update_technical_request_from_territorial_manager(
             await notify_worker_by_telegram_id(
                 id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
-                + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
+                + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
                 reply_markup=create_inline_keyboard(
                     InlineKeyboardButton(
                         text=text.view,
@@ -409,7 +409,7 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
-                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
                     reply_markup=create_inline_keyboard(
                         InlineKeyboardButton(
                             text=text.view,
@@ -432,7 +432,7 @@ async def update_technical_request_from_territorial_manager(
                 for director_extensive_development in directors_extensive_development:
                     await notify_worker_by_telegram_id(
                         id=director_extensive_development.telegram_id,
-                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
                         reply_markup=create_inline_keyboard(
                             InlineKeyboardButton(
                                 text=text.view,
