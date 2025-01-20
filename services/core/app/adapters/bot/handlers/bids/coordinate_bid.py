@@ -301,8 +301,15 @@ class CoordinationFactory:
                 ).pack(),
             ),
         ]
-
-        if callback_data.mode == BidViewMode.full_with_approve:
+        condition = (
+            getattr(bid, self.name + "_state") == ApprovalStatus.pending_approval
+        )
+        if self.name == "fac":
+            condition = (
+                getattr(bid, "fac_state") == ApprovalStatus.pending_approval
+                or getattr(bid, "cc_state") == ApprovalStatus.pending_approval
+            )
+        if callback_data.mode == BidViewMode.full_with_approve and condition:
             buttons.append(
                 InlineKeyboardButton(
                     text=self.approve_button_text,
@@ -313,7 +320,7 @@ class CoordinationFactory:
                     ).pack(),
                 )
             )
-            if not self.without_decline or not callback_data.without_decline:
+            if not self.without_decline:
                 buttons.append(
                     InlineKeyboardButton(
                         text="Отказать",
@@ -328,7 +335,7 @@ class CoordinationFactory:
             message=message,
             text=caption,
             reply_markup=create_inline_keyboard(*buttons),
-        )1
+        )
 
     def get_specified_bids_keyboard(
         self, type: str, tg_id: int

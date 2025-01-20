@@ -20,6 +20,18 @@ from app.schemas import (
     DocumentSchema,
     WorkerSchema,
 )
+from aiogram.types import InlineKeyboardButton
+from app.adapters.bot.kb import create_inline_keyboard
+from app.adapters.bot.text import view
+from app.adapters.bot.handlers.worker_bids.schemas import (
+    WorkerBidCallbackData,
+    BidViewMode,
+)
+
+states = {
+    "security_service_state",
+    "accounting_service_state",
+}
 
 
 async def update_worker_bid_state(state: ApprovalStatus, bid_id):
@@ -103,21 +115,56 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
     return False
 
 
-async def notify_next_coordinator(bid_id, state_column):
+async def notify_next_coordinator(bid: WorkerBidSchema):
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
 
+    state_column = None
+    for state_name in states:
+        if getattr(bid, state_name) == ApprovalStatus.pending_approval:
+            state_column = state_name
+            break
+    if state_column is None:
+        return
+
     match state_column:
-        case "security_service":
+        case "security_service_state":
             for worker in orm.get_workers_with_scope(
                 scope=FujiScope.bot_worker_bid_security_coordinate
             ):
                 if worker.telegram_id is not None:
                     await notify_worker_by_telegram_id(
                         id=worker.telegram_id,
-                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid_id}.",
+                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
+                        reply_markup=create_inline_keyboard(
+                            InlineKeyboardButton(
+                                text=view,
+                                callback_data=WorkerBidCallbackData(
+                                    id=bid.id,
+                                    mode=BidViewMode.full_with_approve,
+                                    endpoint_name="get_pending_bid_security_service",
+                                ).pack(),
+                            )
+                        ),
                     )
-        case "accounting_service":
-            return
+        case "accounting_service_state":
+            for worker in orm.get_workers_with_scope(
+                scope=FujiScope.bot_worker_bid_accounting_coordinate
+            ):
+                if worker.telegram_id is not None:
+                    await notify_worker_by_telegram_id(
+                        id=worker.telegram_id,
+                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
+                        reply_markup=create_inline_keyboard(
+                            InlineKeyboardButton(
+                                text=view,
+                                callback_data=WorkerBidCallbackData(
+                                    id=bid.id,
+                                    mode=BidViewMode.full_with_approve,
+                                    endpoint_name="get_pending_bid_accounting_service",
+                                ).pack(),
+                            )
+                        ),
+                    )
 
 
 async def update_worker_bid_bot(
@@ -137,7 +184,11 @@ async def update_worker_bid_bot(
     if not worker_bid:
         logger.error(f"Worker bid with id: {bid_id} not found.")
         return False
-
+    if (
+        getattr(worker_bid, state_column_name + "_state")
+        != ApprovalStatus.pending_approval
+    ):
+        return
     if state == ApprovalStatus.denied:
         worker_bid.state = state
 
@@ -150,6 +201,7 @@ async def update_worker_bid_bot(
                 worker_bid.accounting_service_state = ApprovalStatus.pending_approval
         case "accounting_service":
             stage = "бухгалтерией"
+            worker_bid.accounting_service_state = state
             worker_bid.state = state
             worker_bid.comment = comment
         case _:
@@ -169,7 +221,7 @@ async def update_worker_bid_bot(
             worker.telegram_id,
             f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
         )
-        await notify_next_coordinator(bid_id, state_column_name)
+        await notify_next_coordinator(worker_bid)
 
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
@@ -248,6 +300,7 @@ async def create_worker_bid(
         work_permission_insts.append(work_permission_inst)
 
     worker_bid = WorkerBidSchema(
+        id=last_bid_id + 1,
         f_name=f_name,
         l_name=l_name,
         o_name=o_name,
@@ -268,7 +321,7 @@ async def create_worker_bid(
     )
 
     orm.add_worker_bid(worker_bid)
-    await notify_next_coordinator(last_bid_id + 1, "security_service")
+    await notify_next_coordinator(worker_bid)
 
 
 def get_pending_approval_bids(state_column) -> list[WorkerBidSchema] | None:

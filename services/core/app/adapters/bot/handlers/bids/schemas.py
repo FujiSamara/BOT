@@ -18,7 +18,6 @@ class BidCallbackData(CallbackData, prefix="bid"):
     mode: BidViewMode
     type: BidViewType
     endpoint_name: str
-    without_decline:int = 0
 
 
 class ActionType(str, Enum):

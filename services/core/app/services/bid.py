@@ -26,6 +26,14 @@ from app.schemas import (
     BidInSchema,
 )
 
+from app.adapters.bot.kb import create_inline_keyboard
+from app.adapters.bot.text import view
+from aiogram.types import InlineKeyboardButton
+from app.adapters.bot.handlers.bids.schemas import (
+    BidCallbackData,
+    BidViewType,
+    BidViewMode,
+)
 
 # In right order
 states = [
@@ -346,7 +354,19 @@ async def update_bid_state(
             case _:
                 stage = "Ваша заявка принята!"
         await notify_worker_by_telegram_id(
-            bid.worker.telegram_id, f"{stage}\nНомер заявки: {bid.id}."
+            bid.worker.telegram_id,
+            f"{stage}\nНомер заявки: {bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full,
+                        type=BidViewType.creation,
+                        endpoint_name="create_bid_info",
+                    ).pack(),
+                )
+            ),
         )
         bid.close_date = datetime.now()
     elif state == ApprovalStatus.denied:
@@ -355,6 +375,17 @@ async def update_bid_state(
             "Ваша заявка отклонена!\nПричина: "
             + bid.denying_reason
             + f"\nНомер заявки: {bid.id}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full,
+                        type=BidViewType.creation,
+                        endpoint_name="create_bid_info",
+                    ).pack(),
+                )
+            ),
         )
         bid.close_date = datetime.now()
 
@@ -392,8 +423,6 @@ async def notify_next_coordinator(bid: BidSchema):
         notify_workers_in_department_by_scope,
         notify_worker_by_telegram_id,
     )
-    from app.adapters.bot.kb import create_inline_keyboard
-    from aiogram.types import InlineKeyboardButton
 
     message = f"У вас новая заявка!\nНомер заявки: {bid.id}\nЗаявитель: {bid.worker.l_name} {bid.worker.f_name}"
     if (
@@ -403,7 +432,17 @@ async def notify_next_coordinator(bid: BidSchema):
         await notify_worker_by_telegram_id(
             bid.expenditure.fac.telegram_id,
             message=message,
-            reply_markup=create_inline_keyboard(),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="fac",
+                    ).pack(),
+                )
+            ),
         )
     elif (
         bid.cc_state == ApprovalStatus.pending_approval
@@ -412,7 +451,17 @@ async def notify_next_coordinator(bid: BidSchema):
         await notify_worker_by_telegram_id(
             bid.expenditure.cc.telegram_id,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="fac",
+                    ).pack(),
+                )
+            ),
         )
     elif (
         bid.paralegal_state == ApprovalStatus.pending_approval
@@ -421,44 +470,103 @@ async def notify_next_coordinator(bid: BidSchema):
         await notify_worker_by_telegram_id(
             bid.expenditure.paralegal.telegram_id,
             message=message,
-            reply_markup=reply_markup,
         )
     elif bid.kru_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
             scope=FujiScope.bot_bid_kru,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="kru",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.owner_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
             scope=FujiScope.bot_bid_owner,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="owner",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
             scope=FujiScope.bot_bid_accountant_card,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="accountant_card",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
             scope=FujiScope.bot_bid_accountant_cash,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="accountant_cash",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
             scope=FujiScope.bot_bid_teller_card,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="teller_card",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_in_department_by_scope(
             scope=FujiScope.bot_bid_teller_cash,
             department_id=bid.paying_department.id,
             message=message,
-            reply_markup=reply_markup,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="teller_cash",
+                    ).pack(),
+                )
+            ),
         )
 
 
