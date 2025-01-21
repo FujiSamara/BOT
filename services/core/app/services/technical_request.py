@@ -393,7 +393,7 @@ def update_technical_request_problem(request_id: int, problem_id: int):
 
 
 def get_all_waiting_technical_requests_for_worker(
-    telegram_id: int,
+    telegram_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
@@ -404,16 +404,16 @@ def get_all_waiting_technical_requests_for_worker(
         logger.error(f"Worker with telegram id {telegram_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.close_date],
-            [worker.id, null()],
-        )[:-16:-1]
+            columns=[TechnicalRequest.worker_id, TechnicalRequest.close_date],
+            values=[worker.id, null()],
+            limit=limit,
+        )
 
     return requests
 
 
 def get_all_waiting_technical_requests_for_repairman(
-    telegram_id: int,
-    department_name: str,
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -431,14 +431,15 @@ def get_all_waiting_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.repairman_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                     TechnicalRequest.confirmation_date,
                 ],
-                [repairman.id, ApprovalStatus.pending, department_id, null()],
-            )[:-16:-1]
+                values=[repairman.id, ApprovalStatus.pending, department_id, null()],
+                limit=limit,
+            )
 
             return requests
 
@@ -469,8 +470,7 @@ def get_all_rework_technical_requests_for_repairman(
 
 
 def get_all_waiting_technical_requests_for_territorial_manager(
-    telegram_id: int,
-    department_name: str,
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for territorial_manager
@@ -490,24 +490,24 @@ def get_all_waiting_technical_requests_for_territorial_manager(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.territorial_manager_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                 ],
-                [
+                values=[
                     territorial_manager.id,
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
-            )[:-16:-1]
+                limit=limit,
+            )
 
             return requests
 
 
 def get_all_active_technical_requests_for_department_director(
-    telegram_id: int,
-    department_name: str,
+    department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for department_director
@@ -520,12 +520,13 @@ def get_all_active_technical_requests_for_department_director(
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
             history_flag=False,
-        )[:-16:-1]
+            limit=limit,
+        )
         return requests
 
 
 def get_all_history_technical_requests_for_repairman(
-    telegram_id: int, department_name: str
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for repairman
@@ -543,14 +544,14 @@ def get_all_history_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_for_repairman_history(
-                repairman.id, department_id
-            )[:-16:-1]
+                repairman.id, department_id, limit=limit
+            )
 
             return requests
 
 
 def get_all_history_technical_requests_for_territorial_manager(
-    tg_id: int, department_name: str
+    tg_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for territorial_manager
@@ -568,19 +569,23 @@ def get_all_history_technical_requests_for_territorial_manager(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.territorial_manager_id,
                     TechnicalRequest.department_id,
                 ],
-                [territorial_manager.id, department_id],
+                values=[
+                    territorial_manager.id,
+                    department_id,
+                ],
                 history=True,
-            )[:-16:-1]
+                limit=limit,
+            )
 
             return requests
 
 
 def get_all_history_technical_requests_for_worker(
-    tg_id: int,
+    tg_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -591,14 +596,17 @@ def get_all_history_technical_requests_for_worker(
         logger.error(f"Worker with telegram id: {tg_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id], [worker.id], history=True
-        )[:-16:-1]
+            columns=[TechnicalRequest.worker_id],
+            values=[worker.id],
+            history=True,
+            limit=limit,
+        )
 
         return requests
 
 
 def get_all_history_technical_requests_for_department_director(
-    department_name: str,
+    department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -611,7 +619,8 @@ def get_all_history_technical_requests_for_department_director(
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
             history_flag=True,
-        )[:-16:-1]
+            limit=limit,
+        )
 
         return requests
 

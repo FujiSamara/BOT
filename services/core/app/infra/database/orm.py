@@ -1238,7 +1238,7 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 
 
 def get_technical_requests_by_columns(
-    columns: list[Any], values: list[Any], history: bool = False
+    columns: list[Any], values: list[Any], history: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
@@ -1255,14 +1255,14 @@ def get_technical_requests_by_columns(
                     TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
-        raw_models = query.order_by(TechnicalRequest.id).all()
+        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
 
 
 def get_all_technical_requests_in_department(
-    department_id: int, history_flag: bool = False
+    department_id: int, history_flag: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema for department director.
@@ -1289,7 +1289,7 @@ def get_all_technical_requests_in_department(
                 )
             )
 
-        raw_models = query.order_by(TechnicalRequest.id).all()
+        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -1323,7 +1323,7 @@ def get_rework_tech_request(
 
 
 def get_technical_requests_for_repairman_history(
-    repairman_id: int, department_id: int
+    repairman_id: int, department_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -1340,7 +1340,8 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
-            .order_by(TechnicalRequest.id)
+            .limit(limit)
+            .order_by(TechnicalRequest.id.desc)
             .all()
         )
         return [
