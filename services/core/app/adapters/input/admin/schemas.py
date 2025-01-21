@@ -343,13 +343,11 @@ class WorkerView(ModelView, model=Worker):
     @staticmethod
     def gender_format(inst, column):
         value = getattr(inst, column)
-
-        return gender_decode_dict[value]
+        return gender_decode_dict.get(value)
 
     @staticmethod
     def worker_status_format(inst, column):
         value = getattr(inst, column)
-
         return worker_status_dict.get(value)
 
     @staticmethod
@@ -555,13 +553,11 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def payment_type_format(inst, column):
         value = getattr(inst, column)
-
         return payment_type_dict.get(value)
 
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-
         return approval_status_dict.get(value)
 
     @action(
@@ -704,7 +700,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-        return approval_status_technical_request_dict[value]
+        return approval_status_technical_request_dict.get(value)
 
     column_formatters = {
         TechnicalRequest.state: approval_status_format,
