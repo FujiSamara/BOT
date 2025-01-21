@@ -438,7 +438,10 @@ async def set_worksheet(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_worker_bid_passport_form")
 async def get_passport_form(callback: CallbackQuery, state: FSMContext):
     await utils.handle_documents_form(
-        callback.message, state, WorkerBidCreating.passport
+        callback.message,
+        state,
+        WorkerBidCreating.passport,
+        text="\nПаспорт, СНИЛС, ИНН, военный билет, свидетельство/а о рождение детей до 14 лет\nДля иностранцев так же вид на жительство, РВП, миграционная карточка",
     )
 
 
@@ -451,7 +454,10 @@ async def set_passport(message: Message, state: FSMContext):
 @router.callback_query(F.data == "get_worker_bid_work_permission_form")
 async def get_work_permission_form(callback: CallbackQuery, state: FSMContext):
     await utils.handle_documents_form(
-        callback.message, state, WorkerBidCreating.work_permission
+        callback.message,
+        state,
+        WorkerBidCreating.work_permission,
+        text="\nПатент, чеки, регистрация",
     )
 
 

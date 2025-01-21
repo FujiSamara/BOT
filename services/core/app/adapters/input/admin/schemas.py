@@ -283,7 +283,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.citizenship: "Гражданство",
         Worker.can_use_crm: "Может использовать CRM",
         Worker.password: "Пароль",
-        Worker.passport: "Паспорт",
+        Worker.passport: "Документы",
         Worker.snils: "СНИЛС",
         Worker.inn: "ИНН",
         Worker.registration: "Регистрация",
@@ -369,8 +369,8 @@ class WorkerView(ModelView, model=Worker):
 
 
 class WorkerPassportView(ModelView, model=WorkerPassport):
-    name = "Паспорт работника"
-    name_plural = "Паспорта работников"
+    name = "Документ работника"
+    name_plural = "Документы работников"
 
     can_create = True
     can_edit = True
@@ -388,7 +388,7 @@ class WorkerPassportView(ModelView, model=WorkerPassport):
 
     column_labels = {
         WorkerPassport.worker: "Работник",
-        WorkerPassport.document: "Паспорт",
+        WorkerPassport.document: "Документ",
     }
 
     form_ajax_refs = {
@@ -496,7 +496,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.department: "Предприятия",
         WorkerBid.work_permission: "Разрешение на работу",
         WorkerBid.worksheet: "Анкета",
-        WorkerBid.passport: "Паспорт",
+        WorkerBid.passport: "Документы",
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
@@ -803,7 +803,7 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
         WorkTime.company: "Компания",
         WorkTime.work_begin: "Начало работы",
         WorkTime.work_end: "Конец работы",
-        WorkTime.work_duration: "Продолжительность (мин)",
+        WorkTime.work_duration: "Продолжительность (часы и доли часа)",
         WorkTime.day: "День",
         WorkTime.rating: "Рейтинг",
         WorkTime.fine: "Штраф",

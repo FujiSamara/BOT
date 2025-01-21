@@ -2628,18 +2628,14 @@ def get_last_worker_id() -> int:
 
 def get_subordinates_in_departments(
     chief_id: int,
-    scopes: list[FujiScope] = [],
     l_name: str | None = None,
 ) -> list[WorkerSchema]:
     with session.begin() as s:
-        departments = (
+        territorial_director_departments = (
             s.execute(
                 select(Department)
                 .filter(
-                    or_(
-                        Department.territorial_manager_id == chief_id,
-                        Department.territorial_director_id == chief_id,
-                    )
+                    Department.territorial_director_id == chief_id,
                 )
                 .order_by(Department.id)
             )
@@ -2647,25 +2643,43 @@ def get_subordinates_in_departments(
             .all()
         )
 
-        stmt = select(Worker).join(
-            PostScope, onclause=Worker.post_id == PostScope.post_id
+        territorial_manager_departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    Department.territorial_manager_id == chief_id,
+                    *[
+                        Department.id != department.id
+                        for department in territorial_director_departments
+                    ],
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
         )
 
-        if l_name is not None:
-            stmt = stmt.filter(Worker.l_name.like(l_name))
-        else:
-            or_filter = False
-            for scope in scopes:
-                or_filter = or_(PostScope.scope == scope, or_filter)
-            stmt = stmt.filter(or_filter)
-
-        or_filter = False
-        for department in departments:
-            or_filter = or_(or_filter, Worker.department_id == department.id)
-
-        stmt = stmt.filter(or_filter)
         raw_workers = (
-            s.execute(stmt.group_by(Worker.id).order_by(Worker.id)).scalars().all()
+            s.execute(
+                select(Worker).filter(
+                    Worker.id != chief_id,
+                    *[
+                        Worker.id != department.territorial_director_id
+                        for department in territorial_manager_departments
+                    ],
+                    or_(
+                        *{
+                            Worker.department_id == department.id
+                            for department in (
+                                territorial_director_departments
+                                + territorial_manager_departments
+                            )
+                        },
+                    ),
+                )
+            )
+            .scalars()
+            .all()
         )
         return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
 
