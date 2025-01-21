@@ -351,16 +351,12 @@ class WorkerView(ModelView, model=Worker):
     @staticmethod
     def gender_format(inst, column):
         value = getattr(inst, column)
-        if value in gender_decode_dict.keys():
-            return gender_decode_dict[value]
-        return None
+        return gender_decode_dict.get(value)
 
     @staticmethod
     def worker_status_format(inst, column):
         value = getattr(inst, column)
-        if value in worker_status_dict.keys():
-            return worker_status_dict[value]
-        return None
+        return worker_status_dict.get(value)
 
     @staticmethod
     def files_format(inst, column):
@@ -565,15 +561,12 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def payment_type_format(inst, column):
         value = getattr(inst, column)
-
         return payment_type_dict.get(value)
 
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-        if value in approval_status_dict.keys():
-            return approval_status_dict.get(value)
-        return None
+        return approval_status_dict.get(value)
 
     @action(
         name="approve_worker_bid",
@@ -715,9 +708,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-        if value in approval_status_technical_request_dict.keys():
-            return approval_status_technical_request_dict[value]
-        return None
+        return approval_status_technical_request_dict.get(value)
 
     column_formatters = {
         TechnicalRequest.state: approval_status_format,
