@@ -229,6 +229,8 @@ async def update_technical_request_from_repairman(
     cur_date = datetime.now()
 
     request: TechnicalRequestSchema = get_technical_request_by_id(request_id=request_id)
+    if request.state != ApprovalStatus.pending:
+        return False
 
     if request.reopen_date:
         request.reopen_repair_date = cur_date
@@ -350,7 +352,8 @@ async def update_technical_request_from_territorial_manager(
     cur_date = datetime.now()
 
     request = get_technical_request_by_id(request_id=request_id)
-
+    if request.state != ApprovalStatus.pending_approval:
+        return False
     request.score = mark
 
     if request.reopen_date:
