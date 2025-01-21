@@ -110,7 +110,7 @@ class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     description = State()
 
 
-class TerritorialManagerRequestForm(StatesGroup):
+class AppraiserRequestForm(StatesGroup):
     department = State()
     mark = State()
     description = State()
