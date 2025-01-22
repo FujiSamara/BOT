@@ -8,6 +8,7 @@ from aiogram.fsm.context import FSMContext
 
 from app.schemas import WorkTimeSchema
 from app.adapters.bot.handlers.rate.schemas import RateFormStatus, RateShiftCallbackData
+from app.adapters.bot.text import back
 
 # Buttons
 main_menu_button = InlineKeyboardButton(text="Главное меню", callback_data="get_menu")
@@ -188,7 +189,11 @@ async def get_create_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
                 callback_data="get_activity_type_form",
             )
         ],
-        [create_bid_menu_button],
+        [
+            InlineKeyboardButton(
+                text=back, callback_data=create_bid_menu_button.callback_data
+            )
+        ],
     ]
     if all_field_exist:
         keyboard.append(

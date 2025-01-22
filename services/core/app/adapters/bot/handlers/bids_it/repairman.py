@@ -130,7 +130,7 @@ async def set_department_type(message: Message, state: FSMContext):
         await try_delete_message(msg)  ##########
         await try_edit_or_answer(
             message=message,
-            text=hbold(f'Заявки на производстве "{message.text}"'),
+            text=hbold(f'Заявки на предприятие "{message.text}"'),
             reply_markup=repairman_bids_it_menu,
         )
     else:
@@ -189,7 +189,7 @@ async def get_repairman_menu(callback: CallbackQuery, state: FSMContext):
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f'Заявки на производстве "{department_name}"'),
+        text=hbold(f'Заявки на предприятие "{department_name}"'),
         reply_markup=repairman_bids_it_menu,
     )
 
@@ -303,7 +303,7 @@ async def send_bid_it_rm(
     await state.update_data(department=department_name)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f'Заявки на производстве "{department_name}"'),
+        text=hbold(f'Заявки на предприятие "{department_name}"'),
         reply_markup=repairman_bids_it_menu,
     )
 

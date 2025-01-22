@@ -85,8 +85,8 @@ def get_departments_names(_all: bool = False) -> list[str]:
     """
     departments_raw = orm.get_departments_columns(Department.name)
     result = [column[0] for column in departments_raw]
-    if not _all and "Нет производства" in result:
-        result.remove("Нет производства")
+    if not _all and "Нет предприятия" in result:
+        result.remove("Нет предприятия")
     return result
 
 
@@ -236,7 +236,7 @@ def get_companies_names():
 def set_tellers_cash_department() -> list[WorkerSchema]:
     """"""
     company_name = "Нет компании"
-    department_name = "Нет производства"
+    department_name = "Нет предприятия"
     if company_name not in get_companies_names():
         orm.create_company(company_name=company_name)
         if department_name in get_departments_names(_all=True):

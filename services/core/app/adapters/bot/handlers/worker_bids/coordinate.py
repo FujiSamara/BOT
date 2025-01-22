@@ -179,12 +179,8 @@ class WorkerBidCoordinationFactory:
                     ).pack(),
                 )
             )
-
-        await try_edit_or_answer(
-            message=callback.message,
-            text=get_full_worker_bid_info(bid),
-            reply_markup=create_inline_keyboard(
-                *buttons,
+        if getattr(bid, self.name + "_state") == ApprovalStatus.pending_approval:
+            buttons.append(
                 InlineKeyboardButton(
                     text="Согласовать",
                     callback_data=WorkerBidCallbackData(
@@ -194,6 +190,8 @@ class WorkerBidCoordinationFactory:
                         state=1,
                     ).pack(),
                 ),
+            )
+            buttons.append(
                 InlineKeyboardButton(
                     text="Отказать",
                     callback_data=WorkerBidCallbackData(
@@ -203,10 +201,18 @@ class WorkerBidCoordinationFactory:
                         state=0,
                     ).pack(),
                 ),
-                InlineKeyboardButton(
-                    text=text.back,
-                    callback_data=self.coordinator_menu_button.callback_data,
-                ),
+            )
+        buttons.append(
+            InlineKeyboardButton(
+                text=text.back,
+                callback_data=self.coordinator_menu_button.callback_data,
+            ),
+        )
+        await try_edit_or_answer(
+            message=callback.message,
+            text=get_full_worker_bid_info(bid),
+            reply_markup=create_inline_keyboard(
+                *buttons,
             ),
         )
 

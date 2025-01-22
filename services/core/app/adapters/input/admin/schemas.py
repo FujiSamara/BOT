@@ -89,7 +89,7 @@ class CompanyView(ModelView, model=Company):
     name = "Компания"
     column_labels = {
         Company.name: "Название",
-        Company.departments: "Производства",
+        Company.departments: "Предприятия",
         Company.workers: "Работники",
     }
 
@@ -124,7 +124,7 @@ class DepartmentView(ModelView, model=Department):
     ]
     can_export = False
 
-    name_plural = "Производства"
+    name_plural = "Предприятия"
     name = "Предприятие"
     column_labels = {
         Department.name: "Название",
