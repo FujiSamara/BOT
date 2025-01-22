@@ -177,7 +177,7 @@ async def show_form(
             ]
         )
     else:
-        buttons.append(main_menu_button)
+        buttons.append([main_menu_button])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
