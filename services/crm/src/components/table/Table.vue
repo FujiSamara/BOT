@@ -127,7 +127,7 @@ onMounted(() => {
 			</div>
 		</Transition>
 		<TransitionGroup
-			name="table"
+			name="shift"
 			tag="div"
 			style="display: inline-block; width: fit-content"
 			:duration="{ enter: 1500, leave: 500 }"
@@ -323,18 +323,6 @@ onMounted(() => {
 				@include checkbox;
 			}
 		}
-	}
-
-	// Transitions
-
-	.table-enter-active,
-	.table-leave-active {
-		transition: all 1s ease;
-	}
-	.table-enter-from,
-	.table-leave-to {
-		opacity: 0;
-		transform: translateY(30px);
 	}
 }
 </style>

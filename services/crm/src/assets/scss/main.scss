@@ -20,4 +20,16 @@ body,
   .fade-leave-active {
     transition: opacity 0.5s !important;
   }
+
+  .shift-enter-active,
+  .shift-leave-active {
+    transition:
+      opacity 1s ease,
+      transform 1s ease !important;
+  }
+  .shift-enter-from,
+  .shift-leave-to {
+    opacity: 0;
+    transform: translateY(30px);
+  }
 }
