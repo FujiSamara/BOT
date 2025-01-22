@@ -43,7 +43,7 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
-    WorkerPassport,
+    WorkerDocument,
 )
 from app.schemas import (
     BidSchema,
@@ -2610,8 +2610,8 @@ def add_worker(record: WorkerSchema) -> bool:
         )
         s.add(worker)
 
-        for doc in record.passport:
-            file = WorkerPassport(
+        for doc in record.documents:
+            file = WorkerDocument(
                 worker=worker,
                 document=doc.document,
             )
@@ -2710,4 +2710,4 @@ def get_last_worker_passport_id(worker_id: int) -> int:
         )
         if raw_worker is None:
             return 0
-        return len(WorkerSchema.model_validate(raw_worker).passport)
+        return len(WorkerSchema.model_validate(raw_worker).documents)
