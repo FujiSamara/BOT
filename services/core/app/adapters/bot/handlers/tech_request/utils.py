@@ -167,7 +167,7 @@ async def show_form(
                 )
             ]
         )
-    if "department_name" in data:
+    if "department_name" in data or "WR" in callback_data.end_point:
         buttons.append(
             [
                 InlineKeyboardButton(
