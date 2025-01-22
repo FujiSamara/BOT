@@ -21,6 +21,10 @@ from app.schemas import (
     DocumentSchema,
 )
 
+from aiogram.types import InlineKeyboardButton
+from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.kb import create_inline_keyboard
+
 
 def counting_date_sla(sla: int):
     deadline_date = datetime.now()
@@ -161,7 +165,16 @@ async def create_technical_request(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=last_technical_request_id + 1,
+                            end_point="show_CT_TR_admin_form",
+                        ).pack(),
+                    )
+                ),
             )
         directors_extensive_development = orm.get_workers_with_scope(
             FujiScope.bot_technical_request_department_director
@@ -174,12 +187,30 @@ async def create_technical_request(
             for director_extensive_development in directors_extensive_development:
                 await notify_worker_by_telegram_id(
                     id=director_extensive_development.telegram_id,
-                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
+                    reply_markup=create_inline_keyboard(
+                        InlineKeyboardButton(
+                            text=text.view,
+                            callback_data=ShowRequestCallbackData(
+                                request_id=last_technical_request_id + 1,
+                                end_point="DD_TR_show_form_active",
+                            ).pack(),
+                        )
+                    ),
                 )
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=last_technical_request_id + 1,
+                        end_point="RM_TR_repair_waiting_form",
+                    ).pack(),
+                )
+            ),
         )
 
     return True
@@ -198,6 +229,8 @@ async def update_technical_request_from_repairman(
     cur_date = datetime.now()
 
     request: TechnicalRequestSchema = get_technical_request_by_id(request_id=request_id)
+    if request.state != ApprovalStatus.pending:
+        return False
 
     if request.reopen_date:
         request.reopen_repair_date = cur_date
@@ -236,11 +269,29 @@ async def update_technical_request_from_repairman(
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
             message=text.notification_territorial_manager
-            + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
+            + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        end_point="TM_TR_show_form_waiting",
+                    ).pack(),
+                )
+            ),
         )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id,
             message=text.notification_worker + f"\nЗаявка {request_id} на проверке ТУ.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        end_point="WR_TR_show_form_history",
+                    ).pack(),
+                )
+            ),
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -251,7 +302,16 @@ async def update_technical_request_from_repairman(
         else:
             await notify_worker_by_telegram_id(
                 id=chief_technician.telegram_id,
-                message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            end_point="show_CT_TR_admin_form",
+                        ).pack(),
+                    )
+                ),
             )
         directors_extensive_development = orm.get_workers_with_scope(
             FujiScope.bot_technical_request_department_director
@@ -264,7 +324,16 @@ async def update_technical_request_from_repairman(
             for director_extensive_development in directors_extensive_development:
                 await notify_worker_by_telegram_id(
                     id=director_extensive_development.telegram_id,
-                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
+                    reply_markup=create_inline_keyboard(
+                        InlineKeyboardButton(
+                            text=text.view,
+                            callback_data=ShowRequestCallbackData(
+                                request_id=request_id,
+                                end_point="DD_TR_show_form_active",
+                            ).pack(),
+                        )
+                    ),
                 )
 
     return True
@@ -283,7 +352,8 @@ async def update_technical_request_from_territorial_manager(
     cur_date = datetime.now()
 
     request = get_technical_request_by_id(request_id=request_id)
-
+    if request.state != ApprovalStatus.pending_approval:
+        return False
     request.score = mark
 
     if request.reopen_date:
@@ -323,7 +393,16 @@ async def update_technical_request_from_territorial_manager(
             await notify_worker_by_telegram_id(
                 id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
-                + f"\nНомер заявки: {request_id}\nНа производстве: {request.department.name}",
+                + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            end_point="RM_TR_show_form_rework",
+                        ).pack(),
+                    )
+                ),
             )
             chief_technician = orm.get_chief_technician(request.department.id)
             if chief_technician is None:
@@ -333,7 +412,16 @@ async def update_technical_request_from_territorial_manager(
             else:
                 await notify_worker_by_telegram_id(
                     id=chief_technician.telegram_id,
-                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                    message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
+                    reply_markup=create_inline_keyboard(
+                        InlineKeyboardButton(
+                            text=text.view,
+                            callback_data=ShowRequestCallbackData(
+                                request_id=request_id,
+                                end_point="show_CT_TR_admin_form",
+                            ).pack(),
+                        )
+                    ),
                 )
 
             directors_extensive_development = orm.get_workers_with_scope(
@@ -347,17 +435,44 @@ async def update_technical_request_from_territorial_manager(
                 for director_extensive_development in directors_extensive_development:
                     await notify_worker_by_telegram_id(
                         id=director_extensive_development.telegram_id,
-                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПроизводство: {request.department.name}",
+                        message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
+                        reply_markup=create_inline_keyboard(
+                            InlineKeyboardButton(
+                                text=text.view,
+                                callback_data=ShowRequestCallbackData(
+                                    request_id=request_id,
+                                    end_point="DD_TR_show_form_active",
+                                ).pack(),
+                            )
+                        ),
                     )
             await notify_worker_by_telegram_id(
                 id=request.worker.telegram_id,
                 message=text.notification_worker
                 + f"\nЗаявка {request_id} отправлена на доработку.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            end_point="WR_TR_show_form_history",
+                        ).pack(),
+                    )
+                ),
             )
         else:
             await notify_worker_by_telegram_id(
                 id=request.worker.telegram_id,
                 message=text.notification_worker + f"\nЗаявка {request_id} закрыта.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            end_point="WR_TR_show_form_history",
+                        ).pack(),
+                    )
+                ),
             )
 
     return True
@@ -380,7 +495,7 @@ def update_tech_request_executor(
         request_id=request_id, repairman_id=repairman.id
     ):
         logger.error(f"Technical request with id: {request_id} wasn't update executor")
-    return repairman.telegram_id
+    return repairman.x
 
 
 def update_technical_request_problem(request_id: int, problem_id: int):

@@ -31,6 +31,8 @@ unclosed_shift_request = "Закройте смену!"
 
 back = "⏪ Назад"
 
+view = "Просмотреть"
+
 
 view = "Просмотреть"
 

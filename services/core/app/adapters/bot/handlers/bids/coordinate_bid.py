@@ -204,7 +204,7 @@ class CoordinationFactory:
         msg = await callback.message.answer(
             message=callback.message,
             text=hbold(
-                f"Выберите предприятие на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+                f"Выберите предприятие на котором будут выданы деньги.\n Заявка с предприятия: {bid.department.name}."
             ),
             reply_markup=create_reply_keyboard(
                 text.back,
@@ -301,8 +301,15 @@ class CoordinationFactory:
                 ).pack(),
             ),
         ]
-
-        if callback_data.mode == BidViewMode.full_with_approve:
+        condition = (
+            getattr(bid, self.name + "_state") == ApprovalStatus.pending_approval
+        )
+        if self.name == "fac":
+            condition = (
+                getattr(bid, "fac_state") == ApprovalStatus.pending_approval
+                or getattr(bid, "cc_state") == ApprovalStatus.pending_approval
+            )
+        if callback_data.mode == BidViewMode.full_with_approve and condition:
             buttons.append(
                 InlineKeyboardButton(
                     text=self.approve_button_text,
@@ -495,7 +502,7 @@ async def set_department(message: Message, state: FSMContext):
 
         msg = await message.answer(
             text=hbold(
-                f"\nВыберите предприятие на котором будут выданы деньги.\n Заявка с производства: {bid.department.name}."
+                f"\nВыберите предприятие на котором будут выданы деньги.\n Заявка с предприятия: {bid.department.name}."
             ),
             reply_markup=create_reply_keyboard(
                 text.back,

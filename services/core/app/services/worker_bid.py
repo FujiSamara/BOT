@@ -184,7 +184,11 @@ async def update_worker_bid_bot(
     if not worker_bid:
         logger.error(f"Worker bid with id: {bid_id} not found.")
         return False
-
+    if (
+        getattr(worker_bid, state_column_name + "_state")
+        != ApprovalStatus.pending_approval
+    ):
+        return
     if state == ApprovalStatus.denied:
         worker_bid.state = state
 
@@ -197,6 +201,7 @@ async def update_worker_bid_bot(
                 worker_bid.accounting_service_state = ApprovalStatus.pending_approval
         case "accounting_service":
             stage = "бухгалтерией"
+            worker_bid.accounting_service_state = state
             worker_bid.state = state
             worker_bid.comment = comment
         case _:
@@ -213,15 +218,35 @@ async def update_worker_bid_bot(
 
     if state == ApprovalStatus.approved:
         await notify_worker_by_telegram_id(
-            worker.telegram_id,
-            f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
+            id=worker.telegram_id,
+            message=f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full,
+                        endpoint_name="bid",
+                    ).pack(),
+                ),
+            ),
         )
         await notify_next_coordinator(bid=worker_bid)
 
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
-            worker.telegram_id,
-            f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
+            id=worker.telegram_id,
+            message=f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full,
+                        endpoint_name="bid",
+                    ).pack(),
+                ),
+            ),
         )
 
     return True
