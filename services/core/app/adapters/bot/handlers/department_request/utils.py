@@ -26,7 +26,11 @@ from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from app.adapters.bot.kb import create_inline_keyboard, create_reply_keyboard
+from app.adapters.bot.kb import (
+    create_inline_keyboard,
+    create_reply_keyboard,
+    main_menu_button,
+)
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
     RequestType,
@@ -180,14 +184,17 @@ async def show_form_technician(
                 )
             ]
         )
-
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                text=text.back, callback_data=history_or_waiting_button.callback_data
-            )
-        ]
-    )
+    if "department_name" in data or "WR" in callback_data.end_point:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=history_or_waiting_button.callback_data,
+                )
+            ]
+        )
+    else:
+        buttons.append([main_menu_button])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
