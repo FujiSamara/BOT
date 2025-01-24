@@ -336,13 +336,17 @@ async def show_form_cleaning(
             ]
         )
 
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                text=text.back, callback_data=history_or_waiting_button.callback_data
-            )
-        ]
-    )
+    if "department_name" in data or "WR" in callback_data.end_point:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=history_or_waiting_button.callback_data,
+                )
+            ]
+        )
+    else:
+        buttons.append([main_menu_button])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:

@@ -23,7 +23,10 @@ from app.schemas import (
 )
 
 from aiogram.types import InlineKeyboardButton
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    RequestType,
+)
 from app.adapters.bot.kb import create_inline_keyboard
 
 
@@ -208,12 +211,11 @@ async def create_technical_request(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=last_technical_request_id + 1,
-                        end_point="RM_TR_repair_waiting_form",
+                        end_point=f"{RequestType.TR.name}_waiting_work_form",
                     ).pack(),
                 )
             ),
         )
-3333
     return True
 
 
@@ -401,9 +403,9 @@ async def update_technical_request_from_territorial_manager(
                         text=text.view,
                         callback_data=ShowRequestCallbackData(
                             request_id=request_id,
-                            end_point="RM_TR_show_form_rework",
+                            end_point=f"{RequestType.TR.name}_show_rework_form",
                         ).pack(),
-                    )333
+                    )
                 ),
             )
             chief_technician = orm.get_chief_technician(request.department.id)
