@@ -205,13 +205,13 @@ async def create_technical_request(
         await notify_worker_by_telegram_id(
             id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятии: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=last_technical_request_id + 1,
-                        end_point=f"{RequestType.TR.name}_waiting_work_form",
+                        end_point=f"{RequestType.TR.name}_show_waiting_form",
                     ).pack(),
                 )
             ),
@@ -272,13 +272,13 @@ async def update_technical_request_from_repairman(
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
             message=text.notification_territorial_manager_TR
-            + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+            + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        end_point="TM_TR_show_form_waiting",
+                        end_point=f"{RequestType.TR.name}_show_waiting_form_TM",
                     ).pack(),
                 )
             ),
@@ -292,7 +292,8 @@ async def update_technical_request_from_repairman(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        end_point="WR_TR_show_form_history",
+                        req_type=1,
+                        end_point="WR_DR_show_form_waiting",
                     ).pack(),
                 )
             ),
@@ -397,7 +398,7 @@ async def update_technical_request_from_territorial_manager(
             await notify_worker_by_telegram_id(
                 id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
-                + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+                + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
                 reply_markup=create_inline_keyboard(
                     InlineKeyboardButton(
                         text=text.view,
@@ -459,7 +460,8 @@ async def update_technical_request_from_territorial_manager(
                         text=text.view,
                         callback_data=ShowRequestCallbackData(
                             request_id=request_id,
-                            end_point="WR_TR_show_form_history",
+                            req_type=1,
+                            end_point="WR_DR_show_form_waiting",
                         ).pack(),
                     )
                 ),
@@ -473,7 +475,8 @@ async def update_technical_request_from_territorial_manager(
                         text=text.view,
                         callback_data=ShowRequestCallbackData(
                             request_id=request_id,
-                            end_point="WR_TR_show_form_history",
+                            req_type=1,
+                            end_point="WR_DR_show_form_history",
                         ).pack(),
                     )
                 ),

@@ -33,6 +33,12 @@ async def create_cleaning_request(
 ) -> bool:
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text as t
+    from aiogram.types import InlineKeyboardButton
+    from app.adapters.bot.handlers.department_request.schemas import (
+        ShowRequestCallbackData,
+        RequestType,
+    )
+    from app.adapters.bot.kb import create_inline_keyboard
 
     """
     Create cleaning request
@@ -89,13 +95,21 @@ async def create_cleaning_request(
     if not orm.create_cleaning_request(request):
         logger.error("Cleaning request record wasn't created")
         return False
-
-    await notify_worker_by_telegram_id(
-        id=cleaner.telegram_id,
-        message=t.notification_cleaner
-        + f"\n На предприятие: {request.department.name}",
-    )
-
+    else:
+        await notify_worker_by_telegram_id(
+            id=request.cleaner.telegram_id,
+            message=t.notification_cleaner
+            + f"\nНомер заявки: {last_cleaning_request_id + 1}\nНа предприятии: {request.department.name}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=t.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=last_cleaning_request_id + 1,
+                        end_point=f"{RequestType.CR.name}_show_waiting_form",
+                    ).pack(),
+                )
+            ),
+        )
     return True
 
 
@@ -133,7 +147,7 @@ def get_all_history_cleaning_requests_for_cleaner(
     try:
         cleaner = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Repairman with telegram id: {tg_id} wasn't found")
+        logger.error(f"Cleaner with telegram id: {tg_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -174,7 +188,7 @@ def get_all_waiting_cleaning_requests_for_cleaner(
     try:
         cleaner = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Repairman with telegram id: {tg_id} wasn't found")
+        logger.error(f"Cleaner with telegram id: {tg_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -205,7 +219,7 @@ def get_all_rework_cleaning_requests_for_cleaner(
     try:
         cleaner = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Repairman with telegram id: {tg_id} wasn't found")
+        logger.error(f"Cleaner with telegram id: {tg_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -231,9 +245,14 @@ async def update_cleaning_request_from_cleaner(
     Update cleaning request
     Notifies territorial manager, chief technician and request of the request #TODO поправить текст
     """
-
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
-    from app.adapters.bot import text
+    from app.adapters.bot import text as t
+    from aiogram.types import InlineKeyboardButton
+    from app.adapters.bot.handlers.department_request.schemas import (
+        ShowRequestCallbackData,
+        RequestType,
+    )
+    from app.adapters.bot.kb import create_inline_keyboard
 
     cur_date = datetime.now()
 
@@ -266,12 +285,31 @@ async def update_cleaning_request_from_cleaner(
     else:
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
-            message=text.notification_territorial_manager_CR,
+            message=t.notification_territorial_manager_TR
+            + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=t.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        end_point=f"{RequestType.CR.name}_show_waiting_form_TM",
+                    ).pack(),
+                )
+            ),
         )
         await notify_worker_by_telegram_id(
             id=request.worker.telegram_id,
-            message=text.notification_worker_CR
-            + f"\nЗаявка {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
+            message=t.notification_worker_CR + f"\nЗаявка {request_id} на проверке ТУ.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=t.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        req_type=2,
+                        end_point="WR_DR_show_form_waiting",
+                    ).pack(),
+                )
+            ),
         )
     return True
 
@@ -354,7 +392,13 @@ async def update_cleaning_request_from_territorial_manager(
     request_id: int,
 ) -> bool:
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
-    from app.adapters.bot import text
+    from app.adapters.bot import text as t
+    from aiogram.types import InlineKeyboardButton
+    from app.adapters.bot.handlers.department_request.schemas import (
+        ShowRequestCallbackData,
+        RequestType,
+    )
+    from app.adapters.bot.kb import create_inline_keyboard
 
     request = orm.get_cleaning_request_by_id(request_id=request_id)
     if request is None:
@@ -391,21 +435,48 @@ async def update_cleaning_request_from_territorial_manager(
         if mark == 1 and request.state == ApprovalStatus.pending:
             await notify_worker_by_telegram_id(
                 id=request.cleaner.telegram_id,
-                message=text.notification_cleaner_reopen
-                + f"\nНа предприятие: {request.department.name}",
+                message=t.notification_cleaner_reopen
+                + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=t.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            end_point=f"{RequestType.CR.name}_show_rework_form",
+                        ).pack(),
+                    )
+                ),
             )
             await notify_worker_by_telegram_id(
                 id=request.worker.telegram_id,
-                message=text.notification_worker_CR
-                + f"\nЗаявка {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
+                message=t.notification_worker_CR
+                + f"\nЗаявка {request_id} отправлена на доработку.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=t.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            req_type=2,
+                            end_point="WR_DR_show_form_waiting",
+                        ).pack(),
+                    )
+                ),
             )
         else:
             await notify_worker_by_telegram_id(
                 id=request.worker.telegram_id,
-                message=text.notification_worker_CR
-                + f"\nЗаявка {request_id} закрыта.\nПредприятие: {request.department.name}",
+                message=t.notification_worker_CR + f"\nЗаявка {request_id} закрыта.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=t.view,
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request_id,
+                            req_type=2,
+                            end_point="WR_DR_show_form_history",
+                        ).pack(),
+                    )
+                ),
             )
-
     return True
 
 

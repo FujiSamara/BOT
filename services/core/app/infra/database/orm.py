@@ -1255,7 +1255,7 @@ def get_technical_requests_by_columns(
                     TechnicalRequest.state == ApprovalStatus.not_relevant,
                 )
             )
-        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc).all()
+        raw_models = query.order_by(TechnicalRequest.id.desc()).limit(limit).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -1289,7 +1289,7 @@ def get_all_technical_requests_in_department(
                 )
             )
 
-        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc).all()
+        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc()).all()
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
