@@ -505,12 +505,12 @@ async def executor_repair_rework_kb(
 
 # region Appraiser (AR)
 
-TM_TR_button = InlineKeyboardButton(
+AR_TR_button = InlineKeyboardButton(
     text="Приём технических заявок", callback_data="get_AR_TR"
 )
 
-TM_CR_button = InlineKeyboardButton(
-    text="Приём заявок клининга", callback_data="get_AP_CR"
+AR_CR_button = InlineKeyboardButton(
+    text="Приём заявок клининга", callback_data="get_AR_CR"
 )
 
 

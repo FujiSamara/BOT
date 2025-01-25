@@ -66,12 +66,13 @@ async def create_cleaning_request(
     cleaner = orm.get_cleaner_in_department(department_id=department.id)
     if cleaner is None:
         logger.error(f"Cleaner from department id: {department.id} wasn't found")
-
-    territorial_manager = orm.get_territorial_manager_by_department_id(department.id)
-    if territorial_manager is None:
-        logger.error(
-            f"Territorial manager with department id: {department.id} wasn't found"
-        )
+    appraiser = orm.get_restaurant_manager_by_department_id(department_id=department.id)
+    if appraiser is None:
+        appraiser = orm.get_territorial_manager_by_department_id(department.id)
+        if appraiser is None:
+            logger.error(
+                f"Territorial manager with department id: {department.id} wasn't found"
+            )
 
     documents = []
     for index, doc in enumerate(photo_files):
@@ -88,7 +89,7 @@ async def create_cleaning_request(
         open_date=cur_date,
         worker=worker,
         cleaner=cleaner,
-        territorial_manager=territorial_manager,
+        appraiser=appraiser,
         department=department,
     )
 
@@ -285,14 +286,14 @@ async def update_cleaning_request_from_cleaner(
     else:
         await notify_worker_by_telegram_id(
             id=request.territorial_manager.telegram_id,
-            message=t.notification_territorial_manager_TR
+            message=t.notification_appraiser_TR
             + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=t.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        end_point=f"{RequestType.CR.name}_show_waiting_form_TM",
+                        end_point=f"{RequestType.CR.name}_show_waiting_form_AR",
                     ).pack(),
                 )
             ),
@@ -318,7 +319,7 @@ async def update_cleaning_request_from_cleaner(
 # region Territorial manager
 
 
-def get_all_history_cleaning_requests_for_territorial_manager(
+def get_all_history_cleaning_requests_for_appraiser(
     tg_id: int,
     department_name: str,
 ):
@@ -358,7 +359,7 @@ def get_all_history_cleaning_requests_for_territorial_manager(
     return requests
 
 
-def get_all_waiting_cleaning_requests_for_territorial_manager(
+def get_all_waiting_cleaning_requests_for_appraiser(
     tg_id: int,
     department_name: str,
 ):
@@ -386,7 +387,7 @@ def get_all_waiting_cleaning_requests_for_territorial_manager(
     return requests
 
 
-async def update_cleaning_request_from_territorial_manager(
+async def update_cleaning_request_from_appraiser(
     mark: int,
     description: str,
     request_id: int,

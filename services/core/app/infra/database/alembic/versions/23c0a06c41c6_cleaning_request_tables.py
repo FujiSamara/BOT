@@ -1,7 +1,7 @@
 """cleaning request tables
 
 Revision ID: 23c0a06c41c6
-Revises: 7373aeb0e65f
+Revises: d4f431dbac29
 Create Date: 2025-01-07 12:50:20.411469
 
 """
@@ -41,7 +41,7 @@ old_options = (
     "bot_technical_request_worker",
     "bot_technical_request_repairman",
     "bot_technical_request_chief_technician",
-    "bot_technical_request_territorial_manager",
+    "bot_technical_request_appraiser",
     "bot_technical_request_department_director",
     "bot_bid_it_worker",
     "bot_bid_it_repairman",
@@ -57,14 +57,14 @@ new_options = sorted(
     old_options
     + (
         "bot_cleaning_request_cleaner",
-        "bot_cleaning_request_territorial_manager",
+        "bot_cleaning_request_appraiser",
     )
 )
 table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "23c0a06c41c6"
-down_revision: Union[str, None] = "05034881b2b5"
+down_revision: Union[str, None] = "d4f431dbac29"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -100,7 +100,7 @@ def upgrade() -> None:
         sa.Column("score", sa.Integer(), nullable=True),
         sa.Column("cleaner_id", sa.Integer(), nullable=False),
         sa.Column("worker_id", sa.Integer(), nullable=False),
-        sa.Column("territorial_manager_id", sa.Integer(), nullable=False),
+        sa.Column("appraiser_id", sa.Integer(), nullable=False),
         sa.Column("department_id", sa.Integer(), nullable=False),
         sa.Column("open_date", sa.DateTime(), nullable=False),
         sa.Column("cleaning_date", sa.DateTime(), nullable=True),
@@ -125,7 +125,7 @@ def upgrade() -> None:
             ["cleaning_problems.id"],
         ),
         sa.ForeignKeyConstraint(
-            ["territorial_manager_id"],
+            ["appraiser_id"],
             ["workers.id"],
         ),
         sa.ForeignKeyConstraint(

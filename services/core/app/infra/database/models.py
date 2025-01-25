@@ -452,12 +452,10 @@ class Worker(Base):
         back_populates="cleaner",
         foreign_keys="[CleaningRequest.cleaner_id]",
     )
-    territorial_manager_cleaning_requests: Mapped[List["CleaningRequest"]] = (
-        relationship(
-            "CleaningRequest",
-            back_populates="territorial_manager",
-            foreign_keys="[CleaningRequest.territorial_manager_id]",
-        )
+    appraiser_cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
+        "CleaningRequest",
+        back_populates="appraiser",
+        foreign_keys="[CleaningRequest.appraiser_id]",
     )
 
     passport: Mapped[List["WorkerPassport"]] = relationship(
@@ -1232,13 +1230,11 @@ class CleaningRequest(Base):
         foreign_keys=[worker_id],
     )
 
-    territorial_manager_id: Mapped[int] = mapped_column(
-        ForeignKey("workers.id"), nullable=False
-    )
-    territorial_manager: Mapped["Worker"] = relationship(
+    appraiser_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    appraiser: Mapped["Worker"] = relationship(
         "Worker",
-        back_populates="territorial_manager_cleaning_requests",
-        foreign_keys=[territorial_manager_id],
+        back_populates="appraiser_cleaning_requests",
+        foreign_keys=[appraiser_id],
     )
 
     department_id: Mapped[int] = mapped_column(

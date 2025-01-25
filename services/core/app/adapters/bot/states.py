@@ -125,7 +125,7 @@ class DepartmentDirectorRequestForm(StatesGroup):
     description = State()
 
 
-# Persconal Cabinet form
+# Personal Cabinet form
 class PersonalCabinet(StatesGroup):
     department = State()
     menu = State()

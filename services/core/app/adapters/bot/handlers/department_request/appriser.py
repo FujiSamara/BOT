@@ -14,7 +14,7 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import (
     Base,
-    TerritorialManagerRequestForm,
+    AppraiserRequestForm,
 )
 
 from app.adapters.bot.handlers.department_request.utils import (
@@ -35,17 +35,17 @@ from app.adapters.bot.handlers.utils import (
 
 
 from app.services import (
-    get_all_history_technical_requests_for_territorial_manager,
-    get_all_history_cleaning_requests_for_territorial_manager,
-    get_all_waiting_technical_requests_for_territorial_manager,
-    get_all_waiting_cleaning_requests_for_territorial_manager,
-    get_departments_names_for_territorial_manager,
-    update_technical_request_from_territorial_manager,
-    update_cleaning_request_from_territorial_manager,
+    get_all_history_technical_requests_for_appraiser,
+    get_all_history_cleaning_requests_for_appraiser,
+    get_all_waiting_technical_requests_for_appraiser,
+    get_all_waiting_cleaning_requests_for_appraiser,
+    get_departments_names_for_appraiser,
+    update_technical_request_from_appraiser,
+    update_cleaning_request_from_appraiser,
 )
 from app.infra.database.models import ApprovalStatus
 
-router = Router(name="department_request_territorial_manager")
+router = Router(name="department_request_appraiser")
 
 
 class CoordinationFactory:
@@ -110,7 +110,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.show_waiting_form,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_show_waiting_form_TM"
+                F.end_point == f"{self.problem_type.name}_show_waiting_form_AR"
             ),
         )
         router.callback_query.register(
@@ -122,7 +122,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.show_rate_request,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_rate_TM",
+                F.end_point == f"{self.problem_type.name}_rate_AR",
             ),
         )
         router.callback_query.register(
@@ -134,7 +134,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.save_rate,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_save_rate_TM"
+                F.end_point == f"{self.problem_type.name}_save_rate_AR"
             ),
         )
 
@@ -149,7 +149,7 @@ class CoordinationFactory:
         )
 
     async def change_department(self, callback: CallbackQuery, state: FSMContext):
-        await state.set_state(TerritorialManagerRequestForm.department)
+        await state.set_state(AppraiserRequestForm.department)
         await state.update_data(
             generator=self.show_department_menu,
             menu_markup=self.menu_markup,
@@ -158,7 +158,7 @@ class CoordinationFactory:
         department_names = department_names_with_count(
             state=ApprovalStatus.pending_approval,
             tg_id=callback.message.chat.id,
-            department_names=get_departments_names_for_territorial_manager(
+            department_names=get_departments_names_for_appraiser(
                 callback.message.chat.id
             ),
             type=self.problem_type,
@@ -188,7 +188,7 @@ class CoordinationFactory:
                         end_point=f"{self.problem_type.name}_show_form_history_TM",
                         menu_button=self.menu_button,
                         requests=(
-                            get_all_history_technical_requests_for_territorial_manager(
+                            get_all_history_technical_requests_for_appraiser(
                                 tg_id=callback.message.chat.id,
                                 department_name=department_name,
                             )
@@ -199,7 +199,7 @@ class CoordinationFactory:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
                     end_point=f"{self.problem_type.name}_show_form_history_TM",
                     menu_button=self.menu_button,
-                    requests=get_all_history_cleaning_requests_for_territorial_manager(
+                    requests=get_all_history_cleaning_requests_for_appraiser(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
@@ -245,18 +245,18 @@ class CoordinationFactory:
         match self.problem_type:
             case RequestType.TR:
                 reply_markup = department_kb.create_kb_with_end_point_TR(
-                    end_point=f"{self.problem_type.name}_show_waiting_form_TM",
+                    end_point=f"{self.problem_type.name}_show_waiting_form_AR",
                     menu_button=self.menu_button,
-                    requests=get_all_waiting_technical_requests_for_territorial_manager(
+                    requests=get_all_waiting_technical_requests_for_appraiser(
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
-                    end_point=f"{self.problem_type.name}_show_waiting_form_TM",
+                    end_point=f"{self.problem_type.name}_show_waiting_form_AR",
                     menu_button=self.menu_button,
-                    requests=get_all_waiting_cleaning_requests_for_territorial_manager(
+                    requests=get_all_waiting_cleaning_requests_for_appraiser(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
@@ -335,7 +335,7 @@ class CoordinationFactory:
         state: FSMContext,
         callback_data: ShowRequestCallbackData,
     ):
-        await state.set_state(TerritorialManagerRequestForm.mark)
+        await state.set_state(AppraiserRequestForm.mark)
         await state.update_data(
             request_id=callback_data.request_id,
             generator=self.show_rate_form,
@@ -355,7 +355,7 @@ class CoordinationFactory:
         state: FSMContext,
         callback_data: ShowRequestCallbackData,
     ):
-        await state.set_state(TerritorialManagerRequestForm.description)
+        await state.set_state(AppraiserRequestForm.description)
         await try_delete_message(callback.message)
         msg = await callback.message.answer(text=hbold("Введите комментарий:"))
         await state.update_data(msg=msg, generator=self.show_rate_form)
@@ -374,9 +374,9 @@ class CoordinationFactory:
         message = callback.message
         match self.problem_type:
             case RequestType.TR:
-                update: Callable = update_technical_request_from_territorial_manager
+                update: Callable = update_technical_request_from_appraiser
             case RequestType.CR:
-                update: Callable = update_cleaning_request_from_territorial_manager
+                update: Callable = update_cleaning_request_from_appraiser
 
         if not await update(mark=mark, request_id=request_id, description=description):
             message = await try_edit_or_answer(
@@ -396,7 +396,7 @@ class CoordinationFactory:
         )
 
 
-@router.message(TerritorialManagerRequestForm.department)
+@router.message(AppraiserRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
     data = await state.get_data()
     if "menu_markup" not in data:
@@ -411,7 +411,7 @@ async def set_department(message: Message, state: FSMContext):
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
         tg_id=message.chat.id,
-        department_names=get_departments_names_for_territorial_manager(message.chat.id),
+        department_names=get_departments_names_for_appraiser(message.chat.id),
         type=problem_type,
     )
 
@@ -424,7 +424,7 @@ async def set_department(message: Message, state: FSMContext):
         await show_department_menu(message)
 
 
-@router.message(TerritorialManagerRequestForm.description)
+@router.message(AppraiserRequestForm.description)
 async def set_description(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     data = await state.get_data()
@@ -439,7 +439,7 @@ async def set_description(message: Message, state: FSMContext):
     await show_rate_form(message, state)
 
 
-@router.message(TerritorialManagerRequestForm.mark)
+@router.message(AppraiserRequestForm.mark)
 async def set_mark(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -472,10 +472,10 @@ def build_coordinations():
     CoordinationFactory(
         router=router,
         problem_type=RequestType.TR,
-        menu_button=department_kb.TM_TR_button,
+        menu_button=department_kb.AP_TR_button,
     )
     CoordinationFactory(
         router=router,
         problem_type=RequestType.CR,
-        menu_button=department_kb.TM_CR_button,
+        menu_button=department_kb.AR_CR_button,
     )

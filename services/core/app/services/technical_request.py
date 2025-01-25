@@ -279,7 +279,7 @@ async def update_technical_request_from_repairman(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        end_point=f"{RequestType.TR.name}_show_waiting_form_AP",
+                        end_point=f"{RequestType.TR.name}_show_waiting_form_AR",
                     ).pack(),
                 )
             ),
@@ -676,9 +676,7 @@ def get_all_history_technical_requests_for_appraiser(
     Return all history technical requests by Telegram id for appraiser
     """
     try:
-        appraiser = orm.get_workers_with_post_by_column(
-            Worker.telegram_id, tg_id
-        )[0]
+        appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
         logger.error(f"Appraiser with telegram id: {tg_id} wasn't found")
     else:

@@ -2686,7 +2686,7 @@ def create_cleaning_request(record: CleaningRequestSchema) -> bool:
             reopen_cleaning_date=None,
             worker_id=record.worker.id,
             cleaner_id=record.cleaner.id,
-            territorial_manager_id=record.territorial_manager.id,
+            territorial_manager_id=record.appraiser.id,
             department_id=record.department.id,
         )
         s.add(cleaning_request)

@@ -424,7 +424,7 @@ class CleaningRequestSchema(BaseSchemaPK):
     problem_photos: list[DocumentSchema] | None = None
     cleaning_photos: list[DocumentSchema] | None = None
     cleaner: WorkerSchema
-    territorial_manager: WorkerSchema
+    appraiser: WorkerSchema
     department: DepartmentSchema
 
     open_date: datetime.datetime
