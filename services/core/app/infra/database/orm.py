@@ -2672,7 +2672,6 @@ def get_subordinates_in_departments(
             .scalars()
             .all()
         )
-
         raw_workers = (
             s.execute(
                 select(Worker).filter(
@@ -2689,7 +2688,9 @@ def get_subordinates_in_departments(
                                 + territorial_manager_departments
                             )
                         },
+                        False,
                     ),
+                    Worker.l_name == l_name if l_name is not None else True,
                 )
             )
             .scalars()

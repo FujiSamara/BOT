@@ -1,7 +1,7 @@
 """rename worker passport table, rename passport in worker into documents
 
 Revision ID: 7e9dbb5c710e
-Revises: 05034881b2b5
+Revises: d4f431dbac29
 Create Date: 2025-01-22 12:13:22.315339
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "7e9dbb5c710e"
-down_revision: Union[str, None] = "05034881b2b5"
+down_revision: Union[str, None] = "d4f431dbac29"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
