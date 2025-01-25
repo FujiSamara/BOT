@@ -1231,13 +1231,15 @@ def get_repairman_by_department_id_and_executor_type(
             return None
 
 
-def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema:
+def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema | None:
     with session.begin() as s:
         restaurant_manager: Worker = (
             s.execute(select(Department).filter(Department.id == department_id))
             .scalars()
             .first()
         ).restaurant_manager
+        if restaurant_manager is None:
+            return None
         return WorkerSchema.model_validate(restaurant_manager)
 
 
