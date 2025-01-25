@@ -3,7 +3,7 @@ from aiogram import Router
 from app.adapters.bot.handlers.tech_request import (
     worker,
     repairman,
-    territorial_manager,
+    appraiser,
     chief_technician,
     department_director,
     local_handlers,
@@ -15,7 +15,7 @@ router.include_routers(
     worker.router,
     repairman.router,
     chief_technician.router,
-    territorial_manager.router,
+    appraiser.router,
     local_handlers.router,
     department_director.router,
 )
