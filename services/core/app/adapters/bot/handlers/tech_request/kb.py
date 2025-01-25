@@ -301,6 +301,8 @@ wr_menu = InlineKeyboardMarkup(
 
 
 async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
+    from app.adapters.bot.text import back
+
     data = await state.get_data()
     form_complete = True
     problem_name = data.get("problem_name")
@@ -353,7 +355,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [wr_menu_button],
+        [InlineKeyboardButton(text=back, callback_data=wr_menu_button.callback_data)],
     ]
 
     if form_complete:
@@ -514,30 +516,30 @@ async def rm_repair_rework_kb(
 
 # endregion
 
-# region Territorial manager (TM)
+# region Appraiser (AR)
 
 tm_button = InlineKeyboardButton(
-    text="Приём технических заявок", callback_data="get_TM_TR"
+    text="Приём технических заявок", callback_data="get_AR_TR"
 )
 
-tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TM_TR_menu")
+tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_AR_TR_menu")
 
 tm_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_TM_TR_waiting"
+    text="Ожидающие заявки", callback_data="get_AR_TR_waiting"
 )
 
 tm_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_TM_TR_history"
+    text="История заявок", callback_data="get_AR_TR_history"
 )
 
-tm_change_department_button = InlineKeyboardButton(
+appraiser_change_department_button = InlineKeyboardButton(
     text="Выбрать предприятие",
-    callback_data="set_TM_TR_department",
+    callback_data="set_AR_TR_department",
 )
 
 tm_change_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [tm_change_department_button],
+        [appraiser_change_department_button],
         [main_menu_button],
     ]
 )
@@ -579,7 +581,7 @@ async def tm_rate_kb(
                 text="Оценка",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="TM_TR_rate",
+                    end_point="AR_TR_rate",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -590,7 +592,7 @@ async def tm_rate_kb(
                 text="Комментарий",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="description_TM_TR",
+                    end_point="description_AR_TR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -601,7 +603,7 @@ async def tm_rate_kb(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="TM_TR_show_form_waiting",
+                    end_point="AR_TR_show_form_waiting",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
@@ -623,7 +625,7 @@ async def tm_rate_kb(
                 InlineKeyboardButton(
                     text=text,
                     callback_data=ShowRequestCallbackData(
-                        end_point="save_TM_TR_rate",
+                        end_point="save_AR_TR_rate",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )

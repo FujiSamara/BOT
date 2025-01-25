@@ -123,12 +123,13 @@ async def create_technical_request(
         logger.error(
             f"Repairman from department id: {department.id} and responsible by {problem.executor.name} wasn't found"
         )
-
-    territorial_manager = orm.get_territorial_manager_by_department_id(department.id)
-    if not territorial_manager:
-        logger.error(
-            f"Territorial manager with department id: {department.id} wasn't found"
-        )
+    appraiser = orm.get_restaurant_manager_by_department_id(department.id)
+    if appraiser is None:
+        appraiser = orm.get_territorial_manager_by_department_id(department.id)
+        if appraiser is None:
+            logger.error(
+                f"Territorial manager with department id: {department.id} wasn't found"
+            )
 
     documents = []
     for index, doc in enumerate(photo_files):
@@ -148,7 +149,7 @@ async def create_technical_request(
         deadline_date=deadline_date,
         worker=worker,
         repairman=repairman,
-        territorial_manager=territorial_manager,
+        appraiser=appraiser,
         department=department,
         repairman_worktime=0,
     )
@@ -181,7 +182,7 @@ async def create_technical_request(
         )
         if directors_extensive_development == []:
             logger.error(
-                f"The Director of Extensive Development wasn't found at department {request.department.id}"
+                f"The Directors of Extensive Development wasn't found at department {request.department.id}"
             )
         else:
             for director_extensive_development in directors_extensive_development:
@@ -224,7 +225,7 @@ async def update_technical_request_from_repairman(
 
     """
     Update technical request
-    Notifies territorial manager, chief technician and request of the request
+    Notifies appraiser, chief technician and request of the request
     """
     cur_date = datetime.now()
 
@@ -267,15 +268,15 @@ async def update_technical_request_from_repairman(
         return False
     else:
         await notify_worker_by_telegram_id(
-            id=request.territorial_manager.telegram_id,
-            message=text.notification_territorial_manager
+            id=request.appraiser.telegram_id,
+            message=text.notification_appraiser
             + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
                     text=text.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        end_point="TM_TR_show_form_waiting",
+                        end_point="AR_TR_show_form_waiting",
                     ).pack(),
                 )
             ),
@@ -339,7 +340,7 @@ async def update_technical_request_from_repairman(
     return True
 
 
-async def update_technical_request_from_territorial_manager(
+async def update_technical_request_from_appraiser(
     mark: int, request_id: int, description: Optional[str]
 ) -> bool:
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
@@ -364,7 +365,7 @@ async def update_technical_request_from_territorial_manager(
     if mark != 1:
         request.state = ApprovalStatus.approved
         request.close_date = cur_date
-        request.acceptor_post = request.territorial_manager.post
+        request.acceptor_post = request.appraiser.post
         if request.reopen_date:
             request.reopen_confirmation_date = cur_date
         else:
@@ -385,7 +386,7 @@ async def update_technical_request_from_territorial_manager(
                     request.repairman_worktime -= cur_date.hour - 9
             request.reopen_deadline_date = counting_date_sla(24)
 
-    if not orm.update_technical_request_from_territorial_manager(request):
+    if not orm.update_technical_request_from_appraiser(request):
         logger.error(f"Technical problem with id {request.id} record wasn't updated")
         return False
     else:
@@ -581,21 +582,19 @@ def get_all_rework_technical_requests_for_repairman(
             return requests
 
 
-def get_all_waiting_technical_requests_for_territorial_manager(
+def get_all_waiting_technical_requests_for_appraiser(
     telegram_id: int,
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all waiting technical requests by Telegram id for territorial_manager
+    Return all waiting technical requests by Telegram id for appraiser
     """
     try:
-        territorial_manager = orm.get_workers_with_post_by_column(
+        appraiser = orm.get_workers_with_post_by_column(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logger.error(
-            f"Territorial manager with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Appraiser with telegram id: {telegram_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -604,12 +603,12 @@ def get_all_waiting_technical_requests_for_territorial_manager(
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
-                    TechnicalRequest.territorial_manager_id,
+                    TechnicalRequest.appraiser_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                 ],
                 [
-                    territorial_manager.id,
+                    appraiser.id,
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
@@ -662,20 +661,18 @@ def get_all_history_technical_requests_for_repairman(
             return requests
 
 
-def get_all_history_technical_requests_for_territorial_manager(
+def get_all_history_technical_requests_for_appraiser(
     telegram_id: int, department_name: str
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all history technical requests by Telegram id for territorial_manager
+    Return all history technical requests by Telegram id for appraiser
     """
     try:
-        territorial_manager = orm.get_workers_with_post_by_column(
+        appraiser = orm.get_workers_with_post_by_column(
             Worker.telegram_id, telegram_id
         )[0]
     except IndexError:
-        logger.error(
-            f"Territorial manager with telegram id: {telegram_id} wasn't found"
-        )
+        logger.error(f"Appraiser with telegram id: {telegram_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -684,10 +681,10 @@ def get_all_history_technical_requests_for_territorial_manager(
         else:
             requests = orm.get_technical_requests_by_columns(
                 [
-                    TechnicalRequest.territorial_manager_id,
+                    TechnicalRequest.appraiser_id,
                     TechnicalRequest.department_id,
                 ],
-                [territorial_manager.id, department_id],
+                [appraiser.id, department_id],
                 history=True,
             )[:-16:-1]
 
@@ -759,11 +756,18 @@ def get_departments_names_for_repairman(
         return orm.get_departments_names_for_repairman(worker_id=worker.id)
 
 
-def get_departments_names_for_territorial_manager(
+def get_departments_names_for_appraiser(
     telegram_id: int,
 ) -> list[str]:
-    return _get_departments_names_for_employee(
-        telegram_id=telegram_id, worker_column=Department.territorial_manager_id
+    return list(
+        tuple(
+            _get_departments_names_for_employee(
+                telegram_id=telegram_id, worker_column=Department.territorial_manager_id
+            )
+            + _get_departments_names_for_employee(
+                telegram_id=telegram_id, worker_column=Department.restaurant_manager_id
+            )
+        )
     )
 
 
