@@ -45,7 +45,7 @@ from app.adapters.bot.handlers.department_request.kb import (
     repairman_button,
     cleaner_button,
     ct_button,  # chief technician
-    TM_TR_button,  # territorial manager tech req
+    AP_TR_button,  # territorial manager tech req
     TM_CR_button,  # territorial manager cleaning req
     dd_button,  # department director
 )
@@ -69,7 +69,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_worker: wr_menu_button,
         FujiScope.bot_technical_request_repairman: repairman_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_territorial_manager: TM_TR_button,
+        FujiScope.bot_technical_request_appraiser: AP_TR_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,

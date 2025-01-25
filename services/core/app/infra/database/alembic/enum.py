@@ -43,3 +43,20 @@ def update_enum(
 def delete_enum(name: str):
     """Deletes enum."""
     sa.Enum(name=name).drop(op.get_bind(), checkfirst=False)
+
+
+def rename_enum(old_name: str, new_name: str, enum_name: str):
+    """Rename"""
+    rename_enums(
+        old_names=[old_name],
+        new_names=[new_name],
+        enum_name=enum_name,
+    )
+
+
+def rename_enums(old_names: list[str], new_names: list[str], enum_name: str):
+    """Rename"""
+    for old_name, new_name in zip(old_names, new_names):
+        op.execute(
+            f"ALTER TYPE {enum_name} RENAME VALUE '{old_name}' TO '{new_name}'",
+        )

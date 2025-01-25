@@ -60,7 +60,7 @@ class FujiScope(enum.Enum):
     bot_technical_request_worker = 14
     bot_technical_request_repairman = 15
     bot_technical_request_chief_technician = 16
-    bot_technical_request_territorial_manager = 17
+    bot_technical_request_appraiser = 17
     bot_technical_request_department_director = 21
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
@@ -224,6 +224,13 @@ class Department(Base):
     )
     territorial_manager: Mapped["Worker"] = relationship(
         "Worker", foreign_keys=[territorial_manager_id]
+    )
+
+    restaurant_manager_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"), nullable=True
+    )
+    restaurant_manager: Mapped["Worker"] = relationship(
+        "Worker", foreign_keys=[restaurant_manager_id]
     )
 
     territorial_brand_chef_id: Mapped[int] = mapped_column(
@@ -395,12 +402,10 @@ class Worker(Base):
         foreign_keys="[TechnicalRequest.repairman_id]",
         back_populates="repairman",
     )
-    territorial_manager_technical_requests: Mapped[List["TechnicalRequest"]] = (
-        relationship(
-            "TechnicalRequest",
-            foreign_keys="[TechnicalRequest.territorial_manager_id]",
-            back_populates="territorial_manager",
-        )
+    appraiser_technical_requests: Mapped[List["TechnicalRequest"]] = relationship(
+        "TechnicalRequest",
+        foreign_keys="[TechnicalRequest.appraiser_id]",
+        back_populates="appraiser",
     )
 
     bids_it: Mapped[List["BidIT"]] = relationship(
@@ -990,13 +995,11 @@ class TechnicalRequest(Base):
         foreign_keys=[repairman_id],
     )
 
-    territorial_manager_id: Mapped[int] = mapped_column(
-        ForeignKey("workers.id"), nullable=False
-    )
-    territorial_manager: Mapped["Worker"] = relationship(
+    appraiser_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    appraiser: Mapped["Worker"] = relationship(
         "Worker",
-        back_populates="territorial_manager_technical_requests",
-        foreign_keys=[territorial_manager_id],
+        back_populates="appraiser_technical_requests",
+        foreign_keys=[appraiser_id],
     )
 
     acceptor_post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=True)

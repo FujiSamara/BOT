@@ -285,7 +285,7 @@ class TechnicalRequestSchema(BaseSchemaPK):
 
     worker: WorkerSchema
     repairman: WorkerSchema
-    territorial_manager: WorkerSchema
+    appraiser: WorkerSchema
     acceptor_post: Optional[PostSchema] = None
     department: DepartmentSchema
 

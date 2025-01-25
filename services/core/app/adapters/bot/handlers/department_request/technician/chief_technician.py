@@ -320,7 +320,7 @@ async def save_repair(
 
     await notify_worker_by_telegram_id(
         id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_territorial_manager_TR
+        message=text.notification_appraiser_TR
         + f"\n На предприятии: {request_data['department_name']}",
     )
 

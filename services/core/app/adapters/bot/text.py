@@ -37,7 +37,7 @@ view = "Просмотреть"
 notification_repairman = "У Вас новая техническая заявка!"
 notification_repairman_reopen = "У Вас новая техническая заявка на доработку!"
 
-notification_territorial_manager_TR = "У Вас новая техническая заявка для оценки!"
+notification_appraiser_TR = "У Вас новая техническая заявка для оценки!"
 
 notification_worker_TR = "Статус технической заявки обновлён!"
 

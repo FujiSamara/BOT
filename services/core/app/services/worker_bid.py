@@ -354,7 +354,7 @@ def get_subordinates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
         logger.error(f"Worker with id {chief} wasn't found")
     chief = chief[0]
     scopes = []
-    if FujiScope.bot_technical_request_territorial_manager in chief.post.scopes:
+    if FujiScope.bot_technical_request_appraiser in chief.post.scopes:
         scopes += [
             FujiScope.bot_bid_create,
             FujiScope.bot_bid_kru,
@@ -372,7 +372,7 @@ def get_subordinates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
         ]
     if FujiScope.bot_technical_request_department_director in chief.post.scopes:
         scopes += [
-            FujiScope.bot_technical_request_territorial_manager,
+            FujiScope.bot_technical_request_appraiser,
             FujiScope.bot_bid_it_tm,
         ]
 

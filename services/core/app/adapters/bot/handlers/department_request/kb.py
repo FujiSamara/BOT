@@ -307,6 +307,8 @@ wr_menu = InlineKeyboardMarkup(
 
 
 async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
+    from app.adapters.bot.text import back
+
     data = await state.get_data()
     form_complete = True
     problem_name = data.get("problem_name")
@@ -366,11 +368,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото проблемы", callback_data="photo_WR_TR_CR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [
-            InlineKeyboardButton(
-                text=text.back, callback_data=wr_menu_button.callback_data
-            ),
-        ],
+        [InlineKeyboardButton(text=back, callback_data=wr_menu_button.callback_data)],
     ]
 
     if form_complete:
@@ -505,14 +503,14 @@ async def executor_repair_rework_kb(
 
 # endregion
 
-# region Territorial manager (TM)
+# region Appraiser (AR)
 
 TM_TR_button = InlineKeyboardButton(
-    text="Приём технических заявок", callback_data="get_TM_TR"
+    text="Приём технических заявок", callback_data="get_AR_TR"
 )
 
 TM_CR_button = InlineKeyboardButton(
-    text="Приём заявок клининга", callback_data="get_TM_CR"
+    text="Приём заявок клининга", callback_data="get_AP_CR"
 )
 
 
@@ -546,7 +544,7 @@ async def tm_rate_kb(
                 text="Оценка",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_rate_TM",
+                    end_point=f"{problem_type.name}_rate_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -557,7 +555,7 @@ async def tm_rate_kb(
                 text="Комментарий",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_description_TM",
+                    end_point=f"{problem_type.name}_description_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -568,7 +566,7 @@ async def tm_rate_kb(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_show_waiting_form_TM",
+                    end_point=f"{problem_type.name}_show_waiting_form_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
@@ -590,7 +588,7 @@ async def tm_rate_kb(
                 InlineKeyboardButton(
                     text=text,
                     callback_data=ShowRequestCallbackData(
-                        end_point=f"{problem_type.name}_save_rate_TM",
+                        end_point=f"{problem_type.name}_save_rate_AR",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )
