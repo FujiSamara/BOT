@@ -285,7 +285,7 @@ class TechnicalRequestSchema(BaseSchemaPK):
 
     worker: WorkerSchema
     repairman: WorkerSchema
-    territorial_manager: WorkerSchema
+    appraiser: WorkerSchema
     acceptor_post: Optional[PostSchema] = None
     department: DepartmentSchema
 
@@ -572,7 +572,7 @@ aliases: dict[Type[BaseModel], dict[str, str]] = {
         "id": "ID",
         "amount": "Сумма",
         "payment_type": "Тип оплаты",
-        "department": "Произовдство",
+        "department": "Предприятие",
         "worker": "Работник",
         "purpose": "Цель",
         "create_date": "Дата создания",

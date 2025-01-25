@@ -1102,7 +1102,7 @@ def create_technical_request(record: TechnicalRequestSchema) -> bool:
             reopen_date=None,
             close_date=None,
             worker_id=record.worker.id,
-            territorial_manager_id=record.territorial_manager.id,
+            appraiser_id=record.appraiser.id,
             repairman_id=record.repairman.id,
             department_id=record.department.id,
             repairman_worktime=0,
@@ -1139,7 +1139,7 @@ def update_technical_request_from_repairman(record: TechnicalRequestSchema) -> b
     return True
 
 
-def update_technical_request_from_territorial_manager(
+def update_technical_request_from_appraiser(
     record: TechnicalRequestSchema,
 ) -> bool:
     with session.begin() as s:
@@ -1231,13 +1231,25 @@ def get_repairman_by_department_id_and_executor_type(
             return None
 
 
+def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema:
+    with session.begin() as s:
+        restaurant_manager: Worker = (
+            s.execute(select(Department).filter(Department.id == department_id))
+            .scalars()
+            .first()
+        ).restaurant_manager
+        return WorkerSchema.model_validate(restaurant_manager)
+
+
 def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
     """
     Return WorkerSchema for territorial manager by department id
     """
     with session.begin() as s:
         territorial_manager: Worker = (
-            s.query(Department).filter(Department.id == department_id).first()
+            s.execute(select(Department).filter(Department.id == department_id))
+            .scalars()
+            .first()
         ).territorial_manager
         return WorkerSchema.model_validate(territorial_manager)
 
@@ -1456,7 +1468,7 @@ def get_count_req_in_departments(
                 case ApprovalStatus.pending_approval:
                     stm = stm.filter(
                         and_(
-                            TechnicalRequest.territorial_manager_id == worker_id,
+                            TechnicalRequest.appraiser_id == worker_id,
                             TechnicalRequest.state == state,
                         )
                     )
@@ -2445,7 +2457,7 @@ def update_company_for_department(
 
 
 def set_tellers_cash_department() -> list[WorkerSchema]:
-    """Set department 'Нет производства' for teller cash.
+    """Set department 'Нет предприятия' for teller cash.
     Return true if all done, false if department wasn't found"""
     with session.begin() as s:
         post_id = (
@@ -2463,7 +2475,7 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
         )
 
         department: Optional[Department] = (
-            s.execute(select(Department).filter(Department.name == "Нет производства"))
+            s.execute(select(Department).filter(Department.name == "Нет предприятия"))
             .scalars()
             .first()
         )

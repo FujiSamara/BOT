@@ -46,7 +46,7 @@ scope_decode_dict = {
     FujiScope.bot_technical_request_worker: "Бот подача технической заявки",
     FujiScope.bot_technical_request_repairman: "Бот технические заявки исполнитель",
     FujiScope.bot_technical_request_chief_technician: "Бот технические заявки главный техник",
-    FujiScope.bot_technical_request_territorial_manager: "Бот технические заявки ТУ",
+    FujiScope.bot_technical_request_appraiser: "Бот технические заявки оценка",
     FujiScope.bot_technical_request_department_director: "Бот технические заявки директор",
     FujiScope.bot_bid_it_worker: "Бот подача IT заявки",
     FujiScope.bot_bid_it_repairman: "Бот IT заявки исполнитель",

@@ -89,7 +89,7 @@ class CompanyView(ModelView, model=Company):
     name = "Компания"
     column_labels = {
         Company.name: "Название",
-        Company.departments: "Производства",
+        Company.departments: "Предприятия",
         Company.workers: "Работники",
     }
 
@@ -104,6 +104,7 @@ class DepartmentView(ModelView, model=Department):
         Department.bids,
         Department.delivery_manager_id,
         Department.territorial_manager_id,
+        Department.restaurant_manager_id,
         Department.territorial_director_id,
         Department.territorial_brand_chef_id,
         Department.technical_requests,
@@ -124,7 +125,7 @@ class DepartmentView(ModelView, model=Department):
     ]
     can_export = False
 
-    name_plural = "Производства"
+    name_plural = "Предприятия"
     name = "Предприятие"
     column_labels = {
         Department.name: "Название",
@@ -138,6 +139,7 @@ class DepartmentView(ModelView, model=Department):
         Department.closing_date: "Дата закрытия",
         Department.area: "Общая площадь",
         Department.territorial_manager: "Территориальный управляющий",
+        Department.restaurant_manager: "Управляющий рестораном",
         Department.territorial_brand_chef: "Территориальный брендшеф",
         Department.delivery_manager: "Менеджер доставки",
         Department.territorial_director: "Территориальный директор",
@@ -158,6 +160,10 @@ class DepartmentView(ModelView, model=Department):
             "order_by": "l_name",
         },
         "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "restaurant_manager": {
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },
@@ -343,13 +349,11 @@ class WorkerView(ModelView, model=Worker):
     @staticmethod
     def gender_format(inst, column):
         value = getattr(inst, column)
-
-        return gender_decode_dict[value]
+        return gender_decode_dict.get(value)
 
     @staticmethod
     def worker_status_format(inst, column):
         value = getattr(inst, column)
-
         return worker_status_dict.get(value)
 
     @staticmethod
@@ -555,13 +559,11 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def payment_type_format(inst, column):
         value = getattr(inst, column)
-
         return payment_type_dict.get(value)
 
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-
         return approval_status_dict.get(value)
 
     @action(
@@ -636,7 +638,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.repairman: "Исполнитель",
         TechnicalRequest.department: "Предприятие",
         TechnicalRequest.problem: "Проблема",
-        TechnicalRequest.territorial_manager: "Территориальный менеджер",
+        TechnicalRequest.appraiser: "Территориальный менеджер/управляющий",
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
         TechnicalRequest.repairman_worktime: "Заявка в исполнение",
@@ -657,7 +659,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.problem_id,
         TechnicalRequest.repairman_id,
         TechnicalRequest.department_id,
-        TechnicalRequest.territorial_manager_id,
+        TechnicalRequest.appraiser_id,
         TechnicalRequest.acceptor_post_id,
     ]
     form_excluded_columns = [
@@ -704,7 +706,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     @staticmethod
     def approval_status_format(inst, column):
         value = getattr(inst, column)
-        return approval_status_technical_request_dict[value]
+        return approval_status_technical_request_dict.get(value)
 
     column_formatters = {
         TechnicalRequest.state: approval_status_format,
@@ -738,7 +740,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
             "fields": ("problem_name",),
             "order_by": "name",
         },
-        "territorial_manager": {
+        "appraiser": {
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },

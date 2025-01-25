@@ -67,7 +67,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_worker: wr_menu_button,
         FujiScope.bot_technical_request_repairman: rm_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_territorial_manager: tm_button,
+        FujiScope.bot_technical_request_appraiser: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
@@ -185,7 +185,9 @@ async def try_edit_or_answer(
     return True
 
 
-async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
+async def notify_workers_by_scope(
+    scope: FujiScope, message: str, reply_markup: InlineKeyboardMarkup | None = None
+) -> None:
     """
     Sends notify `message` to workers by their `scope`.
     """
@@ -199,14 +201,21 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     }
 
     for id in telegram_ids:
-        msg = await notify_worker_by_telegram_id(id=id, message=message)
+        msg = await notify_worker_by_telegram_id(
+            id=id,
+            message=message,
+            reply_markup=reply_markup,
+        )
         if not msg:
             continue
         await send_menu_by_scopes(message=msg)
 
 
 async def notify_workers_in_department_by_scope(
-    scope: FujiScope, department_id: int, message: str
+    scope: FujiScope,
+    department_id: int,
+    message: str,
+    reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
     """
     Sends notify `message` to workers in department by their `scope`.
@@ -219,7 +228,11 @@ async def notify_workers_in_department_by_scope(
     for worker in workers:
         if not worker.telegram_id:
             continue
-        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+        msg = await notify_worker_by_telegram_id(
+            id=worker.telegram_id,
+            message=message,
+            reply_markup=reply_markup,
+        )
         if not msg:
             continue
         await send_menu_by_scopes(message=msg)

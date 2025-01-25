@@ -26,6 +26,14 @@ from app.schemas import (
     BidInSchema,
 )
 
+from app.adapters.bot.kb import create_inline_keyboard
+from app.adapters.bot.text import view
+from aiogram.types import InlineKeyboardButton
+from app.adapters.bot.handlers.bids.schemas import (
+    BidCallbackData,
+    BidViewType,
+    BidViewMode,
+)
 
 # In right order
 states = [
@@ -307,6 +315,9 @@ async def update_bid_state(
         notify_worker_by_telegram_id,
     )
 
+    if getattr(bid, state_name) != ApprovalStatus.pending_approval:
+        return
+
     if state == ApprovalStatus.approved:
         skip_repeating_bid_state(bid, state_name)
 
@@ -331,7 +342,7 @@ async def update_bid_state(
                 stage = "Ваша заявка согласована бухгалтерией!"
             case "accountant_cash_state":
                 if bid.paying_department is not None:
-                    stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа производстве {bid.paying_department.name}."
+                    stage = f"Денежные средства по вашей заявке готовы к выдачи!\nНа предприятии {bid.paying_department.name}."
                 else:
                     stage = "Денежные средства по вашей заявке готовы к выдачи!"
             case "teller_card_state":
@@ -343,7 +354,19 @@ async def update_bid_state(
             case _:
                 stage = "Ваша заявка принята!"
         await notify_worker_by_telegram_id(
-            bid.worker.telegram_id, f"{stage}\nНомер заявки: {bid.id}."
+            bid.worker.telegram_id,
+            f"{stage}\nНомер заявки: {bid.id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full,
+                        type=BidViewType.creation,
+                        endpoint_name="create_bid_info",
+                    ).pack(),
+                )
+            ),
         )
         bid.close_date = datetime.now()
     elif state == ApprovalStatus.denied:
@@ -352,6 +375,17 @@ async def update_bid_state(
             "Ваша заявка отклонена!\nПричина: "
             + bid.denying_reason
             + f"\nНомер заявки: {bid.id}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full,
+                        type=BidViewType.creation,
+                        endpoint_name="create_bid_info",
+                    ).pack(),
+                )
+            ),
         )
         bid.close_date = datetime.now()
 
@@ -391,49 +425,148 @@ async def notify_next_coordinator(bid: BidSchema):
     )
 
     message = f"У вас новая заявка!\nНомер заявки: {bid.id}\nЗаявитель: {bid.worker.l_name} {bid.worker.f_name}"
-
     if (
         bid.fac_state == ApprovalStatus.pending_approval
         and bid.expenditure.fac.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.fac.telegram_id, message=message
+            bid.expenditure.fac.telegram_id,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="fac",
+                    ).pack(),
+                )
+            ),
         )
     elif (
         bid.cc_state == ApprovalStatus.pending_approval
         and bid.expenditure.cc.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.cc.telegram_id, message=message
+            bid.expenditure.cc.telegram_id,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="fac",
+                    ).pack(),
+                )
+            ),
         )
     elif (
         bid.paralegal_state == ApprovalStatus.pending_approval
         and bid.expenditure.paralegal.telegram_id is not None
     ):
         await notify_worker_by_telegram_id(
-            bid.expenditure.paralegal.telegram_id, message=message
+            bid.expenditure.paralegal.telegram_id,
+            message=message,
         )
     elif bid.kru_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(scope=FujiScope.bot_bid_kru, message=message)
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_kru,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="kru",
+                    ).pack(),
+                )
+            ),
+        )
     elif bid.owner_state == ApprovalStatus.pending_approval:
-        await notify_workers_by_scope(scope=FujiScope.bot_bid_owner, message=message)
+        await notify_workers_by_scope(
+            scope=FujiScope.bot_bid_owner,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="owner",
+                    ).pack(),
+                )
+            ),
+        )
     elif bid.accountant_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_card, message=message
+            scope=FujiScope.bot_bid_accountant_card,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="accountant_card",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.accountant_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_accountant_cash, message=message
+            scope=FujiScope.bot_bid_accountant_cash,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="accountant_cash",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.teller_card_state == ApprovalStatus.pending_approval:
         await notify_workers_by_scope(
-            scope=FujiScope.bot_bid_teller_card, message=message
+            scope=FujiScope.bot_bid_teller_card,
+            message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="teller_card",
+                    ).pack(),
+                )
+            ),
         )
     elif bid.teller_cash_state == ApprovalStatus.pending_approval:
         await notify_workers_in_department_by_scope(
             scope=FujiScope.bot_bid_teller_cash,
             department_id=bid.paying_department.id,
             message=message,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=BidCallbackData(
+                        id=bid.id,
+                        type=BidViewType.coordination,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="teller_cash",
+                    ).pack(),
+                )
+            ),
         )
 
 
