@@ -116,7 +116,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.show_rate_form,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_rate_form_TM",
+                F.end_point == f"{self.problem_type.name}_rate_form_AR",
             ),
         )
         router.callback_query.register(
@@ -128,7 +128,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.get_description,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_description_TM"
+                F.end_point == f"{self.problem_type.name}_description_AR"
             ),
         )
         router.callback_query.register(
@@ -283,7 +283,7 @@ class CoordinationFactory:
                     text="Оценить заявку",
                     callback_data=ShowRequestCallbackData(
                         request_id=callback_data.request_id,
-                        end_point=f"{self.problem_type.name}_rate_form_TM",
+                        end_point=f"{self.problem_type.name}_rate_form_AR",
                     ).pack(),
                 )
             ]
@@ -319,7 +319,7 @@ class CoordinationFactory:
 
             callback_data = ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point=f"{self.problem_type.name}_rate_form_TM",
+                end_point=f"{self.problem_type.name}_rate_form_AR",
             )
         await try_edit_or_answer(
             message=message,
@@ -472,7 +472,7 @@ def build_coordinations():
     CoordinationFactory(
         router=router,
         problem_type=RequestType.TR,
-        menu_button=department_kb.AP_TR_button,
+        menu_button=department_kb.AR_TR_button,
     )
     CoordinationFactory(
         router=router,

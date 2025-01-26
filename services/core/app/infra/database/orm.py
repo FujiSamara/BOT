@@ -2779,7 +2779,7 @@ def create_cleaning_request(record: CleaningRequestSchema) -> bool:
             reopen_cleaning_date=None,
             worker_id=record.worker.id,
             cleaner_id=record.cleaner.id,
-            territorial_manager_id=record.appraiser.id,
+            appraiser_id=record.appraiser.id,
             department_id=record.department.id,
         )
         s.add(cleaning_request)
@@ -2906,7 +2906,7 @@ def get_cleaning_request_by_id(request_id: int) -> CleaningRequestSchema | None:
         return CleaningRequestSchema.model_validate(raw_req)
 
 
-def update_cleaning_request_from_territorial_manager(
+def update_cleaning_request_from_appraiser(
     record: CleaningRequestSchema,
 ) -> bool:
     with session.begin() as s:

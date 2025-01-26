@@ -285,7 +285,7 @@ async def update_cleaning_request_from_cleaner(
         return False
     else:
         await notify_worker_by_telegram_id(
-            id=request.territorial_manager.telegram_id,
+            id=request.appraiser.telegram_id,
             message=t.notification_appraiser_TR
             + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
             reply_markup=create_inline_keyboard(
@@ -316,17 +316,17 @@ async def update_cleaning_request_from_cleaner(
 
 
 # endregion
-# region Territorial manager
+# region Appraiser
 
 
 def get_all_history_cleaning_requests_for_appraiser(
     tg_id: int,
     department_name: str,
 ):
-    territorial_manager = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
-    if territorial_manager == []:
+    appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if appraiser == []:
         logger.error(f"Worker with id {tg_id} wasn't found")
-    territorial_manager = territorial_manager[0]
+    appraiser = appraiser[0]
     department_id = orm.find_departments_by_name(department_name)
     if department_id is None:
         logger.error(f"Department with name: {department_name} wasn't found")
@@ -334,11 +334,11 @@ def get_all_history_cleaning_requests_for_appraiser(
 
     requests = orm.get_last_cleaning_requests_by_columns(
         and_col=[
-            CleaningRequest.territorial_manager_id,
+            CleaningRequest.appraiser_id,
             CleaningRequest.department_id,
         ],
         and_val=[
-            territorial_manager.id,
+            appraiser.id,
             department_id,
         ],
         or_col=[
@@ -363,10 +363,10 @@ def get_all_waiting_cleaning_requests_for_appraiser(
     tg_id: int,
     department_name: str,
 ):
-    territorial_manager = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
-    if territorial_manager == []:
+    appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if appraiser == []:
         logger.error(f"Worker with id {tg_id} wasn't found")
-    territorial_manager = territorial_manager[0]
+    appraiser = appraiser[0]
     department_id = orm.find_departments_by_name(department_name)
     if department_id == []:
         logger.error(f"Department with name: {department_name} wasn't found")
@@ -374,12 +374,12 @@ def get_all_waiting_cleaning_requests_for_appraiser(
 
     requests = orm.get_last_cleaning_requests_by_columns(
         and_col=[
-            CleaningRequest.territorial_manager_id,
+            CleaningRequest.appraiser,
             CleaningRequest.department_id,
             CleaningRequest.state,
         ],
         and_val=[
-            territorial_manager.id,
+            appraiser.id,
             department_id,
             ApprovalStatus.pending_approval,
         ],
@@ -429,7 +429,7 @@ async def update_cleaning_request_from_appraiser(
             request.confirmation_date = cur_date
             request.reopen_date = cur_date
 
-    if not orm.update_cleaning_request_from_territorial_manager(request):
+    if not orm.update_cleaning_request_from_appraiser(request):
         logger.error(f"Technical problem with id {request.id} record wasn't updated")
         return False
     else:
