@@ -2572,7 +2572,6 @@ def get_chief_technician(department_id: int) -> WorkerSchema | None:
         return WorkerSchema.model_validate(chief_technician[0])
 
 
-# region Cleaning requests
 def get_territorial_director(department_id: int) -> WorkerSchema | None:
     with session.begin() as s:
         raw_department = (
