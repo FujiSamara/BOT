@@ -2,7 +2,7 @@ import axios from "axios";
 
 import * as config from "@/config";
 import { useNetworkStore } from "@/store/network";
-import { BaseSchema, QuerySchema, InfoSchema } from "@/types";
+import { BaseSchema, QuerySchema, InfoSchema, DepartmentSchema } from "@/types";
 
 class PathOptions {
 	getExtraPath: string = "";
@@ -100,5 +100,11 @@ export default class EntityService<T extends BaseSchema> {
 		)[1];
 
 		this._networkStore.saveFile(filename, resp.data);
+	}
+
+	public async searchDepartments(term: string): Promise<DepartmentSchema[]> {
+		const url = `${this._endpoint}/${this.entityName}/by/name?name=${term}`;
+		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+		return resp.data;
 	}
 }
