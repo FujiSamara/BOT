@@ -38,7 +38,7 @@ onUnmounted(() => {
 				class="dd-menu"
 				@click.stop
 				:class="{ 'align-right': alignRight }"
-				v-if="menuVisible"
+				v-show="menuVisible"
 			>
 				<slot name="menu"></slot>
 			</ul>
