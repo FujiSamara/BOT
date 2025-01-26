@@ -57,7 +57,10 @@ const onInput = (event: Event) => {
 		</Transition>
 
 		<Transition name="fade">
-			<span v-if="error !== undefined && active" class="tool-message">
+			<span
+				v-if="error !== undefined && active && error !== ''"
+				class="tool-message"
+			>
 				{{ error }}
 			</span>
 		</Transition>
