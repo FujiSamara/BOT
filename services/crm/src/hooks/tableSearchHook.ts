@@ -140,14 +140,16 @@ interface EntitySearchModelIn {
 
 interface EntitySearchModelOut {
 	entities: BaseEntity<BaseSchema>[];
+	exist: Ref<boolean>;
 }
 
 export const useEntitySearch = (
 	table: Table<BaseSchema>,
 	...modelsIn: EntitySearchModelIn[]
 ): EntitySearchModelOut => {
-	const modelsOut: EntitySearchModelOut = {
+	const modelOut: EntitySearchModelOut = {
 		entities: modelsIn.map((val) => val.entity),
+		exist: ref(false),
 	};
 
 	for (let index = 0; index < modelsIn.length; index++) {
@@ -188,11 +190,17 @@ export const useEntitySearch = (
 				temp.push(filter);
 			}
 
+			const tempSet = new Set(
+				temp.map((val) => (val.id === undefined ? -1 : val.id)),
+			);
+			const idSet = new Set(modelsIn.map((val) => val.id));
+
+			modelOut.exist.value = tempSet.intersection(idSet).size > 0;
 			table.filterQuery.value = temp;
 		});
 	}
 
-	return modelsOut;
+	return modelOut;
 };
 
 const applyFilterPattern = (fields: string[], value: any): FilterSchema => {
