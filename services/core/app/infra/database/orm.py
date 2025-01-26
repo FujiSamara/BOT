@@ -43,7 +43,7 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
-    WorkerPassport,
+    WorkerDocument,
 )
 from app.schemas import (
     BidSchema,
@@ -2624,8 +2624,8 @@ def add_worker(record: WorkerSchema) -> bool:
         )
         s.add(worker)
 
-        for doc in record.passport:
-            file = WorkerPassport(
+        for doc in record.documents:
+            file = WorkerDocument(
                 worker=worker,
                 document=doc.document,
             )
@@ -2642,18 +2642,14 @@ def get_last_worker_id() -> int:
 
 def get_subordinates_in_departments(
     chief_id: int,
-    scopes: list[FujiScope] = [],
     l_name: str | None = None,
 ) -> list[WorkerSchema]:
     with session.begin() as s:
-        departments = (
+        territorial_director_departments = (
             s.execute(
                 select(Department)
                 .filter(
-                    or_(
-                        Department.territorial_manager_id == chief_id,
-                        Department.territorial_director_id == chief_id,
-                    )
+                    Department.territorial_director_id == chief_id,
                 )
                 .order_by(Department.id)
             )
@@ -2661,25 +2657,44 @@ def get_subordinates_in_departments(
             .all()
         )
 
-        stmt = select(Worker).join(
-            PostScope, onclause=Worker.post_id == PostScope.post_id
+        territorial_manager_departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    Department.territorial_manager_id == chief_id,
+                    *[
+                        Department.id != department.id
+                        for department in territorial_director_departments
+                    ],
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
         )
-
-        if l_name is not None:
-            stmt = stmt.filter(Worker.l_name.like(l_name))
-        else:
-            or_filter = False
-            for scope in scopes:
-                or_filter = or_(PostScope.scope == scope, or_filter)
-            stmt = stmt.filter(or_filter)
-
-        or_filter = False
-        for department in departments:
-            or_filter = or_(or_filter, Worker.department_id == department.id)
-
-        stmt = stmt.filter(or_filter)
         raw_workers = (
-            s.execute(stmt.group_by(Worker.id).order_by(Worker.id)).scalars().all()
+            s.execute(
+                select(Worker).filter(
+                    Worker.id != chief_id,
+                    *[
+                        Worker.id != department.territorial_director_id
+                        for department in territorial_manager_departments
+                    ],
+                    or_(
+                        *{
+                            Worker.department_id == department.id
+                            for department in (
+                                territorial_director_departments
+                                + territorial_manager_departments
+                            )
+                        },
+                        False,
+                    ),
+                    Worker.l_name == l_name if l_name is not None else True,
+                )
+            )
+            .scalars()
+            .all()
         )
         return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
 
@@ -2710,4 +2725,4 @@ def get_last_worker_passport_id(worker_id: int) -> int:
         )
         if raw_worker is None:
             return 0
-        return len(WorkerSchema.model_validate(raw_worker).passport)
+        return len(WorkerSchema.model_validate(raw_worker).documents)
