@@ -150,6 +150,28 @@ async def show_worker(
 
 
 @router.callback_query(
+    CandidatesCoordinationCallbackData.filter(
+        F.endpoint_name == "show_worker_notification"
+    )
+)
+async def show_worker_notification(
+    message: Message | CallbackQuery, callback_data: CandidatesCoordinationCallbackData
+):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+    worker = get_worker_by_id(callback_data.id)
+    await try_edit_or_answer(
+        message=message,
+        text=f"""{worker.l_name} {worker.f_name} {worker.o_name}
+{hbold("Должность:")} {worker.post.name}
+{hbold("Предприятие:")} {worker.department.name}
+{hbold("Номер телефона:")} {worker.phone_number}
+{hbold("Статус:")} {worker_status_dict[worker.state]}""",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[main_menu_button]]),
+    )
+
+
+@router.callback_query(
     CandidatesCoordinationCallbackData.filter(F.endpoint_name == "change_status")
 )
 async def get_status(

@@ -458,8 +458,8 @@ class Worker(Base):
         foreign_keys="[CleaningRequest.appraiser_id]",
     )
 
-    passport: Mapped[List["WorkerPassport"]] = relationship(
-        "WorkerPassport", cascade="all,delete", back_populates="worker"
+    documents: Mapped[List["WorkerDocument"]] = relationship(
+        "WorkerDocument", cascade="all,delete", back_populates="worker"
     )
     snils: Mapped[str] = mapped_column(nullable=True)
     inn: Mapped[str] = mapped_column(nullable=True)
@@ -475,10 +475,10 @@ class Worker(Base):
     patent: Mapped[str] = mapped_column(nullable=True)
 
 
-class WorkerPassport(Base):
+class WorkerDocument(Base):
     """Паспорта работников"""
 
-    __tablename__ = "workers_passports"
+    __tablename__ = "workers_documents"
 
     def __str__(self):
         return f"id {self.id}"
@@ -489,7 +489,7 @@ class WorkerPassport(Base):
     )
     worker: Mapped["Worker"] = relationship(
         "Worker",
-        back_populates="passport",
+        back_populates="documents",
         foreign_keys=[worker_id],
     )
     document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))

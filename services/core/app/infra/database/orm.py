@@ -43,7 +43,7 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
-    WorkerPassport,
+    WorkerDocument,
     CleaningProblem,
     CleaningRequest,
     CleaningRequestCleaningPhoto,
@@ -2629,14 +2629,108 @@ def add_worker(record: WorkerSchema) -> bool:
         )
         s.add(worker)
 
-        for doc in record.passport:
-            file = WorkerPassport(
+        for doc in record.documents:
+            file = WorkerDocument(
                 worker=worker,
                 document=doc.document,
             )
             s.add(file)
 
         return True
+
+
+def get_last_worker_id() -> int:
+    """Return last worker id"""
+    with session.begin() as s:
+        return s.execute(select(Worker.id).order_by(Worker.id.desc())).scalar()
+
+
+def get_subordinates_in_departments(
+    chief_id: int,
+    l_name: str | None = None,
+) -> list[WorkerSchema]:
+    with session.begin() as s:
+        territorial_director_departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    Department.territorial_director_id == chief_id,
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
+        )
+
+        territorial_manager_departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    Department.territorial_manager_id == chief_id,
+                    *[
+                        Department.id != department.id
+                        for department in territorial_director_departments
+                    ],
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
+        )
+        raw_workers = (
+            s.execute(
+                select(Worker).filter(
+                    Worker.id != chief_id,
+                    *[
+                        Worker.id != department.territorial_director_id
+                        for department in territorial_manager_departments
+                    ],
+                    or_(
+                        *{
+                            Worker.department_id == department.id
+                            for department in (
+                                territorial_director_departments
+                                + territorial_manager_departments
+                            )
+                        },
+                        False,
+                    ),
+                    Worker.l_name == l_name if l_name is not None else True,
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
+
+
+def get_subordinates(
+    chief_id: int,
+    l_name: str | None = None,
+) -> list[WorkerSchema]:
+    with session.begin() as s:
+        stmt = (
+            select(Subordination)
+            .join(Worker, onclause=Subordination.employee_id == Worker.id)
+            .filter(
+                Subordination.chief_id == chief_id,
+            )
+        )
+        if l_name is not None:
+            stmt = stmt.filter(Worker.l_name.like(l_name))
+        subs = s.execute(stmt.order_by(Worker.id)).scalars().all()
+
+        return [WorkerSchema.model_validate(sub.employee) for sub in subs]
+
+
+def get_last_worker_passport_id(worker_id: int) -> int:
+    with session.begin() as s:
+        raw_worker = (
+            s.execute(select(Worker).filter(Worker.id == worker_id)).scalars().first()
+        )
+        if raw_worker is None:
+            return 0
+        return len(WorkerSchema.model_validate(raw_worker).documents)
 
 
 # region Cleaning requests

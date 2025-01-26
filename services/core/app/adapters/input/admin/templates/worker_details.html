@@ -24,7 +24,7 @@
                         <tr>
                             <td>{{ label }}</td>
                             {% set value, formatted_value = model_view.get_detail_value(model, name) %}
-                            {% if name == "passport"%}
+                            {% if name == "documents"%}
                             {% set formatted_value = model_view.files_format(model, name) %}
                             <td>
                                 {% for elem in formatted_value %}
