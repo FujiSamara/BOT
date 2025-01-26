@@ -10,7 +10,6 @@ from app.adapters.bot.handlers.department_request.schemas import (
     RequestType,
 )
 from app.adapters.bot.kb import main_menu_button
-from app.adapters.bot import text
 
 from app.schemas import TechnicalRequestSchema, CleaningRequestSchema
 
