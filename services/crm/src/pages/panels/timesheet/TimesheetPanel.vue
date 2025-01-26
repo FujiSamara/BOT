@@ -10,7 +10,7 @@ import DateFilter from "@/components/table/tools/DateFilter.vue";
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useEntitySearch, useSearch } from "@/hooks/tableSearchHook";
-import { PropType } from "vue";
+import { computed, PropType } from "vue";
 import { useDateInterval } from "@/hooks/dateIntervalHook";
 import { DepartmentEntity, PostEntity } from "@/components/entity";
 
@@ -60,6 +60,10 @@ const entitySearchList = useEntitySearch(
 	},
 );
 const dateInterval = await useDateInterval(props.table, "");
+
+const filtersExist = computed(
+	() => dateInterval.exist.value && entitySearchList.exist.value,
+);
 </script>
 
 <template>
@@ -98,7 +102,7 @@ const dateInterval = await useDateInterval(props.table, "");
 					<ExportToExcel
 						:table="props.table"
 						style="width: 187px; height: 48px"
-						:disabled="!dateInterval.exist.value"
+						:disabled="!filtersExist"
 					></ExportToExcel>
 				</div>
 			</div>
@@ -106,7 +110,7 @@ const dateInterval = await useDateInterval(props.table, "");
 		<Table
 			class="table"
 			:table="props.table"
-			:blockLoading="!dateInterval.exist.value || !entitySearchList.exist.value"
+			:blockLoading="!filtersExist"
 		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
