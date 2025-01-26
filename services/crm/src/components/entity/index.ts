@@ -1,5 +1,5 @@
 import { computed, ref, Ref } from "vue";
-import { DepartmentSchema } from "@/types";
+import { DepartmentSchema, PostSchema } from "@/types";
 import EntityService from "@/services/entity";
 
 export abstract class BaseEntity<T> {
@@ -9,11 +9,11 @@ export abstract class BaseEntity<T> {
 
 	constructor() {}
 
+	public loading: Ref<boolean> = ref(false);
+	public placeholder = "";
 	public disabled: Ref<boolean> = ref(false);
-	public get selectedEntity() {
-		return this._selectedEntities.value;
-	}
 
+	public selectedEntities = computed(() => this._selectedEntities.value);
 	public entitiesList = computed((): { value: string; checked: boolean }[] => {
 		const result = this._selectedEntities.value.map((val) => ({
 			value: this.format(val),
@@ -35,8 +35,10 @@ export abstract class BaseEntity<T> {
 			return this._inputValue.value;
 		},
 		set: async (val: string) => {
+			this.loading.value = true;
 			this._inputValue.value = val;
 			await this.onInput(val);
+			this.loading.value = false;
 		},
 	});
 
@@ -74,17 +76,42 @@ export abstract class BaseEntity<T> {
 }
 
 export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
+	public placeholder = "Предприятие";
+
 	protected async onInput(val: string): Promise<void> {
 		if (val.length < 3) {
 			this._searchEntities.value = [];
 			return;
 		}
 
-		const service = new EntityService("department");
+		const service = new EntityService<DepartmentSchema>("department");
 
-		const departments = await service.searchDepartments(val);
+		const departments = await service.searchEntities(val);
 
 		this._searchEntities.value = departments.sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}
+
+	protected format(value: DepartmentSchema): string {
+		return value.name;
+	}
+}
+
+export class PostEntity extends BaseEntity<PostSchema> {
+	public placeholder = "Должность";
+
+	protected async onInput(val: string): Promise<void> {
+		if (val.length < 3) {
+			this._searchEntities.value = [];
+			return;
+		}
+
+		const service = new EntityService<PostSchema>("post");
+
+		const posts = await service.searchEntities(val);
+
+		this._searchEntities.value = posts.sort((a, b) =>
 			a.name.localeCompare(b.name),
 		);
 	}
