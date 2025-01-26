@@ -9,9 +9,10 @@ import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/tableSearchHook";
+import { useSearch, useEntitySearch } from "@/hooks/tableSearchHook";
 import { PropType } from "vue";
 import { useDateInterval } from "@/hooks/dateIntervalHook";
+import { DepartmentEntity, PostEntity } from "@/components/entity";
 
 const props = defineProps({
 	table: {
@@ -43,6 +44,22 @@ const searchList = useSearch(
 		placeholder: "Поиск",
 		style: "height: 100%; width: 170px",
 		name: "general",
+	},
+);
+
+const entitySearchList = useEntitySearch(
+	props.table,
+	{
+		entity: new DepartmentEntity(),
+		pattern: "department",
+		groups: [0],
+		id: 0,
+	},
+	{
+		entity: new PostEntity(),
+		pattern: "post",
+		groups: [1],
+		id: 1,
 	},
 );
 
@@ -79,7 +96,7 @@ const dateInterval = await useDateInterval(props.table, "day");
 					></ColumnFilter>
 					<SearchFilter
 						:style="'height: 48px'"
-						:table="props.table"
+						:entities="entitySearchList.entities"
 					></SearchFilter>
 					<ExportToExcel
 						:table="props.table"

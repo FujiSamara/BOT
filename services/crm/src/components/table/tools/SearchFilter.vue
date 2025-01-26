@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import { PropType } from "vue";
-import { Table } from "@/components/table";
-import { BaseSchema } from "@/types";
 import DropDownMenu from "@/components/DropDownMenu.vue";
 import EntitySelect from "@/components/entity/EntitySelect.vue";
-import { DepartmentEntity } from "@/components/entity";
+import { BaseEntity } from "@/components/entity";
 
 const props = defineProps({
-	table: {
-		type: Object as PropType<Table<BaseSchema>>,
-		required: true,
-	},
 	style: {
 		type: String,
 	},
 	alignRight: {
 		type: Boolean,
+	},
+	entities: {
+		type: Array<BaseEntity<any>>,
 	},
 });
 </script>
@@ -27,7 +23,10 @@ const props = defineProps({
 			<span>Фильтры</span>
 		</template>
 		<template #menu>
-			<EntitySelect :entity="new DepartmentEntity()"></EntitySelect>
+			<EntitySelect
+				v-for="entity in props.entities"
+				:entity="entity"
+			></EntitySelect>
 		</template>
 	</DropDownMenu>
 </template>
