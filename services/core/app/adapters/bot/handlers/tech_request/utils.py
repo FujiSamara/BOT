@@ -25,7 +25,11 @@ from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from app.adapters.bot.kb import create_inline_keyboard, create_reply_keyboard
+from app.adapters.bot.kb import (
+    create_inline_keyboard,
+    create_reply_keyboard,
+    main_menu_button,
+)
 from app.adapters.bot.handlers.tech_request.schemas import (
     ShowRequestCallbackData,
 )
@@ -50,7 +54,7 @@ async def show_form(
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(settings.date_format)
         + f"\nОписание:\n{request.description}\n\
-Адрес: {request.worker.department.address}\n\
+Адрес: {request.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
 Номер телефона: {request.worker.phone_number}\n\
 Должность: {request.worker.post.name}\n\
@@ -108,18 +112,20 @@ async def show_form(
                 + request.reopen_confirmation_date.date().strftime(settings.date_format)
                 + "\n"
             )
-            if request.close_description:
-                text_form += "Комментарий ТУ: " + request.close_description + "\n \n"
-
-        if request.close_date:
-            text_form += (
-                "Дата закрытия заявки: "
-                + request.close_date.date().strftime(settings.date_format)
-                + "\n"
-            )
-
         if request.score:
             text_form += f"\nОценка проделанной работы: {request.score}\n"
+
+    if request.close_description:
+        text_form += (
+            "Комментарий при закрытие заявки: " + request.close_description + "\n \n"
+        )
+
+    if request.close_date:
+        text_form += (
+            "Дата закрытия заявки: "
+            + request.close_date.date().strftime(settings.date_format)
+            + "\n"
+        )
 
     buttons.append(
         [
@@ -161,14 +167,17 @@ async def show_form(
                 )
             ]
         )
-
-    buttons.append(
-        [
-            InlineKeyboardButton(
-                text=text.back, callback_data=history_or_waiting_button.callback_data
-            )
-        ]
-    )
+    if "department_name" in data or "WR" in callback_data.end_point:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=history_or_waiting_button.callback_data,
+                )
+            ]
+        )
+    else:
+        buttons.append([main_menu_button])
 
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     if callback:
@@ -232,7 +241,7 @@ async def handle_department(
         department_name = " ".join(message.text.split(" ")[1:])
         await state.update_data(department_name=department_name)
         await message.answer(
-            text=hbold(f"Производство: {department_name}"),
+            text=hbold(f"Предприятие: {department_name}"),
             reply_markup=reply_markup,
         )
         await state.set_state(Base.none)
@@ -253,7 +262,8 @@ def department_names_with_count(
     if len(department_names) > 0:
         for department_name, count in request_count:
             out_department_names.append(f"{count} {department_name}")
-            department_names.remove(department_name)
+            if department_name in department_names:
+                department_names.remove(department_name)
         for department_name in department_names:
             out_department_names.append(f"0 {department_name}")
 

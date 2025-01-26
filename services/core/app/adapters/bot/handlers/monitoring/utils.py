@@ -15,10 +15,18 @@ def get_monitoring_list() -> str:
     sep = "\n"
 
     return f"""{hbold("Статусы оборудования:")}
-{str.join(sep, (hcode(f'''Предприятие: {equipment_status.department.name}
+{
+        str.join(
+            sep,
+            (
+                hcode(f'''Предприятие: {equipment_status.department.name}
 Тип оборудования: {equipment_status.equipment_name}
 Статус: {equipment_status.status}
-''') for equipment_status in statuses))}
+''')
+                for equipment_status in statuses
+            ),
+        )
+    }
 """
 
 
@@ -58,7 +66,7 @@ def get_incident_full_info(incident: schemas.EquipmentIncidentSchema) -> str:
     if len(tellers_cash) != 0:
         teller_cash_text = sep + teller_cash_text
 
-    return f"""Производство: {hcode(department_name)}
+    return f"""Предприятие: {hcode(department_name)}
 Время инцидента: {hcode(date_time)}
 Территориальный: {hcode(territorial_manager_text)}
 Кассиры: {teller_cash_text}
@@ -78,8 +86,16 @@ def get_incidents_history_list() -> str:
     sep = "\n"
 
     return f"""{hbold("История инцидентов:")}
-{str.join(sep, (hcode(f'''Предприятие: {incident.department.name}
+{
+        str.join(
+            sep,
+            (
+                hcode(f'''Предприятие: {incident.department.name}
 Тип оборудования: {incident.equipment_name}
 Статус: {incident.status}
-''') for incident in incidents))}
+''')
+                for incident in incidents
+            ),
+        )
+    }
 """

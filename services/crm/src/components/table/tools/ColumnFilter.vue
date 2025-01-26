@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, PropType, Ref, ref, watch } from "vue";
+import { PropType, Ref, ref, watch } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
+import DropDownMenu from "@/components/DropDownMenu.vue";
 
 const props = defineProps({
 	table: {
@@ -16,7 +17,6 @@ const props = defineProps({
 	},
 });
 
-const menuVisible = ref(false);
 const headersHidden: Ref<Array<boolean>> = ref([]);
 const oneColumnVisible = ref(false);
 
@@ -47,142 +47,65 @@ watch(headersHidden, () => {
 		props.table.columnHidden.value.length ===
 		props.table.orderedHeaders.value.length - 1;
 });
-
-const menuOutsideClicked = () => {
-	menuVisible.value = false;
-};
-
-onMounted(() => {
-	document.addEventListener("click", menuOutsideClicked);
-});
-onUnmounted(() => {
-	document.removeEventListener("click", menuOutsideClicked);
-});
 </script>
 
 <template>
-	<div class="column-filter">
-		<button
-			@click.stop="menuVisible = !menuVisible"
-			:class="{ active: menuVisible }"
-			:style="props.style"
-			class="cf-switch"
-		>
-			<div class="tool-icon-wrapper">
-				<div class="tool-icon filter"></div>
-			</div>
-			<span>Фильтр</span>
-		</button>
-		<Transition name="fade">
-			<ul
-				class="cf-menu"
-				@click.stop
-				:class="{ 'align-right': alignRight }"
-				v-if="menuVisible"
+	<DropDownMenu :style="props.style" :align-right="props.alignRight">
+		<template #title>
+			<div class="tool-icon-wrapper"><div class="tool-icon filter"></div></div>
+			<span>Настройка столбцов</span>
+		</template>
+		<template #menu>
+			<li
+				class="menu-list"
+				v-for="(header, index) in props.table.orderedHeaders.value"
+				:key="header"
 			>
-				<li
-					v-for="(header, index) in props.table.orderedHeaders.value"
-					:key="header"
+				<div
+					class="checkbox"
+					:class="{
+						checked: !headersHidden[index],
+						disabled: oneColumnVisible,
+					}"
+					@click="() => checkboxClicked(index)"
 				>
-					<div
-						class="checkbox"
-						:class="{
-							checked: !headersHidden[index],
-							disabled: oneColumnVisible,
-						}"
-						@click="() => checkboxClicked(index)"
-					>
-						<div class="icon"></div>
-					</div>
-					<p>{{ header }}</p>
-				</li>
-			</ul>
-		</Transition>
-	</div>
+					<div class="icon"></div>
+				</div>
+				<p>{{ header }}</p>
+			</li>
+		</template>
+	</DropDownMenu>
 </template>
 
 <style scoped lang="scss">
-.column-filter {
-	position: relative;
+.tool-icon-wrapper {
+	.tool-icon {
+		width: 15px;
+		height: 10px;
 
-	.cf-switch {
-		@include field;
-
-		&.active {
-			background-color: $fuji-blue;
-
-			span {
-				color: white;
-			}
-
-			.tool-icon-wrapper {
-				.tool-icon {
-					color: white;
-				}
-			}
-		}
-
-		.tool-icon-wrapper {
-			.tool-icon {
-				width: 15px;
-				height: 10px;
-
-				&.filter {
-					mask-image: url("@/assets/icons/filter.svg");
-				}
-			}
+		&.filter {
+			mask-image: url("@/assets/icons/sort.svg");
 		}
 	}
+}
 
-	.cf-menu {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
+.menu-list {
+	display: flex;
+	flex-direction: row;
 
-		min-width: 202px;
-		width: fit-content;
-		max-height: 350px;
+	width: 100%;
+
+	p {
 		margin: 0;
+	}
 
-		position: absolute;
-		z-index: 1;
-		overflow-y: auto;
+	gap: 16px;
 
-		white-space: nowrap;
+	.checkbox {
+		@include checkbox;
 
-		gap: 16px;
-
-		border-radius: 8px;
-		list-style: none;
-		padding: 24px;
-		border: 1px solid $border-color;
-		background-color: $table-bg-color;
-
-		transition: opacity 0.5s;
-
-		&.align-right {
-			right: 0;
-		}
-
-		li {
-			display: flex;
-			flex-direction: row;
-
-			width: 100%;
-
-			p {
-				margin: 0;
-			}
-
-			gap: 16px;
-
-			.checkbox {
-				@include checkbox;
-
-				&.disabled.checked {
-					background-color: $disabled-bg-color;
-				}
-			}
+		&.disabled.checked {
+			background-color: $disabled-bg-color;
 		}
 	}
 }

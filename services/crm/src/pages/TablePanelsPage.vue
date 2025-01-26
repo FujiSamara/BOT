@@ -3,7 +3,7 @@ import { LinkData } from "@/types";
 import { computed, onMounted, Ref, ref, useTemplateRef, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import TableSidebar from "@/components/table/TableSidebar.vue";
+import PageSidebar from "@/components/PageSidebar.vue";
 import { getPanelsByAccesses } from "./panels";
 import { useNetworkStore } from "@/store/network";
 import { TableService } from "@/services/table";
@@ -94,13 +94,13 @@ loadPanels();
 
 <template>
 	<div class="layout">
-		<TableSidebar
+		<PageSidebar
 			:links="links"
 			class="sidebar"
 			@change="linkChange"
 			v-model="sidebarFolded"
 			:class="{ folded: sidebarFolded }"
-		></TableSidebar>
+		></PageSidebar>
 		<div ref="content" class="content" :class="{ expanded: sidebarFolded }">
 			<RouterView v-slot="{ Component }">
 				<template v-if="Component && currentTable !== undefined">

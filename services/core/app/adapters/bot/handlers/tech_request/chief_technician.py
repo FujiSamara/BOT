@@ -73,7 +73,7 @@ async def get_department(callback: CallbackQuery, state: FSMContext):
     )
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите производство:"),
+        text=hbold("Выберите предприятие:"),
         reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
@@ -86,7 +86,6 @@ async def set_department(message: Message, state: FSMContext):
         state=state,
         departments_names=department_names_with_count(
             state=ApprovalStatus.pending,
-            tg_id=message.chat.id,
             department_names=get_departments_names_for_chief_technician(
                 message.chat.id
             ),
@@ -104,7 +103,7 @@ async def show_own_requests(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Производство: {department_name}"),
+        text=hbold(f"Предприятие: {department_name}"),
         reply_markup=tech_kb.ct_own_menu_markup,
     )
 
@@ -118,7 +117,7 @@ async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.ct_own_waiting.text + f"\nПроизводство: {department_name}"),
+        text=hbold(tech_kb.ct_own_waiting.text + f"\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="CT_TR_show_form_waiting",
             menu_button=tech_kb.ct_own_button,
@@ -215,7 +214,7 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Заявки на доработку\nПроизводство: {department_name}"),
+        text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.ct_own_button,
@@ -321,8 +320,8 @@ async def save_repair(
 
     await notify_worker_by_telegram_id(
         id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_territorial_manager
-        + f"\n На производстве: {request_data['department_name']}",
+        message=text.notification_appraiser
+        + f"\n На предприятие: {request_data['department_name']}",
     )
 
     await notify_worker_by_telegram_id(
@@ -346,7 +345,7 @@ async def show_own_history(callback: CallbackQuery, state: FSMContext):
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.ct_own_history.text + f"\nПроизводство: {department_name}"),
+        text=hbold(tech_kb.ct_own_history.text + f"\nПредприятие: {department_name}"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="show_CT_TR_own_history_form",
             menu_button=tech_kb.ct_own_button,
@@ -573,8 +572,7 @@ async def save_CT_TR_admin_form(
     data = await state.get_data()
     await notify_worker_by_telegram_id(
         id=repairman_TG_id,
-        message="Вас назначили на заявку"
-        + f"\n На производстве: {data.get('department_name')}",
+        message=f"Вас назначили на заявку {request_id}\nНа предприятие: {data.get('department_name')}",
     )
     await state.clear()
     await state.set_state(Base.none)

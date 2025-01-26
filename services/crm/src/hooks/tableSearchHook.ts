@@ -1,5 +1,6 @@
+import { BaseEntity } from "@/components/entity";
 import { Table } from "@/components/table";
-import { BaseSchema, SearchSchema } from "@/types";
+import { BaseSchema, FilterSchema, SearchSchema } from "@/types";
 import { Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
@@ -124,6 +125,96 @@ const applyPattern = (fields: string[], term: string): SearchSchema => {
 	const result: SearchSchema = {
 		column: fields[0],
 		term: completedTerm,
+		dependencies: deps,
+	};
+
+	return result;
+};
+
+interface EntitySearchModelIn {
+	pattern: string; // Pattern in format: parent.child.grandson...
+	groups: number[];
+	entity: BaseEntity<BaseSchema>;
+	id: number;
+}
+
+interface EntitySearchModelOut {
+	entities: BaseEntity<BaseSchema>[];
+	exist: Ref<boolean>;
+}
+
+export const useEntitySearch = (
+	table: Table<BaseSchema>,
+	...modelsIn: EntitySearchModelIn[]
+): EntitySearchModelOut => {
+	const modelOut: EntitySearchModelOut = {
+		entities: modelsIn.map((val) => val.entity),
+		exist: ref(false),
+	};
+
+	for (let index = 0; index < modelsIn.length; index++) {
+		const modelIn = modelsIn[index];
+		watch(modelIn.entity.selectedEntities, () => {
+			const selected = modelIn.entity.selectedEntities.value;
+			const filters: FilterSchema[] = [];
+
+			for (const entity of selected) {
+				const fields = [...modelIn.pattern.split("."), "id"];
+
+				const filter = applyFilterPattern(fields, entity.id);
+				filter.groups = modelIn.groups;
+				filter.id = modelIn.id;
+
+				filters.push(filter);
+			}
+
+			const temp = [...table.filterQuery.value];
+
+			const oldIndexes = [];
+
+			for (let i = 0; i < temp.length; i++) {
+				const oldFilter = temp[i];
+
+				if (modelIn.id === oldFilter.id) {
+					oldIndexes.push(i);
+				}
+			}
+
+			oldIndexes.sort((a, b) => b - a);
+
+			for (const index of oldIndexes) {
+				temp.splice(index, 1);
+			}
+
+			for (const filter of filters) {
+				temp.push(filter);
+			}
+
+			const tempSet = new Set(
+				temp.map((val) => (val.id === undefined ? -1 : val.id)),
+			);
+			const idSet = new Set(modelsIn.map((val) => val.id));
+
+			modelOut.exist.value = tempSet.intersection(idSet).size > 0;
+			table.filterQuery.value = temp;
+		});
+	}
+
+	return modelOut;
+};
+
+const applyFilterPattern = (fields: string[], value: any): FilterSchema => {
+	const deps = [];
+	let completedTerm = value;
+
+	if (fields.length > 1) {
+		completedTerm = "";
+		deps.push(applyFilterPattern(fields.slice(1), value));
+	}
+
+	const result: FilterSchema = {
+		column: fields[0],
+		value: completedTerm,
 		dependencies: deps,
 	};
 

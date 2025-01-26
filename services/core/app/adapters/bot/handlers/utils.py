@@ -36,7 +36,9 @@ from app.adapters.bot.kb import (
     get_it_tm_menu_btn,
     get_personal_cabinet_button,
     get_monitoring_menu_btn,
-    get_coordinate_worker_bid_btn,
+    get_coordinate_worker_bids_SS_btn,
+    get_coordinate_worker_bids_AS_btn,
+    get_candidates_coordinate_menu_btn,
 )
 from app.adapters.bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
@@ -65,14 +67,16 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_worker: wr_menu_button,
         FujiScope.bot_technical_request_repairman: rm_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_territorial_manager: tm_button,
+        FujiScope.bot_technical_request_appraiser: tm_button,
         FujiScope.bot_technical_request_department_director: dd_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
         FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
         FujiScope.bot_personal_cabinet: get_personal_cabinet_button,
         FujiScope.bot_incident_monitoring: get_monitoring_menu_btn,
-        FujiScope.bot_coordinate_worker_bid: get_coordinate_worker_bid_btn,
+        FujiScope.bot_subordinates_menu: get_candidates_coordinate_menu_btn,
+        FujiScope.bot_worker_bid_security_coordinate: get_coordinate_worker_bids_SS_btn,
+        FujiScope.bot_worker_bid_accounting_coordinate: get_coordinate_worker_bids_AS_btn,
     }
 
 
@@ -181,7 +185,9 @@ async def try_edit_or_answer(
     return True
 
 
-async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
+async def notify_workers_by_scope(
+    scope: FujiScope, message: str, reply_markup: InlineKeyboardMarkup | None = None
+) -> None:
     """
     Sends notify `message` to workers by their `scope`.
     """
@@ -195,14 +201,21 @@ async def notify_workers_by_scope(scope: FujiScope, message: str) -> None:
     }
 
     for id in telegram_ids:
-        msg = await notify_worker_by_telegram_id(id=id, message=message)
+        msg = await notify_worker_by_telegram_id(
+            id=id,
+            message=message,
+            reply_markup=reply_markup,
+        )
         if not msg:
             continue
         await send_menu_by_scopes(message=msg)
 
 
 async def notify_workers_in_department_by_scope(
-    scope: FujiScope, department_id: int, message: str
+    scope: FujiScope,
+    department_id: int,
+    message: str,
+    reply_markup: InlineKeyboardMarkup | None = None,
 ) -> None:
     """
     Sends notify `message` to workers in department by their `scope`.
@@ -215,7 +228,11 @@ async def notify_workers_in_department_by_scope(
     for worker in workers:
         if not worker.telegram_id:
             continue
-        msg = await notify_worker_by_telegram_id(id=worker.telegram_id, message=message)
+        msg = await notify_worker_by_telegram_id(
+            id=worker.telegram_id,
+            message=message,
+            reply_markup=reply_markup,
+        )
         if not msg:
             continue
         await send_menu_by_scopes(message=msg)

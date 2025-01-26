@@ -29,7 +29,7 @@
 
       height: inherit;
 
-      max-width: 50%;
+      max-width: 60%;
 
       .tb-group {
         display: flex;
@@ -78,6 +78,7 @@
   flex-direction: row;
   align-items: center;
   position: relative;
+  width: fit-content;
 
   gap: 10px;
 

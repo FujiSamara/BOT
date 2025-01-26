@@ -31,12 +31,21 @@ class BidCoordination(StatesGroup):
     search = State()
 
 
+class CandidatesCoordination(StatesGroup):
+    state = State()
+    l_name = State()
+
+
 class WorkerBidCreating(StatesGroup):
     f_name = State()
     l_name = State()
     o_name = State()
     post = State()
     department = State()
+    birth_year = State()
+    birth_month = State()
+    birth_day = State()
+    phone_number = State()
     worksheet = State()
     passport = State()
     work_permission = State()
@@ -101,7 +110,7 @@ class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     description = State()
 
 
-class TerritorialManagerRequestForm(StatesGroup):
+class AppraiserRequestForm(StatesGroup):
     department = State()
     mark = State()
     description = State()

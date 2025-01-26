@@ -14,7 +14,6 @@ from app.infra.database.models import (
     WorkerBid,
     WorkerBidDocument,
     ApprovalStatus,
-    Gender,
     TechnicalRequest,
     Group,
     WorkTime,
@@ -23,8 +22,21 @@ from app.infra.database.models import (
     MaterialValues,
     WorkerFingerprint,
     FingerprintAttempt,
+    WorkerPassport,
+    WorkerChildren,
 )
-from app.adapters.bot.kb import payment_type_dict, approval_status_dict
+from app.adapters.input.admin.converters import (
+    TechnicalRequestConverter,
+    PostScopeConverter,
+    WorkerConverter,
+)
+from app.infra.database.converters import (
+    approval_status_dict,
+    approval_status_technical_request_dict,
+    worker_status_dict,
+    gender_decode_dict,
+)
+from app.adapters.bot.kb import payment_type_dict
 from app.schemas import FileOutSchema
 from app import services
 from app.adapters.input.api.auth import encrypt_password
@@ -37,7 +49,7 @@ class PostScopeView(ModelView, model=PostScope):
     column_details_exclude_list = [PostScope.post_id, PostScope.id]
     can_export = False
     can_edit = False
-
+    form_converter = PostScopeConverter
     name_plural = "Доступы"
     name = "Доступ"
     column_labels = {
@@ -77,7 +89,7 @@ class CompanyView(ModelView, model=Company):
     name = "Компания"
     column_labels = {
         Company.name: "Название",
-        Company.departments: "Производства",
+        Company.departments: "Предприятия",
         Company.workers: "Работники",
     }
 
@@ -92,6 +104,7 @@ class DepartmentView(ModelView, model=Department):
         Department.bids,
         Department.delivery_manager_id,
         Department.territorial_manager_id,
+        Department.restaurant_manager_id,
         Department.territorial_director_id,
         Department.territorial_brand_chef_id,
         Department.technical_requests,
@@ -112,8 +125,8 @@ class DepartmentView(ModelView, model=Department):
     ]
     can_export = False
 
-    name_plural = "Производства"
-    name = "Производство"
+    name_plural = "Предприятия"
+    name = "Предприятие"
     column_labels = {
         Department.name: "Название",
         Department.address: "Адрес",
@@ -126,6 +139,7 @@ class DepartmentView(ModelView, model=Department):
         Department.closing_date: "Дата закрытия",
         Department.area: "Общая площадь",
         Department.territorial_manager: "Территориальный управляющий",
+        Department.restaurant_manager: "Управляющий рестораном",
         Department.territorial_brand_chef: "Территориальный брендшеф",
         Department.delivery_manager: "Менеджер доставки",
         Department.territorial_director: "Территориальный директор",
@@ -146,6 +160,10 @@ class DepartmentView(ModelView, model=Department):
             "order_by": "l_name",
         },
         "territorial_manager": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "restaurant_manager": {
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },
@@ -194,17 +212,23 @@ class GroupView(ModelView, model=Group):
 
 
 class WorkerView(ModelView, model=Worker):
+    details_template = "worker_details.html"
     column_searchable_list = [
         Worker.f_name,
         Worker.l_name,
         Worker.o_name,
         Worker.phone_number,
     ]
+    column_sortable_list = [
+        Worker.state,
+        Worker.id,
+    ]
     column_list = [
         Worker.l_name,
         Worker.f_name,
         Worker.o_name,
         Worker.phone_number,
+        Worker.state,
     ]
 
     column_details_list = [
@@ -212,6 +236,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name,
         Worker.o_name,
         Worker.post,
+        Worker.state,
         Worker.subordination_chief,
         Worker.phone_number,
         Worker.department,
@@ -221,10 +246,21 @@ class WorkerView(ModelView, model=Worker):
         Worker.telegram_id,
         Worker.gender,
         Worker.employment_date,
+        Worker.official_employment_date,
         Worker.dismissal_date,
+        Worker.official_dismissal_date,
         Worker.medical_records_availability,
         Worker.citizenship,
         Worker.can_use_crm,
+        Worker.passport,
+        Worker.snils,
+        Worker.inn,
+        Worker.registration,
+        Worker.actual_residence,
+        Worker.children,
+        Worker.children_born_date,
+        Worker.military_ticket,
+        Worker.patent,
     ]
     can_export = False
 
@@ -234,8 +270,9 @@ class WorkerView(ModelView, model=Worker):
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
         Worker.o_name: "Отчество",
+        Worker.state: "Статус",
         Worker.subordination_chief: "Руководитель",
-        Worker.department: "Производство",
+        Worker.department: "Предприятие",
         Worker.group: "Отдел",
         Worker.post: "Должность",
         Worker.b_date: "Дата рождения",
@@ -243,19 +280,31 @@ class WorkerView(ModelView, model=Worker):
         Worker.phone_number: "Номер телефона",
         Worker.company: "Компания",
         Worker.telegram_id: "ID телеграмм",
-        Worker.employment_date: "Дата приема",
+        Worker.employment_date: "Дата приёма",
+        Worker.official_employment_date: "Официальная дата приёма",
         Worker.dismissal_date: "Дата увольнения",
+        Worker.official_dismissal_date: "Официальная дата увольнения",
         Worker.medical_records_availability: "Наличие медицинской книжки",
         Worker.gender: "Пол",
         Worker.citizenship: "Гражданство",
         Worker.can_use_crm: "Может использовать CRM",
         Worker.password: "Пароль",
+        Worker.passport: "Паспорт",
+        Worker.snils: "СНИЛС",
+        Worker.inn: "ИНН",
+        Worker.registration: "Регистрация",
+        Worker.actual_residence: "Фактическое место жительства",
+        Worker.children: "Дети",
+        Worker.children_born_date: "Даты рождения детей",
+        Worker.military_ticket: "Военный билет",
+        Worker.patent: "Патент",
     }
 
     form_columns = [
         Worker.f_name,
         Worker.l_name,
         Worker.o_name,
+        Worker.state,
         Worker.phone_number,
         Worker.department,
         Worker.group,
@@ -263,12 +312,23 @@ class WorkerView(ModelView, model=Worker):
         Worker.post,
         Worker.b_date,
         Worker.employment_date,
+        Worker.official_employment_date,
         Worker.dismissal_date,
+        Worker.official_dismissal_date,
         Worker.medical_records_availability,
         Worker.gender,
         Worker.citizenship,
         Worker.can_use_crm,
         Worker.password,
+        Worker.passport,
+        Worker.snils,
+        Worker.inn,
+        Worker.registration,
+        Worker.actual_residence,
+        Worker.children,
+        Worker.children_born_date,
+        Worker.military_ticket,
+        Worker.patent,
     ]
 
     form_ajax_refs = {
@@ -287,20 +347,148 @@ class WorkerView(ModelView, model=Worker):
     }
 
     @staticmethod
-    def gender_format(inst, columm):
-        value = getattr(inst, columm)
+    def gender_format(inst, column):
+        value = getattr(inst, column)
+        return gender_decode_dict.get(value)
 
-        if value == Gender.man:
-            return "Мужчина"
-        else:
-            return "Женщина"
+    @staticmethod
+    def worker_status_format(inst, column):
+        value = getattr(inst, column)
+        return worker_status_dict.get(value)
+
+    @staticmethod
+    def files_format(inst, column):
+        return WorkerBidView.files_format(inst, column)
 
     async def on_model_change(self, data: dict, model: Worker, is_created, request):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
-    column_formatters = {Worker.gender: gender_format}
+    column_formatters = {
+        Worker.gender: gender_format,
+        Worker.state: worker_status_format,
+        Worker.passport: files_format,
+    }
     column_formatters_detail = column_formatters
+
+    form_converter = WorkerConverter
+
+
+class WorkerPassportView(ModelView, model=WorkerPassport):
+    name = "Паспорт работника"
+    name_plural = "Паспорта работников"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerPassport.id,
+        WorkerPassport.worker,
+        WorkerPassport.document,
+    ]
+
+    column_sortable_list = [
+        WorkerPassport.id,
+    ]
+
+    column_labels = {
+        WorkerPassport.worker: "Работник",
+        WorkerPassport.document: "Паспорт",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(WorkerPassport).filter(
+            WorkerPassport.worker_id.in_(workers_id),
+        )
+
+    async def on_model_change(
+        self, data: dict, model: WorkerPassport, is_created, request
+    ):
+        from pathlib import Path
+
+        if "document" in data and "worker" in data:
+            worker_id = int(data["worker"])
+            document = data["document"]
+            filename = f"photo_worker_passport_{worker_id}"
+            filename += (
+                f"_{services.get_last_worker_passport_id(worker_id=worker_id) + 1}"
+            )
+            filename += f"{Path(document.filename).suffix}"
+            data["document"].filename = filename
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
+
+
+class WorkerChildrenView(ModelView, model=WorkerChildren):
+    name = "Дети работника"
+    name_plural = "Дети работников"
+
+    can_create = True
+    can_edit = True
+    can_export = False
+
+    column_list = [
+        WorkerChildren.id,
+        WorkerChildren.worker,
+        WorkerChildren.born_date,
+    ]
+
+    column_sortable_list = [
+        WorkerChildren.id,
+    ]
+
+    column_labels = {
+        WorkerChildren.worker: "Работник",
+        WorkerChildren.born_date: "Дата рождения",
+    }
+
+    form_ajax_refs = {
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    @staticmethod
+    def search_query(stmt: Select, term):
+        workers_id = select(Worker.id).filter(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        return select(WorkerChildren).filter(
+            WorkerChildren.worker_id.in_(workers_id),
+        )
+
+    column_searchable_list = [
+        "Фамилия",
+        "Имя",
+        "Отчество",
+    ]
 
 
 class WorkerBidView(ModelView, model=WorkerBid):
@@ -360,9 +548,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
     form_columns = [WorkerBid.comment]
 
     @staticmethod
-    def datetime_format(inst, columm):
+    def datetime_format(inst, column):
         format = "%H:%M %d.%m.%y"
-        value = getattr(inst, columm)
+        value = getattr(inst, column)
         if value:
             return value.strftime(format)
         else:
@@ -371,13 +559,11 @@ class WorkerBidView(ModelView, model=WorkerBid):
     @staticmethod
     def payment_type_format(inst, column):
         value = getattr(inst, column)
-
         return payment_type_dict.get(value)
 
     @staticmethod
-    def approval_status_format(inst, columm):
-        value = getattr(inst, columm)
-
+    def approval_status_format(inst, column):
+        value = getattr(inst, column)
         return approval_status_dict.get(value)
 
     @action(
@@ -450,11 +636,12 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.repair_photos: "Фотографии ремонта",
         TechnicalRequest.problem_photos: "Фотографии проблемы",
         TechnicalRequest.repairman: "Исполнитель",
-        TechnicalRequest.department: "Производство",
+        TechnicalRequest.department: "Предприятие",
         TechnicalRequest.problem: "Проблема",
-        TechnicalRequest.territorial_manager: "Территориальный менеджер",
+        TechnicalRequest.appraiser: "Территориальный менеджер/управляющий",
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
+        TechnicalRequest.repairman_worktime: "Заявка в исполнение",
     }
 
     column_list = [
@@ -472,12 +659,20 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.problem_id,
         TechnicalRequest.repairman_id,
         TechnicalRequest.department_id,
-        TechnicalRequest.territorial_manager_id,
+        TechnicalRequest.appraiser_id,
         TechnicalRequest.acceptor_post_id,
+    ]
+    form_excluded_columns = [
+        TechnicalRequest.problem_photos,
+        TechnicalRequest.repair_photos,
+        TechnicalRequest.repairman_worktime,
     ]
 
     column_sortable_list = [
         TechnicalRequest.id,
+        TechnicalRequest.state,
+        TechnicalRequest.department,
+        TechnicalRequest.repairman,
     ]
 
     @staticmethod
@@ -499,7 +694,7 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     column_searchable_list = [TechnicalRequest.department, TechnicalRequest.problem]
 
     can_create = False
-    can_edit = False
+    can_edit = True
     can_export = False
     name_plural = "Технические заявки"
     name = "Техническая заявка"
@@ -508,8 +703,13 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     def files_format(inst, column):
         return WorkerBidView.files_format(inst, column)
 
+    @staticmethod
+    def approval_status_format(inst, column):
+        value = getattr(inst, column)
+        return approval_status_technical_request_dict.get(value)
+
     column_formatters = {
-        TechnicalRequest.state: WorkerBidView.approval_status_format,
+        TechnicalRequest.state: approval_status_format,
         TechnicalRequest.repair_photos: files_format,
         TechnicalRequest.problem_photos: files_format,
         TechnicalRequest.open_date: WorkerBidView.datetime_format,
@@ -524,6 +724,55 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     }
 
     column_formatters_detail = column_formatters
+    form_converter = TechnicalRequestConverter
+
+    column_default_sort = "state"
+    form_ajax_refs = {
+        "repairman": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "department": {
+            "fields": ("name",),
+            "order_by": "name",
+        },
+        "problem": {
+            "fields": ("problem_name",),
+            "order_by": "name",
+        },
+        "appraiser": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "worker": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+    }
+
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "repairman" or sort_field == "department":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
 
 
 class WorkTimeAdminView(ModelView, model=WorkTime):

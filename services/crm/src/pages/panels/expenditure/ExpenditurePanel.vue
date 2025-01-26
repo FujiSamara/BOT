@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
-import SearchInput from "@/components/table/tools/SearchInput.vue";
+import SearchInput from "@/components/SearchInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 // import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/searchHook";
+import { useSearch } from "@/hooks/tableSearchHook";
 import { PropType } from "vue";
 
 const props = defineProps({
@@ -17,39 +17,25 @@ const props = defineProps({
 	},
 });
 
-const searchList = useSearch(
-	props.table,
-	{
-		schemas: [
-			{
-				pattern: "creator.department",
-				groups: [0, 1, 2],
-			},
-		],
-		placeholder: "Производство",
-		style: "height: 100%; width: 215px",
-		name: "department",
-	},
-	{
-		schemas: [
-			{
-				pattern: "fac",
-				groups: [0],
-			},
-			{
-				pattern: "chapter",
-				groups: [1],
-			},
-			{
-				pattern: "name",
-				groups: [2],
-			},
-		],
-		placeholder: "Поиск",
-		style: "height: 100%; width: 170px",
-		name: "general",
-	},
-);
+const searchList = useSearch(props.table, {
+	schemas: [
+		{
+			pattern: "fac",
+			groups: [0],
+		},
+		{
+			pattern: "chapter",
+			groups: [1],
+		},
+		{
+			pattern: "name",
+			groups: [2],
+		},
+	],
+	placeholder: "Поиск",
+	style: "height: 100%; width: 170px",
+	name: "general",
+});
 </script>
 
 <template>
@@ -72,7 +58,7 @@ const searchList = useSearch(
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<ColumnFilter
-						:style="'width: 126px; height: 48px'"
+						:style="'height: 48px'"
 						:table="props.table"
 						:alignRight="true"
 					></ColumnFilter>

@@ -135,7 +135,6 @@ async def get_worker_photo(callback: CallbackQuery, state: FSMContext):
 @router.message(WorkerTechnicalRequestForm.photo)
 async def set_worker_photo(message: Message, state: FSMContext):
     await handle_documents(message, state, "photo", show_worker_create_request_format)
-    await try_delete_message(message=message)
 
 
 @router.callback_query(F.data == "department_WR_TR")
@@ -147,7 +146,7 @@ async def get_department(message: Message | CallbackQuery, state: FSMContext):
     await state.update_data(
         msg=await try_edit_or_answer(
             message=message,
-            text=hbold("Выберите производство:"),
+            text=hbold("Выберите предприятие:"),
             reply_markup=create_reply_keyboard(text.back, *get_departments_names()),
             return_message=True,
         )

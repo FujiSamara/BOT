@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
 import TableCellContainer from "@/components/table/TableCellContainer.vue";
+import Checkbox from "@/components/UI/Checkbox.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
 import { useRoute, useRouter } from "vue-router";
@@ -127,22 +128,20 @@ onMounted(() => {
 			</div>
 		</Transition>
 		<TransitionGroup
-			name="table"
+			name="shift"
 			tag="div"
 			style="display: inline-block; width: fit-content"
 			:duration="{ enter: 1500, leave: 500 }"
 		>
 			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
 				<TableCellContainer id="-1" class="t-cell check">
-					<div
-						class="checkbox"
-						:class="{ checked: props.table.allChecked.value }"
+					<Checkbox
+						:checked="props.table.allChecked.value"
 						@click="
 							props.table.allChecked.value = !props.table.allChecked.value
 						"
 					>
-						<div class="icon"></div>
-					</div>
+					</Checkbox>
 				</TableCellContainer>
 				<TableCellContainer
 					:id="index"
@@ -179,16 +178,14 @@ onMounted(() => {
 			</div>
 			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
 				<TableCellContainer id="-1" class="t-cell check">
-					<div
-						class="checkbox"
-						:class="{ checked: table.checked.value[index].value }"
+					<Checkbox
+						:checked="table.checked.value[index].value"
 						@click="
 							table.checked.value[index].value =
 								!table.checked.value[index].value
 						"
 					>
-						<div class="icon"></div>
-					</div>
+					</Checkbox>
 				</TableCellContainer>
 				<TableCellContainer
 					:id="index"
@@ -318,23 +315,7 @@ onMounted(() => {
 
 		.check {
 			width: fit-content;
-
-			.checkbox {
-				@include checkbox;
-			}
 		}
-	}
-
-	// Transitions
-
-	.table-enter-active,
-	.table-leave-active {
-		transition: all 1s ease;
-	}
-	.table-enter-from,
-	.table-leave-to {
-		opacity: 0;
-		transform: translateY(30px);
 	}
 }
 </style>

@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
-import SearchInput from "@/components/table/tools/SearchInput.vue";
+import SearchInput from "@/components/SearchInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
+import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/searchHook";
+import { useSearch, useEntitySearch } from "@/hooks/tableSearchHook";
 import { PropType } from "vue";
 import { useDateInterval } from "@/hooks/dateIntervalHook";
+import { DepartmentEntity, PostEntity } from "@/components/entity";
 
 const props = defineProps({
 	table: {
@@ -19,32 +21,32 @@ const props = defineProps({
 	},
 });
 
-const searchList = useSearch(
+const searchList = useSearch(props.table, {
+	schemas: [
+		{
+			pattern: "worker",
+			groups: [0],
+		},
+	],
+	placeholder: "Поиск",
+	style: "height: 100%; width: 170px",
+	name: "general",
+});
+const entitySearchList = useEntitySearch(
 	props.table,
 	{
-		schemas: [
-			{
-				pattern: "department",
-				groups: [0],
-			},
-		],
-		placeholder: "Производство",
-		style: "height: 100%; width: 215px",
-		name: "department",
+		entity: new DepartmentEntity(),
+		pattern: "department",
+		groups: [0],
+		id: 0,
 	},
 	{
-		schemas: [
-			{
-				pattern: "worker",
-				groups: [0],
-			},
-		],
-		placeholder: "Поиск",
-		style: "height: 100%; width: 170px",
-		name: "general",
+		entity: new PostEntity(),
+		pattern: "post",
+		groups: [1],
+		id: 1,
 	},
 );
-
 const dateInterval = await useDateInterval(props.table, "day");
 </script>
 
@@ -73,9 +75,13 @@ const dateInterval = await useDateInterval(props.table, "day");
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<ColumnFilter
-						:style="'width: 126px; height: 48px'"
+						:style="'height: 48px'"
 						:table="props.table"
 					></ColumnFilter>
+					<SearchFilter
+						:style="'height: 48px'"
+						:entities="entitySearchList.entities"
+					></SearchFilter>
 					<ExportToExcel
 						:table="props.table"
 						style="width: 187px; height: 48px"

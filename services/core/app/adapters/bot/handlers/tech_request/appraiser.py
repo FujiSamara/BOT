@@ -12,7 +12,7 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import (
     Base,
-    TerritorialManagerRequestForm,
+    AppraiserRequestForm,
 )
 
 from app.adapters.bot.handlers.tech_request.utils import (
@@ -29,14 +29,14 @@ from app.adapters.bot.handlers.utils import (
 
 
 from app.services import (
-    get_all_history_technical_requests_for_territorial_manager,
-    get_all_waiting_technical_requests_for_territorial_manager,
-    get_departments_names_for_territorial_manager,
-    update_technical_request_from_territorial_manager,
+    get_all_history_technical_requests_for_appraiser,
+    get_all_waiting_technical_requests_for_appraiser,
+    get_departments_names_for_appraiser,
+    update_technical_request_from_appraiser,
 )
 from app.infra.database.models import ApprovalStatus
 
-router = Router(name="technical_request_territorial_manager")
+router = Router(name="technical_request_appraiser")
 
 
 @router.callback_query(F.data == tech_kb.tm_button.callback_data)
@@ -56,31 +56,31 @@ async def show_tech_req_menu_ms(message: Message):
     )
 
 
-@router.callback_query(F.data == tech_kb.tm_change_department_button.callback_data)
+@router.callback_query(
+    F.data == tech_kb.appraiser_change_department_button.callback_data
+)
 async def change_department(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(TerritorialManagerRequestForm.department)
+    await state.set_state(AppraiserRequestForm.department)
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
         tg_id=callback.message.chat.id,
-        department_names=get_departments_names_for_territorial_manager(
-            callback.message.chat.id
-        ),
+        department_names=get_departments_names_for_appraiser(callback.message.chat.id),
     )
 
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
-        text=hbold("Выберите производство:"),
+        text=hbold("Выберите предприятие:"),
         reply_markup=kb.create_reply_keyboard(text.back, *department_names),
     )
     await state.update_data(msg=msg)
 
 
-@router.message(TerritorialManagerRequestForm.department)
+@router.message(AppraiserRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
         tg_id=message.chat.id,
-        department_names=get_departments_names_for_territorial_manager(message.chat.id),
+        department_names=get_departments_names_for_appraiser(message.chat.id),
     )
 
     if await handle_department(
@@ -97,7 +97,7 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Производство: {department_name}"),
+        text=hbold(f"Предприятие: {department_name}"),
         reply_markup=tech_kb.tm_menu_markup,
     )
 
@@ -105,7 +105,7 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == tech_kb.tm_history.callback_data)
 async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = get_all_history_technical_requests_for_territorial_manager(
+    requests = get_all_history_technical_requests_for_appraiser(
         telegram_id=callback.message.chat.id, department_name=department_name
     )
 
@@ -114,7 +114,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
         message=callback.message,
         text=hbold("История заявок"),
         reply_markup=tech_kb.create_kb_with_end_point(
-            end_point="TM_TR_show_form_history",
+            end_point="AR_TR_show_form_history",
             menu_button=tech_kb.tm_menu_button,
             requests=requests,
         ),
@@ -122,7 +122,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "TM_TR_show_form_history")
+    ShowRequestCallbackData.filter(F.end_point == "AR_TR_show_form_history")
 )
 async def show_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -140,7 +140,7 @@ async def show_history_form(
 @router.callback_query(F.data == tech_kb.tm_waiting.callback_data)
 async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
-    requests = get_all_waiting_technical_requests_for_territorial_manager(
+    requests = get_all_waiting_technical_requests_for_appraiser(
         telegram_id=callback.message.chat.id, department_name=department_name
     )
     await try_delete_message(callback.message)
@@ -148,7 +148,7 @@ async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
         message=callback.message,
         text=hbold("Ожидающие заявки"),
         reply_markup=tech_kb.create_kb_with_end_point(
-            end_point="TM_TR_show_form_waiting",
+            end_point="AR_TR_show_form_waiting",
             menu_button=tech_kb.tm_menu_button,
             requests=requests,
         ),
@@ -156,7 +156,7 @@ async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "TM_TR_show_form_waiting")
+    ShowRequestCallbackData.filter(F.end_point == "AR_TR_show_form_waiting")
 )
 async def show_waiting_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -167,7 +167,7 @@ async def show_waiting_form(
                 text="Оценить заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="TM_TR_rate_form",
+                    end_point="AR_TR_rate_form",
                 ).pack(),
             )
         ]
@@ -181,7 +181,7 @@ async def show_waiting_form(
     )
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "TM_TR_rate_form"))
+@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "AR_TR_rate_form"))
 async def show_rate_form_cb(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
@@ -201,17 +201,17 @@ async def show_rate_form_ms(message: Message, state: FSMContext):
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="TM_TR_rate_form",
+                end_point="AR_TR_rate_form",
             ),
         ),
     )
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "TM_TR_rate"))
+@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "AR_TR_rate"))
 async def show_rate_tech_request(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    await state.set_state(TerritorialManagerRequestForm.mark)
+    await state.set_state(AppraiserRequestForm.mark)
     await state.update_data(request_id=callback_data.request_id)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
@@ -223,7 +223,7 @@ async def show_rate_tech_request(
     await state.update_data(msg=msg)
 
 
-@router.message(TerritorialManagerRequestForm.mark)
+@router.message(AppraiserRequestForm.mark)
 async def set_mark(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -250,18 +250,18 @@ async def set_mark(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "description_TM_TR")
+    ShowRequestCallbackData.filter(F.end_point == "description_AR_TR")
 )
 async def get_description(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    await state.set_state(TerritorialManagerRequestForm.description)
+    await state.set_state(AppraiserRequestForm.description)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Введите комментарий:"))
     await state.update_data(msg=msg)
 
 
-@router.message(TerritorialManagerRequestForm.description)
+@router.message(AppraiserRequestForm.description)
 async def set_description(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     data = await state.get_data()
@@ -273,7 +273,7 @@ async def set_description(message: Message, state: FSMContext):
     await show_rate_form_ms(message, state)
 
 
-@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "save_TM_TR_rate"))
+@router.callback_query(ShowRequestCallbackData.filter(F.end_point == "save_AR_TR_rate"))
 async def save_rate(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
@@ -283,7 +283,7 @@ async def save_rate(
     request_id = callback_data.request_id
 
     message = callback.message
-    if not await update_technical_request_from_territorial_manager(
+    if not await update_technical_request_from_appraiser(
         mark=mark, request_id=request_id, description=description
     ):
         message = await try_edit_or_answer(
