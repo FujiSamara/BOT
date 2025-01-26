@@ -17,39 +17,25 @@ const props = defineProps({
 	},
 });
 
-const searchList = useSearch(
-	props.table,
-	{
-		schemas: [
-			{
-				pattern: "creator.department",
-				groups: [0, 1, 2],
-			},
-		],
-		placeholder: "Производство",
-		style: "height: 100%; width: 215px",
-		name: "department",
-	},
-	{
-		schemas: [
-			{
-				pattern: "fac",
-				groups: [0],
-			},
-			{
-				pattern: "chapter",
-				groups: [1],
-			},
-			{
-				pattern: "name",
-				groups: [2],
-			},
-		],
-		placeholder: "Поиск",
-		style: "height: 100%; width: 170px",
-		name: "general",
-	},
-);
+const searchList = useSearch(props.table, {
+	schemas: [
+		{
+			pattern: "fac",
+			groups: [0],
+		},
+		{
+			pattern: "chapter",
+			groups: [1],
+		},
+		{
+			pattern: "name",
+			groups: [2],
+		},
+	],
+	placeholder: "Поиск",
+	style: "height: 100%; width: 170px",
+	name: "general",
+});
 </script>
 
 <template>
