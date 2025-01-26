@@ -15,12 +15,22 @@ const props = defineProps({
 const entity = props.entity;
 
 const active = ref(false);
-const error = ref(undefined);
 const entities = computed(() => {
 	if (!active.value) {
 		return [];
 	}
 	return entity.entitiesList.value;
+});
+const error = computed(() => {
+	if (
+		entity.entitiesList.value.length - entity.selectedEntities.value.length ===
+			0 &&
+		entity.formattedField.value.length !== 0 &&
+		!entity.loading.value
+	) {
+		return "";
+	}
+	return undefined;
 });
 </script>
 
@@ -35,6 +45,7 @@ const entities = computed(() => {
 			:value="entity.formattedField.value"
 			@submit="(val: string) => (entity.formattedField.value = val)"
 			:error="error"
+			:placeholder="entity.placeholder"
 		></SearchInput>
 		<TransitionGroup
 			:css="false"
@@ -77,16 +88,20 @@ const entities = computed(() => {
 		gap: 10px;
 
 		width: 248px;
-		min-height: 100px;
 		padding: 0;
 
 		.entity-wrapper {
 			@include field;
 			width: inherit;
+			justify-content: space-between;
 
 			.entity {
 				overflow-x: hidden;
 			}
+		}
+
+		&:empty {
+			margin-top: calc(-16px);
 		}
 	}
 }
