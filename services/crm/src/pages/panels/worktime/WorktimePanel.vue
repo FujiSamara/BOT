@@ -21,32 +21,17 @@ const props = defineProps({
 	},
 });
 
-const searchList = useSearch(
-	props.table,
-	// {
-	// 	schemas: [
-	// 		{
-	// 			pattern: "department",
-	// 			groups: [0],
-	// 		},
-	// 	],
-	// 	placeholder: "Производство",
-	// 	style: "height: 100%; width: 215px",
-	// 	name: "department",
-	// },
-	{
-		schemas: [
-			{
-				pattern: "worker",
-				groups: [0],
-			},
-		],
-		placeholder: "Поиск",
-		style: "height: 100%; width: 170px",
-		name: "general",
-	},
-);
-
+const searchList = useSearch(props.table, {
+	schemas: [
+		{
+			pattern: "worker",
+			groups: [0],
+		},
+	],
+	placeholder: "Поиск",
+	style: "height: 100%; width: 170px",
+	name: "general",
+});
 const entitySearchList = useEntitySearch(
 	props.table,
 	{
@@ -62,7 +47,6 @@ const entitySearchList = useEntitySearch(
 		id: 1,
 	},
 );
-
 const dateInterval = await useDateInterval(props.table, "day");
 </script>
 
