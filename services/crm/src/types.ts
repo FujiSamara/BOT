@@ -161,6 +161,7 @@ export interface DateSchema {
 }
 
 export interface FilterSchema {
+	id?: number;
 	column: string;
 	value: any;
 	dependencies?: Array<FilterSchema>;
