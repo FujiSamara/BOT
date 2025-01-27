@@ -200,8 +200,10 @@ async def update_worker_bid_bot(
             stage = "службой безопасности"
             worker_bid.security_service_state = state
             worker_bid.security_service_comment = comment
-            if state != ApprovalStatus.denied:
+            if state == ApprovalStatus.approved:
                 worker_bid.accounting_service_state = ApprovalStatus.pending_approval
+            else:
+                worker_bid.accounting_service_state = ApprovalStatus.skipped
         case "accounting_service":
             stage = "бухгалтерией"
             worker_bid.accounting_service_state = state
