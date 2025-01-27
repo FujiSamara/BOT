@@ -70,7 +70,7 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
         await send_menu_by_scopes(msg)
 
 
-def create_and_add_worker(worker_bid: WorkerBidSchema) -> int:
+def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
     """Creates and add worker from worker bid in database.
 
     Returns:
