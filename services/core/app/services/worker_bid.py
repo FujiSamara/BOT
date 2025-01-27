@@ -70,11 +70,11 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
         await send_menu_by_scopes(msg)
 
 
-def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
+def create_and_add_worker(worker_bid: WorkerBidSchema) -> int:
     """Creates and add worker from worker bid in database.
 
     Returns:
-        `bool`: True if worker was created successfully else False
+        `int | None`: worker id:int if worker was created successfully else None
     """
     last_worker_id = orm.get_last_worker_id()
     passport = []
@@ -111,8 +111,8 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
         military_ticket=None,
     )
     if orm.add_worker(worker):
-        return True
-    return False
+        return worker.id
+    return None
 
 
 async def notify_next_coordinator(bid: WorkerBidSchema):
@@ -178,6 +178,9 @@ async def update_worker_bid_bot(
     Use only in bot
     """
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot.handlers.worker_bids.schemas import (
+        CandidatesCoordinationCallbackData,
+    )
 
     worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
 
@@ -208,8 +211,34 @@ async def update_worker_bid_bot(
             logger.error("State for worker bid not found")
 
     orm.update_worker_bid(worker_bid)
+
     if worker_bid.state == ApprovalStatus.approved:
-        create_and_add_worker(worker_bid)
+        worker_id = create_and_add_worker(worker_bid)
+        if worker_id is None:
+            logger.error(f"Worker from worker bid id: {worker_bid.id} wasn't create")
+
+        territorial_manager = orm.get_territorial_manager_by_department_id(
+            department_id=worker_bid.department.id
+        )
+        if territorial_manager is None:
+            logger.error(
+                f"Territorial manager in department with id: {worker_bid.department.id} wasn't found"
+            )
+
+        await notify_worker_by_telegram_id(
+            id=territorial_manager.telegram_id,
+            message="У Вас новый сотрудник на стажировке",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=CandidatesCoordinationCallbackData(
+                        id=worker_id,
+                        page=0,
+                        endpoint_name="show_worker",
+                    ).pack(),
+                ),
+            ),
+        )
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
@@ -232,7 +261,6 @@ async def update_worker_bid_bot(
             ),
         )
         await notify_next_coordinator(bid=worker_bid)
-
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
             id=worker.telegram_id,
