@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from fastapi import UploadFile
 import app.adapters.bot.kb as kb
 from app.adapters.bot.handlers import utils
-from app.adapters.bot.states import WorkerBidCreating, Base
+from app.adapters.bot.states import WorkerBidCreating, WorkerBidUpdate, Base
 from app import services
 from app.adapters.bot.handlers.worker_bids.schemas import (
     BidViewMode,
@@ -68,6 +68,8 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     work_permission = data.get("work_permission")
     birth_date = datetime.strptime(data["birth_date"], "%Y-%m-%d")
     phone_number = data["phone_number"]
+    official_work = data["official_work"]
+
     if not work_permission:
         work_permission = []
 
@@ -94,6 +96,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
         callback.message.chat.id,
         birth_date,
         phone_number,
+        True if official_work == 1 else False,
     )
     await state.clear()
     await state.set_state(Base.none)
@@ -420,6 +423,49 @@ async def set_phone_number(message: Message, state: FSMContext):
         await get_phone_number(message, state)
 
 
+# Official work
+@router.callback_query(F.data == "get_worker_bid_official_work")
+async def get_worker_bid_official_work(
+    message: Message | CallbackQuery, state: FSMContext
+):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+    else:
+        await utils.try_delete_message((await state.get_data()).get("msg"))
+    await utils.try_delete_message(message)
+    await state.set_state(WorkerBidCreating.official_work)
+    msg = await utils.try_edit_or_answer(
+        message=message,
+        text="Официальное трудоустройство",
+        reply_markup=kb.create_reply_keyboard(text.back, "Да", "Нет"),
+        return_message=True,
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.official_work)
+async def set_worker_bid_official_work(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.set_state(Base.none)
+
+    await utils.try_delete_message(data.get("msg"))
+    await utils.try_delete_message(message)
+
+    if message.text == text.back:
+        await send_create_menu(message=message, state=state)
+    else:
+        if message.text in ["Да", "Нет"]:
+            await state.update_data(official_work=1 if message.text == "Да" else 0)
+            await send_create_menu(message=message, state=state)
+        else:
+            msg = await utils.try_edit_or_answer(
+                message=message, text=text.format_err, return_message=True
+            )
+            await sleep(3)
+            await utils.try_delete_message(msg)
+            await get_worker_bid_official_work(message=message, state=state)
+
+
 # Documents
 # Worksheet
 @router.callback_query(F.data == "get_worker_bid_worksheet_form")
@@ -523,7 +569,7 @@ async def get_documents(
     WorkerBidCallbackData.filter(F.mode == BidViewMode.full),
     WorkerBidCallbackData.filter(F.endpoint_name == "bid"),
 )
-async def get_worker_bid(
+async def get_worker_bid_history(
     callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
 ):
     bid_id = callback_data.id
@@ -553,10 +599,9 @@ async def get_worker_bid(
     )
 
 
-@router.callback_query(F.data == "get_worker_bid_history")
+@router.callback_query(F.data == kb.worker_bid_history_button.callback_data)
 async def get_workers_bids_history(callback: CallbackQuery):
-    bids = services.get_workers_bids_by_sender_telegram_id(callback.message.chat.id)
-    bids = sorted(bids, key=lambda bid: bid.create_date, reverse=True)[:10]
+    bids = services.get_workers_bids_history_sender(callback.message.chat.id)
     keyboard = kb.create_inline_keyboard(
         *(
             InlineKeyboardButton(
@@ -571,3 +616,187 @@ async def get_workers_bids_history(callback: CallbackQuery):
     )
     await utils.try_delete_message(callback.message)
     await callback.message.answer("История заявок:", reply_markup=keyboard)
+
+
+# Pending
+@router.callback_query(F.data == kb.worker_bid_pending_button.callback_data)
+async def get_worker_bids_pending(callback: CallbackQuery):
+    bids = services.get_workers_bids_pending_sender(callback.message.chat.id)
+    keyboard = kb.create_inline_keyboard(
+        *(
+            InlineKeyboardButton(
+                text=get_worker_bid_list_info(bid),
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=BidViewMode.full_with_update,
+                    endpoint_name="bid",
+                ).pack(),
+            )
+            for bid in bids
+        ),
+        kb.worker_bid_menu_button,
+    )
+    await utils.try_delete_message(callback.message)
+    await callback.message.answer(
+        f"{kb.worker_bid_pending_button.text}:", reply_markup=keyboard
+    )
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_update),
+    WorkerBidCallbackData.filter(F.endpoint_name == "bid"),
+)
+async def get_worker_bid_pending(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: WorkerBidCallbackData,
+):
+    bid_id = callback_data.id
+    bid = services.get_worker_bid_by_id(bid_id)
+    data = await state.get_data()
+    if "msgs" in data:
+        for msg in data["msgs"]:
+            await utils.try_delete_message(msg)
+        await state.update_data(msgs=[])
+
+    caption = get_full_worker_bid_info(bid)
+
+    await utils.try_edit_message(
+        message=callback.message,
+        text=caption,
+        reply_markup=kb.create_inline_keyboard(
+            kb.worker_bid_pending_button,
+            InlineKeyboardButton(
+                text="Показать документы",
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    endpoint_name="documents",
+                ).pack(),
+            ),
+            InlineKeyboardButton(
+                text="Добавить документы",
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    endpoint_name="update_documents_form",
+                ).pack(),
+            ),
+        ),
+    )
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_update),
+    WorkerBidCallbackData.filter(F.endpoint_name == "update_documents_form"),
+)
+async def update_documents_form(
+    message: Message | CallbackQuery,
+    state: FSMContext,
+    callback_data: WorkerBidCallbackData | None = None,
+):
+    data = await state.get_data()
+    if isinstance(message, CallbackQuery):
+        message = message.message
+        bid_id = callback_data.id
+        await state.update_data(id=bid_id)
+    else:
+        bid_id = data.get("id")
+
+    await utils.try_edit_or_answer(
+        message=message,
+        text="Добавить документы",
+        reply_markup=await kb.get_update_documents_menu(data=data, bid_id=bid_id),
+    )
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_update),
+    WorkerBidCallbackData.filter(F.endpoint_name == "update_documents"),
+)
+async def update_worker_bid_documents(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    await utils.handle_documents_form(
+        callback.message, state, WorkerBidUpdate.documents
+    )
+
+
+@router.message(WorkerBidUpdate.documents)
+async def set_update_documents(message, state):
+    await utils.handle_documents(message, state, "docs", update_documents_form)
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_update),
+    WorkerBidCallbackData.filter(F.endpoint_name == "documents"),
+)
+async def get_documents_pending(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    bid = services.get_worker_bid_by_id(callback_data.id)
+    media: list[InputMediaDocument] = []
+    for doc in bid.worksheet:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
+            )
+        )
+    for doc in bid.passport:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
+            )
+        )
+    for doc in bid.work_permission:
+        media.append(
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=await doc.document.read(), filename=doc.document.filename
+                )
+            )
+        )
+
+    await utils.try_delete_message(callback.message)
+    msgs = await callback.message.answer_media_group(media=media)
+    await state.update_data(msgs=msgs)
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=kb.create_inline_keyboard(
+            InlineKeyboardButton(
+                text="Назад",
+                callback_data=WorkerBidCallbackData(
+                    id=bid.id,
+                    mode=callback_data.mode,
+                    endpoint_name="bid",
+                ).pack(),
+            )
+        ),
+    )
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.endpoint_name == "save_update"),
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_update),
+)
+async def save_update(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    data = await state.get_data()
+
+    docs: list[UploadFile] = []
+
+    for doc in data.get("docs"):
+        docs.append(await utils.download_file(doc))
+    await services.update_worker_bid_documents(bid_id=callback_data.id, files=docs)
+    await state.clear()
+    await state.set_state(Base)
+    await utils.try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Согласование кандидатов"),
+        reply_markup=kb.worker_bid_menu,
+    )

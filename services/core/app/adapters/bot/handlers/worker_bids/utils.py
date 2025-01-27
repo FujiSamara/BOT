@@ -2,7 +2,7 @@ from app.schemas import WorkerBidSchema
 from app.infra.database.models import ApprovalStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
-from app.services import get_worker_by_id
+from app.services import get_worker_by_id, get_worker_bid_documents_requests
 from app.infra.database.models import FujiScope
 from app.adapters.bot.handlers.utils import notify_workers_by_scope
 
@@ -27,6 +27,7 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Документы")}: Прикреплены к сообщению.
 {hbold("Должность")}: {bid.post.name}
 {hbold("Статус")}: {stage}
+{hbold("Официальное трудоустройство")}: {"Да" if bid.official_work else "Нет"}
 
 {hbold("Данные заявителя")}
 {hbold("Имя")}: {bid.sender.f_name}
@@ -34,6 +35,20 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Отчество")}: {bid.sender.o_name}
 {hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
+    if bid.security_service_comment is not None and bid.security_service_comment != "":
+        bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
+    if bid.comment is not None and bid.comment != "":
+        bid_info += f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.comment}"
+    documents_requests = get_worker_bid_documents_requests(bid.id)
+    if documents_requests != []:
+        bid_info += f"\n\n{hbold('История запросов на дополнение документов')}"
+        for documents_request in documents_requests:
+            bid_info += f"\n{documents_request.sender.l_name} "
+            if documents_request.sender.f_name is not None:
+                bid_info += f"{documents_request.sender.f_name[0]}. "
+            if documents_request.sender.l_name is not None:
+                bid_info += f"{documents_request.sender.l_name[0]}."
+            bid_info += f": {documents_request.message}"
 
     return bid_info
 

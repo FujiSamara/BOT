@@ -49,10 +49,16 @@ class WorkerBidCreating(StatesGroup):
     worksheet = State()
     passport = State()
     work_permission = State()
+    official_work = State()
+
+
+class WorkerBidUpdate(StatesGroup):
+    documents = State()
 
 
 class WorkerBidCoordination(StatesGroup):
     comment = State()
+    seek_documents = State()
 
 
 # Rate
