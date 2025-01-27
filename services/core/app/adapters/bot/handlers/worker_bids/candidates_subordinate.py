@@ -50,10 +50,15 @@ async def get_menu(
     subordinates = get_subordinates(message.chat.id, 10, callback_data.page)
     buttons = []
     for subordinate in subordinates:
+        t = subordinate.l_name
+        if len(subordinate.f_name) > 0:
+            t += f" {subordinate.f_name[0]}."
+        if len(subordinate.o_name) > 0:
+            t += f" {subordinate.o_name[0]}."
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text=f"{subordinate.l_name} {subordinate.f_name[0]}. {subordinate.o_name[0]}.",
+                    text=t,
                     callback_data=CandidatesCoordinationCallbackData(
                         id=subordinate.id,
                         page=callback_data.page,
