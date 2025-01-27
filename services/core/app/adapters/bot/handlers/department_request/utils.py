@@ -425,12 +425,13 @@ def department_names_with_count(
     from app.infra.database.models import TechnicalRequest, CleaningRequest
 
     model = TechnicalRequest if type == RequestType.TR else CleaningRequest
-    if department_names == []:
-        return []
+
     if tg_id is not None:
         request_count = get_request_count_in_departments_by_tg_id(
             state=state, tg_id=tg_id, model=model
         )
+        if department_names == []:
+            return [f"{dep_count[1]} {dep_count[0]}" for dep_count in request_count]
     else:
         request_count = get_request_count_in_departments(state=state, model=model)
     out_department_names = []

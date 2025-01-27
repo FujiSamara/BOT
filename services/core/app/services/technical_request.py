@@ -493,17 +493,17 @@ def update_tech_request_executor(
     Update executor in technical request return telegram id
     """
     try:
-        repairman = orm.get_workers_with_post_by_columns(
+        new_repairman = orm.get_workers_with_post_by_columns(
             [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
         )[0]
     except IndexError:
         logger.error(f"Worker with full name: {repairman_full_name} wasn't found")
 
     if not orm.update_tech_request_executor(
-        request_id=request_id, repairman_id=repairman.id
+        request_id=request_id, repairman_id=new_repairman.id
     ):
         logger.error(f"Technical request with id: {request_id} wasn't update executor")
-    return repairman.x
+    return new_repairman.telegram_id
 
 
 def update_technical_request_problem(request_id: int, problem_id: int):
@@ -850,8 +850,10 @@ def close_request(
 
 
 def get_request_count_in_departments_by_tg_id(
-    state: ApprovalStatus, tg_id: int, model: TechnicalRequest | CleaningRequest
-) -> tuple[str, int]:
+    state: ApprovalStatus,
+    tg_id: int,
+    model: TechnicalRequest | CleaningRequest,
+) -> list[tuple[str, int]]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
         logger.error(f"Worker with telegram id: {tg_id} not found")

@@ -1166,7 +1166,7 @@ def update_tech_request_executor(request_id: int, repairman_id: int):
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
         )
-        repairman = s.query(Worker).filter(Worker.id == repairman_id)
+        repairman = s.query(Worker).filter(Worker.id == repairman_id).first()
         cur_request.repairman = repairman
         cur_request.repairman_id = repairman_id
     return True
@@ -1451,7 +1451,7 @@ def get_count_req_in_departments(
     state: ApprovalStatus,
     model: TechnicalRequest | CleaningRequest,
     worker_id: int | None = None,
-) -> tuple[str, int]:
+) -> list[tuple[str, int]]:
     """Count model requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
         stm = select(Department.name, func.count(getattr(model, "id"))).join(Department)
