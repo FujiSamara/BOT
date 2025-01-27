@@ -28,7 +28,7 @@ const props = defineProps({
 
 	.logo {
 		background-color: currentColor;
-		color: $logo-color;
+		color: $main-dark-gray;
 		width: 153px;
 		height: 31px;
 		fill: currentColor;

@@ -127,7 +127,7 @@ const monthChoosed = (month: number) => {
 	font-family: Wix Madefor Display;
 	font-weight: 500;
 	font-size: 14px;
-	color: $text-color;
+	color: $main-dark-gray;
 
 	.c-header {
 		display: flex;
@@ -151,18 +151,18 @@ const monthChoosed = (month: number) => {
 			width: 24px;
 			height: 24px;
 			border-radius: 8px;
-			border: 1px solid $fuji-blue-lightest;
+			border: 1px solid $stroke-light-blue;
 			cursor: pointer;
 
 			transform: rotate(90deg);
 
 			.arrow {
 				@include arrow();
-				color: $text-color;
+				color: $main-dark-gray;
 			}
 
 			&:hover {
-				border-color: $fuji-blue;
+				border-color: $main-accent-blue;
 			}
 
 			transition: border-color 0.25s;
@@ -195,8 +195,8 @@ const monthChoosed = (month: number) => {
 
 				&:hover,
 				&.choosed {
-					background-color: $text-color;
-					color: $fuji-white;
+					background-color: $main-dark-gray;
+					color: $main-white;
 				}
 			}
 		}

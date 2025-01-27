@@ -214,7 +214,7 @@ onMounted(() => {
 
 	overflow-x: auto;
 
-	background-color: $table-bg-color;
+	background-color: $main-white;
 
 	.load-button {
 		@include field;
@@ -238,7 +238,7 @@ onMounted(() => {
 			.tool-icon-wrapper {
 				.tool-icon {
 					&.search {
-						color: $fuji-blue;
+						color: $main-accent-blue;
 					}
 				}
 			}
@@ -264,7 +264,7 @@ onMounted(() => {
 		font-family: Wix Madefor Display;
 		font-weight: 500;
 		line-height: 17.64px;
-		color: $text-color;
+		color: $main-dark-gray;
 
 		&.titles {
 			font-size: 16px;
@@ -310,7 +310,7 @@ onMounted(() => {
 		}
 
 		&:nth-child(even) {
-			background-color: $row-bg-color;
+			background-color: $bg-accent-blue-3;
 		}
 
 		.check {

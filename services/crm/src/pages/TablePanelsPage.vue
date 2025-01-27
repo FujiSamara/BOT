@@ -134,7 +134,7 @@ loadPanels();
 	width: 100%;
 	height: 100%;
 
-	background-color: $body-background-color;
+	background-color: $bg-light-blue;
 
 	.sidebar {
 		position: fixed;

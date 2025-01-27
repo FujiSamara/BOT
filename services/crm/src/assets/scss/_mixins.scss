@@ -53,8 +53,8 @@
 @mixin window() {
   display: flex;
 
-  border: 1px solid $border-color;
-  background-color: $table-bg-color;
+  border: 1px solid $stroke-gray;
+  background-color: $main-white;
   border-radius: 8px;
 }
 
@@ -92,7 +92,7 @@
     font-family: Wix Madefor Display;
     font-weight: 500;
     font-size: 14px;
-    color: $text-color;
+    color: $main-dark-gray;
 
     white-space: nowrap;
     transition: color 0.25s;
@@ -109,7 +109,7 @@
       background-color: currentColor;
       fill: currentColor;
 
-      color: $text-color;
+      color: $main-dark-gray;
 
       mask-size: contain;
       mask-repeat: no-repeat;
@@ -129,7 +129,7 @@
     position: absolute;
     left: calc(-16px + 100%);
 
-    color: $danger-color;
+    color: $sec-arrantion-red;
     font-size: 10px;
 
     z-index: 1;
@@ -137,15 +137,15 @@
     background-color: inherit;
     padding: 4px 8px;
     border-radius: 8px;
-    border: 1px solid $danger-color;
+    border: 1px solid $sec-arrantion-red;
   }
 
   &:hover,
   &.active {
-    border-color: $fuji-blue;
+    border-color: $main-accent-blue;
 
     .tool-icon-wrapper .tool-icon {
-      color: $fuji-blue;
+      color: $main-accent-blue;
     }
   }
 
@@ -160,19 +160,19 @@
     }
 
     span {
-      color: $text-color !important;
+      color: $main-dark-gray !important;
     }
   }
 
   &.error {
-    border-color: $danger-color;
+    border-color: $sec-arrantion-red;
 
     .tool-icon-wrapper > .tool-icon {
-      color: $danger-color;
+      color: $sec-arrantion-red;
     }
 
     span {
-      color: $danger-color;
+      color: $sec-arrantion-red;
     }
   }
 }
@@ -187,7 +187,7 @@
   padding: 7px 5px;
   border-radius: 6px;
 
-  border: 1px $border-color solid;
+  border: 1px $stroke-gray solid;
 
   .icon {
     background-color: currentColor;
@@ -197,7 +197,7 @@
 
     mask: url("@/assets/icons/check.svg") no-repeat;
 
-    color: $fuji-white;
+    color: $main-white;
   }
 
   transition:
@@ -205,7 +205,7 @@
     border-color 0.25s;
 
   &.checked {
-    background-color: $fuji-gray;
+    background-color: $main-dark-gray;
     border-color: transparent;
   }
 }

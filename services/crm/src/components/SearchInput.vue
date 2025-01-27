@@ -83,7 +83,7 @@ const onInput = (event: Event) => {
 
 			&.error {
 				mask-image: url("@/assets/icons/alert.svg");
-				color: $danger-color;
+				color: $sec-arrantion-red;
 			}
 		}
 	}
@@ -101,11 +101,11 @@ const onInput = (event: Event) => {
 		font-family: Wix Madefor Display;
 		font-weight: 500;
 		font-size: 14px;
-		color: $text-color;
+		color: $main-dark-gray;
 		background-color: inherit;
 
 		&::placeholder {
-			color: $text-color-lighter;
+			color: $sec-dark-gray-25;
 
 			transition: opacity 0.25s;
 		}
@@ -122,7 +122,7 @@ const onInput = (event: Event) => {
 		.tool-icon-wrapper {
 			.tool-icon {
 				&.search {
-					color: $fuji-blue;
+					color: $main-accent-blue;
 				}
 			}
 		}
@@ -137,7 +137,7 @@ const onInput = (event: Event) => {
 	&.error {
 		input,
 		input::placeholder {
-			color: $danger-color;
+			color: $sec-arrantion-red;
 		}
 	}
 }

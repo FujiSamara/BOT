@@ -1,19 +1,27 @@
-$fuji-blue: #2e5ffa;
-$fuji-blue-lighter: #f8f9ff;
-$fuji-blue-lightest: #f0f1f5;
-$fuji-gray-darker: #1f1f1f;
-$fuji-gray: #474747;
-$fuji-gray-lighter: #47474780;
-$fuji-soft-gray: #f3f6fa;
-$fuji-soft-gray-darker: #cbcbcb;
-$fuji-soft-gray-lighter: #fafbfd;
-$fuji-soft-blue: #2e5ffa08;
-$fuji-white: #ffffff;
-$fuji-white-darker: #f8f8f8;
-$fuji-red: #ce4b67;
-$fuji-green: #107c41;
+// Main
+$main-white: #ffffff;
+$main-dark-gray: #474747;
+$main-accent-blue: #2e5ffa;
 
-// Base
+// BG
+$bg-light-blue: #f3f6fa;
+$bg-accent-blue-3: #2e5ffa08;
+
+// Stroke
+$stroke-green: #107c41;
+$stroke-light-blue: #f0f1f5;
+$stroke-gray: #cbcbcb;
+
+// Secondary
+$sec-arrantion-red: #ce274b;
+$sec-dark-gray-25: #47474740;
+$sec-accent-blue-50: #2e5ffa80;
+$sec-not-active-bg: #eeeeee;
+$sec-not-active-fill: #cdcdcd99;
+$sec-day-off: #519bca;
+$sec-gray-blue: #6b6d82;
+
+// Sizes
 $sidebar-width: 256px;
 $folded-sidebar-width: 72px;
 $table-pagination-height: 82px;
@@ -24,27 +32,3 @@ $table-toollbar-height: 48px;
   --table-toollbar-height: $table-toollbar-height;
   --max-cell-width: 200px;
 }
-
-// Colors
-$text-color: $fuji-gray;
-$text-color-lighter: $fuji-gray-lighter;
-
-$text-color-white: $fuji-white;
-$logo-color: $fuji-gray-darker;
-$row-bg-color: $fuji-soft-blue;
-
-$body-background-color: $fuji-soft-gray;
-$sidebar-background-color: $fuji-white;
-
-$sidebar-link-background-color: $fuji-blue-lighter;
-$sidebar-link-border-color: $fuji-blue;
-$sidebar-link-text-color: $fuji-blue;
-
-$table-bg-color: $fuji-white;
-
-$border-color: $fuji-soft-gray-darker;
-
-$danger-color: $fuji-red;
-
-$disabled-bg-color: $fuji-soft-gray-darker;
-$disabled-color: $fuji-gray-lighter;

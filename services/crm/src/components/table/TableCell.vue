@@ -112,7 +112,7 @@ const openPhoto = (cell: Cell, index: number) => {
 			cursor: default;
 
 			.c-link {
-				color: $fuji-blue;
+				color: $main-accent-blue;
 				transition: color 0.25s;
 				text-decoration: underline;
 				user-select: none;
@@ -120,13 +120,13 @@ const openPhoto = (cell: Cell, index: number) => {
 				transition: color 0.25s;
 
 				&:hover {
-					color: $text-color;
+					color: $main-dark-gray;
 				}
 			}
 
 			.c-image {
 				background-color: currentColor;
-				color: $text-color;
+				color: $main-dark-gray;
 				width: 20px;
 				height: 20px;
 				fill: currentColor;
@@ -138,7 +138,7 @@ const openPhoto = (cell: Cell, index: number) => {
 				transition: color 0.25s;
 
 				&:hover {
-					color: $fuji-blue;
+					color: $main-accent-blue;
 					cursor: pointer;
 				}
 
@@ -150,10 +150,10 @@ const openPhoto = (cell: Cell, index: number) => {
 
 					@keyframes blinking {
 						from {
-							color: $fuji-blue;
+							color: $main-accent-blue;
 						}
 						to {
-							color: $text-color;
+							color: $main-dark-gray;
 						}
 					}
 				}

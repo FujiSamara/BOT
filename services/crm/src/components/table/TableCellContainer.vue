@@ -106,7 +106,7 @@ onUnmounted(() => {
 	background-color: transparent;
 
 	&.highlight {
-		background-color: $row-bg-color;
+		background-color: $bg-accent-blue-3;
 	}
 
 	.hint {
@@ -124,9 +124,9 @@ onUnmounted(() => {
 
 		z-index: 2;
 		border-radius: 8px;
-		border: 1px $border-color solid;
+		border: 1px $stroke-gray solid;
 		padding: 16px;
-		background-color: $table-bg-color;
+		background-color: $main-white;
 
 		.cell {
 			max-width: max-content;

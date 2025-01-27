@@ -49,18 +49,18 @@ const onClick = async () => {
 	@include field;
 
 	span {
-		color: $fuji-green;
+		color: $stroke-green;
 	}
 
-	border-color: $fuji-green;
+	border-color: $stroke-green;
 
 	&:hover,
 	&.active {
-		background-color: $fuji-green;
-		border-color: $fuji-green;
+		background-color: $stroke-green;
+		border-color: $stroke-green;
 
 		span {
-			color: $fuji-white;
+			color: $main-white;
 		}
 	}
 }

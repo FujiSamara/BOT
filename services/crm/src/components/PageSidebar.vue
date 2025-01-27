@@ -60,7 +60,7 @@ const onClick = async (link: LinkData) => {
 
 	padding: 46px 32px 64px 32px;
 
-	background-color: $sidebar-background-color;
+	background-color: $main-white;
 
 	.sb-list {
 		display: flex;
@@ -89,7 +89,7 @@ const onClick = async (link: LinkData) => {
 			padding: 0 9px;
 
 			border-left: 2px solid transparent;
-			color: $text-color;
+			color: $main-dark-gray;
 			cursor: pointer;
 
 			transition:
@@ -134,9 +134,9 @@ const onClick = async (link: LinkData) => {
 						opacity: 100%;
 					}
 				}
-				background-color: $body-background-color;
-				border-left-color: $sidebar-link-border-color;
-				color: $fuji-blue;
+				background-color: $bg-light-blue;
+				border-left-color: $main-accent-blue;
+				color: $main-accent-blue;
 			}
 		}
 	}
@@ -161,14 +161,14 @@ const onClick = async (link: LinkData) => {
 			transform: rotate(90deg);
 
 			border-radius: 8px;
-			background-color: $row-bg-color;
+			background-color: $bg-accent-blue-3;
 			cursor: pointer;
 
 			transition: transform 0.25s;
 
 			.sb-arrow {
 				background-color: currentColor;
-				color: $fuji-blue;
+				color: $main-accent-blue;
 				width: 24px;
 				height: 16px;
 				fill: currentColor;

@@ -123,7 +123,7 @@ onUnmounted(() => {
 		gap: 8px;
 
 		padding: 4px 16px;
-		background-color: $fuji-gray;
+		background-color: $main-dark-gray;
 		border-radius: 8px;
 
 		.tool-icon-wrapper {
@@ -134,14 +134,14 @@ onUnmounted(() => {
 				&.calendar-icon {
 					width: 16px;
 					height: 16px;
-					color: $fuji-white;
+					color: $main-white;
 					mask-image: url("@/assets/icons/calendar.svg");
 				}
 			}
 		}
 
 		.df-title {
-			color: $fuji-white;
+			color: $main-white;
 			font-size: 14px;
 		}
 	}
@@ -165,12 +165,12 @@ onUnmounted(() => {
 
 			padding: 4px 12px;
 			border-radius: 8px;
-			background-color: $fuji-white-darker;
+			background-color: $bg-light-blue;
 
 			font-family: Wix Madefor Display;
 			font-weight: 500;
 			font-size: 14px;
-			color: $text-color;
+			color: $main-dark-gray;
 		}
 	}
 
@@ -182,7 +182,7 @@ onUnmounted(() => {
 	}
 
 	&:hover {
-		border-color: $border-color;
+		border-color: $stroke-gray;
 	}
 }
 </style>
