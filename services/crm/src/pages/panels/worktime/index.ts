@@ -1,5 +1,5 @@
 import { Table } from "@/components/table";
-import { WorkTimeSchema as WorktimeSchema } from "@/types";
+import { BaseSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	DateTimeSmartField,
@@ -9,6 +9,23 @@ import {
 	WorkerSmartField,
 } from "@/components/table/field";
 import * as parser from "@/parser";
+import {
+	EntitySearchModelOut,
+	SearchModelOut,
+	useSearch,
+	useEntitySearch,
+} from "@/hooks/tableSearchHook";
+import {
+	DateIntervalModelOut,
+	useDateInterval,
+} from "@/hooks/dateIntervalHook";
+import { DepartmentEntity, PostEntity } from "@/components/entity";
+
+interface WorktimePanelData {
+	searchList: SearchModelOut[];
+	entitySearchList: EntitySearchModelOut;
+	dateInterval: DateIntervalModelOut;
+}
 
 export class WorktimeTable extends Table<WorktimeSchema> {
 	constructor() {
@@ -34,6 +51,44 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 		this._aliases.set("fine", "Штраф");
 		this._aliases.set("photo_b64", "Фото");
 	}
+}
+
+export async function setupWorktime(
+	table: Table<BaseSchema>,
+): Promise<WorktimePanelData> {
+	const searchList = useSearch(table, {
+		schemas: [
+			{
+				pattern: "worker",
+				groups: [0],
+			},
+		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
+		name: "general",
+	});
+	const entitySearchList = useEntitySearch(
+		table,
+		{
+			entity: new DepartmentEntity(),
+			pattern: "department",
+			groups: [0],
+			id: 0,
+		},
+		{
+			entity: new PostEntity(),
+			pattern: "post",
+			groups: [1],
+			id: 1,
+		},
+	);
+	const dateInterval = await useDateInterval(table, "day");
+
+	return {
+		entitySearchList,
+		searchList,
+		dateInterval,
+	};
 }
 
 export class WorkTimeEditor extends Editor {

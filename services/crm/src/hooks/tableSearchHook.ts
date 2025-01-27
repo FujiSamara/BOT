@@ -4,7 +4,7 @@ import { BaseSchema, FilterSchema, SearchSchema } from "@/types";
 import { Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-interface SearchModelIn {
+export interface SearchModelIn {
 	schemas: {
 		pattern: string; // Pattern in format: parent.child.grandson...
 		groups: number[];
@@ -14,7 +14,7 @@ interface SearchModelIn {
 	placeholder?: string;
 }
 
-interface SearchModelOut {
+export interface SearchModelOut {
 	onInput: (value: string) => void;
 	style?: string;
 	placeholder?: string;
@@ -131,14 +131,14 @@ const applyPattern = (fields: string[], term: string): SearchSchema => {
 	return result;
 };
 
-interface EntitySearchModelIn {
+export interface EntitySearchModelIn {
 	pattern: string; // Pattern in format: parent.child.grandson...
 	groups: number[];
 	entity: BaseEntity<BaseSchema>;
 	id: number;
 }
 
-interface EntitySearchModelOut {
+export interface EntitySearchModelOut {
 	entities: BaseEntity<BaseSchema>[];
 	exist: Ref<boolean>;
 }
