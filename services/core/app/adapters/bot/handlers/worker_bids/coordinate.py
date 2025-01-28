@@ -19,6 +19,7 @@ from aiogram.fsm.context import FSMContext
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
+    send_menu_by_scopes,
 )
 from app.adapters.bot.states import (
     Base,
@@ -36,6 +37,7 @@ from app.services import (
     get_pending_approval_bids,
     get_worker_bid_by_id,
     update_worker_bid_bot,
+    add_worker_bids_documents_requests,
 )
 
 router = Router(name="coordinate_worker_bid")
@@ -202,6 +204,19 @@ class WorkerBidCoordinationFactory:
                     ).pack(),
                 ),
             )
+
+        if self.state_column == WorkerBid.accounting_service_state:
+            buttons.append(
+                InlineKeyboardButton(
+                    text="Запросить документы",
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"seek_docs_{self.name}",
+                    ).pack(),
+                ),
+            )
+
         buttons.append(
             InlineKeyboardButton(
                 text=text.back,
@@ -308,6 +323,52 @@ async def set_comment(message: Message, state: FSMContext):
     await sleep(3)
     await try_delete_message(msg)
     await get_menu(message)
+
+
+@router.callback_query(
+    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
+    WorkerBidCallbackData.filter(F.endpoint_name == "seek_docs_accounting_service"),
+)
+async def seek_docs_accounting_service(
+    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
+):
+    msg = await try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Перечислите документы"),
+        return_message=True,
+    )
+    await state.update_data(id=callback_data.id, msg=msg)
+
+    await state.set_state(WorkerBidCoordination.seek_documents)
+
+
+@router.message(WorkerBidCoordination.seek_documents)
+async def set_docs_accounting_service(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.set_state(Base.none)
+    await try_delete_message(message=message)
+    if "msg" in data:
+        await try_delete_message(message=data.get("msg"))
+    bid_id = data.get("id")
+    if bid_id is None:
+        raise KeyError("Worker bid id not exist")
+    await state.clear()
+
+    if not await add_worker_bids_documents_requests(
+        bid_id=bid_id,
+        tg_id=message.chat.id,
+        message=message.text,
+    ):
+        msg = await try_edit_or_answer(
+            message=message, text=text.err, return_message=True
+        )
+        await send_menu_by_scopes(message=msg)
+    else:
+        msg = await try_edit_or_answer(
+            message=message, text="Успешно!", return_message=True
+        )
+        await try_delete_message(msg)
+        await send_menu_by_scopes(message=message)
 
 
 def build_coordinations():

@@ -120,6 +120,7 @@ class WorkerSchema(BaseSchemaPK):
     children_born_date: list["WorkerChildrenSchema"] = []
     military_ticket: str | None = None
     patent: str | None = None
+    official_work: bool | None = None
 
 
 class WorkerChildrenSchema(BaseSchemaPK):
@@ -204,6 +205,15 @@ class WorkerBidSchema(BaseSchemaPK):
 
     comment: str | None = None
     security_service_comment: str | None = None
+    official_work: bool | None = None
+    document_request: list["WorkerBidDocumentRequestSchema"] = []
+
+
+class WorkerBidDocumentRequestSchema(BaseSchemaPK):
+    sender: WorkerSchema
+    worker_bid: WorkerBidSchema
+    date: datetime.datetime
+    message: str
 
 
 class ExpenditureSchema(BaseSchemaPK):

@@ -44,6 +44,7 @@ from app.infra.database.models import (
     MaterialValues,
     Company,
     WorkerDocument,
+    WorkerBidDocumentRequest,
     CleaningProblem,
     CleaningRequest,
     CleaningRequestCleaningPhoto,
@@ -73,6 +74,7 @@ from app.schemas import (
     AccountLoginsSchema,
     MaterialValuesSchema,
     CompanySchema,
+    WorkerBidDocumentRequestSchema,
     CleaningProblemSchema,
     CleaningRequestSchema,
 )
@@ -171,7 +173,7 @@ def find_bid_by_column(column: any, value: any) -> BidSchema:
         return BidSchema.model_validate(raw_bid)
 
 
-def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
+def get_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     """
     Returns worker bid in database by `column` with `value`.
     If worker bid not exist return `None`.
@@ -295,12 +297,52 @@ def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_workers_bids_by_sender(sender: WorkerSchema) -> list[BidSchema]:
+def get_workers_bids_history_sender(
+    sender: WorkerSchema, limit: int = 15
+) -> list[BidSchema]:
     """
     Returns all bids in database by worker.
     """
     with session.begin() as s:
-        raw_bids = s.query(WorkerBid).filter(WorkerBid.sender_id == sender.id).all()
+        raw_bids = (
+            s.execute(
+                select(WorkerBid)
+                .filter(
+                    WorkerBid.sender_id == sender.id,
+                    or_(
+                        WorkerBid.state == ApprovalStatus.denied,
+                        WorkerBid.state == ApprovalStatus.approved,
+                    ),
+                )
+                .order_by(WorkerBid.id.desc())
+                .limit(limit=limit)
+            )
+            .scalars()
+            .all()
+        )
+        return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_workers_bids_pending_sender(
+    sender: WorkerSchema, limit: int = 15
+) -> list[BidSchema]:
+    """
+    Returns all bids in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.execute(
+                select(WorkerBid)
+                .filter(
+                    WorkerBid.sender_id == sender.id,
+                    WorkerBid.state == ApprovalStatus.pending_approval,
+                )
+                .order_by(WorkerBid.id.desc())
+                .limit(limit=limit)
+            )
+            .scalars()
+            .all()
+        )
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
@@ -723,6 +765,7 @@ def add_worker_bid(bid: WorkerBidSchema):
             state=bid.state,
             create_date=bid.create_date,
             sender=sender,
+            official_work=bid.official_work,
         )
 
         s.add(worker_bid)
@@ -770,6 +813,10 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.l_name = bid.l_name
         cur_bid.o_name = bid.o_name
         cur_bid.sender = sender
+        cur_bid.security_service_state = bid.security_service_state
+        cur_bid.accounting_service_state = bid.accounting_service_state
+        cur_bid.comment = bid.comment
+        cur_bid.security_service_comment = bid.security_service_comment
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
@@ -2625,6 +2672,7 @@ def add_worker(record: WorkerSchema) -> bool:
             actual_residence=record.actual_residence,
             children=record.children,
             military_ticket=record.military_ticket,
+            official_work=record.official_work,
         )
         s.add(worker)
 
@@ -2730,6 +2778,66 @@ def get_last_worker_passport_id(worker_id: int) -> int:
         if raw_worker is None:
             return 0
         return len(WorkerSchema.model_validate(raw_worker).documents)
+
+
+def get_last_index_worker_documents(worker_bid_id: int):
+    with session.begin() as s:
+        return s.execute(
+            select(func.count(WorkerBidPassport.worker_bid_id)).filter(
+                WorkerBidPassport.worker_bid_id == worker_bid_id
+            )
+        ).scalar()
+
+
+def update_worker_bid_documents(
+    documents: list[DocumentSchema],
+    bid_id: int,
+) -> bool:
+    with session.begin() as s:
+        worker_bid = (
+            s.execute(select(WorkerBid).filter(WorkerBid.id == bid_id))
+            .scalars()
+            .first()
+        )
+        for document in documents:
+            s.add(WorkerBidPassport(worker_bid=worker_bid, document=document.document))
+    return True
+
+
+def get_worker_bid_documents_requests(
+    bid_id: int,
+) -> list[WorkerBidDocumentRequestSchema]:
+    with session.begin() as s:
+        raw_bids = (
+            s.execute(
+                select(WorkerBidDocumentRequest)
+                .filter(WorkerBidDocumentRequest.worker_bid_id == bid_id)
+                .order_by(WorkerBidDocumentRequest.id)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            WorkerBidDocumentRequestSchema.model_validate(raw_bid)
+            for raw_bid in raw_bids
+        ]
+
+
+def add_worker_bids_documents_requests(
+    sender_id: int,
+    bid_id: int,
+    date: datetime,
+    message: str,
+) -> bool:
+    with session.begin() as s:
+        raw_model = WorkerBidDocumentRequest(
+            sender_id=sender_id,
+            worker_bid_id=bid_id,
+            date=date,
+            message=message,
+        )
+        s.add(raw_model)
+    return True
 
 
 # region Cleaning requests
