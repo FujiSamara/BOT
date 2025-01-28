@@ -627,6 +627,22 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
         return urls
 
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        or_stmt = or_(
+            WorkerBid.f_name.ilike(f"%{term}%"),
+            WorkerBid.l_name.ilike(f"%{term}%"),
+            WorkerBid.o_name.ilike(f"%{term}%"),
+        )
+
+        for state, text in worker_status_dict.items():
+            if text.lower() == term.lower():
+                or_stmt = WorkerBid.state == state
+                break
+
+        workers = select(Worker).filter(or_stmt)
+        return workers
+
     can_create = False
     can_export = False
     name_plural = "Заявки на работу"
