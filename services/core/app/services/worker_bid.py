@@ -134,6 +134,7 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         children=False,
         children_born_date=[],
         military_ticket=None,
+        official_work=worker_bid.official_work,
     )
     if orm.add_worker(worker):
         return worker.id

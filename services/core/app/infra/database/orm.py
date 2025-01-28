@@ -2666,6 +2666,7 @@ def add_worker(record: WorkerSchema) -> bool:
             actual_residence=record.actual_residence,
             children=record.children,
             military_ticket=record.military_ticket,
+            official_work=record.official_work,
         )
         s.add(worker)
 
