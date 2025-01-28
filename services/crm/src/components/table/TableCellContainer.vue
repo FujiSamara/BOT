@@ -127,6 +127,7 @@ onUnmounted(() => {
 		border: 1px $stroke-gray solid;
 		padding: 16px;
 		background-color: $main-white;
+		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		.cell {
 			max-width: max-content;
