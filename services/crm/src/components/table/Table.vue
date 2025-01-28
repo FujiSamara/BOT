@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
+import {
+	computed,
+	nextTick,
+	onMounted,
+	PropType,
+	Ref,
+	useTemplateRef,
+	watch,
+} from "vue";
 import TableCellContainer from "@/components/table/TableCellContainer.vue";
 import Checkbox from "@/components/UI/Checkbox.vue";
 import { BaseSchema } from "@/types";
@@ -8,7 +16,7 @@ import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	table: {
-		type: Table<BaseSchema>,
+		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
 	blockLoading: {
