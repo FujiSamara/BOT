@@ -487,7 +487,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="Паспорт",
+                text="Документы",
                 callback_data="get_worker_bid_passport_form",
             ),
             InlineKeyboardButton(
