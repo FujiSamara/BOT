@@ -301,6 +301,8 @@ wr_menu = InlineKeyboardMarkup(
 
 
 async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
+    from app.adapters.bot.text import back
+
     data = await state.get_data()
     form_complete = True
     problem_name = data.get("problem_name")
@@ -353,7 +355,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
-        [wr_menu_button],
+        [InlineKeyboardButton(text=back, callback_data=wr_menu_button.callback_data)],
     ]
 
     if form_complete:

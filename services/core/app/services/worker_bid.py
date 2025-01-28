@@ -70,18 +70,18 @@ async def update_worker_bid_state(state: ApprovalStatus, bid_id):
         await send_menu_by_scopes(msg)
 
 
-def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
+def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
     """Creates and add worker from worker bid in database.
 
     Returns:
-        `bool`: True if worker was created successfully else False
+        `int | None`: worker id:int if worker was created successfully else None
     """
     last_worker_id = orm.get_last_worker_id()
     passport = []
-    for index, doc in enumerate(worker_bid.passport):
+    for index, doc in enumerate(worker_bid.passport + worker_bid.work_permission):
         doc = doc.document
         suffix = Path(doc.filename).suffix
-        filename = f"photo_worker_passport_{last_worker_id + 1}_{index + 1}{suffix}"
+        filename = f"photo_worker_document_{last_worker_id + 1}_{index + 1}{suffix}"
         doc.filename = filename
         passport.append(DocumentSchema(document=doc))
     worker = WorkerSchema(
@@ -101,7 +101,7 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
         citizenship=None,
         password=None,
         can_use_crm=False,
-        passport=passport,
+        documents=passport,
         snils=None,
         inn=None,
         registration=None,
@@ -111,8 +111,8 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> bool:
         military_ticket=None,
     )
     if orm.add_worker(worker):
-        return True
-    return False
+        return worker.id
+    return None
 
 
 async def notify_next_coordinator(bid: WorkerBidSchema):
@@ -178,6 +178,9 @@ async def update_worker_bid_bot(
     Use only in bot
     """
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot.handlers.worker_bids.schemas import (
+        CandidatesCoordinationCallbackData,
+    )
 
     worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
 
@@ -197,8 +200,10 @@ async def update_worker_bid_bot(
             stage = "службой безопасности"
             worker_bid.security_service_state = state
             worker_bid.security_service_comment = comment
-            if state != ApprovalStatus.denied:
+            if state == ApprovalStatus.approved:
                 worker_bid.accounting_service_state = ApprovalStatus.pending_approval
+            else:
+                worker_bid.accounting_service_state = ApprovalStatus.skipped
         case "accounting_service":
             stage = "бухгалтерией"
             worker_bid.accounting_service_state = state
@@ -208,8 +213,34 @@ async def update_worker_bid_bot(
             logger.error("State for worker bid not found")
 
     orm.update_worker_bid(worker_bid)
+
     if worker_bid.state == ApprovalStatus.approved:
-        create_and_add_worker(worker_bid)
+        worker_id = create_and_add_worker(worker_bid)
+        if worker_id is None:
+            logger.error(f"Worker from worker bid id: {worker_bid.id} wasn't create")
+
+        territorial_manager = orm.get_territorial_manager_by_department_id(
+            department_id=worker_bid.department.id
+        )
+        if territorial_manager is None:
+            logger.error(
+                f"Territorial manager in department with id: {worker_bid.department.id} wasn't found"
+            )
+
+        await notify_worker_by_telegram_id(
+            id=territorial_manager.telegram_id,
+            message="У Вас новый сотрудник на стажировке",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=CandidatesCoordinationCallbackData(
+                        id=worker_id,
+                        page=0,
+                        endpoint_name="show_worker",
+                    ).pack(),
+                ),
+            ),
+        )
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
@@ -231,8 +262,7 @@ async def update_worker_bid_bot(
                 ),
             ),
         )
-        await notify_next_coordinator(worker_bid)
-
+        await notify_next_coordinator(bid=worker_bid)
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
             id=worker.telegram_id,
@@ -340,7 +370,8 @@ async def create_worker_bid(
         phone_number=phone_number,
     )
 
-    orm.add_worker_bid(worker_bid)
+    if not orm.add_worker_bid(worker_bid):
+        logger.error(f"Worker bid with data: {worker_bid} wasn't create")
     await notify_next_coordinator(worker_bid)
 
 
@@ -348,42 +379,14 @@ def get_pending_approval_bids(state_column) -> list[WorkerBidSchema] | None:
     return orm.find_worker_bids_by_column(state_column, ApprovalStatus.pending_approval)
 
 
-def get_subordinates(tg_id: int, limit: int, offset: int) -> list[WorkerSchema]:
+def get_subordinates(tg_id: int, limit: int, offset: int) -> tuple[WorkerSchema]:
     chief = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if chief == []:
         logger.error(f"Worker with id {chief} wasn't found")
     chief = chief[0]
-    scopes = []
-    if FujiScope.bot_technical_request_appraiser in chief.post.scopes:
-        scopes += [
-            FujiScope.bot_bid_create,
-            FujiScope.bot_bid_kru,
-            FujiScope.bot_bid_teller_cash,
-            FujiScope.bot_bid_teller_card,
-            FujiScope.bot_bid_accountant_cash,
-            FujiScope.bot_bid_accountant_card,
-            FujiScope.bot_worker_bid,
-            FujiScope.bot_technical_request_worker,
-            FujiScope.bot_technical_request_repairman,
-            FujiScope.bot_technical_request_chief_technician,
-            FujiScope.bot_bid_it_worker,
-            FujiScope.bot_bid_it_repairman,
-            FujiScope.bot_personal_cabinet,
-        ]
-    if FujiScope.bot_technical_request_department_director in chief.post.scopes:
-        scopes += [
-            FujiScope.bot_technical_request_appraiser,
-            FujiScope.bot_bid_it_tm,
-        ]
-
-    workers = []
-    if scopes != []:
-        workers = orm.get_subordinates_in_departments(
-            chief_id=chief.id,
-            scopes=scopes,
-        )
+    workers = orm.get_subordinates_in_departments(chief_id=chief.id)
     workers += orm.get_subordinates(chief_id=chief.id)
-    return workers[offset * limit : (offset + 1) * limit]
+    return tuple(workers)[offset * limit : (offset + 1) * limit]
 
 
 def search_subordinate(tg_id: int, l_name: str) -> int | None:
@@ -404,9 +407,34 @@ def search_subordinate(tg_id: int, l_name: str) -> int | None:
 
 
 def update_worker_state(worker_id: int, state: WorkerStatus) -> bool:
+    from app.adapters.bot.handlers.utils import notify_workers_by_scope
+    from app.adapters.bot.kb import create_inline_keyboard
+    from app.adapters.bot.text import view
+    from aiogram.types import InlineKeyboardButton
+    from app.adapters.bot.handlers.worker_bids.schemas import (
+        CandidatesCoordinationCallbackData,
+    )
+
     worker = get_worker_by_id(worker_id)
     if worker is None:
         return False
+    if worker.state == WorkerStatus.internship and (
+        state == WorkerStatus.active or state == WorkerStatus.refusal_internship
+    ):
+        notify_workers_by_scope(
+            scope=FujiScope.bot_worker_bid_accounting_coordinate,
+            message=f"Сотрудник {worker.l_name} {worker.f_name} {worker.o_name}.\nid сотрудника {worker.id}\
+                \n{'Отказался от стажировки' if state == WorkerStatus.refusal_internship else 'Прошёл стажировку'}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=CandidatesCoordinationCallbackData(
+                        id=worker.id,
+                        endpoint_name="show_worker_notification",
+                    ).pack(),
+                )
+            ),
+        )
     worker.state = state
     orm.update_worker(worker)
     return True
