@@ -37,7 +37,7 @@ const error = computed(() => {
 		:searchList="entity.entitiesList.value"
 		:search-value="entity.formattedField.value"
 		@submit="(val) => (entity.formattedField.value = val)"
-		@select="entity.select"
+		@select="(index: number) => entity.select(index)"
 	></MultiSelectInput>
 </template>
 
