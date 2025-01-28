@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DropDownMenu from "@/components/DropDownMenu.vue";
 import EntitySelect from "@/components/entity/EntitySelect.vue";
-import { BaseEntity } from "@/components/entity";
+import { BaseEntity, SelectType } from "@/components/entity";
 
 const props = defineProps({
 	style: {
@@ -26,6 +26,7 @@ const props = defineProps({
 			<EntitySelect
 				v-for="entity in props.entities"
 				:entity="entity"
+				:select-type="SelectType.MultiSelectInput"
 			></EntitySelect>
 		</template>
 	</DropDownMenu>
