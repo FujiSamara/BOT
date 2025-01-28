@@ -617,7 +617,7 @@ async def get_update_documents_menu(
 
     docs = data.get("docs")
     form_complete = True
-    if docs is None:
+    if docs is None or len(docs)==0:
         docs = ""
         form_complete = False
     else:
