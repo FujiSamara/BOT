@@ -89,6 +89,7 @@ onUnmounted(() => {
 
 		list-style: none;
 		padding: 24px;
+		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		transition: opacity 0.5s;
 
