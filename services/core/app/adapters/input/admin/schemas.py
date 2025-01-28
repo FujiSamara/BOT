@@ -635,7 +635,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
             WorkerBid.o_name.ilike(f"%{term}%"),
         )
 
-        for state, text in worker_status_dict.items():
+        for state, text in approval_status_dict.items():
             if text.lower() == term.lower():
                 or_stmt = WorkerBid.state == state
                 break
