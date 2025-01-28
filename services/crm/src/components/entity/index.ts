@@ -2,6 +2,14 @@ import { computed, ref, Ref } from "vue";
 import { DepartmentSchema, PostSchema } from "@/types";
 import EntityService from "@/services/entity";
 
+export enum SelectType {
+	MultiSelectInput,
+	MonoSelectInput,
+	MultiDocument,
+	MonoDocument,
+	Input,
+}
+
 export abstract class BaseEntity<T> {
 	protected _selectedEntities: Ref<T[]> = ref([]);
 	protected _searchEntities: Ref<T[]> = ref([]);
