@@ -15,6 +15,10 @@ const props = defineProps({
 		type: Boolean,
 	},
 });
+const emits = defineEmits<{
+	(e: "rowClick", index: number): void;
+	(e: "cellClick", rowIndex: number, cellIndex: number): void;
+}>();
 
 const router = useRouter();
 const route = useRoute();
@@ -176,7 +180,12 @@ onMounted(() => {
 					</div>
 				</TableCellContainer>
 			</div>
-			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
+			<div
+				class="t-row"
+				v-for="(row, index) in rows"
+				:key="row.id"
+				@click="emits('rowClick', index)"
+			>
 				<TableCellContainer id="-1" class="t-cell check">
 					<Checkbox
 						:checked="table.checked.value[index].value"
@@ -188,11 +197,12 @@ onMounted(() => {
 					</Checkbox>
 				</TableCellContainer>
 				<TableCellContainer
-					:id="index"
+					:id="cellIndex"
 					class="t-cell"
-					v-for="(cell, index) in row.columns"
-					:key="index"
+					v-for="(cell, cellIndex) in row.columns"
+					:key="cellIndex"
 					:cell="cell"
+					@click="emits('cellClick', index, cellIndex)"
 				>
 				</TableCellContainer>
 			</div>
@@ -257,6 +267,7 @@ onMounted(() => {
 		width: fit-content;
 
 		border-radius: 8px;
+		border: 1px solid transparent;
 
 		padding: 8px 24px;
 
@@ -264,7 +275,9 @@ onMounted(() => {
 		font-family: Wix Madefor Display;
 		font-weight: 500;
 		line-height: 17.64px;
-		color: $main-dark-gray;
+		color: $main-accent-blue;
+
+		transition: border-color 0.25s;
 
 		&.titles {
 			font-size: 16px;
@@ -315,6 +328,10 @@ onMounted(() => {
 
 		.check {
 			width: fit-content;
+		}
+
+		&:not(:first-child):hover {
+			// border-color: $main-dark-gray;
 		}
 	}
 }
