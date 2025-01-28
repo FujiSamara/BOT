@@ -7,6 +7,7 @@ class BidViewMode(str, Enum):
     full = 1
     state_only = 2
     full_with_approve = 3
+    full_with_update = 4
 
 
 class WorkerBidCallbackData(CallbackData, prefix="worker_bid"):
