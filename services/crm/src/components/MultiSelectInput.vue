@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Checkbox from "@/components/UI/Checkbox.vue";
-import SearchInput from "@/components/SearchInput.vue";
+import SearchInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
 import * as animations from "@/components/entity/animations";
 

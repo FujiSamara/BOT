@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
-import SearchInput from "@/components/SearchInput.vue";
+import SearchInput from "@/components/MaybeDelayInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
