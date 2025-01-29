@@ -640,7 +640,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
                 or_stmt = WorkerBid.state == state
                 break
 
-        workers = select(Worker).filter(or_stmt)
+        workers = select(WorkerBid).filter(or_stmt)
         return workers
 
     can_create = False
