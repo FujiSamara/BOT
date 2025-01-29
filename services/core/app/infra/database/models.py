@@ -456,7 +456,7 @@ class Worker(Base):
 
 
 class WorkerDocument(Base):
-    """Паспорта работников"""
+    """Документы работников"""
 
     __tablename__ = "workers_documents"
 

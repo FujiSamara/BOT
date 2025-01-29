@@ -160,7 +160,7 @@ class WorkerBidCoordinationFactory:
         if bid.passport != []:
             buttons.append(
                 InlineKeyboardButton(
-                    text="Паспорт",
+                    text="Документы",
                     callback_data=WorkerBidCallbackData(
                         id=callback_data.id,
                         mode=callback_data.mode,
