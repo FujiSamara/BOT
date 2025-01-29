@@ -6,7 +6,8 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
-import CreateRow from "@/components/table/tools/CreateRow.vue";
+import CreateButton from "@/components/UI-new/CreateButton.vue";
+import RowEditor from "@/components/table/RowEditor.vue";
 
 import { Table as BaseTable } from "@/components/table";
 import { BaseSchema } from "@/types";
@@ -28,7 +29,7 @@ const setup = await setupWorktime(props.table);
 		<div class="toolbar">
 			<div class="tb-outer-group">
 				<div class="tb-group">
-					<CreateRow></CreateRow>
+					<CreateButton @click="setup.rowEditor.create()"></CreateButton>
 					<SearchInput
 						v-for="(search, index) in setup.searchList"
 						:style="search.style"
@@ -68,6 +69,10 @@ const setup = await setupWorktime(props.table);
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
+
+		<Transition name="fade">
+			<RowEditor :editor="setup.rowEditor"></RowEditor>
+		</Transition>
 	</div>
 </template>
 

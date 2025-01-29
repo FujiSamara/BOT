@@ -19,12 +19,14 @@ import {
 	DateIntervalModelOut,
 	useDateInterval,
 } from "@/hooks/dateIntervalHook";
-import { DepartmentEntity, PostEntity } from "@/components/entity";
+import { DepartmentEntity, PostEntity, SelectType } from "@/components/entity";
+import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 
 interface WorktimePanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
+	rowEditor: RowEditor;
 }
 
 export class WorktimeTable extends Table<WorktimeSchema> {
@@ -83,11 +85,17 @@ export async function setupWorktime(
 		},
 	);
 	const dateInterval = await useDateInterval(table, "day");
+	const rowEditor = useRowEditor(
+		[{ entity: new DepartmentEntity(), type: SelectType.MonoSelectInput }],
+		"Создать явку",
+		"Изменить явку",
+	);
 
 	return {
 		entitySearchList,
 		searchList,
 		dateInterval,
+		rowEditor,
 	};
 }
 
