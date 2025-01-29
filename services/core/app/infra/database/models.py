@@ -1150,9 +1150,7 @@ class WorkerFingerprint(Base):
     cell_number: Mapped[int] = mapped_column(nullable=True)
     rfid_card: Mapped[str] = mapped_column(nullable=True)
 
-    worker: Mapped["Worker"] = relationship(
-        "Worker", foreign_keys=[worker_id]
-    )
+    worker: Mapped["Worker"] = relationship("Worker", foreign_keys=[worker_id])
 
     department: Mapped["Department"] = relationship(
         "Department", foreign_keys=[department_id]
