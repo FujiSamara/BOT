@@ -75,7 +75,7 @@ const list = computed(() => {
 	gap: 16px;
 
 	.msi-input {
-		width: 248px;
+		width: 100%;
 	}
 
 	.msi-list {
@@ -83,7 +83,7 @@ const list = computed(() => {
 		flex-direction: column;
 		gap: 10px;
 
-		width: 248px;
+		width: 100%;
 		padding: 0;
 
 		.msi-row-wrapper {

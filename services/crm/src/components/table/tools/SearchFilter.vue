@@ -24,6 +24,7 @@ const props = defineProps({
 		</template>
 		<template #menu>
 			<EntitySelect
+				class="e-select"
 				v-for="entity in props.entities"
 				:entity="entity"
 				:select-type="SelectType.MultiSelectInput"
@@ -42,5 +43,9 @@ const props = defineProps({
 			mask-image: url("@/assets/icons/filter.svg");
 		}
 	}
+}
+
+.e-select {
+	width: 248px;
 }
 </style>
