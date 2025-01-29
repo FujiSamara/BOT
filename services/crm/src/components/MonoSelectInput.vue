@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SearchInput from "@/components/MaybeDelayInput.vue";
+import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
 import * as animations from "@/components/entity/animations";
 
@@ -35,13 +35,13 @@ const list = computed(() => {
 
 <template>
 	<div class="msi-wrapper" @focusin="active = true" @focusout="active = false">
-		<SearchInput
+		<MaybeDelayInput
 			class="msi-input"
 			:value="searchValue"
 			@submit="(val: string) => emits('submit', val)"
 			:error="props.error"
 			:placeholder="props.placeholder"
-		></SearchInput>
+		></MaybeDelayInput>
 		<TransitionGroup
 			:css="false"
 			tag="ul"
