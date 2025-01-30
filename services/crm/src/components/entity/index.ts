@@ -15,7 +15,7 @@ export abstract class BaseEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 	protected _inputValue: Ref<string> = ref("");
 
-	constructor() {}
+	constructor(public required: boolean = false) {}
 
 	public loading: Ref<boolean> = ref(false);
 	public placeholder = "";
