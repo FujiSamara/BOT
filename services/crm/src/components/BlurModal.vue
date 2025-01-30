@@ -5,6 +5,9 @@ const props = defineProps({
 	title: {
 		type: String,
 	},
+	height: {
+		type: String,
+	},
 });
 const emits = defineEmits(["close"]);
 
@@ -25,7 +28,7 @@ onUnmounted(() => {
 
 <template>
 	<div class="bm-wrapper" @click="emits('close')">
-		<div class="bm-window" @click.stop>
+		<div class="bm-window" @click.stop :style="{ height: props.height }">
 			<div class="bm-title">
 				<!--stub-->
 				<div></div>
