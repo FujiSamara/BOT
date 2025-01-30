@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId, useTemplateRef } from "vue";
+import { computed, Ref, ref, useId, useTemplateRef } from "vue";
 
 const props = defineProps({
 	placeholder: {
@@ -37,14 +37,23 @@ const emits = defineEmits<{
 
 const active = ref(false);
 const input = useTemplateRef("input");
+const tempValue: Ref<string | undefined> = ref(undefined);
+const value = computed(() => {
+	if (tempValue.value === undefined) {
+		return props.value;
+	}
+	return tempValue.value;
+});
 
 let delaySetter: number = setTimeout(() => {}, 0);
 const delay = 500;
 
 const onInput = (event: Event) => {
 	const val = (event.target as HTMLInputElement).value;
+	tempValue.value = val;
 	clearTimeout(delaySetter);
 	delaySetter = setTimeout(async () => {
+		tempValue.value = undefined;
 		emits("submit", val);
 	}, delay);
 };
@@ -74,7 +83,7 @@ const starClicked = () => {
 		<Transition name="fade">
 			<span
 				class="required"
-				v-if="!active && props.required"
+				v-if="!active && props.required && !value"
 				@click="starClicked"
 			>
 				<span class="stub">{{ props.placeholder }}</span>
