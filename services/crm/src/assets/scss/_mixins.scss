@@ -106,6 +106,8 @@
     width: 24px;
     height: 24px;
 
+    border-radius: 6px;
+
     .tool-icon {
       background-color: currentColor;
       fill: currentColor;
@@ -124,6 +126,8 @@
       width: 28px;
       height: 28px;
     }
+
+    transition: background-color 0.25s;
   }
 
   .tool-message {
