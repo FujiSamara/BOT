@@ -456,7 +456,7 @@ class Worker(Base):
 
 
 class WorkerDocument(Base):
-    """Паспорта работников"""
+    """Документы работников"""
 
     __tablename__ = "workers_documents"
 
@@ -1144,11 +1144,17 @@ class EquipmentIncident(Base):
 class WorkerFingerprint(Base):
     __tablename__ = "workers_fingerprints"
 
-    worker_id: Mapped[int] = mapped_column(nullable=False)
-    department_id: Mapped[int] = mapped_column(nullable=False)
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department_hex: Mapped[str] = mapped_column(nullable=False)
     cell_number: Mapped[int] = mapped_column(nullable=True)
     rfid_card: Mapped[str] = mapped_column(nullable=True)
+
+    worker: Mapped["Worker"] = relationship("Worker", foreign_keys=[worker_id])
+
+    department: Mapped["Department"] = relationship(
+        "Department", foreign_keys=[department_id]
+    )
 
 
 class FingerprintAttempt(Base):
