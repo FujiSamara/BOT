@@ -77,6 +77,13 @@ from app.services.extra import (
     get_companies_names,
     set_tellers_cash_department,
     get_last_worker_passport_id,
+    get_old_technical_requests_docs_path,
+    update_old_technical_requests_documents,
+    get_old_worker_bids_docs_path,
+    update_old_worker_bids_documents,
+    get_old_bids_docs_path,
+    update_old_bids_documents,
+    delete_old_worktimes_photos,
 )
 from app.services.it_problem import (
     create_bid_it,
@@ -302,4 +309,11 @@ __all__ = [
     "get_worker_bid_documents_requests",
     "add_worker_bids_documents_requests",
     "update_worker_bid_documents",
+    "update_old_technical_requests_documents",
+    "get_old_technical_requests_docs_path",
+    "get_old_worker_bids_docs_path",
+    "update_old_worker_bids_documents",
+    "get_old_bids_docs_path",
+    "update_old_bids_documents",
+    "delete_old_worktimes_photos",
 ]

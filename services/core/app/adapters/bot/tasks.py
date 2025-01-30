@@ -152,3 +152,56 @@ async def update_repairman_worktimes() -> None:  # Technical requests
         logger.info("Updating the working hours of the repairmen.")
         services.update_repairman_worktimes(9, 18)
         logger.info("Updating the working hours of the repairmen. Completed")
+
+
+@repeat_every(
+    seconds=60 * 60 * 24,
+    logger=logger,
+)
+def delete_old_files() -> None:
+    from app.adapters.output.file.delete_old_files import delete_old_files
+
+    dt_now = datetime.now()
+
+    if dt_now.weekday() == 5:
+        logger.info("Deleting old documents.")
+
+        logger.info("Deleting technical requests documents.")
+        if delete_old_files(
+            get_old_paths_func=services.get_old_technical_requests_docs_path,
+            update_old_paths_func=services.update_old_technical_requests_documents,
+            dt_now=dt_now,
+        ):
+            logger.info("Deleting technical requests documents. Completed.")
+        else:
+            logger.info("Deleting technical requests documents. Was stop with error.")
+
+        logger.info("Deleting worker bids documents.")
+        if delete_old_files(
+            get_old_paths_func=services.get_old_worker_bids_docs_path,
+            update_old_paths_func=services.update_old_worker_bids_documents,
+            dt_now=dt_now,
+        ):
+            logger.info("Deleting worker bids documents. Completed.")
+        else:
+            logger.info("Deleting worker bids documents. Was stop with error.")
+
+        logger.info("Deleting bids documents.")
+        if delete_old_files(
+            get_old_paths_func=services.get_old_bids_docs_path,
+            update_old_paths_func=services.update_old_bids_documents,
+            dt_now=dt_now,
+        ):
+            logger.info("Deleting bids documents. Completed.")
+        else:
+            logger.info("Deleting bids documents. Was stop with error.")
+
+        logger.info("Deleting worktimes photos.")
+        if services.delete_old_worktimes_photos(
+            dt_now=dt_now,
+        ):
+            logger.info("Deleting worktimes photos. Completed.")
+        else:
+            logger.info("Deleting worktimes photos. Was stop with error.")
+
+        logger.info("Deleting old documents. Completed.")
