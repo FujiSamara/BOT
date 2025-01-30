@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, useId } from "vue";
+import { ref, useId, useTemplateRef } from "vue";
 
 const props = defineProps({
 	placeholder: {
@@ -11,8 +11,24 @@ const props = defineProps({
 	error: {
 		type: String,
 	},
+	errorLeftAlign: {
+		type: Boolean,
+		default: false,
+	},
 	value: {
 		type: String,
+	},
+	withSearchIcon: {
+		type: Boolean,
+		default: true,
+	},
+	withEditMark: {
+		type: Boolean,
+		default: false,
+	},
+	required: {
+		type: Boolean,
+		default: false,
 	},
 });
 const emits = defineEmits<{
@@ -20,6 +36,7 @@ const emits = defineEmits<{
 }>();
 
 const active = ref(false);
+const input = useTemplateRef("input");
 
 let delaySetter: number = setTimeout(() => {}, 0);
 const delay = 500;
@@ -31,6 +48,9 @@ const onInput = (event: Event) => {
 		emits("submit", val);
 	}, delay);
 };
+const starClicked = () => {
+	input.value!.focus();
+};
 </script>
 
 <template>
@@ -38,7 +58,7 @@ const onInput = (event: Event) => {
 		class="search-input"
 		:class="{ active: active, disabled: disabled, error: error !== undefined }"
 	>
-		<div class="tool-icon-wrapper">
+		<div class="tool-icon-wrapper" v-if="props.withSearchIcon">
 			<div class="tool-icon search"></div>
 		</div>
 		<input
@@ -49,12 +69,27 @@ const onInput = (event: Event) => {
 			@input="onInput"
 			:value="value"
 			:id="useId()"
+			ref="input"
 		/>
+		<Transition name="fade">
+			<span
+				class="required"
+				v-if="!active && props.required"
+				@click="starClicked"
+			>
+				<span class="stub">{{ props.placeholder }}</span>
+				<span>*</span>
+			</span>
+		</Transition>
 		<Transition name="fade">
 			<div v-show="error !== undefined" class="tool-icon-wrapper">
 				<div class="tool-icon error"></div>
 			</div>
 		</Transition>
+
+		<div v-if="props.withEditMark" class="tool-icon-wrapper edit">
+			<div class="tool-icon edit"></div>
+		</div>
 
 		<Transition name="fade">
 			<span
@@ -71,6 +106,12 @@ const onInput = (event: Event) => {
 .search-input {
 	@include field;
 
+	.tool-message {
+		&.left {
+			left: 0;
+		}
+	}
+
 	.tool-icon-wrapper {
 		.tool-icon {
 			width: 16px;
@@ -78,12 +119,17 @@ const onInput = (event: Event) => {
 
 			&.search {
 				mask-image: url("@/assets/icons/loop.svg");
-				color: #090c2f99;
+				color: $main-dark-gray;
 			}
 
 			&.error {
 				mask-image: url("@/assets/icons/alert.svg");
 				color: $sec-arrantion-red;
+			}
+
+			&.edit {
+				mask-image: url("@/assets/icons/pencil.svg");
+				color: $main-dark-gray;
 			}
 		}
 	}
@@ -92,6 +138,7 @@ const onInput = (event: Event) => {
 		display: flex;
 		width: 0;
 		flex-grow: 1;
+		padding: 0;
 
 		outline: none;
 		border: none;
@@ -111,6 +158,30 @@ const onInput = (event: Event) => {
 		}
 	}
 
+	.required {
+		span {
+			color: $sec-arrantion-red;
+			font-family: Wix Madefor Display;
+			font-size: 12px;
+			font-weight: 500;
+			line-height: 15.12px;
+		}
+
+		.stub {
+			opacity: 0;
+			font-size: 14px;
+		}
+
+		position: absolute;
+		top: 14px;
+		left: 25px;
+
+		&.fade-enter-active,
+		&.fade-leave-active {
+			transition: opacity 0.25s !important;
+		}
+	}
+
 	&.active {
 		input::placeholder {
 			opacity: 0;
@@ -124,6 +195,14 @@ const onInput = (event: Event) => {
 				&.search {
 					color: $main-accent-blue;
 				}
+
+				&.edit {
+					color: $main-white;
+				}
+			}
+
+			&.edit {
+				background-color: $main-accent-blue;
 			}
 		}
 	}
