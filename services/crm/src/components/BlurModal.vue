@@ -24,8 +24,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="bm-wrapper">
-		<div class="bm-window">
+	<div class="bm-wrapper" @click="emits('close')">
+		<div class="bm-window" @click.stop>
 			<div class="bm-title">
 				<!--stub-->
 				<div></div>
