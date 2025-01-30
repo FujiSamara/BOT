@@ -4,6 +4,7 @@ import {
 	nextTick,
 	onMounted,
 	PropType,
+	ref,
 	Ref,
 	useTemplateRef,
 	watch,
@@ -32,6 +33,7 @@ const router = useRouter();
 const route = useRoute();
 
 const tableRef = useTemplateRef("table");
+const photoOpenned = ref(false);
 
 const resizeCells = () => {
 	const cells = tableRef.value!.getElementsByClassName("t-cell");
@@ -211,6 +213,9 @@ onMounted(() => {
 					:key="cellIndex"
 					:cell="cell"
 					@click="emits('cellClick', index, cellIndex)"
+					@photo-open="photoOpenned = true"
+					@photo-close="photoOpenned = false"
+					:photo-disabled="photoOpenned"
 				>
 				</TableCellContainer>
 			</div>

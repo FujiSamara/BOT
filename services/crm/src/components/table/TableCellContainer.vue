@@ -16,7 +16,11 @@ const props = defineProps({
 	cell: {
 		type: Object as PropType<Cell>,
 	},
+	photoDisabled: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits(["photoOpen", "photoClose"]);
 
 const cellWrapperRef = useTemplateRef("cellWrapper");
 const hintRef = useTemplateRef("hint");
@@ -78,12 +82,23 @@ onUnmounted(() => {
 		@mouseleave="hintVisible = false"
 		:class="{ highlight: hintAvailable }"
 	>
-		<TableCell class="cell" :cell="props.cell">
+		<TableCell
+			class="cell"
+			:cell="props.cell"
+			:photo-disabled="props.photoDisabled"
+			@photo-close="emits('photoClose')"
+			@photo-open="emits('photoOpen')"
+		>
 			<slot></slot>
 		</TableCell>
 		<Transition name="fade">
 			<div ref="hint" class="hint" v-show="hintAvailable && hintVisible">
-				<TableCell :cell="props.cell">
+				<TableCell
+					:cell="props.cell"
+					:photo-disabled="props.photoDisabled"
+					@photo-close="emits('photoClose')"
+					@photo-open="emits('photoOpen')"
+				>
 					<slot></slot>
 				</TableCell>
 			</div>
