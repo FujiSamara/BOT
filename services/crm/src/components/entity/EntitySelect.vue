@@ -2,8 +2,8 @@
 import { BaseEntity, SelectType } from ".";
 import { PropType } from "vue";
 import { computed } from "@vue/reactivity";
-import MultiSelectInput from "@/components/MultiSelectInput.vue";
-import MonoSelectInput from "../MonoSelectInput.vue";
+import MultiSelectInput from "@/components/selects/MultiSelectInput.vue";
+import MonoSelectInput from "@/components/selects/MonoSelectInput.vue";
 
 const props = defineProps({
 	entity: {
@@ -31,25 +31,28 @@ const error = computed(() => {
 </script>
 
 <template>
-	<MultiSelectInput
-		v-if="props.selectType === SelectType.MultiSelectInput"
-		:error="error"
-		:placeholder="entity.placeholder"
-		:searchList="entity.entitiesList.value"
-		:search-value="entity.formattedField.value"
-		@submit="(val) => (entity.formattedField.value = val)"
-		@select="(index: number) => entity.select(index)"
-	></MultiSelectInput>
-	<MonoSelectInput
-		v-if="props.selectType === SelectType.MonoSelectInput"
-		:error="error"
-		:placeholder="entity.placeholder"
-		:searchList="entity.entitiesList.value.map((val) => val.value)"
-		:search-value="entity.formattedField.value"
-		@submit="(val) => (entity.formattedField.value = val)"
-		@select="(index: number) => entity.select(index)"
-	>
-	</MonoSelectInput>
+	<div class="e-select">
+		<MultiSelectInput
+			v-if="props.selectType === SelectType.MultiSelectInput"
+			:error="error"
+			:placeholder="entity.placeholder"
+			:searchList="entity.entitiesList.value"
+			:search-value="entity.formattedField.value"
+			@submit="(val) => (entity.formattedField.value = val)"
+			@select="(index: number) => entity.select(index)"
+		></MultiSelectInput>
+		<MonoSelectInput
+			v-if="props.selectType === SelectType.MonoSelectInput"
+			:error="error"
+			:placeholder="entity.placeholder"
+			:searchList="entity.entitiesList.value.map((val) => val.value)"
+			:search-value="entity.formattedField.value"
+			@submit="(val) => (entity.formattedField.value = val)"
+			@select="(index: number) => entity.select(index)"
+			:required="entity.required"
+		>
+		</MonoSelectInput>
+	</div>
 </template>
 
 <style scoped lang="scss"></style>

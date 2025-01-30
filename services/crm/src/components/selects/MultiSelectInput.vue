@@ -2,7 +2,7 @@
 import Checkbox from "@/components/UI/Checkbox.vue";
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
-import * as animations from "@/components/entity/animations";
+import * as animations from "@/components/selects/multiSelectAnimations";
 
 const props = defineProps({
 	error: {
@@ -72,7 +72,6 @@ const list = computed(() => {
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
 
 	.msi-input {
 		width: 100%;
@@ -82,7 +81,6 @@ const list = computed(() => {
 	.msi-list {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
 
 		width: 100%;
 		padding: 0;
@@ -93,15 +91,12 @@ const list = computed(() => {
 			width: inherit;
 			height: 48px;
 			justify-content: space-between;
+			margin-top: 8px;
 
 			.msi-row {
 				max-width: 80%;
 				overflow-x: hidden;
 			}
-		}
-
-		&:empty {
-			margin-top: calc(-16px);
 		}
 	}
 }

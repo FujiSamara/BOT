@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
-import * as animations from "@/components/entity/animations";
+import * as animations from "@/components/selects/monoSelectAnimations";
 
 const props = defineProps({
 	error: {
@@ -17,6 +17,10 @@ const props = defineProps({
 	searchValue: {
 		type: String,
 		required: true,
+	},
+	required: {
+		type: Boolean,
+		default: false,
 	},
 });
 const emits = defineEmits<{
@@ -41,6 +45,9 @@ const list = computed(() => {
 			@submit="(val: string) => emits('submit', val)"
 			:error="props.error"
 			:placeholder="props.placeholder"
+			:with-search-icon="false"
+			:with-edit-mark="true"
+			:required="props.required"
 		></MaybeDelayInput>
 		<TransitionGroup
 			:css="false"
@@ -67,26 +74,26 @@ const list = computed(() => {
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
-	gap: 16px;
 
 	.msi-input {
 		width: 100%;
+		height: 48px;
 	}
 
 	.msi-list {
 		display: flex;
 		flex-direction: column;
-		gap: 10px;
 
 		width: 100%;
 		padding: 0;
+		margin: 0;
 
 		.msi-row {
+			margin-top: 8px;
+			height: 48px;
 		}
 
-		&:empty {
-			margin-top: calc(-16px);
-		}
+		transition: margin-top 0.25s;
 	}
 }
 </style>
