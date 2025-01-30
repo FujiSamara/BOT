@@ -246,7 +246,7 @@ onMounted(() => {
 			.tool-icon {
 				&.search {
 					mask-image: url("@/assets/icons/loop.svg");
-					color: #090c2f99;
+					color: $main-dark-gray;
 				}
 			}
 		}
