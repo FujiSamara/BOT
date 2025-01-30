@@ -344,7 +344,8 @@ onMounted(() => {
 		}
 
 		&:not(:first-child):hover {
-			// border-color: $main-dark-gray;
+			border-color: $sec-active-blue;
+			background-color: $sec-active-blue-10;
 		}
 	}
 }
