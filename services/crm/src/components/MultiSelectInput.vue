@@ -76,6 +76,7 @@ const list = computed(() => {
 
 	.msi-input {
 		width: 100%;
+		height: 48px;
 	}
 
 	.msi-list {
@@ -85,10 +86,12 @@ const list = computed(() => {
 
 		width: 100%;
 		padding: 0;
+		margin: 0;
 
 		.msi-row-wrapper {
 			@include field;
 			width: inherit;
+			height: 48px;
 			justify-content: space-between;
 
 			.msi-row {
