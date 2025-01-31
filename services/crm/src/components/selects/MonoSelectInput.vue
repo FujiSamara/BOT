@@ -116,7 +116,7 @@ const focusOut = () => {
 			width: 100%;
 			margin: 0;
 			padding: 0;
-			height: 86px;
+			max-height: 86px;
 			overflow-y: scroll;
 
 			.msi-row {
