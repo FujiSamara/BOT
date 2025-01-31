@@ -63,6 +63,8 @@ onUnmounted(() => {
 		display: flex;
 		flex-direction: column;
 
+		overflow-y: scroll;
+
 		gap: 24px;
 		padding: 16px;
 		border-radius: 16px;
