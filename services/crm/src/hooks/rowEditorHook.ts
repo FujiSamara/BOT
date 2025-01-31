@@ -47,7 +47,7 @@ export const useRowEditor = (
 			const name = field.name;
 			const entity = field.entity;
 
-			if ((model as any)[name]) {
+			if ((model as any)[name] !== undefined && (model as any)[name] !== null) {
 				entity.init((model as any)[name]);
 			}
 		}
@@ -69,6 +69,7 @@ export const useRowEditor = (
 		}
 
 		if (isCreating.value) {
+			return;
 			await table.create(result);
 		} else {
 			await table.update(result, editIndex);
