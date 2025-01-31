@@ -112,7 +112,7 @@ export async function setupWorktime(
 			{
 				entity: new FloatInputEntity(false, "Оценка"),
 				type: SelectType.Input,
-				name: "rate",
+				name: "rating",
 			},
 			{
 				entity: new FloatInputEntity(false, "Штраф"),
