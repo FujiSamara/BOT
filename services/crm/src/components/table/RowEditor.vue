@@ -3,6 +3,7 @@ import BlurModal from "@/components/BlurModal.vue";
 import { RowEditor } from "@/hooks/rowEditorHook";
 import { PropType } from "vue";
 import EntitySelect from "../entity/EntitySelect.vue";
+import DefaultButton from "../UI-new/DefaultButton.vue";
 
 const props = defineProps({
 	editor: {
@@ -24,6 +25,7 @@ const editor = props.editor;
 			:entity="field.entity"
 			:select-type="field.type"
 		></EntitySelect>
+		<DefaultButton @click="editor.save" title="Сохранить"></DefaultButton>
 	</BlurModal>
 </template>
 

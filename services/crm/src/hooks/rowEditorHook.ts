@@ -1,9 +1,9 @@
-import { BaseEntity, SelectType } from "@/components/entity";
+import { InputEntity, SelectType } from "@/components/entity";
 import { Table } from "@/components/table";
 import { Ref, ref } from "vue";
 
 export interface RowField {
-	entity: BaseEntity<any>;
+	entity: InputEntity<any>;
 	type: SelectType;
 	name: string;
 }
@@ -27,6 +27,7 @@ export const useRowEditor = (
 	const active = ref(false);
 	const title = ref("");
 	const isCreating = ref(false);
+	let editIndex = -1;
 
 	const close = () => {
 		active.value = false;
@@ -40,6 +41,7 @@ export const useRowEditor = (
 		title.value = editTitle;
 		isCreating.value = false;
 		const model = table.getModel(index);
+		editIndex = index;
 
 		for (const field of fields) {
 			const name = field.name;
@@ -55,8 +57,20 @@ export const useRowEditor = (
 		isCreating.value = true;
 	};
 
-	const save = () => {
+	const save = async () => {
 		active.value = false;
+
+		const result: any = {};
+
+		for (const field of fields) {
+			result[field.name] = field.entity.selectedEntities.value[0];
+		}
+
+		if (isCreating.value) {
+			await table.create(result);
+		} else {
+			await table.update(result, editIndex);
+		}
 	};
 
 	return { active, close, edit, create, save, fields, title };

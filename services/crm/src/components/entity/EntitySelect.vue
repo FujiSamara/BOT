@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { BaseEntity, SelectType } from ".";
 import { PropType } from "vue";
-import { computed } from "@vue/reactivity";
-import MultiSelectInput from "@/components/selects/MultiSelectInput.vue";
-import MonoSelectInput from "@/components/selects/MonoSelectInput.vue";
+import MultiEntitySelect from "./MultiEntitySelect.vue";
+import MonoEntitySelect from "./MonoEntitySelect.vue";
 
 const props = defineProps({
 	entity: {
@@ -15,46 +14,16 @@ const props = defineProps({
 		required: true,
 	},
 });
-const entity = props.entity;
+const entity = props.entity as any;
 
-const error = computed(() => {
-	if (
-		entity.formattedField.value.length &&
-		entity.formattedField.value.length < entity.neededWord
-	) {
-		return `Необходимо минимум ${entity.neededWord} символа`;
-	}
-	if (entity.notFound.value) {
-		return "Совпадения не найдены";
-	}
-
-	return undefined;
-});
+const multiSelect = props.selectType === SelectType.MultiSelectInput;
+const monoSelect = props.selectType === SelectType.MonoSelectInput;
 </script>
 
 <template>
 	<div class="e-select">
-		<MultiSelectInput
-			v-if="props.selectType === SelectType.MultiSelectInput"
-			:error="error"
-			:placeholder="entity.placeholder"
-			:searchList="entity.entitiesList.value"
-			:search-value="entity.formattedField.value"
-			@submit="(val) => (entity.formattedField.value = val)"
-			@select="(index: number) => entity.select(index)"
-		></MultiSelectInput>
-		<MonoSelectInput
-			v-if="props.selectType === SelectType.MonoSelectInput"
-			:error="error"
-			:placeholder="entity.placeholder"
-			:searchList="entity.entitiesList.value.map((val) => val.value)"
-			:search-value="entity.formattedField.value"
-			@submit="(val) => (entity.formattedField.value = val)"
-			@select="(index: number) => entity.select(index)"
-			@close="() => entity.restoreSaved()"
-			:required="entity.required"
-		>
-		</MonoSelectInput>
+		<MultiEntitySelect v-if="multiSelect" :entity="entity"></MultiEntitySelect>
+		<MonoEntitySelect v-if="monoSelect" :entity="entity"></MonoEntitySelect>
 	</div>
 </template>
 

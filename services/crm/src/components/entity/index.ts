@@ -12,22 +12,72 @@ export enum SelectType {
 
 export abstract class BaseEntity<T> {
 	protected _selectedEntities: Ref<T[]> = ref([]);
-	protected _searchEntities: Ref<T[]> = ref([]);
-	protected _inputValue: Ref<string> = ref("");
 
-	constructor(
-		public required: boolean = false,
-		private monoMode: boolean = false,
-		public neededWord: number = 3,
-	) {
+	public placeholder = "";
+	public disabled: Ref<boolean> = ref(false);
+	public selectedEntities = computed(() => this._selectedEntities.value);
+	public completed: Ref<boolean> = ref(false);
+
+	constructor(public required: boolean = false) {
 		this.sortComparator = this.sortComparator.bind(this);
 	}
 
-	public loading: Ref<boolean> = ref(false);
-	public placeholder = "";
-	public disabled: Ref<boolean> = ref(false);
+	protected format(value: T): string {
+		return `${value}`;
+	}
+	protected sortComparator(a: T, b: T): number {
+		return this.format(a).localeCompare(this.format(b));
+	}
+	protected setSelectedEntities(values: T[]) {
+		this._selectedEntities.value = values.sort(this.sortComparator);
+	}
+	public init(value: T) {
+		this._selectedEntities.value = [value];
+	}
+}
 
-	public selectedEntities = computed(() => this._selectedEntities.value);
+export abstract class InputEntity<T> extends BaseEntity<T> {
+	protected _inputValue: Ref<string> = ref("");
+
+	public completed: Ref<boolean> = computed(() => {
+		return this._inputValue.value.length !== 0;
+	});
+	public formattedField = computed({
+		get: () => {
+			return this._inputValue.value;
+		},
+		set: async (val: string) => {
+			this._inputValue.value = val;
+		},
+	});
+
+	public clear() {
+		this._inputValue.value = "";
+		this._selectedEntities.value = [];
+	}
+
+	public init(value: T) {
+		this._selectedEntities.value = [value];
+		this._inputValue.value = this.format(value);
+	}
+}
+
+export abstract class InputSelectEntity<T> extends InputEntity<T> {
+	protected _searchEntities: Ref<T[]> = ref([]);
+
+	constructor(
+		required: boolean = false,
+		private monoMode: boolean = false,
+		public neededWord: number = 3,
+	) {
+		super(required);
+	}
+
+	public loading: Ref<boolean> = ref(false);
+
+	public completed: Ref<boolean> = computed(() => {
+		return this._selectedEntities.value.length !== 0;
+	});
 	public entitiesList = computed((): { value: string; checked: boolean }[] => {
 		const result: { value: string; checked: boolean }[] = [];
 
@@ -65,7 +115,7 @@ export abstract class BaseEntity<T> {
 				return;
 			}
 			this.loading.value = true;
-			await this.onInput(val);
+			await this.onSubmit(val);
 			this.loading.value = false;
 		},
 	});
@@ -78,17 +128,7 @@ export abstract class BaseEntity<T> {
 		);
 	});
 
-	private setSelectedEntities(values: T[]) {
-		this._selectedEntities.value = values.sort(this.sortComparator);
-	}
-
-	protected abstract onInput(_: string): Promise<void>;
-	protected format(value: T): string {
-		return `${value}`;
-	}
-	protected sortComparator(a: T, b: T): number {
-		return this.format(a).localeCompare(this.format(b));
-	}
+	protected abstract onSubmit(_: string): Promise<void>;
 
 	public remove(index: number) {
 		const temp = [...this._selectedEntities.value];
@@ -137,20 +177,18 @@ export abstract class BaseEntity<T> {
 			throw new Error("Restoring saved must call only in monoMode.");
 		}
 
-		this._selectedEntities.value = [value];
-		this._inputValue.value = this.format(value);
+		super.init(value);
 	}
 	public clear() {
-		this._inputValue.value = "";
-		this._selectedEntities.value = [];
+		super.clear();
 		this._searchEntities.value = [];
 	}
 }
 
-export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
+export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 	public placeholder = "Предприятие";
 
-	protected async onInput(val: string): Promise<void> {
+	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<DepartmentSchema>("department");
 
 		const departments = await service.searchEntities(val);
@@ -163,10 +201,10 @@ export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
 	}
 }
 
-export class PostEntity extends BaseEntity<PostSchema> {
+export class PostEntity extends InputSelectEntity<PostSchema> {
 	public placeholder = "Должность";
 
-	protected async onInput(val: string): Promise<void> {
+	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<PostSchema>("post");
 
 		const posts = await service.searchEntities(val);
@@ -179,10 +217,10 @@ export class PostEntity extends BaseEntity<PostSchema> {
 	}
 }
 
-export class WorkerEntity extends BaseEntity<WorkerSchema> {
+export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 	public placeholder = "Сотрудник";
 
-	protected async onInput(val: string): Promise<void> {
+	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<WorkerSchema>("worker");
 
 		const departments = await service.searchEntities(val);
