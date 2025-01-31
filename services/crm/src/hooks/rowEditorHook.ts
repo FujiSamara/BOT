@@ -47,7 +47,9 @@ export const useRowEditor = (
 			const name = field.name;
 			const entity = field.entity;
 
-			entity.init((model as any)[name]);
+			if ((model as any)[name]) {
+				entity.init((model as any)[name]);
+			}
 		}
 	};
 
