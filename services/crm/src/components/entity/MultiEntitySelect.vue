@@ -17,10 +17,10 @@ const error = computed(() => {
 		entity.formattedField.value.length &&
 		entity.formattedField.value.length < entity.neededWord
 	) {
-		return `Необходимо минимум ${entity.neededWord} символа`;
+		return "";
 	}
 	if (entity.notFound.value) {
-		return "Совпадения не найдены";
+		return "";
 	}
 
 	return undefined;
