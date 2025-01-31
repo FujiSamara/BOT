@@ -55,6 +55,7 @@ const focusOut = () => {
 			:placeholder="props.placeholder"
 			:with-search-icon="false"
 			:with-edit-mark="true"
+			:error-left-align="true"
 			:required="props.required"
 		></MaybeDelayInput>
 		<Transition name="fade">
