@@ -1,5 +1,5 @@
 import { computed, ref, Ref } from "vue";
-import { DepartmentSchema, PostSchema } from "@/types";
+import { DepartmentSchema, PostSchema, WorkerSchema } from "@/types";
 import EntityService from "@/services/entity";
 
 export enum SelectType {
@@ -19,7 +19,9 @@ export abstract class BaseEntity<T> {
 		public required: boolean = false,
 		private monoMode: boolean = false,
 		public neededWord: number = 3,
-	) {}
+	) {
+		this.sortComparator = this.sortComparator.bind(this);
+	}
 
 	public loading: Ref<boolean> = ref(false);
 	public placeholder = "";
@@ -77,14 +79,15 @@ export abstract class BaseEntity<T> {
 	});
 
 	private setSelectedEntities(values: T[]) {
-		this._selectedEntities.value = values.sort((a, b) =>
-			this.format(a).localeCompare(this.format(b)),
-		);
+		this._selectedEntities.value = values.sort(this.sortComparator);
 	}
 
 	protected abstract onInput(_: string): Promise<void>;
 	protected format(value: T): string {
 		return `${value}`;
+	}
+	protected sortComparator(a: T, b: T): number {
+		return this.format(a).localeCompare(this.format(b));
 	}
 
 	public remove(index: number) {
@@ -129,6 +132,19 @@ export abstract class BaseEntity<T> {
 			this._searchEntities.value = [];
 		}
 	}
+	public init(value: T) {
+		if (!this.monoMode) {
+			throw new Error("Restoring saved must call only in monoMode.");
+		}
+
+		this._selectedEntities.value = [value];
+		this._inputValue.value = this.format(value);
+	}
+	public clear() {
+		this._inputValue.value = "";
+		this._selectedEntities.value = [];
+		this._searchEntities.value = [];
+	}
 }
 
 export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
@@ -139,9 +155,7 @@ export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
 
 		const departments = await service.searchEntities(val);
 
-		this._searchEntities.value = departments.sort((a, b) =>
-			a.name.localeCompare(b.name),
-		);
+		this._searchEntities.value = departments.sort(this.sortComparator);
 	}
 
 	protected format(value: DepartmentSchema): string {
@@ -157,12 +171,26 @@ export class PostEntity extends BaseEntity<PostSchema> {
 
 		const posts = await service.searchEntities(val);
 
-		this._searchEntities.value = posts.sort((a, b) =>
-			a.name.localeCompare(b.name),
-		);
+		this._searchEntities.value = posts.sort(this.sortComparator);
 	}
 
 	protected format(value: DepartmentSchema): string {
 		return value.name;
+	}
+}
+
+export class WorkerEntity extends BaseEntity<WorkerSchema> {
+	public placeholder = "Сотрудник";
+
+	protected async onInput(val: string): Promise<void> {
+		const service = new EntityService<WorkerSchema>("worker");
+
+		const departments = await service.searchEntities(val);
+
+		this._searchEntities.value = departments.sort(this.sortComparator);
+	}
+
+	protected format(value: WorkerSchema): string {
+		return `${value.l_name} ${value.f_name} ${value.o_name}`;
 	}
 }
