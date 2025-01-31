@@ -91,22 +91,29 @@ const starClicked = () => {
 			</span>
 		</Transition>
 		<Transition name="fade">
-			<div v-show="error !== undefined" class="tool-icon-wrapper">
-				<div class="tool-icon error"></div>
+			<div
+				v-if="props.withEditMark && error === undefined"
+				class="tool-icon-wrapper edit"
+			>
+				<div class="tool-icon edit"></div>
 			</div>
 		</Transition>
 
-		<div v-if="props.withEditMark" class="tool-icon-wrapper edit">
-			<div class="tool-icon edit"></div>
-		</div>
-
 		<Transition name="fade">
-			<span
-				v-if="error !== undefined && active && error !== ''"
-				class="tool-message"
-			>
-				{{ error }}
-			</span>
+			<div class="error-wrapper" v-show="error !== undefined">
+				<Transition name="fade">
+					<span
+						v-if="active && error"
+						class="tool-message"
+						:class="{ left: props.errorLeftAlign }"
+					>
+						{{ error }}
+					</span>
+				</Transition>
+				<div class="tool-icon-wrapper">
+					<div class="tool-icon error"></div>
+				</div>
+			</div>
 		</Transition>
 	</div>
 </template>
@@ -114,12 +121,6 @@ const starClicked = () => {
 <style scoped lang="scss">
 .search-input {
 	@include field;
-
-	.tool-message {
-		&.left {
-			left: 0;
-		}
-	}
 
 	.tool-icon-wrapper {
 		.tool-icon {
@@ -140,6 +141,12 @@ const starClicked = () => {
 				mask-image: url("@/assets/icons/pencil.svg");
 				color: $main-dark-gray;
 			}
+		}
+
+		&.edit.fade-enter-active,
+		&.edit.fade-leave-active {
+			position: absolute;
+			right: 20px;
 		}
 	}
 
@@ -164,6 +171,26 @@ const starClicked = () => {
 			color: $sec-dark-gray-25;
 
 			transition: opacity 0.25s;
+		}
+	}
+
+	.error-wrapper {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+
+		background-color: inherit;
+		z-index: 1;
+
+		.tool-message {
+			left: 100%;
+			top: 0;
+
+			&.left {
+				position: relative;
+				left: unset;
+				top: unset;
+			}
 		}
 	}
 
