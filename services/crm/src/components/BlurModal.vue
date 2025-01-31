@@ -27,8 +27,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-	<div class="bm-wrapper" @click="emits('close')">
-		<div class="bm-window" @click.stop :style="{ height: props.height }">
+	<div class="bm-wrapper" @mousedown="emits('close')">
+		<div class="bm-window" @mousedown.stop :style="{ height: props.height }">
 			<div class="bm-title">
 				<!--stub-->
 				<div></div>
