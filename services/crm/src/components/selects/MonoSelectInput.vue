@@ -26,19 +26,27 @@ const props = defineProps({
 const emits = defineEmits<{
 	(e: "select", index: number): void;
 	(e: "submit", value: string): void;
+	(e: "close"): void;
 }>();
 
 const active = ref(false);
+
 const list = computed(() => {
 	if (!active.value) {
 		return [];
 	}
 	return props.searchList;
 });
+
+const focusOut = () => {
+	active.value = false;
+
+	emits("close");
+};
 </script>
 
 <template>
-	<div class="msi-wrapper" @focusin="active = true" @focusout="active = false">
+	<div class="msi-wrapper" @focusin="active = true" @focusout="focusOut">
 		<MaybeDelayInput
 			class="msi-input"
 			:value="searchValue"
@@ -65,6 +73,7 @@ const list = computed(() => {
 						:key="row"
 						v-for="(row, index) in list"
 						:data-index="index"
+						@click="emits('select', index)"
 					>
 						<span>
 							{{ row }}

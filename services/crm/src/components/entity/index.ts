@@ -15,7 +15,11 @@ export abstract class BaseEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 	protected _inputValue: Ref<string> = ref("");
 
-	constructor(public required: boolean = false) {}
+	constructor(
+		public required: boolean = false,
+		private monoMode: boolean = false,
+		public neededWord: number = 3,
+	) {}
 
 	public loading: Ref<boolean> = ref(false);
 	public placeholder = "";
@@ -23,15 +27,25 @@ export abstract class BaseEntity<T> {
 
 	public selectedEntities = computed(() => this._selectedEntities.value);
 	public entitiesList = computed((): { value: string; checked: boolean }[] => {
-		const result = this._selectedEntities.value.map((val) => ({
-			value: this.format(val),
-			checked: true,
-		}));
+		const result: { value: string; checked: boolean }[] = [];
+
+		if (!this.monoMode) {
+			result.concat(
+				this._selectedEntities.value.map((val) => ({
+					value: this.format(val),
+					checked: true,
+				})),
+			);
+		}
 
 		for (const val of this._searchEntities.value) {
 			const formatted = this.format(val);
 
-			if (!result.find((val) => val.value === formatted)) {
+			const found = this._selectedEntities.value.find(
+				(val) => this.format(val) === formatted,
+			);
+
+			if (!found) {
 				result.push({ value: formatted, checked: false });
 			}
 		}
@@ -43,11 +57,23 @@ export abstract class BaseEntity<T> {
 			return this._inputValue.value;
 		},
 		set: async (val: string) => {
-			this.loading.value = true;
 			this._inputValue.value = val;
+			if (val.length < this.neededWord) {
+				this._searchEntities.value = [];
+				return;
+			}
+			this.loading.value = true;
 			await this.onInput(val);
 			this.loading.value = false;
 		},
+	});
+	public notFound = computed(() => {
+		return (
+			this._inputValue.value &&
+			!this.loading.value &&
+			this._searchEntities.value.length === 0 &&
+			this._selectedEntities.value.length === 0
+		);
 	});
 
 	private setSelectedEntities(values: T[]) {
@@ -57,7 +83,6 @@ export abstract class BaseEntity<T> {
 	}
 
 	protected abstract onInput(_: string): Promise<void>;
-
 	protected format(value: T): string {
 		return `${value}`;
 	}
@@ -67,9 +92,14 @@ export abstract class BaseEntity<T> {
 		temp.splice(index, 1);
 		this.setSelectedEntities(temp);
 	}
-
 	public select(index: number) {
 		const el = this.entitiesList.value[index];
+
+		if (this.monoMode) {
+			this._selectedEntities.value = [this._searchEntities.value[index]];
+			this.restoreSaved();
+			return;
+		}
 
 		if (el.checked) {
 			this.remove(index);
@@ -81,17 +111,30 @@ export abstract class BaseEntity<T> {
 			this.setSelectedEntities(temp);
 		}
 	}
+	public restoreSaved() {
+		if (!this.monoMode) {
+			throw new Error("Restoring saved must call only in monoMode.");
+		}
+
+		if (this._inputValue.value === "" && this._selectedEntities.value.length) {
+			this.remove(0);
+		}
+
+		if (this._selectedEntities.value.length) {
+			const selected = this._selectedEntities.value[0];
+			this._inputValue.value = this.format(selected);
+			this._searchEntities.value = [];
+		} else {
+			this._inputValue.value = "";
+			this._searchEntities.value = [];
+		}
+	}
 }
 
 export class DepartmentEntity extends BaseEntity<DepartmentSchema> {
 	public placeholder = "Предприятие";
 
 	protected async onInput(val: string): Promise<void> {
-		if (val.length < 3) {
-			this._searchEntities.value = [];
-			return;
-		}
-
 		const service = new EntityService<DepartmentSchema>("department");
 
 		const departments = await service.searchEntities(val);
@@ -110,11 +153,6 @@ export class PostEntity extends BaseEntity<PostSchema> {
 	public placeholder = "Должность";
 
 	protected async onInput(val: string): Promise<void> {
-		if (val.length < 3) {
-			this._searchEntities.value = [];
-			return;
-		}
-
 		const service = new EntityService<PostSchema>("post");
 
 		const posts = await service.searchEntities(val);

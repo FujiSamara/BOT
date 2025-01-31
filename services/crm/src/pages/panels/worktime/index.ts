@@ -86,7 +86,12 @@ export async function setupWorktime(
 	);
 	const dateInterval = await useDateInterval(table, "day");
 	const rowEditor = useRowEditor(
-		[{ entity: new DepartmentEntity(), type: SelectType.MonoSelectInput }],
+		[
+			{
+				entity: new DepartmentEntity(true, true),
+				type: SelectType.MonoSelectInput,
+			},
+		],
 		"Создать явку",
 		"Изменить явку",
 	);

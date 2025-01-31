@@ -19,13 +19,15 @@ const entity = props.entity;
 
 const error = computed(() => {
 	if (
-		entity.entitiesList.value.length - entity.selectedEntities.value.length ===
-			0 &&
-		entity.formattedField.value.length !== 0 &&
-		!entity.loading.value
+		entity.formattedField.value.length &&
+		entity.formattedField.value.length < entity.neededWord
 	) {
-		return "";
+		return `Необходимо минимум ${entity.neededWord} символа`;
 	}
+	if (entity.notFound.value) {
+		return "Совпадения не найдены";
+	}
+
 	return undefined;
 });
 </script>
@@ -49,6 +51,7 @@ const error = computed(() => {
 			:search-value="entity.formattedField.value"
 			@submit="(val) => (entity.formattedField.value = val)"
 			@select="(index: number) => entity.select(index)"
+			@close="() => entity.restoreSaved()"
 			:required="entity.required"
 		>
 		</MonoSelectInput>
