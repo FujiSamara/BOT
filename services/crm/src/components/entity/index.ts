@@ -91,7 +91,10 @@ export class FloatInputEntity extends ValidatingInputEntity<number> {
 	});
 
 	protected async onSubmit(val: string): Promise<void> {
-		this._inputValue.value = val;
+		if (this._inputValue.value === "" && this._selectedEntities.value) {
+			this._inputValue.value = this.format(this._selectedEntities.value[0]);
+			return;
+		}
 		const num = parseFloat(val);
 
 		if (!Number.isNaN(num)) {
