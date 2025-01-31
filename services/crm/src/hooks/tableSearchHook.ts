@@ -100,7 +100,7 @@ export const useSearch = (
 
 			if (value) {
 				if (table.visibleRows.value.length === 0) {
-					newError = "Соответствия не найдены";
+					newError = "Совпадения не найдены";
 				} else if (value.length < neededLetter) {
 					newError = `Необходимо минимум ${neededLetter} символа`;
 				}
