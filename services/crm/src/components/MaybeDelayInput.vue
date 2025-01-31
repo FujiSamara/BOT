@@ -184,7 +184,7 @@ const starClicked = () => {
 		}
 
 		position: absolute;
-		top: 14px;
+		top: 12px;
 		left: 25px;
 
 		&.fade-enter-active,
