@@ -6,7 +6,7 @@ import {
 	WorkerSchema,
 } from "@types";
 import * as config from "@/config";
-import { Cell, CellLine } from "@/table";
+import { Cell, CellLine } from "@/components/table";
 
 export function formatWorker(worker: WorkerSchema): Cell {
 	if (!worker) return new Cell();
