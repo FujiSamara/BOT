@@ -10,7 +10,7 @@ export enum SelectType {
 	Input,
 }
 
-export abstract class BaseEntity<T> {
+export class BaseEntity<T> {
 	protected _selectedEntities: Ref<T[]> = ref([]);
 
 	public placeholder = "";
@@ -18,8 +18,13 @@ export abstract class BaseEntity<T> {
 	public selectedEntities = computed(() => this._selectedEntities.value);
 	public completed: Ref<boolean> = ref(false);
 
-	constructor(public required: boolean = false) {
+	constructor(
+		public required: boolean = false,
+		placeholder?: string,
+	) {
 		this.sortComparator = this.sortComparator.bind(this);
+
+		this.placeholder = placeholder || this.placeholder;
 	}
 
 	protected format(value: T): string {
@@ -40,7 +45,7 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 	protected _inputValue: Ref<string> = ref("");
 
 	public completed: Ref<boolean> = computed(() => {
-		return this._inputValue.value.length !== 0;
+		return this._selectedEntities.value.length !== 0;
 	});
 	public formattedField = computed({
 		get: () => {
@@ -48,8 +53,11 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 		},
 		set: async (val: string) => {
 			this._inputValue.value = val;
+			this.onSubmit(val);
 		},
 	});
+
+	protected abstract onSubmit(_: string): Promise<void>;
 
 	public clear() {
 		this._inputValue.value = "";
@@ -62,6 +70,36 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 	}
 }
 
+export abstract class ValidatingInputEntity<T> extends InputEntity<T> {
+	public validatingResult: Ref<string> = ref("");
+
+	constructor(required: boolean = false, placeholder?: string) {
+		super(required, placeholder);
+	}
+}
+
+export class FloatInputEntity extends ValidatingInputEntity<number> {
+	public validatingResult: Ref<string> = computed(() => {
+		if (this._inputValue.value.length === 0) {
+			return "";
+		}
+		const num = parseFloat(this._inputValue.value);
+		if (Number.isNaN(num)) {
+			return "Значение должно быть числом";
+		}
+		return "";
+	});
+
+	protected async onSubmit(val: string): Promise<void> {
+		this._inputValue.value = val;
+		const num = parseFloat(val);
+
+		if (!Number.isNaN(num)) {
+			this._selectedEntities.value = [num];
+		}
+	}
+}
+
 export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 
@@ -69,8 +107,9 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		required: boolean = false,
 		private monoMode: boolean = false,
 		public neededWord: number = 3,
+		placeholder?: string,
 	) {
-		super(required);
+		super(required, placeholder);
 	}
 
 	public loading: Ref<boolean> = ref(false);
@@ -127,8 +166,6 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			this._selectedEntities.value.length === 0
 		);
 	});
-
-	protected abstract onSubmit(_: string): Promise<void>;
 
 	public remove(index: number) {
 		const temp = [...this._selectedEntities.value];

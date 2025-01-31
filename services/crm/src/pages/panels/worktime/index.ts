@@ -21,6 +21,7 @@ import {
 } from "@/hooks/dateIntervalHook";
 import {
 	DepartmentEntity,
+	FloatInputEntity,
 	PostEntity,
 	SelectType,
 	WorkerEntity,
@@ -107,6 +108,16 @@ export async function setupWorktime(
 				entity: new PostEntity(true, true),
 				type: SelectType.MonoSelectInput,
 				name: "post",
+			},
+			{
+				entity: new FloatInputEntity(false, "Оценка"),
+				type: SelectType.Input,
+				name: "rate",
+			},
+			{
+				entity: new FloatInputEntity(false, "Штраф"),
+				type: SelectType.Input,
+				name: "fine",
 			},
 		],
 		"Создать явку",
