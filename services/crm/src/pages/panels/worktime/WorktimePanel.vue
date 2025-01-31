@@ -67,7 +67,7 @@ const setup = await setupWorktime(props.table);
 		<Table
 			class="table"
 			:table="props.table"
-			@rowClick="(index) => setup.rowEditor.edit(props.table.getModel(index))"
+			@rowClick="setup.rowEditor.edit"
 		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"

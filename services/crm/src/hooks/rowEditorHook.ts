@@ -1,5 +1,5 @@
 import { BaseEntity, SelectType } from "@/components/entity";
-import { BaseSchema } from "@/types";
+import { Table } from "@/components/table";
 import { Ref, ref } from "vue";
 
 export interface RowField {
@@ -12,13 +12,14 @@ export interface RowEditor {
 	active: Ref<boolean>;
 	close: () => void;
 	save: () => void;
-	edit: (model: BaseSchema) => void;
+	edit: (index: number) => void;
 	create: () => void;
 	fields: RowField[];
 	title: Ref<string>;
 }
 
 export const useRowEditor = (
+	table: Table<any>,
 	fields: RowField[],
 	createTitle: string,
 	editTitle: string,
@@ -34,10 +35,11 @@ export const useRowEditor = (
 		}
 	};
 
-	const edit = (model: BaseSchema) => {
+	const edit = (index: number) => {
 		active.value = true;
 		title.value = editTitle;
 		isCreating.value = false;
+		const model = table.getModel(index);
 
 		for (const field of fields) {
 			const name = field.name;

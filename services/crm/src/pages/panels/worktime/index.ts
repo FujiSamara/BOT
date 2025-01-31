@@ -91,6 +91,7 @@ export async function setupWorktime(
 	);
 	const dateInterval = await useDateInterval(table, "day");
 	const rowEditor = useRowEditor(
+		table,
 		[
 			{
 				entity: new WorkerEntity(true, true),
