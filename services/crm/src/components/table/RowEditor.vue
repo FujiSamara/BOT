@@ -18,7 +18,6 @@ const editor = props.editor;
 		:title="editor.title.value"
 		v-if="editor.active.value"
 		@close="editor.close"
-		:height="'400px'"
 	>
 		<EntitySelect
 			v-for="field in editor.fields"

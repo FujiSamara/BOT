@@ -19,7 +19,12 @@ import {
 	DateIntervalModelOut,
 	useDateInterval,
 } from "@/hooks/dateIntervalHook";
-import { DepartmentEntity, PostEntity, SelectType } from "@/components/entity";
+import {
+	DepartmentEntity,
+	PostEntity,
+	SelectType,
+	WorkerEntity,
+} from "@/components/entity";
 import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 
 interface WorktimePanelData {
@@ -88,8 +93,19 @@ export async function setupWorktime(
 	const rowEditor = useRowEditor(
 		[
 			{
+				entity: new WorkerEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "worker",
+			},
+			{
 				entity: new DepartmentEntity(true, true),
 				type: SelectType.MonoSelectInput,
+				name: "department",
+			},
+			{
+				entity: new PostEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "post",
 			},
 		],
 		"Создать явку",
