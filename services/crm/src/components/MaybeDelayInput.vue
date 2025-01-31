@@ -174,6 +174,8 @@ const starClicked = () => {
 			font-size: 12px;
 			font-weight: 500;
 			line-height: 15.12px;
+
+			vertical-align: text-top;
 		}
 
 		.stub {
