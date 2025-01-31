@@ -107,6 +107,7 @@ const focusOut = () => {
 		border: 1px solid $stroke-gray;
 		background-color: $main-white;
 		padding: 16px;
+		z-index: 1;
 
 		.msi-list {
 			display: flex;
@@ -115,12 +116,13 @@ const focusOut = () => {
 			width: 100%;
 			margin: 0;
 			padding: 0;
-			max-height: 86px;
+			height: 86px;
 			overflow-y: scroll;
 
 			.msi-row {
 				display: flex;
 				align-items: center;
+				flex-shrink: 0;
 
 				padding: 8px;
 				margin-top: 4px;
