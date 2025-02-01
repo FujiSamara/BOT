@@ -194,22 +194,49 @@ async def send_photos(
     callback_data: ShowRequestCallbackData,
     media: list[InputMediaDocument],
     request_id: int,
+    deleted_files_count: int,
 ):
     await try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text=text.back,
-                callback_data=ShowRequestCallbackData(
-                    request_id=request_id,
-                    end_point=callback_data.last_end_point,
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        end_point=callback_data.last_end_point,
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request_id,
+                        end_point=callback_data.last_end_point,
+                    ).pack(),
+                )
+            ),
+        )
 
 
 async def handle_department(

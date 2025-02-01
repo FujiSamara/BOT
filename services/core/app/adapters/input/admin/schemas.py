@@ -70,7 +70,7 @@ class PostView(ModelView, model=Post):
     column_labels = {
         Post.name: "Название",
         Post.level: "Уровень доступа",
-        Post.workers: "Работники",
+        Post.workers: "Сотрудники",
         Post.salary: "Зарплата",
         Post.scopes: "Доступы",
     }
@@ -90,7 +90,7 @@ class CompanyView(ModelView, model=Company):
     column_labels = {
         Company.name: "Название",
         Company.departments: "Предприятия",
-        Company.workers: "Работники",
+        Company.workers: "Сотрудники",
     }
 
 
@@ -130,7 +130,7 @@ class DepartmentView(ModelView, model=Department):
     column_labels = {
         Department.name: "Название",
         Department.address: "Адрес",
-        Department.workers: "Работники",
+        Department.workers: "Сотрудники",
         Department.bids: "Заявки",
         Department.company: "Компания",
         Department.type: "Формат",
@@ -265,8 +265,8 @@ class WorkerView(ModelView, model=Worker):
     ]
     can_export = False
 
-    name_plural = "Работники"
-    name = "Работник"
+    name_plural = "Сотрудники"
+    name = "Сотрудник"
     column_labels = {
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
@@ -390,6 +390,17 @@ class WorkerView(ModelView, model=Worker):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from sqladmin._queries import Query
+
+        if delete_files_for_model_by_id(
+            model=WorkerDocument, row_id=int(pk), id_column="worker_id"
+        ):
+            await Query(self).delete(pk, request)
+
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
@@ -401,8 +412,8 @@ class WorkerView(ModelView, model=Worker):
 
 
 class WorkerDocumentView(ModelView, model=WorkerDocument):
-    name = "Документ работника"
-    name_plural = "Документы работников"
+    name = "Документ сотрудник"
+    name_plural = "Документы сотрудников"
 
     can_create = True
     can_edit = True
@@ -419,7 +430,7 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
     ]
 
     column_labels = {
-        WorkerDocument.worker: "Работник",
+        WorkerDocument.worker: "Сотрудник",
         WorkerDocument.document: "Документ",
     }
 
@@ -459,6 +470,17 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
             filename += f"{Path(document.filename).suffix}"
             data["document"].filename = filename
 
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from sqladmin._queries import Query
+
+        if delete_files_for_model_by_id(
+            model=WorkerDocument, row_id=int(pk), id_column="id"
+        ):
+            await Query(self).delete(pk, request)
+
     column_searchable_list = [
         "Фамилия",
         "Имя",
@@ -467,8 +489,8 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
 
 
 class WorkerChildrenView(ModelView, model=WorkerChildren):
-    name = "Дети работника"
-    name_plural = "Дети работников"
+    name = "Дети сотрудника"
+    name_plural = "Дети сотрудников"
 
     can_create = True
     can_edit = True
@@ -485,7 +507,7 @@ class WorkerChildrenView(ModelView, model=WorkerChildren):
     ]
 
     column_labels = {
-        WorkerChildren.worker: "Работник",
+        WorkerChildren.worker: "Сотрудник",
         WorkerChildren.born_date: "Дата рождения",
     }
 
@@ -642,6 +664,31 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
         workers = select(WorkerBid).filter(or_stmt)
         return workers
+
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from app.infra.database.models import (
+            WorkerBidWorkPermission,
+            WorkerBidWorksheet,
+            WorkerBidPassport,
+        )
+        from sqladmin._queries import Query
+
+        all_delete = True
+        for model in [
+            WorkerBidWorkPermission,
+            WorkerBidWorksheet,
+            WorkerBidPassport,
+        ]:
+            if not delete_files_for_model_by_id(
+                model=model, row_id=int(pk), id_column="worker_bid_id"
+            ):
+                all_delete = False
+
+        if all_delete:
+            await Query(self).delete(pk, request)
 
     can_create = False
     can_export = False
@@ -818,6 +865,26 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
 
         return stmt
 
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from app.infra.database.models import (
+            TechnicalRequestProblemPhoto,
+            TechnicalRequestRepairPhoto,
+        )
+        from sqladmin._queries import Query
+
+        all_delete = True
+        for model in [TechnicalRequestProblemPhoto, TechnicalRequestRepairPhoto]:
+            if not delete_files_for_model_by_id(
+                model=model, row_id=int(pk), id_column="technical_request_id"
+            ):
+                all_delete = False
+
+        if all_delete:
+            await Query(self).delete(pk, request)
+
 
 class WorkTimeAdminView(ModelView, model=WorkTime):
     name = "Явка"
@@ -847,7 +914,7 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
     ]
 
     column_labels = {
-        WorkTime.worker: "Работник",
+        WorkTime.worker: "Сотрудник",
         WorkTime.post: "Должность",
         WorkTime.department: "Департамент",
         WorkTime.company: "Компания",
@@ -888,7 +955,7 @@ class AccountLoginsView(ModelView, model=AccountLogins):
 
     column_labels = {
         AccountLogins.id: "id",
-        AccountLogins.worker: "Работник",
+        AccountLogins.worker: "Сотрудник",
         AccountLogins.cop_mail_login: "Корпоративная почта",
         AccountLogins.liko_login: "Iiko",
         AccountLogins.bitrix_login: "Bitrix",
@@ -981,7 +1048,7 @@ class MaterialValuesView(ModelView, model=MaterialValues):
     ]
 
     column_labels = {
-        MaterialValues.worker: "Работник",
+        MaterialValues.worker: "Сотрудник",
         MaterialValues.item: "Предмет",
         MaterialValues.quanity: "Количество",
         MaterialValues.price: "Цена",
@@ -1084,7 +1151,7 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     ]
 
     column_labels = {
-        WorkerFingerprint.worker_id: "Работник",
+        WorkerFingerprint.worker_id: "Сотрудник",
         WorkerFingerprint.department_id: "Департамент",
         WorkerFingerprint.department_hex: "Номер СУКД устройства",
         WorkerFingerprint.cell_number: "Номер ячейки",

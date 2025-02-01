@@ -62,6 +62,8 @@ from app.services import (
 )
 from app.infra.database.models import ApprovalStatus
 
+from app.infra.config.settings import settings
+
 router = Router(name="bid_it_territorial_manager")
 
 
@@ -374,33 +376,64 @@ async def get_documents_problem_tm(
 ):
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
+    deleted_files_count = 0
 
     for document in bid.problem_photos:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=document.document.file.read(),
-                    filename=document.document.filename,
-                ),
+        if document.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=document.document.file.read(),
+                        filename=document.document.filename,
+                    ),
+                )
             )
-        )
+        else:
+            deleted_files_count += 1
 
     await try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs_for_delete=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data=BidITCallbackData(
-                    id=bid.id,
-                    mode=callback_data.mode,
-                    endpoint_name="create_bid_it_info_tm",
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs_for_delete=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )
 
 
 @router.callback_query(
@@ -411,34 +444,66 @@ async def get_documents_done_tm(
 ):
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
+    deleted_files_count = 0
 
     for document in bid.work_photos:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=document.document.file.read(),
-                    filename=document.document.filename,
-                ),
+        if document.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=document.document.file.read(),
+                        filename=document.document.filename,
+                    ),
+                )
             )
-        )
+        else:
+            deleted_files_count += 1
+
     filter_media_by_reopen(media)
 
     await try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs_for_delete=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data=BidITCallbackData(
-                    id=bid.id,
-                    mode=callback_data.mode,
-                    endpoint_name="create_bid_it_info_tm",
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs_for_delete=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )
 
 
 @router.callback_query(
@@ -449,32 +514,63 @@ async def get_documents_done_reopen_tm(
 ):
     bid = get_bid_it_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
+    deleted_files_count = 0
 
     for document in bid.work_photos:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=document.document.file.read(),
-                    filename=document.document.filename,
-                ),
+        if document.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=document.document.file.read(),
+                        filename=document.document.filename,
+                    ),
+                )
             )
-        )
+        else:
+            deleted_files_count += 1
 
     filter_media_by_reopen(media)
 
     await try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs_for_delete=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data=BidITCallbackData(
-                    id=bid.id,
-                    mode=callback_data.mode,
-                    endpoint_name="create_bid_it_info_tm",
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs_for_delete=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=BidITCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="create_bid_it_info_tm",
+                    ).pack(),
+                )
+            ),
+        )

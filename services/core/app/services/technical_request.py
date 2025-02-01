@@ -177,6 +177,21 @@ async def create_technical_request(
                     )
                 ),
             )
+        await notify_worker_by_telegram_id(
+            id=request.repairman.telegram_id,
+            message=text.notification_repairman
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.view,
+                    callback_data=ShowRequestCallbackData(
+                        request_id=last_technical_request_id + 1,
+                        end_point="RM_TR_show_form_waiting",
+                    ).pack(),
+                )
+            ),
+        )
+
         directors_extensive_development = orm.get_workers_with_scope(
             FujiScope.bot_technical_request_department_director
         )
@@ -199,21 +214,6 @@ async def create_technical_request(
                         )
                     ),
                 )
-        await notify_worker_by_telegram_id(
-            id=request.repairman.telegram_id,
-            message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=text.view,
-                    callback_data=ShowRequestCallbackData(
-                        request_id=last_technical_request_id + 1,
-                        end_point="RM_TR_repair_waiting_form",
-                    ).pack(),
-                )
-            ),
-        )
-
     return True
 
 

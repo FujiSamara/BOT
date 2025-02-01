@@ -158,8 +158,8 @@ async def update_repairman_worktimes() -> None:  # Technical requests
     seconds=60 * 60 * 24,
     logger=logger,
 )
-def delete_old_files() -> None:
-    from app.adapters.output.file.delete_old_files import delete_old_files
+async def delete_old_files() -> None:
+    from app.adapters.output.file.delete_files import delete_old_files
 
     dt_now = datetime.now()
 
@@ -175,6 +175,16 @@ def delete_old_files() -> None:
             logger.info("Deleting technical requests documents. Completed.")
         else:
             logger.info("Deleting technical requests documents. Was stop with error.")
+
+        logger.info("Deleting bids IT documents.")
+        if delete_old_files(
+            get_old_paths_func=services.get_old_bids_it_docs_path,
+            update_old_paths_func=services.update_old_bids_it_documents,
+            dt_now=dt_now,
+        ):
+            logger.info("Deleting bids IT documents. Completed.")
+        else:
+            logger.info("Deleting bids IT documents. Was stop with error.")
 
         logger.info("Deleting worker bids documents.")
         if delete_old_files(
@@ -205,3 +215,4 @@ def delete_old_files() -> None:
             logger.info("Deleting worktimes photos. Was stop with error.")
 
         logger.info("Deleting old documents. Completed.")
+    await asyncio.sleep(1)

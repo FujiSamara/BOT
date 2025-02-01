@@ -84,6 +84,9 @@ from app.services.extra import (
     get_old_bids_docs_path,
     update_old_bids_documents,
     delete_old_worktimes_photos,
+    get_old_bids_it_docs_path,
+    update_old_bids_it_documents,
+    get_filepaths_model,
 )
 from app.services.it_problem import (
     create_bid_it,
@@ -316,4 +319,7 @@ __all__ = [
     "get_old_bids_docs_path",
     "update_old_bids_documents",
     "delete_old_worktimes_photos",
+    "get_old_bids_it_docs_path",
+    "update_old_bids_it_documents",
+    "get_filepaths_model",
 ]

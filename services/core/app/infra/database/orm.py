@@ -2855,7 +2855,7 @@ def add_worker_bids_documents_requests(
 
 def get_old_technical_requests_id(
     dt: datetime,
-) -> tuple[int]:
+) -> list[int]:
     with session.begin() as s:
         id_list = (
             s.execute(
@@ -2870,7 +2870,7 @@ def get_old_technical_requests_id(
 
 def get_old_worker_bids_id(
     dt: datetime,
-):
+) -> list[int]:
     with session.begin() as s:
         id_list = (
             s.execute(
@@ -2890,9 +2890,16 @@ def get_old_worker_bids_id(
         return id_list
 
 
-def get_old_bids_id(dt: datetime):
+def get_old_bids_id(dt: datetime) -> list[int]:
     with session.begin() as s:
-        s.execute(select(Bid.id).filter(Bid.close_date <= dt))
+        return s.execute(select(Bid.id).filter(Bid.close_date <= dt)).scalars().all()
+
+
+def get_old_bids_it_id(dt: datetime):
+    with session.begin() as s:
+        return (
+            s.execute(select(BidIT.id).filter(BidIT.close_date <= dt)).scalars().all()
+        )
 
 
 def get_old_docs_path(
@@ -2919,7 +2926,7 @@ def get_old_docs_path(
 
 
 def update_old_documents(
-    id_list: str[int],
+    id_list: list[int],
     id_column: str,
     stubname: str,
     model: Any,
@@ -2931,9 +2938,9 @@ def update_old_documents(
                 or_(*[getattr(model, id_column) == id for id in id_list]),
             )
             .values(document=literal_column(f"'{stubname}'"))
-        ).scalars().all()
+        )
 
-        return True
+    return True
 
 
 def delete_old_worktimes_photos(dt: datetime) -> bool:
@@ -2944,6 +2951,19 @@ def delete_old_worktimes_photos(dt: datetime) -> bool:
                 WorkTime.day <= dt.date(),
             )
             .values(photo_b64=None)
-        ).scalars().all()
+        )
 
-        return True
+    return True
+
+
+def get_filepaths_model(model: Any, id: int, id_column: str) -> list[str]:
+    with session.begin() as s:
+        return (
+            s.execute(
+                select(getattr(model, "document")).filter(
+                    getattr(model, id_column) == id
+                )
+            )
+            .scalars()
+            .all()
+        )
