@@ -1,9 +1,8 @@
 from zipfile import ZipFile
-from os import path, remove
+from os import path
 from app.infra.config.settings import settings
 from app.schemas import DocumentSchema
 from asyncio import get_running_loop
-from time import sleep
 from io import BytesIO
 
 
