@@ -12,6 +12,7 @@ from app.infra.database.models import (
     IncidentStage,
     PostScope,
     Executor,
+    ViewStatus,
 )
 from io import BytesIO
 
@@ -195,15 +196,19 @@ class WorkerBidSchema(BaseSchemaPK):
     passport: list[DocumentSchema]
 
     work_permission: list[DocumentSchema]
-
+    view_state: ViewStatus | None = None
     state: ApprovalStatus
     security_service_state: ApprovalStatus | None = None
     accounting_service_state: ApprovalStatus | None = None
+    iiko_service_state: ApprovalStatus | None = None
 
     sender: WorkerSchema
 
     comment: str | None = None
     security_service_comment: str | None = None
+    accounting_service_comment: str | None = None
+    iiko_service_comment: str | None = None
+
     official_work: bool | None = None
     document_request: list["WorkerBidDocumentRequestSchema"] = []
 
