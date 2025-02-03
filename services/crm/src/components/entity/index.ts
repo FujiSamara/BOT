@@ -121,15 +121,13 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		return this._selectedEntities.value.length !== 0;
 	});
 	public entitiesList = computed((): { value: string; checked: boolean }[] => {
-		const result: { value: string; checked: boolean }[] = [];
+		let result: { value: string; checked: boolean }[] = [];
 
 		if (!this.monoMode) {
-			result.concat(
-				this._selectedEntities.value.map((val) => ({
-					value: this.format(val),
-					checked: true,
-				})),
-			);
+			result = this._selectedEntities.value.map((val) => ({
+				value: this.format(val),
+				checked: true,
+			}));
 		}
 
 		for (const val of this._searchEntities.value) {
