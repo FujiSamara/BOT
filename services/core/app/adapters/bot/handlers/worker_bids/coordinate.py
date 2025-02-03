@@ -99,6 +99,13 @@ class WorkerBidCoordinationFactory:
             WorkerBidCallbackData.filter(F.endpoint_name == f"get_comment_{self.name}"),
             WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
         )
+        router.callback_query.register(
+            self.download_all_docs,
+            WorkerBidCallbackData.filter(
+                F.endpoint_name == f"download_all_docs_{self.name}"
+            ),
+            WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
+        )
 
     async def get_menu(self, message: CallbackQuery | Message):
         if isinstance(message, CallbackQuery):
@@ -181,6 +188,17 @@ class WorkerBidCoordinationFactory:
                         mode=callback_data.mode,
                         endpoint_name=f"show_docs_{self.name}",
                         doc_type="work_permission",
+                    ).pack(),
+                )
+            )
+        if self.state_column != WorkerBid.security_service_state:
+            buttons.append(
+                InlineKeyboardButton(
+                    text="Скачать все документы",
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"download_all_docs_{self.name}",
                     ).pack(),
                 )
             )
@@ -285,6 +303,46 @@ class WorkerBidCoordinationFactory:
             msg=message, get_menu=self.get_menu, state_column_name=self.name
         )
         await state.set_state(WorkerBidCoordination.comment)
+
+    async def download_all_docs(
+        self,
+        callback: CallbackQuery,
+        callback_data: WorkerBidCallbackData,
+        state: FSMContext,
+    ):
+        from app.adapters.output.file.zip_file import ZipFileManager
+
+        bid = get_worker_bid_by_id(callback_data.id)
+        zip_manager = ZipFileManager(
+            [*bid.passport, *bid.work_permission, *bid.worksheet],
+        )
+        await try_edit_or_answer(callback.message, text="Ожидайте.")
+        
+        media: list[InputMediaDocument] = [
+            InputMediaDocument(
+                media=BufferedInputFile(
+                    file=await zip_manager.create_zip(),
+                    filename=f"Документы_{bid.f_name}_{bid.l_name[0]}_{bid.o_name[0] or 'о'}.zip",
+                )
+            )
+        ]
+
+        await try_delete_message(callback.message)
+        msgs = await callback.message.answer_media_group(media=media)
+        await state.update_data(msgs=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:"),
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"get_pending_bid_{self.name}",
+                    ).pack(),
+                ),
+            ),
+        )
 
 
 @router.message(
