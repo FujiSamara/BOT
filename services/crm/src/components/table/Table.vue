@@ -296,9 +296,9 @@ onMounted(() => {
 			font-size: 16px;
 			line-height: 20.16px;
 
-			height: 72px;
-			min-height: 72px;
-			max-height: 72px;
+			height: 84px;
+			min-height: 84px;
+			max-height: 84px;
 
 			.t-cell {
 				white-space: nowrap;
