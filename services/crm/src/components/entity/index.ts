@@ -22,6 +22,7 @@ export class BaseEntity<T> {
 	public disabled: Ref<boolean> = ref(false);
 	public selectedEntities = computed(() => this._selectedEntities.value);
 	public completed: Ref<boolean> = ref(false);
+	public error: Ref<string | undefined> = ref(undefined);
 
 	constructor(
 		public required: boolean = false,
@@ -84,16 +85,8 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 	}
 }
 
-export abstract class ValidatingInputEntity<T> extends InputEntity<T> {
-	public validatingResult: Ref<string> = ref("");
-
-	constructor(required: boolean = false, placeholder?: string) {
-		super(required, placeholder);
-	}
-}
-
-export class FloatInputEntity extends ValidatingInputEntity<number> {
-	public validatingResult: Ref<string> = computed(() => {
+export class FloatInputEntity extends InputEntity<number> {
+	public error: Ref<string> = computed(() => {
 		if (this._inputValue.value.length === 0) {
 			return "";
 		}
@@ -105,10 +98,6 @@ export class FloatInputEntity extends ValidatingInputEntity<number> {
 	});
 
 	protected async onSubmit(val: string): Promise<void> {
-		if (this._inputValue.value === "" && this._selectedEntities.value) {
-			this._inputValue.value = this.format(this._selectedEntities.value[0]);
-			return;
-		}
 		const num = parseFloat(val);
 
 		if (!Number.isNaN(num)) {

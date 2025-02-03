@@ -12,6 +12,34 @@ const props = defineProps({
 	},
 });
 const editor = props.editor;
+
+const save = () => {
+	let ready = true;
+
+	for (const field of editor.fields) {
+		const entiy = field.entity;
+
+		if (!entiy.completed.value && entiy.required) {
+			ready = false;
+
+			const currentError = entiy.error.value;
+
+			entiy.error.value = "Обязательное поле";
+
+			setTimeout(() => {
+				entiy.error.value = currentError;
+			}, 2000);
+		}
+
+		if (entiy.error.value) {
+			ready = false;
+		}
+	}
+
+	if (ready) {
+		editor.save();
+	}
+};
 </script>
 
 <template>
@@ -25,7 +53,7 @@ const editor = props.editor;
 			:entity="field.entity"
 			:select-type="field.type"
 		></EntitySelect>
-		<DefaultButton @click="editor.save" title="Сохранить"></DefaultButton>
+		<DefaultButton @click="save" title="Сохранить"></DefaultButton>
 	</BlurModal>
 </template>
 

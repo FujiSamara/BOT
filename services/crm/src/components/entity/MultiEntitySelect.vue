@@ -13,6 +13,10 @@ const props = defineProps({
 const entity = props.entity;
 
 const error = computed(() => {
+	if (entity.error.value) {
+		return entity.error.value;
+	}
+
 	if (
 		entity.formattedField.value.length &&
 		entity.formattedField.value.length < entity.neededWord

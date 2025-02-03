@@ -1,23 +1,21 @@
 <script setup lang="ts">
 import { PropType } from "vue";
 import { computed } from "@vue/reactivity";
-import { ValidatingInputEntity } from "@/components/entity";
+import { InputEntity } from "@/components/entity";
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 
 const props = defineProps({
 	entity: {
-		type: Object as PropType<ValidatingInputEntity<any>>,
+		type: Object as PropType<InputEntity<any>>,
 		required: true,
 	},
 });
 const entity = props.entity;
 
 const error = computed(() => {
-	if (!entity.validatingResult.value) {
-		return undefined;
+	if (entity.error.value) {
+		return entity.error.value;
 	}
-
-	return entity.validatingResult.value;
 });
 </script>
 
