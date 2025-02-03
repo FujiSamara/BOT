@@ -2783,7 +2783,7 @@ def get_last_worker_passport_id(worker_id: int) -> int:
         )
         if raw_worker is None:
             return 0
-        return len(WorkerSchema.model_validate(raw_worker).documents)
+        return len(raw_worker.documents)
 
 
 def get_last_index_worker_documents(worker_bid_id: int):

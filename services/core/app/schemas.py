@@ -111,7 +111,6 @@ class WorkerSchema(BaseSchemaPK):
             return (val[0],)
         return val
 
-    documents: list[DocumentSchema] | None = None
     snils: str | None = None
     inn: str | None = None
     registration: str | None = None
