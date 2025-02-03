@@ -317,7 +317,7 @@ class WorkerBidCoordinationFactory:
             [*bid.passport, *bid.work_permission, *bid.worksheet],
         )
         await try_edit_or_answer(callback.message, text="Ожидайте.")
-        
+
         media: list[InputMediaDocument] = [
             InputMediaDocument(
                 media=BufferedInputFile(
