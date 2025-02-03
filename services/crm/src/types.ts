@@ -69,7 +69,6 @@ export enum DateType {
 export enum CalendarType {
 	Day,
 	Month,
-	Year,
 }
 
 // #region Schemas

@@ -19,24 +19,58 @@ const emits = defineEmits<{
 	(e: "unset"): void;
 }>();
 
+const year = ref(props.date?.getFullYear() || new Date().getFullYear());
+const month = ref(props.date?.getMonth());
+const day = ref(props.date?.getDate());
+const getDate = () => {
+	const date = new Date();
+
+	date.setFullYear(year.value);
+
+	if (month.value !== undefined) {
+		date.setMonth(month.value);
+	}
+
+	if (day.value !== undefined) {
+		date.setDate(day.value);
+	}
+
+	return date;
+};
+
 const step = ref(
 	props.lockMode !== undefined ? props.lockMode : CalendarType.Month,
 );
-
-const date = ref(props.date);
+const previosStep = () => {
+	switch (step.value) {
+		case CalendarType.Month:
+			return;
+		case CalendarType.Day:
+			month.value = undefined;
+			step.value = CalendarType.Month;
+	}
+};
+const arrowClicked = (value: number) => {
+	switch (step.value) {
+		case CalendarType.Month:
+			year.value += value;
+			return;
+		case CalendarType.Day:
+			month.value = new Date(2000, month.value! + value, 1).getMonth();
+	}
+};
 
 const header = computed(() => {
-	if (!date.value) {
-		return "";
-	}
+	const date = getDate();
 	switch (step.value) {
-		case CalendarType.Year:
-			return date.value.getFullYear().toString();
-		default:
-			return date.value.toLocaleString("ru", { month: "long" });
+		case CalendarType.Month:
+			return date.getFullYear().toString();
+		case CalendarType.Day:
+			return date.toLocaleString("ru", { month: "long" });
 	}
 });
 
+// Constant methods
 const getMonths = (): number[][] => {
 	const result = [];
 
@@ -51,63 +85,101 @@ const getMonths = (): number[][] => {
 	}
 	return result;
 };
+const getDays = (): number[][] => {
+	const maxDay = new Date(year.value, month.value! + 1, 0).getDate();
+
+	const result = [];
+
+	for (let i = 0; i < 5; i++) {
+		const line = [];
+		for (let j = 0; j < 7; j++) {
+			const index = i * 7 + j + 1;
+
+			if (index > maxDay) {
+				break;
+			}
+
+			line.push(index);
+		}
+		result.push(line);
+	}
+	return result;
+};
+//
 
 const toMonth = (month: number): string => {
-	if (date.value) {
-		return new Date(date.value.getFullYear(), month).toLocaleString("ru", {
-			month: "long",
-		});
-	} else {
-		return new Date(new Date().getFullYear(), month).toLocaleString("ru", {
-			month: "long",
-		});
-	}
+	return new Date(year.value, month).toLocaleString("ru", {
+		month: "long",
+	});
 };
 
-const monthChoosed = (month: number) => {
-	if (date.value && month === date.value.getMonth()) {
+const monthChoosed = (currentMonth: number) => {
+	month.value = currentMonth;
+	if (props.lockMode === undefined || props.lockMode !== CalendarType.Month) {
+		step.value = CalendarType.Day;
+		return;
+	}
+
+	if (props.date && currentMonth === month.value) {
 		if (props.blockUnset) return;
-		date.value = undefined;
+		month.value = undefined;
 		emits("unset");
 		return;
 	}
 
-	if (!date.value) date.value = new Date();
+	if (props.lockMode) emits("submit", getDate());
+};
+const dayChoosed = (currentDay: number) => {
+	day.value = currentDay;
 
-	const temp = new Date(date.value);
-	temp.setMonth(month);
-	date.value = temp;
-	if (props.lockMode) emits("submit", date.value);
-	step.value = CalendarType.Day;
+	if (props.date && currentDay === day.value) {
+		if (props.blockUnset) return;
+		day.value = undefined;
+		emits("unset");
+		return;
+	}
+
+	emits("submit", getDate());
 };
 </script>
 <template>
 	<div class="calendar">
 		<div class="c-header">
-			<div class="switch">
+			<div class="switch" @click="() => arrowClicked(-1)">
 				<span class="arrow"></span>
 			</div>
-			<span class="header">{{ capitalize(header) }}</span>
-			<div class="switch">
+			<span class="header" @click="previosStep">{{ capitalize(header) }}</span>
+			<div class="switch" @click="() => arrowClicked(1)">
 				<span class="arrow reversed"></span>
 			</div>
 		</div>
-		<Transition name="fade">
+		<Transition name="fade" mode="out-in">
 			<div v-if="step === CalendarType.Month" class="months c-body">
 				<div class="c-line" v-for="line in getMonths()">
 					<div
-						@click="monthChoosed(month)"
+						@click="monthChoosed(lineMonth)"
 						class="c-element"
-						v-for="month in line"
-						:class="{ choosed: date && month === date.getMonth() }"
+						v-for="lineMonth in line"
+						:class="{ choosed: month === lineMonth }"
 					>
-						<span>{{ capitalize(toMonth(month)) }}</span>
+						<span>{{ capitalize(toMonth(lineMonth)) }}</span>
+					</div>
+				</div>
+			</div>
+
+			<div v-else-if="step === CalendarType.Day" class="days c-body">
+				<div class="c-line" v-for="line in getDays()">
+					<div
+						@click="dayChoosed(lineDay)"
+						class="c-element"
+						v-for="lineDay in line"
+						:class="{ choosed: day && day === lineDay }"
+					>
+						<span>{{ lineDay }}</span>
 					</div>
 				</div>
 			</div>
 		</Transition>
-		<Transition name="fade"></Transition>
-		<!-- TODO: Complete calendar for day and year -->
 	</div>
 </template>
 <style lang="scss" scoped>
@@ -180,6 +252,10 @@ const monthChoosed = (month: number) => {
 			gap: 8px;
 
 			.c-element {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
 				min-width: 72px;
 				height: 24px;
 				padding: 3px 8px;
@@ -198,6 +274,13 @@ const monthChoosed = (month: number) => {
 					background-color: $main-dark-gray;
 					color: $main-white;
 				}
+			}
+		}
+
+		&.days {
+			.c-element {
+				width: 24px;
+				min-width: 0;
 			}
 		}
 	}
