@@ -19,6 +19,9 @@ class ZipFileManager:
         buffer = BytesIO()
         with ZipFile(buffer, mode="w") as zf:
             for file in self.files:
-                zf.write(path.join(settings.storage_path, file.document.filename))
+                if path.exists(
+                    path.join(settings.storage_path, file.document.filename)
+                ):
+                    zf.write(path.join(settings.storage_path, file.document.filename))
         buffer.seek(0)
         return buffer.read()
