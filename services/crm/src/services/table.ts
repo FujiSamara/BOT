@@ -51,8 +51,13 @@ export class TableService {
 			return;
 		}
 
-		const rowCount = Math.floor((tableHeight - 72) / 72);
+		const rowHeight = parseInt(
+			window
+				.getComputedStyle(document.documentElement)
+				.getPropertyValue("--row-height"),
+		);
 
+		const rowCount = Math.floor((tableHeight - 72) / rowHeight);
 		for (const el of this._tables) {
 			el[1].rowsPerPage.value = rowCount;
 		}

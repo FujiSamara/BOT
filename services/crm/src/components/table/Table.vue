@@ -274,9 +274,9 @@ onMounted(() => {
 		align-items: center;
 
 		gap: 32px;
-		height: 72px;
-		min-height: 72px;
-		max-height: 72px;
+		height: var(--row-height);
+		min-height: var(--row-height);
+		max-height: var(--row-height);
 		width: fit-content;
 
 		border-radius: 8px;
