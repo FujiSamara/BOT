@@ -251,7 +251,6 @@ class WorkerBidCoordinationFactory:
         await try_delete_message(callback.message)
         msgs = await callback.message.answer_media_group(
             media=media,
-            protect_content=True,
         )
         await state.update_data(msgs=msgs)
         await msgs[0].reply(
