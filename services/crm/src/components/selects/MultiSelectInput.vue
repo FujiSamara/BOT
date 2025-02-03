@@ -28,7 +28,7 @@ const emits = defineEmits<{
 const active = ref(false);
 const list = computed(() => {
 	if (!active.value) {
-		return [];
+		return [...props.searchList].filter((val) => val.checked);
 	}
 	return props.searchList;
 });
