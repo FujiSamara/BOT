@@ -222,13 +222,16 @@ class WorkerView(ModelView, model=Worker):
     column_sortable_list = [
         Worker.state,
         Worker.id,
+        Worker.post,
+        Worker.employment_date,
     ]
     column_list = [
         Worker.l_name,
         Worker.f_name,
-        Worker.o_name,
         Worker.phone_number,
         Worker.state,
+        Worker.post,
+        Worker.employment_date,
     ]
 
     column_details_list = [
@@ -390,6 +393,30 @@ class WorkerView(ModelView, model=Worker):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
+
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
@@ -533,22 +560,21 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
         WorkerBid.official_work: "Официальное трудоустройство",
+        WorkerBid.close_date: "Дата закрытия заявки",
     }
 
     column_list = [
         WorkerBid.id,
-        WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
         WorkerBid.o_name,
         WorkerBid.post,
         WorkerBid.department,
         WorkerBid.state,
-        WorkerBid.comment,
+        WorkerBid.close_date,
     ]
 
     column_details_list = [
-        WorkerBid.id,
         WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
@@ -561,6 +587,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.state,
         WorkerBid.comment,
         WorkerBid.official_work,
+        WorkerBid.close_date,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -571,6 +598,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.id,
         WorkerBid.o_name,
         WorkerBid.f_name,
+        WorkerBid.state,
+        WorkerBid.post,
+        WorkerBid.close_date,
     ]
 
     form_columns = [WorkerBid.comment]
@@ -657,6 +687,30 @@ class WorkerBidView(ModelView, model=WorkerBid):
     }
 
     column_formatters_detail = column_formatters
+
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
 
 
 class TechnicalRequestView(ModelView, model=TechnicalRequest):

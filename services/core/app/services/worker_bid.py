@@ -228,6 +228,7 @@ async def update_worker_bid_bot(
         return
     if state == ApprovalStatus.denied:
         worker_bid.state = state
+        worker_bid.close_date = datetime.now()
 
     match state_column_name:
         case "security_service":
@@ -254,6 +255,7 @@ async def update_worker_bid_bot(
             worker_bid.iiko_service_state = state
             worker_bid.iiko_service_comment = comment
 
+            worker_bid.close_date = datetime.now()
             worker_bid.state = state
             worker_bid.comment = comment
         case _:

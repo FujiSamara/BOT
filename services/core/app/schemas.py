@@ -181,6 +181,7 @@ class WorkerBidSchema(BaseSchemaPK):
     l_name: str
     o_name: Optional[str]
     create_date: datetime.datetime
+    close_date: datetime.datetime
 
     post: PostSchema
 

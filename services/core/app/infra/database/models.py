@@ -599,6 +599,7 @@ class WorkerBid(Base):
     l_name: Mapped[str] = mapped_column(nullable=False)
     o_name: Mapped[str] = mapped_column(nullable=False)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")

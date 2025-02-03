@@ -829,6 +829,7 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.security_service_comment = bid.security_service_comment
         cur_bid.accounting_service_comment = bid.accounting_service_comment
         cur_bid.iiko_service_comment = bid.iiko_service_comment
+        cur_bid.close_date = bid.close_date
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
