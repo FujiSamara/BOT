@@ -4,6 +4,7 @@ import { PropType } from "vue";
 import MultiEntitySelect from "@/components/entity/MultiEntitySelect.vue";
 import MonoEntitySelect from "@/components/entity/MonoEntitySelect.vue";
 import InputEntity from "@/components/entity/InputEntity.vue";
+import DocumentSelect from "@/components/selects/DocumentSelect.vue";
 
 const props = defineProps({
 	entity: {
@@ -20,6 +21,8 @@ const entity = props.entity as any;
 const multiSelect = props.selectType === SelectType.MultiSelectInput;
 const monoSelect = props.selectType === SelectType.MonoSelectInput;
 const defaultInput = props.selectType === SelectType.Input;
+const monoDocumentSelect = props.selectType === SelectType.MonoDocument;
+const multiDocumentSelect = props.selectType === SelectType.MultiDocument;
 </script>
 
 <template>
@@ -27,6 +30,9 @@ const defaultInput = props.selectType === SelectType.Input;
 		<MultiEntitySelect v-if="multiSelect" :entity="entity"></MultiEntitySelect>
 		<MonoEntitySelect v-if="monoSelect" :entity="entity"></MonoEntitySelect>
 		<InputEntity v-if="defaultInput" :entity="entity"></InputEntity>
+		<DocumentSelect
+			v-if="monoDocumentSelect || multiDocumentSelect"
+		></DocumentSelect>
 	</div>
 </template>
 

@@ -1,5 +1,10 @@
 import { computed, ref, Ref } from "vue";
-import { DepartmentSchema, PostSchema, WorkerSchema } from "@/types";
+import {
+	DepartmentSchema,
+	DocumentSchema,
+	PostSchema,
+	WorkerSchema,
+} from "@/types";
 import EntityService from "@/services/entity";
 
 export enum SelectType {
@@ -39,6 +44,15 @@ export class BaseEntity<T> {
 	public init(value: T) {
 		this._selectedEntities.value = [value];
 	}
+	public clear() {
+		this._selectedEntities.value = [];
+	}
+}
+
+export class DocumentEntity extends BaseEntity<DocumentSchema> {
+	protected format(value: DocumentSchema): string {
+		return value.name;
+	}
 }
 
 export abstract class InputEntity<T> extends BaseEntity<T> {
@@ -61,7 +75,7 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 
 	public clear() {
 		this._inputValue.value = "";
-		this._selectedEntities.value = [];
+		super.clear();
 	}
 
 	public init(value: T) {

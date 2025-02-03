@@ -1,9 +1,9 @@
-import { InputEntity, SelectType } from "@/components/entity";
+import { BaseEntity, SelectType } from "@/components/entity";
 import { Table } from "@/components/table";
 import { Ref, ref } from "vue";
 
 export interface RowField {
-	entity: InputEntity<any>;
+	entity: BaseEntity<any>;
 	type: SelectType;
 	name: string;
 }
