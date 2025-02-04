@@ -1,12 +1,12 @@
 from pathlib import Path
 from typing import Any
 
-import db.orm as orm
-from db.models import (
+from app.infra.database import orm
+from app.infra.database.models import (
     ApprovalStatus,
     FujiScope,
 )
-from db.schemas import (
+from app.schemas import (
     DismissalSchema,
     DocumentSchema,
 )
@@ -14,20 +14,9 @@ import logging
 from datetime import datetime
 from fastapi import UploadFile
 
-from db.service.extra import (
+from app.services import (
     get_worker_by_telegram_id,
 )
-
-
-def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
-    worker = get_worker_by_telegram_id(telegram_id)
-    if not worker:
-        return None
-    return [
-        f"{worker.l_name} {worker.f_name} {worker.o_name}",
-        worker.post.name,
-        worker.department.name,
-    ]
 
 
 async def create_dismissal_blank(
@@ -104,7 +93,7 @@ async def create_dismissal_blank(
 
 
 async def notify_chief(dismissal: DismissalSchema):
-    from bot.handlers.utils import (
+    from app.adapters.bot.handlers.utils import (
         notify_worker_by_telegram_id,
     )
 
@@ -116,7 +105,7 @@ async def notify_chief(dismissal: DismissalSchema):
 
 async def notify_next_dismissal_coordinator(dismissal: DismissalSchema):
     """Notifies next dismissal coordinator with `ApprovalStatus.pending_approval`."""
-    from bot.handlers.utils import (
+    from app.adapters.bot.handlers.utils import (
         notify_workers_by_scope,
     )
 
@@ -148,12 +137,12 @@ def get_pending_dismissal_blanks_by_column(column: Any) -> list[DismissalSchema]
     """
     Returns all dismissal blanks in database with pending approval state at column.
     """
-    return orm.get_specified_pengind_dismissal_blanks(column)
+    return orm.get_specified_pending_dismissal_blanks(column)
 
 
 def get_pending_dismissal_blanks_for_chief(telegram_id: str) -> list[DismissalSchema]:
     chief = get_worker_by_telegram_id(telegram_id)
-    return orm.get_pengind_dismissal_blanks_for_chief(chief)
+    return orm.get_pending_dismissal_blanks_for_chief(chief)
 
 
 async def update_dismissal_by_chief(dismissal: DismissalSchema, comment: str = None):

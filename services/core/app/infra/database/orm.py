@@ -2180,7 +2180,7 @@ def get_dismissal_by_id(id: int) -> DismissalSchema:
         return DismissalSchema.model_validate(raw_bid)
 
 
-def get_specified_pengind_dismissal_blanks(pending_column) -> list[DismissalSchema]:
+def get_specified_pending_dismissal_blanks(pending_column) -> list[DismissalSchema]:
     """
     Returns all dismissal_blanks in database with
     pending approval state in `pending_column`.
@@ -2194,7 +2194,7 @@ def get_specified_pengind_dismissal_blanks(pending_column) -> list[DismissalSche
         return [DismissalSchema.model_validate(raw_blank) for raw_blank in raw_blanks]
 
 
-def get_pengind_dismissal_blanks_for_chief(
+def get_pending_dismissal_blanks_for_chief(
     chief: WorkerSchema,
 ) -> list[DismissalSchema]:
     with session.begin() as s:

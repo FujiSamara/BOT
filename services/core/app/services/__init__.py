@@ -77,6 +77,7 @@ from app.services.extra import (
     get_companies_names,
     set_tellers_cash_department,
     get_last_worker_passport_id,
+    get_worker_info_by_telegram_id,
 )
 from app.services.it_problem import (
     create_bid_it,
@@ -156,6 +157,13 @@ from app.services.worktime import (
     get_opened_today_worktime,
     get_last_completed_worktimes_by_tg_id,
     get_hours_sum_in_month,
+)
+from app.services.dismissal import (
+    get_dismissal_by_id,
+    get_pending_dismissal_blanks_by_column,
+    get_pending_dismissal_blanks_for_chief,
+    update_dismissal_by_chief,
+    update_dismissal,
 )
 
 __all__ = [
@@ -302,4 +310,11 @@ __all__ = [
     "get_worker_bid_documents_requests",
     "add_worker_bids_documents_requests",
     "update_worker_bid_documents",
+    "get_worker_info_by_telegram_id",
+    "create_dismissal_blank",
+    "get_dismissal_by_id",
+    "get_pending_dismissal_blanks_by_column",
+    "get_pending_dismissal_blanks_for_chief",
+    "update_dismissal_by_chief",
+    "update_dismissal",
 ]

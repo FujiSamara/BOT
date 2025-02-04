@@ -38,12 +38,13 @@ from app.adapters.bot.kb import (
     get_monitoring_menu_btn,
     get_coordinate_worker_bids_SS_btn,
     get_coordinate_worker_bids_AS_btn,
-    get_candidates_coordinate_menu_btn,chief_dismissal_menu_button,
-create_dismissal_menu_button,
-kru_dismissal_menu_button
-accountant_dismissal_menu_button
-access_dismissal_menu_button
-tech_dismissal_menu_button
+    get_candidates_coordinate_menu_btn,
+    chief_dismissal_menu_button,
+    create_dismissal_menu_button,
+    kru_dismissal_menu_button,
+    accountant_dismissal_menu_button,
+    access_dismissal_menu_button,
+    tech_dismissal_menu_button,
 )
 from app.adapters.bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker

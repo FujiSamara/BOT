@@ -71,6 +71,12 @@ class FujiScope(enum.Enum):
     bot_subordinates_menu = 34
     bot_worker_bid_security_coordinate = 35
     bot_worker_bid_accounting_coordinate = 36
+    bot_dismissal_chief = 37
+    bot_dismissal = 38
+    bot_dismissal_kru = 39
+    bot_dismissal_accountant = 40
+    bot_dismissal_access = 41
+    bot_dismissal_tech = 42
 
 
 class DepartmentType(enum.Enum):
@@ -1163,3 +1169,74 @@ class FingerprintAttempt(Base):
     worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
     department: Mapped[str] = mapped_column(nullable=False)
     event_dttm: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+
+# region Dismissal blank
+
+
+class DismissalDocument(Base):
+    """Документы заявлений об увольнении"""
+
+    __tablename__ = "dismissal_documents"
+
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
+    dismissal_id: Mapped[int] = mapped_column(ForeignKey("dismissals.id"))
+    dismissal: Mapped["Dismissal"] = relationship(
+        "Dismissal", back_populates="documents"
+    )
+
+
+class Dismissal(Base):
+    """Заявление об увольнении"""
+
+    __tablename__ = "dismissals"
+
+    documents: Mapped[List["DismissalDocument"]] = relationship(
+        "DismissalDocument",
+        cascade="all,delete",
+        back_populates="dismissal",
+    )
+
+    subordination_id: Mapped[int] = mapped_column(
+        ForeignKey("subordinations.id"), nullable=False
+    )
+    subordination: Mapped[Subordination] = relationship(
+        "Subordination", back_populates="dismissal"
+    )
+
+    # States
+    chief_state: Mapped[approvalstatus]
+    tech_state: Mapped[approvalstatus]
+    accountant_state: Mapped[approvalstatus]
+    access_state: Mapped[approvalstatus]
+    kru_state: Mapped[approvalstatus]
+
+    # Comments
+    chief_comment: Mapped[str] = mapped_column(nullable=True)
+    tech_comment: Mapped[str] = mapped_column(nullable=True)
+    accountant_comment: Mapped[str] = mapped_column(nullable=True)
+    access_comment: Mapped[str] = mapped_column(nullable=True)
+    kru_comment: Mapped[str] = mapped_column(nullable=True)
+
+    # Dates
+    create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    chief_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    kru_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    accountant_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    access_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    tech_approval_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    # Others
+    dismissal_reason: Mapped[str] = mapped_column(nullable=False)
+
+    has_material_values: Mapped[bool] = mapped_column(nullable=False)
+    has_debt: Mapped[bool] = mapped_column(nullable=True)
+    has_med_debt: Mapped[bool] = mapped_column(nullable=False)
+
+    fines: Mapped[int] = mapped_column(nullable=False)
+    worked_minutes: Mapped[float] = mapped_column(nullable=False)
+
+
+# endregion

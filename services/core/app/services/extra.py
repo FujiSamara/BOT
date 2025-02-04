@@ -256,3 +256,14 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
 
 def get_last_worker_passport_id(worker_id: int) -> int:
     return orm.get_last_worker_passport_id(worker_id)
+
+
+def get_worker_info_by_telegram_id(telegram_id: int) -> list[str]:
+    worker = get_worker_by_telegram_id(telegram_id)
+    if not worker:
+        return None
+    return [
+        f"{worker.l_name} {worker.f_name} {worker.o_name}",
+        worker.post.name,
+        worker.department.name,
+    ]

@@ -419,6 +419,50 @@ class TimeSheetSchema(BaseSchemaPK):
         return data
 
 
+class DismissalSchema(BaseModel):
+    class Config:
+        arbitrary_types_allowed = True
+        from_attributes = True
+
+    id: Optional[int] = -1
+    subordination: SubordinationSchema
+    documents: list[DocumentSchema]
+
+    # States
+    chief_state: ApprovalStatus
+    tech_state: ApprovalStatus
+    accountant_state: ApprovalStatus
+    access_state: ApprovalStatus
+    kru_state: ApprovalStatus
+
+    # Comments
+    chief_comment: Optional[str] = None
+    tech_comment: Optional[str] = None
+    accountant_comment: Optional[str] = None
+    access_comment: Optional[str] = None
+    kru_comment: Optional[str] = None
+
+    # Dates
+    create_date: datetime.datetime
+    close_date: Optional[datetime.datetime] = None
+
+    chief_approval_date: Optional[datetime.datetime] = None
+    kru_approval_date: Optional[datetime.datetime] = None
+    accountant_approval_date: Optional[datetime.datetime] = None
+    access_approval_date: Optional[datetime.datetime] = None
+    tech_approval_date: Optional[datetime.datetime] = None
+
+    # Others
+    dismissal_reason: Optional[str]
+
+    has_material_values: Optional[bool]
+    has_debt: Optional[bool]
+    has_med_debt: Optional[bool]
+
+    fines: Optional[int]
+    worked_minutes: Optional[float]
+
+
 # endregion
 
 
