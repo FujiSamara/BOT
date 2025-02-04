@@ -21,11 +21,19 @@ class BidCreating(StatesGroup):
     documents = State()
     edm = State()
     activity_type = State()
+    search = State()
 
 
 class BidCoordination(StatesGroup):
     comment = State()
+    paying_comment = State()
     department = State()
+    search = State()
+
+
+class CandidatesCoordination(StatesGroup):
+    state = State()
+    l_name = State()
 
 
 class WorkerBidCreating(StatesGroup):
@@ -34,9 +42,23 @@ class WorkerBidCreating(StatesGroup):
     o_name = State()
     post = State()
     department = State()
+    birth_year = State()
+    birth_month = State()
+    birth_day = State()
+    phone_number = State()
     worksheet = State()
     passport = State()
     work_permission = State()
+    official_work = State()
+
+
+class WorkerBidUpdate(StatesGroup):
+    documents = State()
+
+
+class WorkerBidCoordination(StatesGroup):
+    comment = State()
+    seek_documents = State()
 
 
 # Rate
@@ -76,6 +98,7 @@ class WorkerTechnicalRequestForm(StatesGroup):
     problem_name = State()
     description = State()
     photo = State()
+    department = State()
 
 
 class RepairmanTechnicalRequestForm(StatesGroup):
@@ -93,7 +116,7 @@ class ChiefTechnicianTechnicalRequestForm(StatesGroup):
     description = State()
 
 
-class TerritorialManagerRequestForm(StatesGroup):
+class AppraiserRequestForm(StatesGroup):
     department = State()
     mark = State()
     description = State()
@@ -108,8 +131,9 @@ class DepartmentDirectorRequestForm(StatesGroup):
 
 
 # Persconal Cabinet form
-class PersconalCabinet(StatesGroup):
+class PersonalCabinet(StatesGroup):
     department = State()
+    menu = State()
 
 
 # Dismissal request

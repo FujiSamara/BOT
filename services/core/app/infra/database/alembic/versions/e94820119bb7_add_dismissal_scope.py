@@ -56,7 +56,6 @@ old_options = (
 new_options = sorted(
     old_options
     + (
-        "bot_dismissal",
         "bot_dismissal_kru",
         "bot_dismissal_accountant",
         "bot_dismissal_access",

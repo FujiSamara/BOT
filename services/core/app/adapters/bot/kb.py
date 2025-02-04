@@ -695,11 +695,6 @@ get_per_cab_mat_vals_button = InlineKeyboardButton(
     callback_data="get_per_cab_mat_vals",
 )
 
-get_per_cab_dismissal_button = InlineKeyboardButton(  # issues 176
-    text="Заявления",
-    callback_data="get_per_cab_dismissal",
-)
-
 set_per_cab_department_button = InlineKeyboardButton(
     text="Смена предприятия",
     callback_data="set_per_cab_department",
@@ -744,11 +739,10 @@ monitoring_menu = create_inline_keyboard(
 # endregion
 
 
-
 # region dismissal
 
 create_dismissal_menu_button = InlineKeyboardButton(
-    text="Уволиться", callback_data="get_create_dismissal_menu"
+    text="Подать заявление на увольнение", callback_data="get_create_dismissal_menu"
 )
 
 dismissal_request_button = InlineKeyboardButton(

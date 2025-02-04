@@ -31,9 +31,9 @@ from app.adapters.bot.kb import (
     get_per_cab_logins_button,
     get_per_cab_mat_vals_button,
     set_per_cab_department_button,
-    get_per_cab_dismissal_button,
     get_menu_changing_form_button,
     get_per_cab_worktimes_button,
+    create_dismissal_menu_button,
     main_menu_button,
     create_reply_keyboard,
 )
@@ -65,8 +65,8 @@ async def get_personal_data(message: CallbackQuery | Message):
     buttons: list[list[InlineKeyboardButton]] = [
         [get_per_cab_logins_button],
         [get_per_cab_mat_vals_button],
-        [get_per_cab_dismissal_button],
         [get_per_cab_worktimes_button],
+        [create_dismissal_menu_button],
     ]
     if (
         FujiScope.bot_bid_teller_cash in worker.post.scopes
