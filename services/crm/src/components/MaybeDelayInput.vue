@@ -79,6 +79,7 @@ const starClicked = () => {
 			:value="value"
 			:id="useId()"
 			ref="input"
+			autocomplete="off"
 		/>
 		<Transition name="fade">
 			<span
