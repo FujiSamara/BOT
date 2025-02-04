@@ -78,5 +78,6 @@ def downgrade() -> None:
     op.drop_column("worker_bids", "accounting_service_comment")
     op.drop_column("worker_bids", "iiko_service_state")
     op.drop_column("worker_bids", "view_state")
+    op.drop_column("worker_bids", "close_date")
 
     op.execute("DROP TYPE viewstatus")
