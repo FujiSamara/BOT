@@ -59,14 +59,10 @@ export function validateDate(dateString: string): boolean {
 	return day > 0 && day <= monthLength[month - 1];
 }
 
-export function formattedDateToDate(dateString: string): Date | Number {
-	if (!validateDate(dateString)) {
-		return NaN;
-	}
-
+export function formattedDateToDate(dateString: string): Date {
 	const parts = dateString.split(".").map((val) => parseInt(val));
 
-	const newString = `${parts[1] - 1}.${parts[0]}.${parts[2]}`;
+	const newString = `${parts[1]}.${parts[0]}.${parts[2]}`;
 	const date = new Date(newString);
 
 	return date;
