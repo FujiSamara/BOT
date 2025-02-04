@@ -20,7 +20,7 @@
 				<ToolSeparator></ToolSeparator>
 				<SeacrhTool
 					id="topDepartmentSearch"
-					placeholder="Производство"
+					placeholder="Предприятие"
 					@input="(val) => (departmentSearchString = val)"
 				></SeacrhTool>
 				<SeacrhTool
@@ -34,7 +34,7 @@
 		<PanelTable
 			v-show="!elementViewing && !editingElement"
 			:table="table"
-			:can-delete="true"
+			:can-delete="false"
 			:can-create="true"
 			:can-approve="false"
 			:can-reject="false"
@@ -48,7 +48,7 @@
 			@delete="onDelete"
 			:canApprove="false"
 			:canReject="false"
-			:can-delete="true"
+			:can-delete="false"
 			:viewer="viewer!"
 			class="view-page"
 		></ViewPanelRow>
@@ -86,6 +86,7 @@ import EditPanelRow from "@/components/EditPanelRow.vue";
 import { BidEditor } from "@/editor";
 import BidStatusTool from "@/components/PanelTools/BidStatusTool.vue";
 import BidExpenditureTool from "@/components/PanelTools/BidExpenditureTool.vue";
+import { useBidSearchingHook } from "@/hooks/bidSearchingHook";
 
 const props = defineProps({
 	id: {
@@ -125,34 +126,7 @@ const onSubmit = async () => {
 	editingElement.value = false;
 };
 
-watch([departmentSearchString, searchString], () => {
-	const result = [];
-
-	if (departmentSearchString.value.length > 3) {
-		result.push({
-			column: "department",
-			term: departmentSearchString.value,
-			groups: [0, 1],
-		});
-	}
-
-	if (searchString.value.length > 3) {
-		result.push(
-			{
-				column: "worker",
-				term: searchString.value,
-				groups: [0],
-			},
-			{
-				column: "expenditure",
-				term: searchString.value,
-				groups: [1],
-			},
-		);
-	}
-
-	table.searchQuery.value = result;
-});
+useBidSearchingHook(departmentSearchString, searchString, table);
 
 watch([fromDateString, toDateString], () => {
 	const fromDate = new Date(fromDateString.value);

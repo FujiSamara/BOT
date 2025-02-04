@@ -102,11 +102,12 @@
 									class="table-cell-line"
 									v-for="(cellLine, cellLineIndex) in cell.cellLines"
 								>
-									<p v-if="cellLine.href.length > 0">
+									<p
+										:style="{ color: cellLine.color }"
+										v-if="cellLine.href.length > 0"
+									>
 										<a
-											@click.stop="
-												async () => await onHrefClicked(cellLine.value)
-											"
+											@click.stop="async () => await onHrefClicked(cellLine)"
 											class="link"
 											>{{ cellLine.value }}</a
 										>
@@ -116,7 +117,12 @@
 											class="expand"
 										></span>
 									</p>
-									<p v-if="cellLine.href.length === 0">{{ cellLine.value }}</p>
+									<p
+										:style="{ color: cellLine.color }"
+										v-if="cellLine.href.length === 0"
+									>
+										{{ cellLine.value }}
+									</p>
 								</li>
 							</ul>
 						</th>
@@ -174,7 +180,7 @@ import ClickableIcon from "@/components/UI/ClickableIcon.vue";
 import ModalWindow from "@/components/ModalWindow.vue";
 import TablePagination from "@/components/TablePagination.vue";
 import DocumentView from "@/components/DocumentView.vue";
-import type { Cell, Table } from "@/table";
+import type { Cell, CellLine, Table } from "@/table";
 import { Ref, ref, type PropType } from "vue";
 import { BaseSchema, DocumentSchema } from "@/types";
 import { useNetworkStore } from "@/store/network";
@@ -230,17 +236,21 @@ const onRejectCommentSubmit = async () => {
 	rejectReason.value = "";
 	emit("reject");
 };
-const onHrefClicked = async (filename: string) => {
-	await networkStore.downloadFile(filename);
+const onHrefClicked = async (cellLine: CellLine) => {
+	if (cellLine.forceHref) {
+		await networkStore.downloadFile(cellLine.value, cellLine.href);
+	} else {
+		await networkStore.downloadFile(cellLine.value);
+	}
 };
 const onExpandClicked = (cell: Cell, index: number) => {
-	const docs = [];
+	const docs: Array<DocumentSchema> = [];
 	for (const [i, cellLine] of cell.cellLines.entries()) {
 		if (cellLine.isImage) {
 			if (index === i) {
 				initialDocumentIndex.value = docs.length;
 			}
-			docs.push({ name: cellLine.value, href: cellLine.href });
+			docs.push({ name: cellLine.value, href: cellLine.href, forceHref: true });
 		}
 	}
 	documentViewVisible.value = true;

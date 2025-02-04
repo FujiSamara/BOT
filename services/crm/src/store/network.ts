@@ -92,38 +92,54 @@ export const useNetworkStore = defineStore("network", {
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,
 		): Promise<any> {
-			return await handler.catch((error: AxiosError) => {
+			return await handler.catch(async (error: AxiosError) => {
 				const statusCode = error.response ? error.response.status : null;
 
+				let msg;
+
 				if (statusCode === 401) {
-					router.go(0);
+					if (!(await this.auth())) {
+						router.go(0);
+					}
+
+					msg =
+						"У вас нет доступа к этой панели. " +
+						"Вы можете попробовать обновить страницу, " +
+						"либо обратиться к администратору. \n" +
+						"URL: " +
+						error.config?.url;
 				} else {
-					let msg;
 					if (error.response && (error.response.data as any).detail) {
 						msg = JSON.stringify((error.response.data as any).detail);
 					} else {
 						msg = error.message;
 					}
-
-					this.errors.push(msg);
-					return Promise.reject(error);
 				}
+
+				this.errors.push(msg);
+				return Promise.reject(error);
 			});
 		},
 		async getFile(filename: string): Promise<Uint8Array> {
+			return this.getFileByURL(
+				`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
+			);
+		},
+		async getFileByURL(href: string): Promise<Uint8Array> {
 			const resp = await this.withAuthChecking(
-				axios.get(
-					`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
-					{
-						responseType: "blob",
-					},
-				),
+				axios.get(href, {
+					responseType: "blob",
+				}),
 			);
 
 			return resp.data as Uint8Array;
 		},
-		async downloadFile(filename: string) {
-			this.saveFile(filename, await this.getFile(filename));
+		async downloadFile(filename: string, href?: string) {
+			if (href) {
+				this.saveFile(filename, await this.getFileByURL(href));
+			} else {
+				this.saveFile(filename, await this.getFile(filename));
+			}
 		},
 		saveFile(filename: string, file: Uint8Array) {
 			const fileBlob = new Blob([file], {

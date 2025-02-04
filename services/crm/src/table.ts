@@ -57,6 +57,7 @@ export class CellLine {
 		public value: string = "Не указано",
 		public href: string = "",
 		public color: string = "",
+		public forceHref: boolean = false,
 	) {
 		if (
 			href.length !== 0 &&
@@ -108,10 +109,10 @@ interface QuerySchema {
 export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
-	private _loadedRows: Ref<Array<T>> = ref([]);
+	protected _loadedRows: Ref<Array<T>> = ref([]);
 	protected _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
-	private _newIds: Ref<Array<number>> = ref([]);
+	protected _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
 
 	/**
@@ -785,7 +786,7 @@ export class BudgetTable extends Table<BudgetSchema> {
 		this._aliases.set("limit", "Лимит");
 		this._aliases.set("expenditure", "Статья");
 		this._aliases.set("last_update", "Последние обновление");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("chapter", "Раздел");
 
 		this._columsOrder.set("id", 0);
@@ -819,11 +820,12 @@ export class BidTable extends Table<BidSchema> {
 		this._formatters.set("payment_type", parser.formatPaymentType);
 		this._formatters.set("expenditure", parser.formatExpenditure);
 		this._formatters.set("need_edm", parser.formatCheck);
+		this._formatters.set("status", parser.formatMultilineString);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("amount", "Сумма");
 		this._aliases.set("payment_type", "Тип оплаты");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("worker", "Работник");
 		this._aliases.set("purpose", "Цель");
 		this._aliases.set("create_date", "Дата создания");
@@ -854,15 +856,13 @@ export class BidTable extends Table<BidSchema> {
 	}
 
 	protected color(model: BidSchema): string {
-		switch (model.status) {
-			case "Выплачено":
-				return "#c8fac9";
-			case "Отказано":
-				return "#fac8ca";
-
-			default:
-				return "#ffffff";
+		if (model.status.indexOf("Выплачено") !== -1) {
+			return "#c8fac9";
 		}
+		if (model.status.indexOf("Отказано") !== -1) {
+			return "#fac8ca";
+		}
+		return "#ffffff";
 	}
 
 	public async create(model: BidSchema): Promise<void> {
@@ -885,31 +885,34 @@ export class BidTable extends Table<BidSchema> {
 	}
 }
 
-export class FACBidTable extends BidTable {
+export class FACAndCCBidTable extends BidTable {
 	constructor() {
 		super({
-			getEndpoint: "/fac",
-			infoEndpoint: "/fac",
-			exportEndpoint: "/fac",
-			approveEndpoint: "/fac",
-			rejectEndpoint: "/fac",
+			getEndpoint: "/fac_cc",
+			infoEndpoint: "/fac_cc",
+			exportEndpoint: "/fac_cc",
+			approveEndpoint: "/fac_cc",
+			rejectEndpoint: "/fac_cc",
+		});
+	}
+
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
+}
+export class FACAndCCBidHistoryTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/fac_cc/history",
+			infoEndpoint: "/fac_cc/history",
+			exportEndpoint: "/fac_cc/history",
+			approveEndpoint: "/fac_cc/history",
+			rejectEndpoint: "/fac_cc/history",
 		});
 	}
 }
 
-export class CCBidTable extends BidTable {
-	constructor() {
-		super({
-			getEndpoint: "/cc",
-			infoEndpoint: "/cc",
-			exportEndpoint: "/cc",
-			approveEndpoint: "/cc",
-			rejectEndpoint: "/cc",
-		});
-	}
-}
-
-export class CCSupervisorBidTable extends BidTable {
+export class ParalegalBidTable extends BidTable {
 	constructor() {
 		super({
 			getEndpoint: "/paralegal",
@@ -919,6 +922,24 @@ export class CCSupervisorBidTable extends BidTable {
 			rejectEndpoint: "/paralegal",
 		});
 	}
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
+}
+
+export class AccountantCardBidTable extends BidTable {
+	constructor() {
+		super({
+			getEndpoint: "/accountant_card",
+			infoEndpoint: "/accountant_card",
+			exportEndpoint: "/accountant_card",
+			approveEndpoint: "/accountant_card",
+			rejectEndpoint: "/accountant_card",
+		});
+	}
+	notifies = computed(() => {
+		return this.rowCount.value;
+	});
 }
 
 export class MyBidTable extends BidTable {
@@ -953,10 +974,11 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._formatters.set("work_begin", parser.formatDateTime);
 		this._formatters.set("work_end", parser.formatDateTime);
 		this._formatters.set("day", parser.formatDateTime);
+		this._formatters.set("photo_b64", parser.formatWorkTimePhoto);
 
 		this._aliases.set("id", "ID");
 		this._aliases.set("worker", "Работник");
-		this._aliases.set("department", "Производство");
+		this._aliases.set("department", "Предприятие");
 		this._aliases.set("post", "Должность");
 		this._aliases.set("work_begin", "Начало смены");
 		this._aliases.set("work_end", "Конец смены");
@@ -964,6 +986,7 @@ export class WorkTimeTable extends Table<WorkTimeSchema> {
 		this._aliases.set("work_duration", "Длительность");
 		this._aliases.set("rating", "Оценка");
 		this._aliases.set("fine", "Штраф");
+		this._aliases.set("photo_b64", "Фото");
 	}
 }
 //#endregion

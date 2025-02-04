@@ -15,17 +15,18 @@ export interface Token {
 
 export enum Access {
 	Bid,
+	BidReadOnly,
 	Expenditure,
 	Budget,
 	Admin,
-	FACBid,
-	CCBid,
+	FAC_CCbid,
 	CCSupervisorBid,
 	Worktime,
 	Authed,
 	MyBid,
 	ArchiveBid,
 	MyFile,
+	AccountantCardBid,
 }
 
 export const accessesDict: any = {
@@ -33,13 +34,15 @@ export const accessesDict: any = {
 	crm_bid: Access.Bid,
 	crm_budget: Access.Budget,
 	crm_expenditure: Access.Expenditure,
-	crm_fac_bid: Access.FACBid,
-	crm_cc_bid: Access.CCBid,
+	crm_fac_cc_bid: Access.FAC_CCbid,
 	crm_paralegal_bid: Access.CCSupervisorBid,
 	authenticated: Access.Authed,
 	crm_my_bid: Access.MyBid,
 	crm_archive_bid: Access.ArchiveBid,
 	crm_my_file: Access.MyFile,
+	crm_bid_readonly: Access.BidReadOnly,
+	crm_worktime: Access.Worktime,
+	crm_accountant_card_bid: Access.AccountantCardBid,
 };
 
 export interface PanelData extends NavigationData {
@@ -78,6 +81,7 @@ export interface DepartmentSchema extends BaseSchema {
 export interface DocumentSchema {
 	name: string;
 	href: string;
+	forceHref?: boolean;
 	file?: Blob;
 }
 

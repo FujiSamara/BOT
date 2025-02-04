@@ -1,8 +1,10 @@
 import { Access, PanelData } from "@/types";
 import BidPanel from "@/panels/BidPanel.vue";
-import FACBidPanel from "@/panels/FACBidPanel.vue";
-import CCBidPanel from "@/panels/CCBidPanel.vue";
-import CCSupervisorBidPanel from "@/panels/CCSupervisorBidPanel.vue";
+import BidPanelReadOnly from "@/panels/BidPanelReadOnly.vue";
+import FACAndCCBidPanel from "@/panels/FACAndCCBidPanel.vue";
+import FACAndCCBidHistoryPanel from "@/panels/FACAndCCBidHistoryPanel.vue";
+import ParalegalBidTable from "@/panels/ParalegalBidTable.vue";
+import AccountantCardBidPanel from "@/panels/AccountantCardBidPanel.vue";
 import ExpenditurePanel from "@/panels/ExpenditurePanel.vue";
 import BudgetPanel from "@/panels/BudgetPanel.vue";
 import WorkTimePanel from "@/panels/WorkTimePanel.vue";
@@ -38,29 +40,45 @@ const panels: Array<PanelData> = [
 	{
 		id: 4,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЦФО",
+		label: "Заявки пр.",
 		isActive: false,
-		panel: shallowRef(FACBidPanel),
-		access: Access.FACBid,
+		panel: shallowRef(BidPanelReadOnly),
+		access: Access.BidReadOnly,
 	},
 	{
 		id: 5,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЦЗ",
+		label: "Заявки на соглас.",
 		isActive: false,
-		panel: shallowRef(CCBidPanel),
-		access: Access.CCBid,
+		panel: shallowRef(FACAndCCBidPanel),
+		access: Access.FAC_CCbid,
 	},
 	{
 		id: 6,
 		imageSrc: "/img/bid_logo.svg",
-		label: "Заявки ЮК",
+		label: "История соглас.",
 		isActive: false,
-		panel: shallowRef(CCSupervisorBidPanel),
-		access: Access.CCSupervisorBid,
+		panel: shallowRef(FACAndCCBidHistoryPanel),
+		access: Access.FAC_CCbid,
 	},
 	{
 		id: 7,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки ЮК",
+		isActive: false,
+		panel: shallowRef(ParalegalBidTable),
+		access: Access.CCSupervisorBid,
+	},
+	{
+		id: 8,
+		imageSrc: "/img/bid_logo.svg",
+		label: "Заявки бух.",
+		isActive: false,
+		panel: shallowRef(AccountantCardBidPanel),
+		access: Access.AccountantCardBid,
+	},
+	{
+		id: 9,
 		imageSrc: "/img/worktime.svg",
 		label: "Явки",
 		isActive: false,
@@ -68,7 +86,7 @@ const panels: Array<PanelData> = [
 		access: Access.Worktime,
 	},
 	{
-		id: 8,
+		id: 10,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Мои заявки",
 		isActive: false,
@@ -76,7 +94,7 @@ const panels: Array<PanelData> = [
 		access: Access.MyBid,
 	},
 	{
-		id: 9,
+		id: 11,
 		imageSrc: "/img/bid_logo.svg",
 		label: "Архив заявок",
 		isActive: false,
