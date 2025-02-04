@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, PropType, ref } from "vue";
+import { computed, PropType, Ref, ref, watch } from "vue";
 import { CalendarType } from "@/types";
 import { capitalize } from "@/parser";
 
@@ -19,9 +19,14 @@ const emits = defineEmits<{
 	(e: "unset"): void;
 }>();
 
-const year = ref(props.date?.getFullYear() || new Date().getFullYear());
-const month = ref(props.date?.getMonth());
-const day = ref(props.date?.getDate());
+const year: Ref<number> = ref(0);
+const month: Ref<undefined | number> = ref(undefined);
+const day: Ref<undefined | number> = ref(undefined);
+const updateDate = () => {
+	year.value = props.date?.getFullYear() || new Date().getFullYear();
+	month.value = props.date?.getMonth();
+	day.value = props.date?.getDate();
+};
 const getDate = () => {
 	const date = new Date();
 
@@ -141,6 +146,11 @@ const dayChoosed = (currentDay: number) => {
 
 	emits("submit", getDate());
 };
+
+watch(props, () => {
+	updateDate();
+});
+updateDate();
 </script>
 <template>
 	<div class="calendar">
