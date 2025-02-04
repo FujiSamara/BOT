@@ -1,4 +1,4 @@
-import { computed, ref, Ref } from "vue";
+import { computed, ComputedRef, ref, Ref } from "vue";
 import {
 	DepartmentSchema,
 	DocumentSchema,
@@ -6,6 +6,7 @@ import {
 	WorkerSchema,
 } from "@/types";
 import EntityService from "@/services/entity";
+import * as parser from "@/parser";
 
 export enum SelectType {
 	MultiSelectInput,
@@ -13,6 +14,7 @@ export enum SelectType {
 	MultiDocument,
 	MonoDocument,
 	Input,
+	Date,
 }
 
 export class BaseEntity<T> {
@@ -22,7 +24,7 @@ export class BaseEntity<T> {
 	public disabled: Ref<boolean> = ref(false);
 	public selectedEntities = computed(() => this._selectedEntities.value);
 	public completed: Ref<boolean> = ref(false);
-	public error: Ref<string | undefined> = ref(undefined);
+	public error: ComputedRef<string | undefined> = computed(() => undefined);
 
 	constructor(
 		public required: boolean = false,
@@ -85,8 +87,30 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 	}
 }
 
+export class DateEntity extends InputEntity<Date> {
+	public error: ComputedRef<string | undefined> = computed(() => {
+		if (this._inputValue.value.length === 0) {
+			return "";
+		}
+		if (!parser.validateDate(this._inputValue.value)) {
+			return "Значение должно быть правильной датой";
+		}
+		return "";
+	});
+
+	protected async onSubmit(value: string): Promise<void> {
+		if (parser.validateDate(value)) {
+			this._selectedEntities.value = [parser.formattedDateToDate(value)];
+		}
+	}
+
+	protected format(value: Date): string {
+		return parser.formatDate(value.toDateString()).cellLines[0].value;
+	}
+}
+
 export class FloatInputEntity extends InputEntity<number> {
-	public error: Ref<string> = computed(() => {
+	public error: ComputedRef<string> = computed(() => {
 		if (this._inputValue.value.length === 0) {
 			return "";
 		}

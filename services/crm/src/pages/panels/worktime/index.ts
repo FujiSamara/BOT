@@ -25,6 +25,7 @@ import {
 	PostEntity,
 	SelectType,
 	WorkerEntity,
+	DateEntity,
 } from "@/components/entity";
 import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 
@@ -108,6 +109,11 @@ export async function setupWorktime(
 				entity: new PostEntity(true, true),
 				type: SelectType.MonoSelectInput,
 				name: "post",
+			},
+			{
+				entity: new DateEntity(true, "День"),
+				type: SelectType.Date,
+				name: "day",
 			},
 			{
 				entity: new FloatInputEntity(false, "Оценка"),
