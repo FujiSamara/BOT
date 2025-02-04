@@ -51,7 +51,6 @@ const previosStep = () => {
 		case CalendarType.Month:
 			return;
 		case CalendarType.Day:
-			month.value = undefined;
 			step.value = CalendarType.Month;
 	}
 };
@@ -135,14 +134,13 @@ const monthChoosed = (currentMonth: number) => {
 	if (props.lockMode) emits("submit", getDate());
 };
 const dayChoosed = (currentDay: number) => {
-	day.value = currentDay;
-
 	if (props.date && currentDay === day.value) {
 		if (props.blockUnset) return;
 		day.value = undefined;
 		emits("unset");
 		return;
 	}
+	day.value = currentDay;
 
 	emits("submit", getDate());
 };
@@ -183,7 +181,12 @@ updateDate();
 						@click="dayChoosed(lineDay)"
 						class="c-element"
 						v-for="lineDay in line"
-						:class="{ choosed: day && day === lineDay }"
+						:class="{
+							choosed:
+								day &&
+								day === lineDay &&
+								(!props.date || props.date.getMonth() === month),
+						}"
 					>
 						<span>{{ lineDay }}</span>
 					</div>
