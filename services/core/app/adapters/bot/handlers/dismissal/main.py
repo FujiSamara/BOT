@@ -1,5 +1,5 @@
 from aiogram import Router
-from bot.handlers.dismissal import (
+from app.adapters.bot.handlers.dismissal import (
     worker,
     dismissal_coordination,
     chief,

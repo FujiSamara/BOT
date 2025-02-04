@@ -759,25 +759,23 @@ dismissal_menu = InlineKeyboardMarkup(
 
 async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMarkup:
     data = await state.get_data()
-    blank = data.get("blank")
-    upload_blank_text = "Приложить заявление"
+    upload_blank_count = data.get("blank")
     all_field_exist = True
 
     dismissal_reason = data.get("dismissal_reason")
 
-    if not blank or len(blank) == 0:
+    if upload_blank_count is None or len(upload_blank_count) == 0:
         all_field_exist = False
-        upload_blank_text += " 0"
+        upload_blank_count = ""
     else:
-        upload_blank_text += f" {len(blank)} ✅"
+        upload_blank_count = f" {len(upload_blank_count)} ✅"
 
     if not dismissal_reason or dismissal_reason == 0:
-        dismissal_reason = "..."
+        dismissal_reason = ""
         all_field_exist = False
     else:
         dismissal_reason = f"✅ {dismissal_reason}"
 
-    send_dismissal_callback_data = "dummy"
     if all_field_exist:
         send_dismissal_callback_data = "send_dismissal_blank"
 
@@ -790,14 +788,15 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
         ],
         [
             InlineKeyboardButton(
-                text=upload_blank_text, callback_data="upload_dismissal_blank"
-            )
+                text=upload_blank_count, callback_data="upload_dismissal_blank"
+            ),
+            InlineKeyboardButton(text=upload_blank_count, callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Причина увольнения", callback_data="dummy"),
             InlineKeyboardButton(
-                text=dismissal_reason, callback_data="get_dismissal_reason"
+                text="Причина увольнения", callback_data="get_dismissal_reason"
             ),
+            InlineKeyboardButton(text=dismissal_reason, callback_data="dummy"),
         ],
     ]
     if all_field_exist:
@@ -809,7 +808,13 @@ async def get_create_dismissal_blank_menu(state: FSMContext) -> InlineKeyboardMa
                 )
             ]
         )
-    keyboard.append([main_menu_button])
+    keyboard.append(
+        [
+            InlineKeyboardButton(
+                text=back, callback_data=get_personal_cabinet_button.callback_data
+            )
+        ]
+    )
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

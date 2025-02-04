@@ -10,28 +10,27 @@ from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
-from bot.kb import (
+from app.adapters.bot.kb import (
     create_inline_keyboard,
     main_menu_button,
     chief_pending_button,
     chief_dismissal_menu_button,
 )
-from bot.states import (
+from app.adapters.bot.states import (
     Base,
     DismissalChief,
 )
 
-from bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_message,
 )
-from bot.handlers.dismissal.utils import (
+from app.adapters.bot.handlers.dismissal.utils import (
     get_dismissal_blank_info,
     get_dismissal_list_info,
 )
-from bot.handlers.dismissal.schemas import (
+from app.adapters.bot.handlers.dismissal.schemas import (
     ActionType,
-    DismissalActionData,
     DismissalCallbackData,
 )
 
@@ -112,16 +111,16 @@ async def get_dismissal_blank(
         ),
         InlineKeyboardButton(
             text="Согласовать",
-            callback_data=DismissalActionData(
-                dismissal_id=blank.id,
+            callback_data=DismissalCallbackData(
+                id=blank.id,
                 action=ActionType.approving,
                 endpoint_name=approving_endpoint_name,
             ).pack(),
         ),
         InlineKeyboardButton(
             text="Отказать",
-            callback_data=DismissalActionData(
-                dismissal_id=blank.id,
+            callback_data=DismissalCallbackData(
+                id=blank.id,
                 action=ActionType.declining,
                 endpoint_name=approving_endpoint_name,
             ).pack(),
@@ -136,14 +135,14 @@ async def get_dismissal_blank(
 
 
 @router.callback_query(
-    DismissalActionData.filter(F.action == ActionType.approving),
-    DismissalActionData.filter(F.endpoint_name == approving_endpoint_name),
+    DismissalCallbackData.filter(F.action == ActionType.approving),
+    DismissalCallbackData.filter(F.endpoint_name == approving_endpoint_name),
 )
 async def approve_dismissal(
     callback: CallbackQuery,
-    callback_data: DismissalActionData,
+    callback_data: DismissalCallbackData,
 ):
-    dismissal = get_dismissal_by_id(callback_data.dismissal_id)
+    dismissal = get_dismissal_by_id(callback_data.id)
 
     await update_dismissal_by_chief(dismissal)
 
@@ -158,15 +157,15 @@ async def approve_dismissal(
 
 
 @router.callback_query(
-    DismissalActionData.filter(F.action == ActionType.declining),
-    DismissalActionData.filter(F.endpoint_name == approving_endpoint_name),
+    DismissalCallbackData.filter(F.action == ActionType.declining),
+    DismissalCallbackData.filter(F.endpoint_name == approving_endpoint_name),
 )
 async def decline_dismissal(
     callback: CallbackQuery,
-    callback_data: DismissalActionData,
+    callback_data: DismissalCallbackData,
     state: FSMContext,
 ):
-    dismissal = get_dismissal_by_id(callback_data.dismissal_id)
+    dismissal = get_dismissal_by_id(callback_data.id)
     await try_edit_message(callback.message, hbold("Введите причину отказа:"))
     await state.set_state(DismissalChief.comment)
     await state.update_data(
@@ -174,9 +173,7 @@ async def decline_dismissal(
         callback=callback,
         dismissal=dismissal,
         column_name=Dismissal.chief_state.name,
-        callback_data=DismissalCallbackData(
-            id=callback_data.dismissal_id, endpoint_name=name
-        ),
+        callback_data=DismissalCallbackData(id=callback_data.id, endpoint_name=name),
     )
 
 

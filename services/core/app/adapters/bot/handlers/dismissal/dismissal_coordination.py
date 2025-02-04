@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 import asyncio
 from typing import Any, Callable
 
-from bot.kb import (
+from app.adapters.bot.kb import (
     main_menu_button,
     create_inline_keyboard,
     InlineKeyboardButton,
@@ -22,17 +22,17 @@ from app.services import (
     get_dismissal_by_id,
     update_dismissal,
 )
-from bot.handlers.dismissal.schemas import (
+from app.adapters.bot.handlers.dismissal.schemas import (
     DismissalCallbackData,
-    DismissalActionData,
+    DismissalCallbackData,
     ActionType,
 )
-from bot.states import DismissalCoordination
-from bot.handlers.dismissal.utils import (
+from app.adapters.bot.states import DismissalCoordination
+from app.adapters.bot.handlers.dismissal.utils import (
     get_dismissal_list_info,
     get_dismissal_blank_info,
 )
-from bot.handlers.utils import try_delete_message, try_edit_message
+from app.adapters.bot.handlers.utils import try_delete_message, try_edit_message
 
 router = Router(name="dismissal_coordination")
 
@@ -58,7 +58,7 @@ class DismissalCoordinationFactory:
             self.get_menu, F.data == coordinator_menu_button.callback_data
         )
         router.callback_query.register(
-            self.get_pendings, F.data == f"{name}_dismissal_pending"
+            self.get_pending_bids, F.data == f"{name}_dismissal_pending"
         )
         router.callback_query.register(
             self.get_dismissal_blank,
@@ -72,13 +72,17 @@ class DismissalCoordinationFactory:
         )
         router.callback_query.register(
             self.approve_dismissal,
-            DismissalActionData.filter(F.action == ActionType.approving),
-            DismissalActionData.filter(F.endpoint_name == self.approving_endpoint_name),
+            DismissalCallbackData.filter(F.action == ActionType.approving),
+            DismissalCallbackData.filter(
+                F.endpoint_name == self.approving_endpoint_name
+            ),
         )
         router.callback_query.register(
             self.comment_dismissal,
-            DismissalActionData.filter(F.action == ActionType.declining),
-            DismissalActionData.filter(F.endpoint_name == self.approving_endpoint_name),
+            DismissalCallbackData.filter(F.action == ActionType.declining),
+            DismissalCallbackData.filter(
+                F.endpoint_name == self.approving_endpoint_name
+            ),
         )
 
     async def get_menu(self, callback: CallbackQuery):
@@ -89,7 +93,7 @@ class DismissalCoordinationFactory:
             reply_markup=keyboard,
         )
 
-    async def get_pendings(self, callback: CallbackQuery):
+    async def get_pending_bids(self, callback: CallbackQuery):
         keyboard = self.get_pending_dismissal_keyboard()
         await try_delete_message(callback.message)
         await callback.message.answer("Ожидающие согласования:", reply_markup=keyboard)
@@ -97,36 +101,34 @@ class DismissalCoordinationFactory:
     async def approve_dismissal(
         self,
         callback: CallbackQuery,
-        callback_data: DismissalActionData,
+        callback_data: DismissalCallbackData,
         state: FSMContext,
     ):
         data = await state.get_data()
         comment = data.get("comment")
-        dismissal = get_dismissal_by_id(callback_data.dismissal_id)
+        dismissal = get_dismissal_by_id(callback_data.id)
 
         update_dismissal(dismissal, self.state_column.name, comment)
 
         msg = await callback.message.answer(text="Успешно!")
         await asyncio.sleep(1)
         await msg.delete()
-        await self.get_pendings(callback)
+        await self.get_pending_bids(callback)
 
     async def comment_dismissal(
         self,
         callback: CallbackQuery,
-        callback_data: DismissalActionData,
+        callback_data: DismissalCallbackData,
         state: FSMContext,
     ):
-        dismissal = get_dismissal_by_id(callback_data.dismissal_id)
         await try_edit_message(callback.message, hbold("Введите причину отказа:"))
         await state.set_state(DismissalCoordination.comment)
         await state.update_data(
             generator=self.get_dismissal_blank,
-            callback=callback,
-            dismissal=dismissal,
+            message=callback.message,
             column_name=self.state_column.name,
             callback_data=DismissalCallbackData(
-                id=callback_data.dismissal_id, endpoint_name=self.name
+                id=callback_data.id, endpoint_name=self.name
             ),
         )
 
@@ -210,16 +212,16 @@ class DismissalCoordinationFactory:
             ),
             InlineKeyboardButton(
                 text="Согласовать",
-                callback_data=DismissalActionData(
-                    dismissal_id=blank.id,
+                callback_data=DismissalCallbackData(
+                    id=blank.id,
                     action=ActionType.approving,
                     endpoint_name=self.approving_endpoint_name,
                 ).pack(),
             ),
             InlineKeyboardButton(
                 text=comment_text,
-                callback_data=DismissalActionData(
-                    dismissal_id=blank.id,
+                callback_data=DismissalCallbackData(
+                    id=blank.id,
                     action=ActionType.declining,
                     endpoint_name=self.approving_endpoint_name,
                 ).pack(),
@@ -238,17 +240,13 @@ async def comment_decline(message: Message, state: FSMContext):
     data = await state.get_data()
     if "generator" not in data:
         raise KeyError("Pending generator not exist")
-    if "callback" not in data:
-        raise KeyError("Callback not exist")
-    if "dismissal" not in data:
-        raise KeyError("Dismissal not exist")
-    if "column_name" not in data:
-        raise KeyError("Column name not exist")
+    if "message" not in data:
+        raise KeyError("Message not exist")
     if "callback_data" not in data:
         raise KeyError("Callback data not exist")
 
     generator: Callable = data["generator"]
-    callback: CallbackQuery = data["callback"]
+    callback: Message = data["message"]
     callback_data: DismissalCallbackData = data["callback_data"]
     await state.update_data(comment=message.text)
 

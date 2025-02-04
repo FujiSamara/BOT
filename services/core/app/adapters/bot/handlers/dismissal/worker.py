@@ -9,13 +9,13 @@ from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
-from bot.kb import dismissal_menu
-from bot.states import (
+from app.adapters.bot.kb import dismissal_menu
+from app.adapters.bot.states import (
     Base,
     DismissalRequest,
 )
 
-from bot.handlers.utils import (
+from app.adapters.bot.handlers.utils import (
     send_menu_by_scopes,
     try_delete_message,
     try_edit_message,
@@ -23,7 +23,7 @@ from bot.handlers.utils import (
     handle_documents,
     handle_documents_form,
 )
-from bot.handlers.dismissal.utils import (
+from app.adapters.bot.handlers.dismissal.utils import (
     clear_state_with_success_employee,
     with_next_line,
 )

@@ -7,6 +7,7 @@ from app.adapters.bot.handlers.personal_cab.main import (
 from app.adapters.bot.handlers.rate.main import router as rate_router
 from app.adapters.bot.handlers.tech_request.main import router as tech_request_router
 from app.adapters.bot.handlers.worker_bids.main import router as worker_bid_router
+from app.adapters.bot.handlers.dismissal.main import router as dismissal_router
 
 __all__ = [
     "bid_router",
@@ -16,4 +17,5 @@ __all__ = [
     "rate_router",
     "tech_request_router",
     "worker_bid_router",
+    "dismissal_router",
 ]

@@ -7,10 +7,10 @@ from aiogram.utils.markdown import hbold
 import asyncio
 
 # bot imports
-from bot.kb import get_create_dismissal_blank_menu
-from bot.handlers.dismissal.text import dismissal_request_text
-from bot.states import Base
-from bot.handlers.utils import try_edit_message
+from app.adapters.bot.kb import get_create_dismissal_blank_menu
+from app.adapters.bot.text import dismissal_request_text
+from app.adapters.bot.states import Base
+from app.adapters.bot.handlers.utils import try_edit_message
 
 # db imports
 from app.schemas import DismissalSchema

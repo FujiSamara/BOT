@@ -30,10 +30,6 @@ unclosed_shift_notify = "У вас осталась не закрытая сме
 unclosed_shift_request = "Закройте смену!"
 
 back = "⏪ Назад"
-
-view = "Просмотреть"
-
-
 view = "Просмотреть"
 
 notification_repairman = "У Вас новая техническая заявка!"
@@ -56,3 +52,7 @@ personal_cabinet_logins_dict = {
     "check_office_login": "CheckOffice",
     "pbi_login": "PBI",
 }
+
+dismissal_request_text: str = (
+    "Скачайте бланк заявления,\n" + "заполните и прикрепите фото"
+)

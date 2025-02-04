@@ -164,6 +164,7 @@ from app.services.dismissal import (
     get_pending_dismissal_blanks_for_chief,
     update_dismissal_by_chief,
     update_dismissal,
+    create_dismissal_blank,
 )
 
 __all__ = [
@@ -317,4 +318,5 @@ __all__ = [
     "get_pending_dismissal_blanks_for_chief",
     "update_dismissal_by_chief",
     "update_dismissal",
+    "create_dismissal_blank",
 ]

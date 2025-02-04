@@ -1096,6 +1096,8 @@ class Subordination(Base):
         "Worker", back_populates="subordination_chief", foreign_keys=[employee_id]
     )
 
+    dismissal = relationship("Dismissal", back_populates="subordination")
+
 
 class File(Base):
     """Класс для хранения файлов"""
