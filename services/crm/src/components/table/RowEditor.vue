@@ -22,12 +22,12 @@ const save = () => {
 		if (!entiy.completed.value && entiy.required) {
 			ready = false;
 
-			const currentError = entiy.error.value;
+			const currentError = entiy.overrideError.value;
 
-			entiy.error.value = "Обязательное поле";
+			entiy.overrideError.value = "Обязательное поле";
 
 			setTimeout(() => {
-				entiy.error.value = currentError;
+				entiy.overrideError.value = currentError;
 			}, 2000);
 		}
 

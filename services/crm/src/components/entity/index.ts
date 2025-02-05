@@ -22,9 +22,12 @@ export class BaseEntity<T> {
 
 	public placeholder = "";
 	public disabled: Ref<boolean> = ref(false);
-	public selectedEntities = computed(() => this._selectedEntities.value);
 	public completed: Ref<boolean> = ref(false);
-	public error: ComputedRef<string | undefined> = computed(() => undefined);
+	public selectedEntities = computed(() => this._selectedEntities.value);
+	public error: ComputedRef<string | undefined> = computed(
+		() => this.overrideError.value,
+	);
+	public overrideError: Ref<string | undefined> = ref();
 
 	constructor(
 		public required: boolean = false,
@@ -33,6 +36,10 @@ export class BaseEntity<T> {
 		this.sortComparator = this.sortComparator.bind(this);
 
 		this.placeholder = placeholder || this.placeholder;
+	}
+
+	public getResult(): any {
+		this._selectedEntities.value[0];
 	}
 
 	protected format(value: T): string {
@@ -89,6 +96,10 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 
 export class DateEntity extends InputEntity<Date> {
 	public error: ComputedRef<string | undefined> = computed(() => {
+		if (this.overrideError.value !== undefined) {
+			return this.overrideError.value;
+		}
+
 		if (this._inputValue.value.length === 0) {
 			return "";
 		}
@@ -97,20 +108,44 @@ export class DateEntity extends InputEntity<Date> {
 		}
 		return "";
 	});
-
 	protected async onSubmit(value: string): Promise<void> {
+		if (value === "") {
+			this._selectedEntities.value = [];
+			return;
+		}
+
 		if (parser.validateDate(value)) {
 			this._selectedEntities.value = [parser.formattedDateToDate(value)];
 		}
 	}
 
-	protected format(value: Date): string {
+	public getResult() {
+		const date = this._selectedEntities.value[0];
+
+		const formattedDate =
+			date.getFullYear() +
+			"-" +
+			(date.getMonth() + 1).toString().padStart(2, "0") +
+			"-" +
+			date.getDate().toString().padStart(2, "0");
+
+		return formattedDate;
+	}
+
+	protected format(value: Date | string): string {
+		if (typeof value === "string") {
+			value = new Date(value);
+		}
 		return parser.formatDate(value.toDateString()).cellLines[0].value;
 	}
 }
 
 export class FloatInputEntity extends InputEntity<number> {
 	public error: ComputedRef<string> = computed(() => {
+		if (this.overrideError.value !== undefined) {
+			return this.overrideError.value;
+		}
+
 		if (this._inputValue.value.length === 0) {
 			return "";
 		}
