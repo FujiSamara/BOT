@@ -127,7 +127,6 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         citizenship=None,
         password=None,
         can_use_crm=False,
-        documents=passport,
         snils=None,
         inn=None,
         registration=None,
@@ -137,7 +136,7 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         military_ticket=None,
         official_work=worker_bid.official_work,
     )
-    if orm.add_worker(worker):
+    if orm.add_worker(worker, passport):
         return worker.id
     return None
 
