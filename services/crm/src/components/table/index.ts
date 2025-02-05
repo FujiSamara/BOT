@@ -616,7 +616,6 @@ export class Table<T extends BaseSchema> {
 	 */
 	private updateModel(source: any, target: any): boolean {
 		let modelChanged = false;
-
 		for (const fieldName in target) {
 			const formatter = this.getFormatter(fieldName);
 

@@ -41,7 +41,7 @@ export class BaseEntity<T> {
 	}
 
 	public getResult(): any {
-		this._selectedEntities.value[0];
+		return this._selectedEntities.value[0];
 	}
 
 	protected format(value: T): string {
@@ -115,7 +115,6 @@ export class DateEntity extends InputEntity<Date> {
 			this._selectedEntities.value = [];
 			return;
 		}
-
 		if (parser.validateFormattedDate(value)) {
 			this._selectedEntities.value = [parser.formattedDateToDate(value)];
 		}
@@ -123,7 +122,6 @@ export class DateEntity extends InputEntity<Date> {
 
 	public getResult() {
 		const date = this._selectedEntities.value[0];
-
 		const formattedDate =
 			date.getFullYear() +
 			"-" +
@@ -139,6 +137,16 @@ export class DateEntity extends InputEntity<Date> {
 			value = new Date(value);
 		}
 		return parser.formatDate(value.toDateString()).cellLines[0].value;
+	}
+
+	public init(value: Date): void {
+		if (value === undefined) {
+			return;
+		}
+		const date = new Date(value);
+
+		this._selectedEntities.value = [date];
+		this._inputValue.value = this.format(value);
 	}
 }
 
@@ -161,23 +169,9 @@ export class TimeEntity extends InputEntity<Date> {
 			this._selectedEntities.value = [];
 			return;
 		}
-
-		if (parser.validateFormattedDate(value)) {
-			this._selectedEntities.value = [parser.formattedDateToDate(value)];
+		if (parser.validateFormattedTime(value)) {
+			this._selectedEntities.value = [parser.formattedTimeToTime(value)];
 		}
-	}
-
-	public getResult() {
-		const time = this._selectedEntities.value[0];
-
-		const formattedDate =
-			time.getFullYear() +
-			"-" +
-			(time.getMonth() + 1).toString().padStart(2, "0") +
-			"-" +
-			time.getDate().toString().padStart(2, "0");
-
-		return formattedDate;
 	}
 
 	protected format(value: Date | string): string {
@@ -185,6 +179,16 @@ export class TimeEntity extends InputEntity<Date> {
 			value = new Date(value);
 		}
 		return parser.formatTime(value.toString()).cellLines[0].value;
+	}
+
+	public init(value: Date): void {
+		if (value === undefined) {
+			return;
+		}
+		const date = new Date(value);
+
+		this._selectedEntities.value = [date];
+		this._inputValue.value = this.format(value);
 	}
 }
 
