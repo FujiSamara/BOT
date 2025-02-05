@@ -620,6 +620,10 @@ export class Table<T extends BaseSchema> {
 		for (const fieldName in target) {
 			const formatter = this.getFormatter(fieldName);
 
+			if (target[fieldName] === undefined) {
+				continue;
+			}
+
 			const targetString: string = formatter(target[fieldName]).toString();
 			const sourceString: string = formatter(source[fieldName]).toString();
 			source[fieldName] = target[fieldName];
