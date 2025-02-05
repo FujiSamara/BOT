@@ -2646,7 +2646,7 @@ def get_territorial_director(department_id: int) -> WorkerSchema | None:
         return WorkerSchema.model_validate(raw_department.territorial_director)
 
 
-def add_worker(record: WorkerSchema) -> bool:
+def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
     """
     Add worker to database
 
@@ -2689,7 +2689,7 @@ def add_worker(record: WorkerSchema) -> bool:
         )
         s.add(worker)
 
-        for doc in record.documents:
+        for doc in documents:
             file = WorkerDocument(
                 worker=worker,
                 document=doc.document,
