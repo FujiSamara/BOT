@@ -1028,6 +1028,12 @@ class TechnicalRequest(Base):
 
     repairman_worktime: Mapped[int] = mapped_column(nullable=True)
 
+    not_relevant_description: Mapped[str] = mapped_column(nullable=True)
+    not_relevant_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    not_relevant_confirmation_date: Mapped[datetime.datetime] = mapped_column(
+        nullable=True
+    )
+
 
 # endregion
 

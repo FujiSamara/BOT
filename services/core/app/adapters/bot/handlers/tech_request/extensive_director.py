@@ -11,7 +11,7 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import (
     Base,
-    DepartmentDirectorRequestForm,
+    ExtensiveDirectorRequestForm,
 )
 
 from app.adapters.bot.handlers.tech_request.utils import (
@@ -48,25 +48,19 @@ router = Router(name="technical_request_extensive_director")
 
 
 @router.callback_query(F.data == tech_kb.ed_button.callback_data)
-async def show_tech_req_menu_cb(callback: CallbackQuery):
-    await try_edit_or_answer(
-        message=callback.message,
-        text=hbold(tech_kb.ed_button.text),
-        reply_markup=tech_kb.dd_change_department_menu,
-    )
-
-
-async def show_tech_req_menu_ms(message: Message):
+async def show_tech_req_menu(message: Message | CallbackQuery):
+    if isinstance(message, CallbackQuery):
+        message = message.message
     await try_edit_or_answer(
         message=message,
         text=hbold(tech_kb.ed_button.text),
-        reply_markup=tech_kb.dd_change_department_menu,
+        reply_markup=tech_kb.ed_change_department_menu,
     )
 
 
-@router.callback_query(F.data == tech_kb.dd_change_department_button.callback_data)
+@router.callback_query(F.data == tech_kb.ed_change_department_button.callback_data)
 async def change_department(callback: CallbackQuery, state: FSMContext):
-    await state.set_state(DepartmentDirectorRequestForm.department)
+    await state.set_state(ExtensiveDirectorRequestForm.department)
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
         department_names=get_departments_names(callback.message.chat.id),
@@ -80,7 +74,7 @@ async def change_department(callback: CallbackQuery, state: FSMContext):
     await state.update_data(msg=msg)
 
 
-@router.message(DepartmentDirectorRequestForm.department)
+@router.message(ExtensiveDirectorRequestForm.department)
 async def set_department(message: Message, state: FSMContext):
     department_names = department_names_with_count(
         state=ApprovalStatus.pending_approval,
@@ -91,22 +85,22 @@ async def set_department(message: Message, state: FSMContext):
         message=message,
         state=state,
         departments_names=department_names,
-        reply_markup=tech_kb.dd_menu_markup,
+        reply_markup=tech_kb.ed_menu_markup,
     ):
-        await show_tech_req_menu_ms(message)
+        await show_tech_req_menu(message)
 
 
-@router.callback_query(F.data == tech_kb.dd_menu_button.callback_data)
+@router.callback_query(F.data == tech_kb.ed_menu_button.callback_data)
 async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Предприятие: {department_name}"),
-        reply_markup=tech_kb.dd_menu_markup,
+        reply_markup=tech_kb.ed_menu_markup,
     )
 
 
-@router.callback_query(F.data == tech_kb.dd_history.callback_data)
+@router.callback_query(F.data == tech_kb.ed_history.callback_data)
 async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_extensive_director(
@@ -118,15 +112,15 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
         message=callback.message,
         text=hbold("История заявок"),
         reply_markup=tech_kb.create_kb_with_end_point(
-            end_point="DD_TR_show_form_history",
-            menu_button=tech_kb.dd_menu_button,
+            end_point="ED_TR_show_form_history",
+            menu_button=tech_kb.ed_menu_button,
             requests=requests,
         ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_show_form_history")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_show_form_history")
 )
 async def show_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -137,11 +131,11 @@ async def show_history_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.dd_history,
+        history_or_waiting_button=tech_kb.ed_history,
     )
 
 
-@router.callback_query(F.data == tech_kb.dd_active.callback_data)
+@router.callback_query(F.data == tech_kb.ed_active.callback_data)
 async def show_active_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_technical_requests_for_extensive_director(
@@ -153,15 +147,15 @@ async def show_active_menu(callback: CallbackQuery, state: FSMContext):
         message=callback.message,
         text=hbold("Активные заявки"),
         reply_markup=tech_kb.create_kb_with_end_point(
-            end_point="DD_TR_show_form_active",
-            menu_button=tech_kb.dd_menu_button,
+            end_point="ED_TR_show_form_active",
+            menu_button=tech_kb.ed_menu_button,
             requests=requests,
         ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_show_form_active")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_show_form_active")
 )
 async def show_active_request_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
@@ -173,7 +167,7 @@ async def show_active_request_form(
                 text="Изменить исполнителя",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_update_request_executor",
+                    end_point="ED_TR_update_request_executor",
                 ).pack(),
             )
         ],
@@ -182,7 +176,7 @@ async def show_active_request_form(
                 text="Изменить проблему",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_update_request_problem",
+                    end_point="ED_TR_update_request_problem",
                 ).pack(),
             )
         ],
@@ -191,7 +185,7 @@ async def show_active_request_form(
                 text="Закрыть заявку",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_close_request",
+                    end_point="ED_TR_close_request",
                 ).pack(),
             )
         ],
@@ -202,12 +196,12 @@ async def show_active_request_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.dd_active,
+        history_or_waiting_button=tech_kb.ed_active,
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_update_request_executor")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_update_request_executor")
 )
 async def update_executor_format_cb(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -215,7 +209,7 @@ async def update_executor_format_cb(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Изменить исполнителя"),
-        reply_markup=await tech_kb.dd_update_kb_executor(
+        reply_markup=await tech_kb.ed_update_kb_executor(
             state=state, callback_data=callback_data
         ),
     )
@@ -226,25 +220,25 @@ async def update_executor_format_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Изменить исполнителя"),
-        reply_markup=await tech_kb.dd_update_kb_executor(
+        reply_markup=await tech_kb.ed_update_kb_executor(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="DD_TR_update_request_executor",
+                end_point="ED_TR_update_request_executor",
             ),
         ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_executor_group")
+    ShowRequestCallbackData.filter(F.end_point == "get_ED_TR_executor_group")
 )
 async def get_group(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     groups_names = get_groups_names()
 
-    await state.set_state(DepartmentDirectorRequestForm.group)
+    await state.set_state(ExtensiveDirectorRequestForm.group)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(
         text=hbold("Выберите отдел:"),
@@ -256,7 +250,7 @@ async def get_group(
     await state.update_data(msg=msg)
 
 
-@router.message(DepartmentDirectorRequestForm.group)
+@router.message(ExtensiveDirectorRequestForm.group)
 async def set_group(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -283,7 +277,7 @@ async def set_group(message: Message, state: FSMContext):
 
 
 async def get_executor(message: Message, state: FSMContext):
-    await state.set_state(DepartmentDirectorRequestForm.executor)
+    await state.set_state(ExtensiveDirectorRequestForm.executor)
     group_name = (await state.get_data()).get("group_name")
     workers = get_all_worker_in_group(group_name)
     await try_delete_message(message)
@@ -300,7 +294,7 @@ async def get_executor(message: Message, state: FSMContext):
     await state.update_data(msg=msg)
 
 
-@router.message(DepartmentDirectorRequestForm.executor)
+@router.message(ExtensiveDirectorRequestForm.executor)
 async def set_executor(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -330,7 +324,7 @@ async def set_executor(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_save_change_executor")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_save_change_executor")
 )
 async def save_change_executor(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -351,7 +345,7 @@ async def save_change_executor(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_update_request_problem")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_update_request_problem")
 )
 async def update_problem_format_cb(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -359,7 +353,7 @@ async def update_problem_format_cb(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Изменить заявку"),
-        reply_markup=await tech_kb.dd_update_problem_kb(
+        reply_markup=await tech_kb.ed_update_problem_kb(
             state=state, callback_data=callback_data
         ),
     )
@@ -370,23 +364,23 @@ async def update_problem_format_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Изменить заявку"),
-        reply_markup=await tech_kb.dd_update_problem_kb(
+        reply_markup=await tech_kb.ed_update_problem_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="DD_TR_update_request_problem",
+                end_point="ED_TR_update_request_problem",
             ),
         ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "get_DD_TR_problem")
+    ShowRequestCallbackData.filter(F.end_point == "get_ED_TR_problem")
 )
 async def get_problem(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    await state.set_state(DepartmentDirectorRequestForm.problem)
+    await state.set_state(ExtensiveDirectorRequestForm.problem)
     problems = get_technical_problem_names()
     problems.sort()
     await try_delete_message(callback.message)
@@ -400,7 +394,7 @@ async def get_problem(
     await state.update_data(msg=msg)
 
 
-@router.message(DepartmentDirectorRequestForm.problem)
+@router.message(ExtensiveDirectorRequestForm.problem)
 async def set_problem(message: Message, state: FSMContext):
     data = await state.get_data()
     msg = data.get("msg")
@@ -432,7 +426,7 @@ async def set_problem(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_save_change_problem")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_save_change_problem")
 )
 async def save_change_problem(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -447,7 +441,7 @@ async def save_change_problem(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_close_request")
 )
 async def close_request_change(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -456,14 +450,14 @@ async def close_request_change(
         text="Да",
         callback_data=ShowRequestCallbackData(
             request_id=callback_data.request_id,
-            end_point="DD_TR_close_request_yes",
+            end_point="ED_TR_close_request_yes",
         ).pack(),
     )
     no_button = InlineKeyboardButton(
         text="Нет",
         callback_data=ShowRequestCallbackData(
             request_id=callback_data.request_id,
-            end_point="DD_TR_show_form_active",
+            end_point="ED_TR_show_form_active",
         ).pack(),
     )
 
@@ -475,7 +469,7 @@ async def close_request_change(
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_yes")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_close_request_yes")
 )
 async def close_request_form_format_cb(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
@@ -483,7 +477,7 @@ async def close_request_form_format_cb(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Закрыть заявку"),
-        reply_markup=await tech_kb.dd_close_request_kb(
+        reply_markup=await tech_kb.ed_close_request_kb(
             state=state,
             callback_data=callback_data,
         ),
@@ -495,29 +489,29 @@ async def close_request_form_format_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Закрыть заявку"),
-        reply_markup=await tech_kb.dd_close_request_kb(
+        reply_markup=await tech_kb.ed_close_request_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
-                end_point="DD_TR_close_request_yes",
+                end_point="ED_TR_close_request_yes",
             ),
         ),
     )
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_close_request_description")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_close_request_description")
 )
 async def get_description(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
-    await state.set_state(DepartmentDirectorRequestForm.description)
+    await state.set_state(ExtensiveDirectorRequestForm.description)
     await try_delete_message(callback.message)
     msg = await callback.message.answer(text=hbold("Укажите причину закрытия заявки:"))
     await state.update_data(msg=msg)
 
 
-@router.message(DepartmentDirectorRequestForm.description)
+@router.message(ExtensiveDirectorRequestForm.description)
 async def set_description(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     data = await state.get_data()
@@ -530,7 +524,7 @@ async def set_description(message: Message, state: FSMContext):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "DD_TR_save_close_request")
+    ShowRequestCallbackData.filter(F.end_point == "ED_TR_save_close_request")
 )
 async def save_close_request(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext

@@ -126,6 +126,10 @@ from app.services.technical_request import (
     get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
     update_repairman_worktimes,
+    get_departments_names_for_territorial_director,
+    get_all_pending_technical_requests_for_territorial_director,
+    get_all_history_technical_requests_territorial_director,
+    update_technical_request_by_territorial_director,
 )
 from app.services.worker_bid import (
     create_worker_bid,
@@ -302,4 +306,8 @@ __all__ = [
     "get_worker_bid_documents_requests",
     "add_worker_bids_documents_requests",
     "update_worker_bid_documents",
+    "get_departments_names_for_territorial_director",
+    "get_all_pending_technical_requests_for_territorial_director",
+    "get_all_history_technical_requests_territorial_director",
+    "update_technical_request_by_territorial_director",
 ]

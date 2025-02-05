@@ -1302,24 +1302,22 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 
 
 def get_technical_requests_by_columns(
-    columns: list[Any], values: list[Any], history: bool = False
+    columns: list[Any], values: list[Any], history: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
     """
     with session.begin() as s:
-        query = s.query(TechnicalRequest)
+        stmt = select(TechnicalRequest)
         for column, value in zip(columns, values):
-            query = query.filter(column == value)
+            stmt = stmt.filter(column == value)
         if history:
-            query = query.filter(
-                or_(
-                    TechnicalRequest.state == ApprovalStatus.approved,
-                    TechnicalRequest.state == ApprovalStatus.skipped,
-                    TechnicalRequest.state == ApprovalStatus.not_relevant,
-                )
-            )
-        raw_models = query.order_by(TechnicalRequest.id).all()
+            stmt = stmt.filter(TechnicalRequest.close_date != null())
+        raw_models = (
+            s.execute(stmt.order_by(TechnicalRequest.id.desc()).limit(limit=limit))
+            .scalars()
+            .all()
+        )
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -2569,7 +2567,7 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
         ]
 
 
-def update_technical_requests(
+def update_technical_requests_worktime(
     schemas: list[TechnicalRequestSchema],
 ) -> None:
     for schema in schemas:
@@ -2837,4 +2835,27 @@ def add_worker_bids_documents_requests(
             message=message,
         )
         s.add(raw_model)
+    return True
+
+
+def update_technical_request_from_territorial_director(
+    request: TechnicalRequestSchema,
+) -> bool:
+    with session.begin() as s:
+        cur_req = (
+            s.execute(
+                select(TechnicalRequest).filter(TechnicalRequest.id == request.id)
+            )
+            .scalars()
+            .first()
+        )
+        if cur_req is None:
+            return False
+        
+        cur_req.close_date = request.close_date
+        cur_req.state = request.state
+        cur_req.not_relevant_confirmation_date = request.not_relevant_confirmation_date
+        cur_req.not_relevant_description = request.not_relevant_description
+        cur_req.close_description = request.close_description
+
     return True

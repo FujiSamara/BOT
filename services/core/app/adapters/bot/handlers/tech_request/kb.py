@@ -643,38 +643,38 @@ ed_button = InlineKeyboardButton(
     text="Технические заявки директор", callback_data="get_ED_TR"
 )
 
-dd_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_DD_TR_menu")
+ed_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_ED_TR_menu")
 
-dd_active = InlineKeyboardButton(
-    text="Активные заявки", callback_data="get_DD_TR_active"
+ed_active = InlineKeyboardButton(
+    text="Активные заявки", callback_data="get_ED_TR_active"
 )
 
-dd_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_DD_TR_history"
+ed_history = InlineKeyboardButton(
+    text="История заявок", callback_data="get_ED_TR_history"
 )
 
-dd_change_department_button = InlineKeyboardButton(
+ed_change_department_button = InlineKeyboardButton(
     text="Выбрать предприятие",
-    callback_data="set_DD_TR_department",
+    callback_data="set_ED_TR_department",
 )
 
-dd_change_department_menu = InlineKeyboardMarkup(
+ed_change_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
-        [dd_change_department_button],
+        [ed_change_department_button],
         [main_menu_button],
     ]
 )
 
-dd_menu_markup = InlineKeyboardMarkup(
+ed_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [dd_active],
-        [dd_history],
+        [ed_active],
+        [ed_history],
         [ed_button],
     ]
 )
 
 
-async def dd_update_kb_executor(
+async def ed_update_kb_executor(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
@@ -699,7 +699,7 @@ async def dd_update_kb_executor(
                 text="Исполнитель",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="get_DD_TR_executor_group",
+                    end_point="get_ED_TR_executor_group",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -713,7 +713,7 @@ async def dd_update_kb_executor(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_show_form_active",
+                    end_point="ED_TR_show_form_active",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
@@ -727,7 +727,7 @@ async def dd_update_kb_executor(
                     text="Изменить",
                     callback_data=ShowRequestCallbackData(
                         request_id=callback_data.request_id,
-                        end_point="DD_TR_save_change_executor",
+                        end_point="ED_TR_save_change_executor",
                         last_end_point=callback_data.last_end_point,
                     ).pack(),
                 )
@@ -737,7 +737,7 @@ async def dd_update_kb_executor(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def dd_update_problem_kb(
+async def ed_update_problem_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
@@ -760,7 +760,7 @@ async def dd_update_problem_kb(
                 text="Проблема",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="get_DD_TR_problem",
+                    end_point="get_ED_TR_problem",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -774,7 +774,7 @@ async def dd_update_problem_kb(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_show_form_active",
+                    end_point="ED_TR_show_form_active",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
@@ -788,7 +788,7 @@ async def dd_update_problem_kb(
                     text="Изменить",
                     callback_data=ShowRequestCallbackData(
                         request_id=callback_data.request_id,
-                        end_point="DD_TR_save_change_problem",
+                        end_point="ED_TR_save_change_problem",
                         last_end_point=callback_data.last_end_point,
                     ).pack(),
                 )
@@ -798,7 +798,7 @@ async def dd_update_problem_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def dd_close_request_kb(
+async def ed_close_request_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     description = (await state.get_data()).get("description")
@@ -817,7 +817,7 @@ async def dd_close_request_kb(
                 text="Комментарий",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_close_request_description",
+                    end_point="ED_TR_close_request_description",
                 ).pack(),
             ),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
@@ -827,7 +827,7 @@ async def dd_close_request_kb(
                 text="Отмена",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="DD_TR_show_form_active",
+                    end_point="ED_TR_show_form_active",
                 ).pack(),
             ),
         ],
@@ -840,7 +840,7 @@ async def dd_close_request_kb(
                     text="Утвердить",
                     callback_data=ShowRequestCallbackData(
                         request_id=callback_data.request_id,
-                        end_point="DD_TR_save_close_request",
+                        end_point="ED_TR_save_close_request",
                     ).pack(),
                 ),
             ]
@@ -849,6 +849,100 @@ async def dd_close_request_kb(
 
 
 # endregion
+
+
+# region Territorial director
+
+td_button = InlineKeyboardButton(
+    text="Технические заявки ТД", callback_data="get_TD_TR"
+)
+
+td_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_TD_TR_menu")
+
+td_pending = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_TD_TR_pending"
+)
+
+td_history = InlineKeyboardButton(
+    text="История заявок", callback_data="get_TD_TR_history"
+)
+
+td_change_department_button = InlineKeyboardButton(
+    text="Выбрать предприятие",
+    callback_data="set_TD_TR_department",
+)
+
+td_change_department_menu = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [td_change_department_button],
+        [main_menu_button],
+    ]
+)
+
+td_menu_markup = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [td_pending],
+        [td_history],
+        [td_button],
+    ]
+)
+
+
+async def td_approval_form_kb(
+    state: FSMContext, callback_data: ShowRequestCallbackData
+) -> InlineKeyboardMarkup:
+    description = (await state.get_data()).get("description")
+    state = (await state.get_data()).get("state")
+    form_complete = True
+    if description is None:
+        description = ""
+        form_complete = False
+    else:
+        if len(description) > 16:
+            description = description[:16] + "..."
+        description += " ✅"
+
+    if state is None:
+        state = "Да/Нет"
+    else:
+        state += " ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Статус корректен:",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="TD_TR_get_correct",
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{state}", callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Комментарий",
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="TD_TR_get_description",
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Утвердить",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=callback_data.request_id,
+                        end_point="TD_TR_save_approval_form",
+                    ).pack(),
+                ),
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 # region Universal

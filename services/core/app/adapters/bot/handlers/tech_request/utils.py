@@ -269,3 +269,23 @@ def department_names_with_count(
 
         out_department_names.sort(reverse=True)
     return out_department_names
+
+
+async def notify_worker_by_telegram_id_in_technical_request(
+    telegram_id, message: str, request_id: int, end_point: str
+):
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+
+    await notify_worker_by_telegram_id(
+        telegram_id=telegram_id,
+        message=message,
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text=text.view,
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    end_point=end_point,
+                ).pack(),
+            )
+        ),
+    )
