@@ -691,17 +691,12 @@ export class Table<T extends BaseSchema> {
 	public async update(model: T, index: number): Promise<void> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
-		const clearedModel: any = structuredClone(this._loadedRows.value[index]);
-		Object.keys(clearedModel).forEach(
-			(key) => clearedModel[key] === undefined && delete clearedModel[key],
-		);
-
 		if (elementChanged) {
 			await this._network
 				.withAuthChecking(
 					axios.patch(
 						`${this._endpoint}${this._updateEndpoint}/`,
-						clearedModel,
+						this._loadedRows.value[index],
 					),
 				)
 				.catch((_) => {});
