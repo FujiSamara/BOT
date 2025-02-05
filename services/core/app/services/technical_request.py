@@ -178,7 +178,7 @@ async def create_technical_request(
                 ),
             )
         directors_extensive_development = orm.get_workers_with_scope(
-            FujiScope.bot_technical_request_department_director
+            FujiScope.bot_technical_request_extensive_director
         )
         if directors_extensive_development == []:
             logger.error(
@@ -315,7 +315,7 @@ async def update_technical_request_from_repairman(
                 ),
             )
         directors_extensive_development = orm.get_workers_with_scope(
-            FujiScope.bot_technical_request_department_director
+            FujiScope.bot_technical_request_extensive_director
         )
         if directors_extensive_development == []:
             logger.error(
@@ -426,7 +426,7 @@ async def update_technical_request_from_appraiser(
                 )
 
             directors_extensive_development = orm.get_workers_with_scope(
-                FujiScope.bot_technical_request_department_director
+                FujiScope.bot_technical_request_extensive_director
             )
             if directors_extensive_development == []:
                 logger.error(
@@ -617,12 +617,12 @@ def get_all_waiting_technical_requests_for_appraiser(
             return requests
 
 
-def get_all_active_technical_requests_for_department_director(
+def get_all_active_technical_requests_for_extensive_director(
     telegram_id: int,
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all waiting technical requests by Telegram id for department_director
+    Return all waiting technical requests by Telegram id for extensive_director
     """
     try:
         department = orm.find_departments_by_name(department_name)[0]
@@ -709,7 +709,7 @@ def get_all_history_technical_requests_for_worker(
         return requests
 
 
-def get_all_history_technical_requests_for_department_director(
+def get_all_history_technical_requests_for_extensive_director(
     department_name: str,
 ) -> list[TechnicalRequestSchema]:
     """

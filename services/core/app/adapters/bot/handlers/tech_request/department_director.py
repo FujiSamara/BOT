@@ -44,7 +44,7 @@ from app.services import (
 from app.infra.database.models import ApprovalStatus
 
 
-router = Router(name="technical_request_extensive_director")
+router = Router(name="technical_request_department_director")
 
 
 @router.callback_query(F.data == tech_kb.ed_button.callback_data)

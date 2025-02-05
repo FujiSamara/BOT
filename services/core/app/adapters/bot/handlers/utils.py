@@ -45,7 +45,7 @@ from app.adapters.bot.handlers.tech_request.kb import (
     rm_button,  # repairman
     ct_button,  # chief technician
     tm_button,  # territorial manager
-    dd_button,  # department director
+    ed_button,  # extensive director
 )
 import asyncio
 
@@ -68,7 +68,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_repairman: rm_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
         FujiScope.bot_technical_request_appraiser: tm_button,
-        FujiScope.bot_technical_request_department_director: dd_button,
+        FujiScope.bot_technical_request_extensive_director: ed_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
         FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
