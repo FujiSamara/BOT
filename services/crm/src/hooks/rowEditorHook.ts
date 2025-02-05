@@ -65,7 +65,7 @@ export const useRowEditor = (
 		const result: any = {};
 
 		for (const field of fields) {
-			result[field.name] = field.entity.selectedEntities.value[0];
+			result[field.name] = field.entity.getResult();
 		}
 
 		if (isCreating.value) {
