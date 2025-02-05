@@ -84,13 +84,15 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
     ):
         raise HTTPException(status_code=400)
 
+    day_format = "%Y-%m-%d"
+
     dump = {
         "worker_id": record.worker.id,
         "company_id": record.department.company.id,
         "post_id": record.post.id,
         "department_id": record.department.id,
         "work_begin": record.work_begin.strftime(settings.date_time_format),
-        "day": record.day.strftime(settings.date_format),
+        "day": record.day.strftime(day_format),
     }
 
     if hasattr(record, "work_end") and record.work_end is not None:
