@@ -184,7 +184,7 @@ export class TimeEntity extends InputEntity<Date> {
 		if (typeof value === "string") {
 			value = new Date(value);
 		}
-		return parser.formatDate(value.toDateString()).cellLines[0].value;
+		return parser.formatTime(value.toString()).cellLines[0].value;
 	}
 }
 

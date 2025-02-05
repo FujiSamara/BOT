@@ -6,6 +6,7 @@ import MonoEntitySelect from "@/components/entity/MonoEntitySelect.vue";
 import InputEntity from "@/components/entity/InputEntity.vue";
 import DocumentSelect from "@/components/selects/DocumentSelect.vue";
 import DateEntitySelect from "@/components/entity/DateEntitySelect.vue";
+import TimeEntity from "@/components/entity/TimeEntity.vue";
 
 const props = defineProps({
 	entity: {
@@ -25,6 +26,7 @@ const defaultInput = props.selectType === SelectType.Input;
 const monoDocumentSelect = props.selectType === SelectType.MonoDocument;
 const multiDocumentSelect = props.selectType === SelectType.MultiDocument;
 const dateSelect = props.selectType === SelectType.Date;
+const timeSelect = props.selectType === SelectType.Time;
 </script>
 
 <template>
@@ -36,6 +38,7 @@ const dateSelect = props.selectType === SelectType.Date;
 			v-if="monoDocumentSelect || multiDocumentSelect"
 		></DocumentSelect>
 		<DateEntitySelect v-if="dateSelect" :entity="entity"></DateEntitySelect>
+		<TimeEntity v-if="timeSelect" :entity="entity"></TimeEntity>
 	</div>
 </template>
 
