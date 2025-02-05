@@ -70,7 +70,7 @@ onUnmounted(() => {
 		border-radius: 16px;
 		width: 640px;
 		min-height: 100px;
-		max-height: 700px;
+		max-height: 90%;
 
 		background: $main-white;
 		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
