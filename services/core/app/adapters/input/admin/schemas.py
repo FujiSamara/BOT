@@ -261,6 +261,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.official_work,
     ]
     can_export = False
 
@@ -298,6 +299,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date: "Даты рождения детей",
         Worker.military_ticket: "Военный билет",
         Worker.patent: "Патент",
+        Worker.official_work: "Официально трудоустроен",
     }
 
     form_columns = [
@@ -329,6 +331,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.official_work,
     ]
 
     form_ajax_refs = {
@@ -367,6 +370,22 @@ class WorkerView(ModelView, model=Worker):
 
         return urls
 
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        or_stmt = or_(
+            Worker.f_name.ilike(f"%{term}%"),
+            Worker.l_name.ilike(f"%{term}%"),
+            Worker.o_name.ilike(f"%{term}%"),
+        )
+
+        for state, text in worker_status_dict.items():
+            if text.lower() == term.lower():
+                or_stmt = Worker.state == state
+                break
+
+        workers = select(Worker).filter(or_stmt)
+        return workers
+
     async def on_model_change(self, data: dict, model: Worker, is_created, request):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
@@ -381,7 +400,7 @@ class WorkerView(ModelView, model=Worker):
     form_converter = WorkerConverter
 
 
-class WorkerPassportView(ModelView, model=WorkerDocument):
+class WorkerDocumentView(ModelView, model=WorkerDocument):
     name = "Документ работника"
     name_plural = "Документы работников"
 
@@ -513,6 +532,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
+        WorkerBid.official_work: "Официальное трудоустройство",
     }
 
     column_list = [
@@ -540,6 +560,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.department,
         WorkerBid.state,
         WorkerBid.comment,
+        WorkerBid.official_work,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -605,6 +626,22 @@ class WorkerBidView(ModelView, model=WorkerBid):
                 urls.append(url)
 
         return urls
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        or_stmt = or_(
+            WorkerBid.f_name.ilike(f"%{term}%"),
+            WorkerBid.l_name.ilike(f"%{term}%"),
+            WorkerBid.o_name.ilike(f"%{term}%"),
+        )
+
+        for state, text in approval_status_dict.items():
+            if text.lower() == term.lower():
+                or_stmt = WorkerBid.state == state
+                break
+
+        workers = select(WorkerBid).filter(or_stmt)
+        return workers
 
     can_create = False
     can_export = False

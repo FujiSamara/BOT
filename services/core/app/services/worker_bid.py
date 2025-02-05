@@ -19,6 +19,7 @@ from app.schemas import (
     WorkerBidSchema,
     DocumentSchema,
     WorkerSchema,
+    WorkerBidDocumentRequestSchema,
 )
 from aiogram.types import InlineKeyboardButton
 from app.adapters.bot.kb import create_inline_keyboard
@@ -34,11 +35,35 @@ states = {
 }
 
 
+def get_workers_bids_history_sender(id: str, limit: int = 15) -> list[WorkerBid]:
+    """
+    Returns all complete workers bids own to sender with specified telegram id.
+    """
+    sender = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not sender:
+        return []
+
+    return orm.get_workers_bids_history_sender(sender, limit)
+
+
+def get_workers_bids_pending_sender(id: str, limit: int = 15) -> list[WorkerBid]:
+    """
+    Returns all workers bids with state ApprovalStatus.pending_approval own to sender with specified telegram id.
+    """
+    sender = orm.find_worker_by_column(Worker.telegram_id, id)
+
+    if not sender:
+        return []
+
+    return orm.get_workers_bids_pending_sender(sender, limit)
+
+
 async def update_worker_bid_state(state: ApprovalStatus, bid_id):
     """
     Updates worker bid state to specified `state` by `bid_id` if bid exist.
     """
-    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+    worker_bid = orm.get_worker_bid_by_column(WorkerBid.id, bid_id)
     if not worker_bid.comment:
         return
 
@@ -101,7 +126,6 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         citizenship=None,
         password=None,
         can_use_crm=False,
-        documents=passport,
         snils=None,
         inn=None,
         registration=None,
@@ -109,14 +133,15 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         children=False,
         children_born_date=[],
         military_ticket=None,
+        official_work=worker_bid.official_work,
     )
-    if orm.add_worker(worker):
+    if orm.add_worker(worker, passport):
         return worker.id
     return None
 
 
 async def notify_next_coordinator(bid: WorkerBidSchema):
-    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot.handlers.utils import notify_workers_by_scope
 
     state_column = None
     for state_name in states:
@@ -128,43 +153,35 @@ async def notify_next_coordinator(bid: WorkerBidSchema):
 
     match state_column:
         case "security_service_state":
-            for worker in orm.get_workers_with_scope(
-                scope=FujiScope.bot_worker_bid_security_coordinate
-            ):
-                if worker.telegram_id is not None:
-                    await notify_worker_by_telegram_id(
-                        id=worker.telegram_id,
-                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
-                        reply_markup=create_inline_keyboard(
-                            InlineKeyboardButton(
-                                text=view,
-                                callback_data=WorkerBidCallbackData(
-                                    id=bid.id,
-                                    mode=BidViewMode.full_with_approve,
-                                    endpoint_name="get_pending_bid_security_service",
-                                ).pack(),
-                            )
-                        ),
+            await notify_workers_by_scope(
+                scope=FujiScope.bot_worker_bid_security_coordinate,
+                message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=view,
+                        callback_data=WorkerBidCallbackData(
+                            id=bid.id,
+                            mode=BidViewMode.full_with_approve,
+                            endpoint_name="get_pending_bid_security_service",
+                        ).pack(),
                     )
+                ),
+            )
         case "accounting_service_state":
-            for worker in orm.get_workers_with_scope(
-                scope=FujiScope.bot_worker_bid_accounting_coordinate
-            ):
-                if worker.telegram_id is not None:
-                    await notify_worker_by_telegram_id(
-                        id=worker.telegram_id,
-                        message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
-                        reply_markup=create_inline_keyboard(
-                            InlineKeyboardButton(
-                                text=view,
-                                callback_data=WorkerBidCallbackData(
-                                    id=bid.id,
-                                    mode=BidViewMode.full_with_approve,
-                                    endpoint_name="get_pending_bid_accounting_service",
-                                ).pack(),
-                            )
-                        ),
+            await notify_workers_by_scope(
+                scope=FujiScope.bot_worker_bid_accounting_coordinate,
+                message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=view,
+                        callback_data=WorkerBidCallbackData(
+                            id=bid.id,
+                            mode=BidViewMode.full_with_approve,
+                            endpoint_name="get_pending_bid_accounting_service",
+                        ).pack(),
                     )
+                ),
+            )
 
 
 async def update_worker_bid_bot(
@@ -182,7 +199,7 @@ async def update_worker_bid_bot(
         CandidatesCoordinationCallbackData,
     )
 
-    worker_bid = orm.find_worker_bid_by_column(WorkerBid.id, bid_id)
+    worker_bid = orm.get_worker_bid_by_column(WorkerBid.id, bid_id)
 
     if not worker_bid:
         logger.error(f"Worker bid with id: {bid_id} not found.")
@@ -286,7 +303,7 @@ def get_worker_bid_by_id(id: int) -> WorkerBidSchema:
     """
     Returns worker bid in database by it id.
     """
-    return orm.find_worker_bid_by_column(WorkerBid.id, id)
+    return orm.get_worker_bid_by_column(WorkerBid.id, id)
 
 
 async def create_worker_bid(
@@ -301,6 +318,7 @@ async def create_worker_bid(
     sender_telegram_id: str,
     birth_date: datetime,
     phone_number: str,
+    official_work: bool,
 ):
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
@@ -368,6 +386,7 @@ async def create_worker_bid(
         comment=None,
         birth_date=birth_date,
         phone_number=phone_number,
+        official_work=official_work,
     )
 
     if not orm.add_worker_bid(worker_bid):
@@ -437,4 +456,99 @@ def update_worker_state(worker_id: int, state: WorkerStatus) -> bool:
         )
     worker.state = state
     orm.update_worker(worker)
+    return True
+
+
+async def update_worker_bid_documents(
+    bid_id: int,
+    files: list[UploadFile],
+) -> bool:
+    """Add new documents from sender.
+
+    Returns:
+    `bool`: True if documents upload otherwise False
+    """
+    from app.adapters.bot.handlers.utils import notify_workers_by_scope
+
+    if files == []:
+        return False
+
+    if orm.get_worker_bid_by_column(WorkerBid.id, bid_id) is None:
+        return False
+
+    documents: list[DocumentSchema] = []
+
+    last_index = orm.get_last_index_worker_documents(bid_id)
+    for index, doc in enumerate(files):
+        suffix = Path(doc.filename).suffix
+        filename = f"passport_worker_bid_{bid_id}_{last_index + index + 1}{suffix}"
+        doc.filename = filename
+        document = DocumentSchema(document=doc)
+        documents.append(document)
+
+    if orm.update_worker_bid_documents(
+        bid_id=bid_id,
+        documents=documents,
+    ):
+        await notify_workers_by_scope(
+            FujiScope.bot_worker_bid_accounting_coordinate,
+            message=f"Добавлены новые документы к заявке согласования кандидата.\nНомер заявки: {bid_id}.",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name="get_pending_bid_accounting_service",
+                    ).pack(),
+                ),
+            ),
+        )
+        return True
+    return False
+
+
+def get_worker_bid_documents_requests(
+    bid_id: int,
+) -> list[WorkerBidDocumentRequestSchema]:
+    return orm.get_worker_bid_documents_requests(bid_id)
+
+
+async def add_worker_bids_documents_requests(
+    bid_id: int, tg_id: int, message: str
+) -> bool:
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+
+    sender_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
+    if sender_id == []:
+        return False
+    sender_id = sender_id[0].id
+
+    worker_bid = orm.get_worker_bid_by_column(WorkerBid.id, bid_id)
+    if worker_bid is None:
+        return False
+
+    if not orm.add_worker_bids_documents_requests(
+        sender_id=sender_id,
+        bid_id=bid_id,
+        date=datetime.now(),
+        message=message,
+    ):
+        return False
+
+    await notify_worker_by_telegram_id(
+        worker_bid.sender.telegram_id,
+        message=f"Бухгалтерия запрашивает документы для согласования кандидата.\nНомер заявки {bid_id}",
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text=view,
+                callback_data=WorkerBidCallbackData(
+                    id=bid_id,
+                    mode=BidViewMode.full_with_update,
+                    endpoint_name="bid",
+                ).pack(),
+            )
+        ),
+    )
+
     return True

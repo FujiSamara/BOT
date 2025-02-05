@@ -237,18 +237,6 @@ def get_bids_by_worker_telegram_id(id: str, limit: int) -> list[BidSchema]:
     return orm.get_bids_by_worker(worker, limit)
 
 
-def get_workers_bids_by_sender_telegram_id(id: str) -> list[BidSchema]:
-    """
-    Returns all workers bids own to sender with specified telegram id.
-    """
-    sender = orm.find_worker_by_column(Worker.telegram_id, id)
-
-    if not sender:
-        return []
-
-    return orm.get_workers_bids_by_sender(sender)
-
-
 def get_pending_bids_by_worker_telegram_id(id: str) -> list[BidSchema]:
     """
     Returns all bids own to worker with specified phone number.

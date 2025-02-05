@@ -449,10 +449,14 @@ class Worker(Base):
     )
     military_ticket: Mapped[str] = mapped_column(nullable=True)
     patent: Mapped[str] = mapped_column(nullable=True)
+    official_work: Mapped[bool] = mapped_column(nullable=True)
+    worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
+        relationship("WorkerBidDocumentRequest", back_populates="sender")
+    )
 
 
 class WorkerDocument(Base):
-    """Паспорта работников"""
+    """Документы работников"""
 
     __tablename__ = "workers_documents"
 
@@ -619,6 +623,11 @@ class WorkerBid(Base):
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
 
+    official_work: Mapped[bool] = mapped_column(nullable=True)
+    worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
+        relationship("WorkerBidDocumentRequest", back_populates="worker_bid")
+    )
+
 
 class WorkerBidDocument(Base):
     """Общий класс для документов анкеты на найм"""
@@ -657,6 +666,33 @@ class WorkerBidWorkPermission(WorkerBidDocument):
     worker_bid: Mapped["WorkerBid"] = relationship(
         "WorkerBid", back_populates="work_permission"
     )
+
+
+class WorkerBidDocumentRequest(Base):
+    """Запросы документов согласования кандидатов"""
+
+    __tablename__ = "worker_bid_documents_requests"
+
+    sender_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"),
+        nullable=False,
+    )
+    sender: Mapped[Worker] = relationship(
+        "Worker",
+        back_populates="worker_bid_documents_request",
+    )
+
+    worker_bid_id: Mapped[int] = mapped_column(
+        ForeignKey("worker_bids.id"),
+        nullable=False,
+    )
+    worker_bid: Mapped[WorkerBid] = relationship(
+        "WorkerBid",
+        back_populates="worker_bid_documents_request",
+    )
+
+    message: Mapped[str] = mapped_column(nullable=False)
+    date: Mapped[datetime.datetime] = mapped_column(nullable=False)
 
 
 class WorkTime(Base):
@@ -1108,11 +1144,17 @@ class EquipmentIncident(Base):
 class WorkerFingerprint(Base):
     __tablename__ = "workers_fingerprints"
 
-    worker_id: Mapped[int] = mapped_column(nullable=False)
-    department_id: Mapped[int] = mapped_column(nullable=False)
+    worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     department_hex: Mapped[str] = mapped_column(nullable=False)
     cell_number: Mapped[int] = mapped_column(nullable=True)
     rfid_card: Mapped[str] = mapped_column(nullable=True)
+
+    worker: Mapped["Worker"] = relationship("Worker", foreign_keys=[worker_id])
+
+    department: Mapped["Department"] = relationship(
+        "Department", foreign_keys=[department_id]
+    )
 
 
 class FingerprintAttempt(Base):
