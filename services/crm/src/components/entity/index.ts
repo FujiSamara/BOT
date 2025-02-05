@@ -15,6 +15,7 @@ export enum SelectType {
 	MonoDocument,
 	Input,
 	Date,
+	Time,
 }
 
 export class BaseEntity<T> {
@@ -32,6 +33,7 @@ export class BaseEntity<T> {
 	constructor(
 		public required: boolean = false,
 		placeholder?: string,
+		public readonly?: boolean,
 	) {
 		this.sortComparator = this.sortComparator.bind(this);
 
@@ -103,8 +105,8 @@ export class DateEntity extends InputEntity<Date> {
 		if (this._inputValue.value.length === 0) {
 			return "";
 		}
-		if (!parser.validateDate(this._inputValue.value)) {
-			return "Значение должно быть правильной датой";
+		if (!parser.validateFormattedDate(this._inputValue.value)) {
+			return "Значение должно быть в формате DD.MM.YY";
 		}
 		return "";
 	});
@@ -114,7 +116,7 @@ export class DateEntity extends InputEntity<Date> {
 			return;
 		}
 
-		if (parser.validateDate(value)) {
+		if (parser.validateFormattedDate(value)) {
 			this._selectedEntities.value = [parser.formattedDateToDate(value)];
 		}
 	}
@@ -128,6 +130,52 @@ export class DateEntity extends InputEntity<Date> {
 			(date.getMonth() + 1).toString().padStart(2, "0") +
 			"-" +
 			date.getDate().toString().padStart(2, "0");
+
+		return formattedDate;
+	}
+
+	protected format(value: Date | string): string {
+		if (typeof value === "string") {
+			value = new Date(value);
+		}
+		return parser.formatDate(value.toDateString()).cellLines[0].value;
+	}
+}
+
+export class TimeEntity extends InputEntity<Date> {
+	public error: ComputedRef<string | undefined> = computed(() => {
+		if (this.overrideError.value !== undefined) {
+			return this.overrideError.value;
+		}
+
+		if (this._inputValue.value.length === 0) {
+			return "";
+		}
+		if (!parser.validateFormattedTime(this._inputValue.value)) {
+			return "Значение должно быть в формате HH:MM:SS";
+		}
+		return "";
+	});
+	protected async onSubmit(value: string): Promise<void> {
+		if (value === "") {
+			this._selectedEntities.value = [];
+			return;
+		}
+
+		if (parser.validateFormattedDate(value)) {
+			this._selectedEntities.value = [parser.formattedDateToDate(value)];
+		}
+	}
+
+	public getResult() {
+		const time = this._selectedEntities.value[0];
+
+		const formattedDate =
+			time.getFullYear() +
+			"-" +
+			(time.getMonth() + 1).toString().padStart(2, "0") +
+			"-" +
+			time.getDate().toString().padStart(2, "0");
 
 		return formattedDate;
 	}

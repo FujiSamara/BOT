@@ -36,7 +36,8 @@ export function formatDateTime(dateString: string): Cell {
 	return new Cell(new CellLine(formattedDate));
 }
 
-export function validateDate(dateString: string): boolean {
+//#region Date
+export function validateFormattedDate(dateString: string): boolean {
 	// First check for the pattern
 	if (!/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateString)) return false;
 
@@ -82,7 +83,22 @@ export function formatDate(dateString: string): Cell {
 		date.getFullYear();
 	return new Cell(new CellLine(formattedDate));
 }
+//#endregion
 
+//#region Time
+export function validateFormattedTime(timeString: string): boolean {
+	return /^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])$/.test(timeString);
+}
+export function formattedTimeToTime(timeString: string): Date {
+	const parts = timeString.split(":").map((val) => parseInt(val));
+
+	const date = new Date();
+	date.setHours(parts[0]);
+	date.setMinutes(parts[1]);
+	date.setSeconds(parts[2]);
+
+	return date;
+}
 export function formatTime(dateString: string): Cell {
 	if (!dateString) {
 		return new Cell(new CellLine());
@@ -98,6 +114,7 @@ export function formatTime(dateString: string): Cell {
 
 	return new Cell(new CellLine(formattedDate));
 }
+//#endregion
 
 export function formatExpenditure(expenditure: ExpenditureSchema): Cell {
 	return new Cell(new CellLine(expenditure.name));

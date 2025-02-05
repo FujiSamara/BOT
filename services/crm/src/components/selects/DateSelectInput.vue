@@ -38,7 +38,7 @@ const dateToString = (date: Date) => {
 const date = computed(() => {
 	if (!props.value) return;
 
-	if (!parser.validateDate(props.value)) return;
+	if (!parser.validateFormattedDate(props.value)) return;
 
 	return parser.formattedDateToDate(props.value);
 });
