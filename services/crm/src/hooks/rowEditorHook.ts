@@ -65,11 +65,11 @@ export const useRowEditor = (
 		const result: any = {};
 
 		for (const field of fields) {
+			if (!field.entity.completed.value) continue;
 			result[field.name] = field.entity.getResult();
 		}
 
 		if (isCreating.value) {
-			return;
 			await table.create(result);
 		} else {
 			await table.update(result, editIndex);

@@ -174,6 +174,20 @@ export class TimeEntity extends InputEntity<Date> {
 		}
 	}
 
+	public getResult() {
+		const date = this._selectedEntities.value[0];
+
+		const formattedResult =
+			date.getFullYear() +
+			"-" +
+			(date.getMonth() + 1).toString().padStart(2, "0") +
+			"-" +
+			date.getDate().toString().padStart(2, "0") +
+			" " +
+			this._inputValue.value;
+		return formattedResult;
+	}
+
 	protected format(value: Date | string): string {
 		if (typeof value === "string") {
 			value = new Date(value);
