@@ -5,9 +5,9 @@ from app.adapters.bot.handlers.tech_request import (
     repairman,
     appraiser,
     chief_technician,
-    department_director,
     local_handlers,
 )
+from services.core.app.adapters.bot.handlers.tech_request import extensive_director
 
 router = Router(name="technical_request_main")
 
@@ -17,5 +17,5 @@ router.include_routers(
     chief_technician.router,
     appraiser.router,
     local_handlers.router,
-    department_director.router,
+    extensive_director.router,
 )
