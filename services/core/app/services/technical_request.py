@@ -20,9 +20,32 @@ from app.schemas import (
     WorkerSchema,
     DocumentSchema,
 )
-from app.adapters.bot.handlers.tech_request.utils import (
-    notify_worker_by_telegram_id_in_technical_request,
-)
+
+
+async def notify_worker_by_telegram_id_in_technical_request(
+    telegram_id, message: str, request_id: int, end_point: str
+):
+    from app.adapters.bot.kb import create_inline_keyboard
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+    from app.adapters.bot.handlers.tech_request.schemas import (
+        ShowRequestCallbackData,
+    )
+    from aiogram.types import InlineKeyboardButton
+
+    await notify_worker_by_telegram_id(
+        telegram_id=telegram_id,
+        message=message,
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text=text.view,
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    end_point=end_point,
+                ).pack(),
+            )
+        ),
+    )
 
 
 def counting_date_sla(sla: int):
