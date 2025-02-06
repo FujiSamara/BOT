@@ -46,15 +46,10 @@ router = Router(name="technical_request_chief_technician")
 
 
 @router.callback_query(F.data == tech_kb.ct_button.callback_data)
-async def show_tech_req_format_cb(callback: CallbackQuery):
-    await try_edit_or_answer(
-        message=callback.message,
-        text=hbold(tech_kb.ct_button.text),
-        reply_markup=tech_kb.ct_rm,
-    )
+async def show_tech_req_format(message: Message | CallbackQuery):
+    if isinstance(message, CallbackQuery):
+        message = message.message
 
-
-async def show_tech_req_format_ms(message: Message):
     await try_edit_or_answer(
         message=message,
         text=hbold(tech_kb.ct_button.text),
@@ -92,7 +87,7 @@ async def set_department(message: Message, state: FSMContext):
         ),
         reply_markup=tech_kb.ct_menu_markup,
     ):
-        await show_tech_req_format_ms(message)
+        await show_tech_req_format(message)
 
 
 # region Own requests
@@ -384,7 +379,7 @@ async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         callback.message,
         text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="show_CT_TR_admin_form",
             menu_button=tech_kb.ct_button,
             requests=requests,
@@ -538,7 +533,7 @@ async def set_executor(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await show_tech_req_format_ms(message)
+        await show_tech_req_format(message)
     else:
         LFO_workers = [
             " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
@@ -576,7 +571,7 @@ async def save_CT_TR_admin_form(
     )
     await state.clear()
     await state.set_state(Base.none)
-    await show_tech_req_format_cb(callback=callback)
+    await show_tech_req_format(callback=callback)
 
 
 @router.callback_query(
@@ -669,6 +664,11 @@ async def save_close_request(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     data = await state.get_data()
+    if "request_id" not in data:
+        raise ValueError()
+    if "description" not in data:
+        raise ValueError()
+
     if not await set_not_relevant_state(
         request_id=data.get("request_id"),
         description=data.get("description"),
@@ -678,9 +678,11 @@ async def save_close_request(
             f"Technical request with id: {data.get('request_id')} wasn't update"
         )
 
-    await show_admin_menu(
-        callback=callback,
-        state=state,
+    await state.clear()
+    await state.set_state(Base.none)
+
+    await show_tech_req_format(
+        message=callback.message,
     )
 
 

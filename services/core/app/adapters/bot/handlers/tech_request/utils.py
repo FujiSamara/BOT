@@ -70,8 +70,6 @@ async def show_form(
             text_form += "В процессе выполнения"
         case ApprovalStatus.pending_approval:
             text_form += "Ожидание оценки от ТУ"
-        case ApprovalStatus.denied:
-            text_form += "Отправлено на доработку"
         case ApprovalStatus.skipped:
             text_form += "Не выполнено"
         case ApprovalStatus.not_relevant:
@@ -119,6 +117,15 @@ async def show_form(
         text_form += (
             "Комментарий при закрытие заявки: " + request.close_description + "\n \n"
         )
+
+    if request.not_relevant_description is not None:
+        text_form += f"Не релевантно по причине: {request.not_relevant_description}\n"
+        text_form += f"Дата: {request.not_relevant_date}"
+    if request.not_relevant_confirmation_description is not None:
+        text_form += (
+            f"Комментарий ТД: {request.not_relevant_confirmation_description}\n"
+        )
+        text_form += f"Дата: {request.not_relevant_confirmation_date}"
 
     if request.close_date:
         text_form += (

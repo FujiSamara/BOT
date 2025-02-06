@@ -189,7 +189,7 @@ async def approve_state_menu(
 ):
     if isinstance(message, CallbackQuery):
         await state.update_data(id=callback_data.request_id)
-        message = message
+        message = message.message
     else:
         callback_data = ShowRequestCallbackData(
             request_id=(await state.get_data()).get("id"),
@@ -198,7 +198,7 @@ async def approve_state_menu(
     await try_edit_or_answer(
         message=message,
         text=hbold("Утверждение статуса"),
-        reply_markup=tech_kb.td_approval_form_kb(
+        reply_markup=await tech_kb.td_approval_form_kb(
             state=state, callback_data=callback_data
         ),
     )
@@ -213,24 +213,27 @@ async def get_correct_answer(
     state: FSMContext,
 ):
     if isinstance(message, CallbackQuery):
-        message = message
+        message = message.message
     await state.set_state(TerritorialDirectorRequestForm.correct)
-    await try_edit_or_answer(
+    await try_delete_message(message=message)
+    msg = await try_edit_or_answer(
         message=message,
         text=hbold("Статус корректен:"),
         reply_markup=kb.create_reply_keyboard(text.back, "Да", "Нет"),
+        return_message=True,
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(TerritorialDirectorRequestForm.correct)
 async def set_correct_answer(message: Message, state: FSMContext):
     await state.set_state(Base.none)
+    await try_delete_message((await state.get_data()).get("msg"))
     await try_delete_message(message=message)
-
     if message.text == text.back:
         await approve_state_menu(message=message, state=state)
     elif message.text in ["Да", "Нет"]:
-        await state.update_data(correct=True if "Да" else False)
+        await state.update_data(correct=True if message.text == "Да" else False)
         await approve_state_menu(message=message, state=state)
     else:
         msg = await try_edit_or_answer(
@@ -247,18 +250,21 @@ async def set_correct_answer(message: Message, state: FSMContext):
 )
 async def get_description(callback: CallbackQuery, state: FSMContext):
     await state.set_state(TerritorialDirectorRequestForm.description)
-    await try_edit_or_answer(
+    await try_delete_message(message=callback.message)
+    msg = await try_edit_or_answer(
         message=callback.message,
         text=hbold("Введите комментарий:"),
         reply_markup=kb.create_reply_keyboard(text.back),
+        return_message=True,
     )
+    await state.update_data(msg=msg)
 
 
 @router.message(TerritorialDirectorRequestForm.description)
 async def set_description(message: Message, state: FSMContext):
     await state.set_state(Base.none)
     await try_delete_message(message=message)
-
+    await try_delete_message((await state.get_data()).get("msg"))
     if message.text == text.back:
         await approve_state_menu(message=message, state=state)
     else:

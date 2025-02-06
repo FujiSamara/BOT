@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from app.services import get_technical_problem_by_id, get_technical_request_by_id
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.kb import main_menu_button
+from app.adapters.bot.text import back
 
 from app.schemas import TechnicalRequestSchema
 
@@ -54,7 +55,7 @@ ct_own_history = InlineKeyboardButton(
 )
 
 ct_own_menu_button = InlineKeyboardButton(
-    text="Назад", callback_data=ct_own_button.callback_data
+    text=back, callback_data=ct_own_button.callback_data
 )
 
 ct_own_menu_markup = InlineKeyboardMarkup(
@@ -892,7 +893,7 @@ async def td_approval_form_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     description = (await state.get_data()).get("description")
-    state = (await state.get_data()).get("state")
+    correct_options = (await state.get_data()).get("correct")
     form_complete = True
     if description is None:
         description = ""
@@ -902,10 +903,10 @@ async def td_approval_form_kb(
             description = description[:16] + "..."
         description += " ✅"
 
-    if state is None:
-        state = "Да/Нет"
+    if correct_options is None:
+        correct_options = "Да/Нет"
     else:
-        state += " ✅"
+        correct_options = f"{'Да' if correct_options else 'Нет'} ✅"
 
     buttons = [
         [
@@ -916,7 +917,7 @@ async def td_approval_form_kb(
                     end_point="TD_TR_get_correct",
                 ).pack(),
             ),
-            InlineKeyboardButton(text=f"{state}", callback_data="dummy"),
+            InlineKeyboardButton(text=f"{correct_options}", callback_data="dummy"),
         ],
         [
             InlineKeyboardButton(
@@ -942,6 +943,17 @@ async def td_approval_form_kb(
                 ),
             ]
         )
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text=back,
+                callback_data=ShowRequestCallbackData(
+                    request_id=callback_data.request_id,
+                    end_point="TD_TR_show_pending_form",
+                ).pack(),
+            ),
+        ]
+    )
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
@@ -960,6 +972,41 @@ def create_kb_with_end_point(
                 [
                     InlineKeyboardButton(
                         text=f"{request.department.name} {request.id} \
+{request.reopen_deadline_date.strftime('%d.%m') if request.reopen_deadline_date else request.deadline_date.strftime('%d.%m')} до\
+ {request.reopen_deadline_date.strftime('%H') if request.reopen_deadline_date else request.deadline_date.strftime('%H')}",
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request.id, end_point=end_point
+                        ).pack(),
+                    )
+                ]
+            )
+    finally:
+        buttons.append([menu_button])
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def create_kb_with_end_point_and_symbols(
+    requests: list[TechnicalRequestSchema],
+    end_point: str,
+    menu_button: InlineKeyboardButton,
+) -> InlineKeyboardMarkup:
+    from app.infra.database.models import ApprovalStatus
+
+    buttons: list[list[InlineKeyboardButton]] = []
+    try:
+        for request in requests:
+            symbol = "🆗"
+            match request.state:
+                case ApprovalStatus.pending:
+                    symbol = "⚒️"
+                case ApprovalStatus.pending_approval:
+                    symbol = "🔴"
+                case ApprovalStatus.not_relevant:
+                    symbol = "⛔️"
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text=f"{symbol} {request.department.name} {request.id} \
 {request.reopen_deadline_date.strftime('%d.%m') if request.reopen_deadline_date else request.deadline_date.strftime('%d.%m')} до\
  {request.reopen_deadline_date.strftime('%H') if request.reopen_deadline_date else request.deadline_date.strftime('%H')}",
                         callback_data=ShowRequestCallbackData(

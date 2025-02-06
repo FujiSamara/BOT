@@ -111,7 +111,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="ED_TR_show_form_history",
             menu_button=tech_kb.ed_menu_button,
             requests=requests,
@@ -139,14 +139,14 @@ async def show_history_form(
 async def show_active_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_technical_requests_for_extensive_director(
-        telegram_id=callback.message.chat.id, department_name=department_name
+        department_name=department_name
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Активные заявки"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="ED_TR_show_form_active",
             menu_button=tech_kb.ed_menu_button,
             requests=requests,
@@ -530,6 +530,12 @@ async def save_close_request(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     data = await state.get_data()
+
+    if "request_id" not in data:
+        raise ValueError("Technical request id wasn't found")
+    if "description" not in data:
+        raise ValueError("Description for technical request wasn't found")
+
     if not await set_not_relevant_state(
         request_id=data.get("request_id"),
         description=data.get("description"),
@@ -538,8 +544,9 @@ async def save_close_request(
         raise ValueError(
             f"Technical request with id: {data.get('request_id')} wasn't update"
         )
+    await state.clear()
+    await state.set_state(Base.none)
 
-    await show_active_menu(
-        callback=callback,
-        state=state,
+    await show_tech_req_menu(
+        message=callback.message,
     )
