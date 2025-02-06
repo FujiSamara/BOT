@@ -14,6 +14,7 @@ from app.infra.database.models import (
     WorkerBid,
     WorkerStatus,
     FujiScope,
+    ViewStatus,
 )
 from app.schemas import (
     WorkerBidSchema,
@@ -32,6 +33,7 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 states = {
     "security_service_state",
     "accounting_service_state",
+    "iiko_service_state",
 }
 
 
@@ -182,6 +184,21 @@ async def notify_next_coordinator(bid: WorkerBidSchema):
                     )
                 ),
             )
+        case "iiko_service_state":
+            await notify_workers_by_scope(
+                scope=FujiScope.bot_worker_bid_iiko,
+                message=f"Поступила новая заявка на добавление кандидата в iiko!\nНомер заявки: {bid.id}.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=view,
+                        callback_data=WorkerBidCallbackData(
+                            id=bid.id,
+                            mode=BidViewMode.full_with_approve,
+                            endpoint_name="get_pending_bid_iiko_service",
+                        ).pack(),
+                    )
+                ),
+            )
 
 
 async def update_worker_bid_bot(
@@ -211,6 +228,7 @@ async def update_worker_bid_bot(
         return
     if state == ApprovalStatus.denied:
         worker_bid.state = state
+        worker_bid.close_date = datetime.now()
 
     match state_column_name:
         case "security_service":
@@ -221,9 +239,23 @@ async def update_worker_bid_bot(
                 worker_bid.accounting_service_state = ApprovalStatus.pending_approval
             else:
                 worker_bid.accounting_service_state = ApprovalStatus.skipped
+                worker_bid.iiko_service_state = ApprovalStatus.skipped
+
         case "accounting_service":
             stage = "бухгалтерией"
             worker_bid.accounting_service_state = state
+            worker_bid.accounting_service_comment = comment
+            if state == ApprovalStatus.approved:
+                worker_bid.iiko_service_state = ApprovalStatus.pending_approval
+            else:
+                worker_bid.iiko_service_state = ApprovalStatus.skipped
+
+        case "iiko_service":
+            stage = "iiko"
+            worker_bid.iiko_service_state = state
+            worker_bid.iiko_service_comment = comment
+
+            worker_bid.close_date = datetime.now()
             worker_bid.state = state
             worker_bid.comment = comment
         case _:
@@ -243,21 +275,21 @@ async def update_worker_bid_bot(
             logger.error(
                 f"Territorial manager in department with id: {worker_bid.department.id} wasn't found"
             )
-
-        await notify_worker_by_telegram_id(
-            id=territorial_manager.telegram_id,
-            message="У Вас новый сотрудник на стажировке",
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=view,
-                    callback_data=CandidatesCoordinationCallbackData(
-                        id=worker_id,
-                        page=0,
-                        endpoint_name="show_worker",
-                    ).pack(),
+        else:
+            await notify_worker_by_telegram_id(
+                id=territorial_manager.telegram_id,
+                message="У Вас новый сотрудник на стажировке",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=view,
+                        callback_data=CandidatesCoordinationCallbackData(
+                            id=worker_id,
+                            page=0,
+                            endpoint_name="show_worker",
+                        ).pack(),
+                    ),
                 ),
-            ),
-        )
+            )
 
     worker = get_worker_by_id(worker_bid.sender.id)
     if not worker:
@@ -379,9 +411,13 @@ async def create_worker_bid(
         work_permission=work_permission_insts,
         create_date=datetime.now(),
         state=ApprovalStatus.pending_approval,
+        view_state=ViewStatus.pending_approval,
         security_service_state=ApprovalStatus.pending_approval,
         accounting_service_state=ApprovalStatus.pending,
+        iiko_service_state=ApprovalStatus.pending,
         security_service_comment=None,
+        accounting_service_comment=None,
+        iiko_service_comment=None,
         sender=sender,
         comment=None,
         birth_date=birth_date,
@@ -504,6 +540,9 @@ async def update_worker_bid_documents(
                 ),
             ),
         )
+        update_view_state_worker_bid(
+            worker_bid_id=bid_id, state=ViewStatus.pending_approval
+        )
         return True
     return False
 
@@ -552,3 +591,7 @@ async def add_worker_bids_documents_requests(
     )
 
     return True
+
+
+def update_view_state_worker_bid(worker_bid_id: int, state: ViewStatus):
+    orm.update_view_state_worker_bid(worker_bid_id, state)

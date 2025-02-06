@@ -307,6 +307,11 @@ get_coordinate_worker_bids_SS_btn = InlineKeyboardButton(
     callback_data="get_coordinate_worker_bids_SS",  # Security service
 )
 
+get_coordinate_worker_bids_iiko_btn = InlineKeyboardButton(
+    text="Согласование кандидатов iiko",
+    callback_data="get_coordinate_worker_bids_iiko",
+)
+
 get_candidates_coordinate_menu_btn = InlineKeyboardButton(
     text="Сотрудники",
     callback_data="get_candidates_menu",
