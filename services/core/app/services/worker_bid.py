@@ -33,6 +33,7 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 states = {
     "security_service_state",
     "accounting_service_state",
+    "iiko_service_state",
 }
 
 
