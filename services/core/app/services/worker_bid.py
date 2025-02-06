@@ -430,8 +430,12 @@ async def create_worker_bid(
     await notify_next_coordinator(worker_bid)
 
 
-def get_pending_approval_bids(state_column) -> list[WorkerBidSchema] | None:
-    return orm.find_worker_bids_by_column(state_column, ApprovalStatus.pending_approval)
+def get_pending_approval_bids(
+    state_column, limit: int = 20
+) -> list[WorkerBidSchema] | None:
+    return orm.find_worker_bids_by_column(
+        state_column, ApprovalStatus.pending_approval, limit=limit
+    )
 
 
 def get_subordinates(tg_id: int, limit: int, offset: int) -> tuple[WorkerSchema]:
