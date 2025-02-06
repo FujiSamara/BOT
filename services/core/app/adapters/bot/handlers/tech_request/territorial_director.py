@@ -27,7 +27,7 @@ from app.adapters.bot.handlers.utils import (
 )
 
 
-from app.services import (
+from app.services.technical_request import (
     get_departments_names_for_territorial_director,
     get_all_pending_technical_requests_for_territorial_director,
     get_all_history_technical_requests_territorial_director,
@@ -136,7 +136,7 @@ async def show_history_form(
 async def show_pending_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_pending_technical_requests_for_territorial_director(
-        telegram_id=callback.message.chat.id, department_name=department_name
+        department_name=department_name
     )
 
     await try_delete_message(callback.message)

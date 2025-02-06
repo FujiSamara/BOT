@@ -97,7 +97,7 @@ from app.services.it_problem import (
     update_bid_it_tm,
 )
 from app.services.technical_request import (
-    close_request,
+    set_not_relevant_state,
     counting_date_sla,
     create_technical_request,
     get_all_active_requests_in_department_for_chief_technician,
@@ -168,7 +168,7 @@ __all__ = [
     "apply_bid_creator_filter",
     "apply_bid_status_filter",
     "bid_to_out_bid",
-    "close_request",
+    "set_not_relevant_state",
     "counting_date_sla",
     "create_bid",
     "create_bid_by_in_schema",

@@ -15,7 +15,7 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text
 
 from app.infra.database.models import ApprovalStatus
-from app.services import (
+from app.services.technical_request import (
     get_technical_request_by_id,
     get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
@@ -248,16 +248,20 @@ async def handle_department(
 
 
 def department_names_with_count(
-    state: ApprovalStatus, department_names: list[str], tg_id: int | None = None
-):
-    if department_names == []:
-        return []
+    state: ApprovalStatus,
+    department_names: list[str],
+    tg_id: int | None = None,
+) -> list[str]:
     if tg_id is not None:
         request_count = get_request_count_in_departments_by_tg_id(
             state=state, tg_id=tg_id
         )
+        if department_names == []:
+            return [f"{dep_count[1]} {dep_count[0]}" for dep_count in request_count]
     else:
-        request_count = get_request_count_in_departments(state=state)
+        request_count = get_request_count_in_departments(
+            state=state, department_names=department_names
+        )
     out_department_names = []
     if len(department_names) > 0:
         for department_name, count in request_count:

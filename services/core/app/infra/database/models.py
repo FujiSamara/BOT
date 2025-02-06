@@ -71,6 +71,7 @@ class FujiScope(enum.Enum):
     bot_subordinates_menu = 34
     bot_worker_bid_security_coordinate = 35
     bot_worker_bid_accounting_coordinate = 36
+    bot_technical_request_department_director = 37
 
 
 class DepartmentType(enum.Enum):
@@ -1033,6 +1034,7 @@ class TechnicalRequest(Base):
     not_relevant_confirmation_date: Mapped[datetime.datetime] = mapped_column(
         nullable=True
     )
+    not_relevant_confirmation_description: Mapped[str] = mapped_column(nullable=True)
 
 
 # endregion

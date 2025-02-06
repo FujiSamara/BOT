@@ -303,6 +303,7 @@ class TechnicalRequestSchema(BaseSchemaPK):
     not_relevant_description: str | None = None
     not_relevant_date: datetime.datetime | None = None
     not_relevant_confirmation_date: datetime.datetime | None = None
+    not_relevant_confirmation_description: str | None = None
 
 
 class AccountLoginsSchema(BaseSchemaPK):

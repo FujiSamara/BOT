@@ -29,7 +29,7 @@ from app.adapters.bot.handlers.utils import (
 
 
 from app.services import (
-    close_request,
+    set_not_relevant_state,
     get_all_history_technical_requests_for_extensive_director,
     get_all_active_technical_requests_for_extensive_director,
     get_all_worker_in_group,
@@ -530,16 +530,15 @@ async def save_close_request(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     data = await state.get_data()
-    creator_tg_id = close_request(
+    if not await set_not_relevant_state(
         request_id=data.get("request_id"),
         description=data.get("description"),
         telegram_id=callback.message.chat.id,
-    )
-    if creator_tg_id:
-        await notify_worker_by_telegram_id(
-            id=creator_tg_id,
-            message=text.notification_worker,
+    ):
+        raise ValueError(
+            f"Technical request with id: {data.get('request_id')} wasn't update"
         )
+
     await show_active_menu(
         callback=callback,
         state=state,

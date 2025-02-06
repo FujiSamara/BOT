@@ -518,17 +518,17 @@ async def rm_repair_rework_kb(
 
 # region Appraiser (AR)
 
-tm_button = InlineKeyboardButton(
+ar_button = InlineKeyboardButton(
     text="Приём технических заявок", callback_data="get_AR_TR"
 )
 
-tm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_AR_TR_menu")
+ar_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_AR_TR_menu")
 
-tm_waiting = InlineKeyboardButton(
+ar_waiting = InlineKeyboardButton(
     text="Ожидающие заявки", callback_data="get_AR_TR_waiting"
 )
 
-tm_history = InlineKeyboardButton(
+ar_history = InlineKeyboardButton(
     text="История заявок", callback_data="get_AR_TR_history"
 )
 
@@ -537,23 +537,23 @@ appraiser_change_department_button = InlineKeyboardButton(
     callback_data="set_AR_TR_department",
 )
 
-tm_change_department_menu = InlineKeyboardMarkup(
+ar_change_department_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [appraiser_change_department_button],
         [main_menu_button],
     ]
 )
 
-tm_menu_markup = InlineKeyboardMarkup(
+ar_menu_markup = InlineKeyboardMarkup(
     inline_keyboard=[
-        [tm_waiting],
-        [tm_history],
-        [tm_button],
+        [ar_waiting],
+        [ar_history],
+        [ar_button],
     ]
 )
 
 
-async def tm_rate_kb(
+async def ar_rate_kb(
     state: FSMContext, callback_data: ShowRequestCallbackData
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
