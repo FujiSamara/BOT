@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
-from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect
+from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect, update
 
 from app.infra.database.query import QueryBuilder
 from app.adapters.output.file.export import XlSXWriterExporter
@@ -45,6 +45,7 @@ from app.infra.database.models import (
     Company,
     WorkerDocument,
     WorkerBidDocumentRequest,
+    ViewStatus,
 )
 from app.schemas import (
     BidSchema,
@@ -761,8 +762,10 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
             post=post,
             department=department,
             state=bid.state,
+            view_state=bid.view_state,
             security_service_state=bid.security_service_state,
             accounting_service_state=bid.accounting_service_state,
+            iiko_service_state=bid.iiko_service_state,
             create_date=bid.create_date,
             sender=sender,
             birth_date=bid.birth_date,
@@ -777,7 +780,10 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
             s.add(file)
 
         for doc in bid.passport:
-            file = WorkerBidPassport(worker_bid=worker_bid, document=doc.document)
+            file = WorkerBidPassport(
+                worker_bid=worker_bid,
+                document=doc.document,
+            )
             s.add(file)
 
         for doc in bid.work_permission:
@@ -791,11 +797,11 @@ def update_worker_bid(bid: WorkerBidSchema):
     with session.begin() as s:
         cur_bid = s.query(WorkerBid).filter(WorkerBid.id == bid.id).first()
         if not cur_bid:
-            return
+            return None
 
         new_post = s.query(Post).filter(Post.id == bid.post.id).first()
         if not new_post:
-            return
+            return None
 
         sender = s.query(Worker).filter(Worker.id == bid.sender.id).first()
         if not sender:
@@ -805,7 +811,7 @@ def update_worker_bid(bid: WorkerBidSchema):
             s.query(Department).filter(Department.id == bid.department.id).first()
         )
         if not new_department:
-            return
+            return None
 
         cur_bid.create_date = bid.create_date
         cur_bid.department = new_department
@@ -818,8 +824,12 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.sender = sender
         cur_bid.security_service_state = bid.security_service_state
         cur_bid.accounting_service_state = bid.accounting_service_state
+        cur_bid.iiko_service_state = bid.iiko_service_state
         cur_bid.comment = bid.comment
         cur_bid.security_service_comment = bid.security_service_comment
+        cur_bid.accounting_service_comment = bid.accounting_service_comment
+        cur_bid.iiko_service_comment = bid.iiko_service_comment
+        cur_bid.close_date = bid.close_date
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
@@ -2800,7 +2810,12 @@ def update_worker_bid_documents(
             .first()
         )
         for document in documents:
-            s.add(WorkerBidPassport(worker_bid=worker_bid, document=document.document))
+            s.add(
+                WorkerBidPassport(
+                    worker_bid=worker_bid,
+                    document=document.document,
+                )
+            )
     return True
 
 
@@ -2838,3 +2853,12 @@ def add_worker_bids_documents_requests(
         )
         s.add(raw_model)
     return True
+
+
+def update_view_state_worker_bid(worker_bid_id: int, state: ViewStatus):
+    with session.begin() as s:
+        s.execute(
+            update(WorkerBid)
+            .where(WorkerBid.id == worker_bid_id)
+            .values(view_state=state)
+        )

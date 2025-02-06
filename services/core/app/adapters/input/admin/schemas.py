@@ -70,7 +70,7 @@ class PostView(ModelView, model=Post):
     column_labels = {
         Post.name: "Название",
         Post.level: "Уровень доступа",
-        Post.workers: "Работники",
+        Post.workers: "Сотрудники",
         Post.salary: "Зарплата",
         Post.scopes: "Доступы",
     }
@@ -90,7 +90,7 @@ class CompanyView(ModelView, model=Company):
     column_labels = {
         Company.name: "Название",
         Company.departments: "Предприятия",
-        Company.workers: "Работники",
+        Company.workers: "Сотрудники",
     }
 
 
@@ -130,7 +130,7 @@ class DepartmentView(ModelView, model=Department):
     column_labels = {
         Department.name: "Название",
         Department.address: "Адрес",
-        Department.workers: "Работники",
+        Department.workers: "Сотрудники",
         Department.bids: "Заявки",
         Department.company: "Компания",
         Department.type: "Формат",
@@ -222,13 +222,16 @@ class WorkerView(ModelView, model=Worker):
     column_sortable_list = [
         Worker.state,
         Worker.id,
+        Worker.post,
+        Worker.employment_date,
     ]
     column_list = [
         Worker.l_name,
         Worker.f_name,
-        Worker.o_name,
         Worker.phone_number,
         Worker.state,
+        Worker.post,
+        Worker.employment_date,
     ]
 
     column_details_list = [
@@ -265,8 +268,8 @@ class WorkerView(ModelView, model=Worker):
     ]
     can_export = False
 
-    name_plural = "Работники"
-    name = "Работник"
+    name_plural = "Сотрудники"
+    name = "Сотрудник"
     column_labels = {
         Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
@@ -390,6 +393,30 @@ class WorkerView(ModelView, model=Worker):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
+
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
@@ -401,8 +428,8 @@ class WorkerView(ModelView, model=Worker):
 
 
 class WorkerDocumentView(ModelView, model=WorkerDocument):
-    name = "Документ работника"
-    name_plural = "Документы работников"
+    name = "Документ сотрудника"
+    name_plural = "Документы сотрудников"
 
     can_create = True
     can_edit = True
@@ -419,7 +446,7 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
     ]
 
     column_labels = {
-        WorkerDocument.worker: "Работник",
+        WorkerDocument.worker: "Сотрудник",
         WorkerDocument.document: "Документ",
     }
 
@@ -467,8 +494,8 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
 
 
 class WorkerChildrenView(ModelView, model=WorkerChildren):
-    name = "Дети работника"
-    name_plural = "Дети работников"
+    name = "Дети сотрудника"
+    name_plural = "Дети сотрудников"
 
     can_create = True
     can_edit = True
@@ -485,7 +512,7 @@ class WorkerChildrenView(ModelView, model=WorkerChildren):
     ]
 
     column_labels = {
-        WorkerChildren.worker: "Работник",
+        WorkerChildren.worker: "Сотрудник",
         WorkerChildren.born_date: "Дата рождения",
     }
 
@@ -533,22 +560,21 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
         WorkerBid.official_work: "Официальное трудоустройство",
+        WorkerBid.close_date: "Дата закрытия заявки",
     }
 
     column_list = [
         WorkerBid.id,
-        WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
         WorkerBid.o_name,
         WorkerBid.post,
         WorkerBid.department,
         WorkerBid.state,
-        WorkerBid.comment,
+        WorkerBid.close_date,
     ]
 
     column_details_list = [
-        WorkerBid.id,
         WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
@@ -561,6 +587,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.state,
         WorkerBid.comment,
         WorkerBid.official_work,
+        WorkerBid.close_date,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -571,6 +598,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.id,
         WorkerBid.o_name,
         WorkerBid.f_name,
+        WorkerBid.state,
+        WorkerBid.post,
+        WorkerBid.close_date,
     ]
 
     form_columns = [WorkerBid.comment]
@@ -657,6 +687,30 @@ class WorkerBidView(ModelView, model=WorkerBid):
     }
 
     column_formatters_detail = column_formatters
+
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
 
 
 class TechnicalRequestView(ModelView, model=TechnicalRequest):
@@ -847,7 +901,7 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
     ]
 
     column_labels = {
-        WorkTime.worker: "Работник",
+        WorkTime.worker: "Сотрудник",
         WorkTime.post: "Должность",
         WorkTime.department: "Департамент",
         WorkTime.company: "Компания",
@@ -888,7 +942,7 @@ class AccountLoginsView(ModelView, model=AccountLogins):
 
     column_labels = {
         AccountLogins.id: "id",
-        AccountLogins.worker: "Работник",
+        AccountLogins.worker: "Сотрудник",
         AccountLogins.cop_mail_login: "Корпоративная почта",
         AccountLogins.liko_login: "Iiko",
         AccountLogins.bitrix_login: "Bitrix",
@@ -981,7 +1035,7 @@ class MaterialValuesView(ModelView, model=MaterialValues):
     ]
 
     column_labels = {
-        MaterialValues.worker: "Работник",
+        MaterialValues.worker: "Сотрудник",
         MaterialValues.item: "Предмет",
         MaterialValues.quanity: "Количество",
         MaterialValues.price: "Цена",
@@ -1084,7 +1138,7 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     ]
 
     column_labels = {
-        WorkerFingerprint.worker_id: "Работник",
+        WorkerFingerprint.worker_id: "Сотрудники",
         WorkerFingerprint.department_id: "Департамент",
         WorkerFingerprint.department_hex: "Номер СУКД устройства",
         WorkerFingerprint.cell_number: "Номер ячейки",
