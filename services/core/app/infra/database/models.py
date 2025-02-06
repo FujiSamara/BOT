@@ -465,6 +465,7 @@ class Worker(Base):
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
         relationship("WorkerBidDocumentRequest", back_populates="sender")
     )
+    passport_str: Mapped[str] = mapped_column(nullable=True)
 
 
 class WorkerDocument(Base):

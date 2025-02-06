@@ -2608,7 +2608,9 @@ def update_technical_requests_worktime(
             cur_request.repairman_worktime = schema.repairman_worktime
 
 
-def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema] | None:
+def find_worker_bids_by_column(
+    column: any, value: any, limit: int = 20
+) -> list[WorkerBidSchema] | None:
     """
     Returns worker bid in database by `column` with `value`.
     If worker bid not exist return `None`.
@@ -2616,7 +2618,10 @@ def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema]
     with session.begin() as s:
         raw_bids = (
             s.execute(
-                select(WorkerBid).filter(column == value).order_by(WorkerBid.id.desc())
+                select(WorkerBid)
+                .filter(column == value)
+                .order_by(WorkerBid.id)
+                .limit(limit=limit)
             )
             .scalars()
             .all()

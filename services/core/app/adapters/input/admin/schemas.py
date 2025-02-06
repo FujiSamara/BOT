@@ -264,6 +264,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.passport_str,
         Worker.official_work,
     ]
     can_export = False
@@ -303,11 +304,12 @@ class WorkerView(ModelView, model=Worker):
         Worker.military_ticket: "Военный билет",
         Worker.patent: "Патент",
         Worker.official_work: "Официально трудоустроен",
+        Worker.passport_str: "Паспорт",
     }
 
     form_columns = [
-        Worker.f_name,
         Worker.l_name,
+        Worker.f_name,
         Worker.o_name,
         Worker.state,
         Worker.phone_number,
@@ -335,6 +337,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.military_ticket,
         Worker.patent,
         Worker.official_work,
+        Worker.passport_str,
     ]
 
     form_ajax_refs = {
