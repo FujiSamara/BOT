@@ -165,7 +165,7 @@ onMounted(() => {
 
 	.pag-info {
 		margin: 0;
-		color: $text-color;
+		color: $main-dark-gray;
 	}
 
 	.pag-buttons {
@@ -189,7 +189,7 @@ onMounted(() => {
 			padding: 12px 16px;
 			border-radius: 8px;
 
-			background-color: $fuji-white;
+			background-color: $main-white;
 			cursor: pointer;
 
 			color: #474747cc;
@@ -200,14 +200,14 @@ onMounted(() => {
 				color 0.25s;
 
 			&.current {
-				background-color: $fuji-gray;
-				color: $text-color-white;
+				background-color: $main-dark-gray;
+				color: $main-white;
 			}
 
 			&:hover {
-				background-color: $fuji-gray;
-				box-shadow: 0px 0px 4px 0px $fuji-gray;
-				color: $text-color-white;
+				background-color: $main-dark-gray;
+				box-shadow: 0px 0px 4px 0px $main-dark-gray;
+				color: $main-white;
 			}
 		}
 
@@ -228,7 +228,7 @@ onMounted(() => {
 		height: 100%;
 		gap: 8px;
 
-		color: $text-color;
+		color: $main-dark-gray;
 
 		input {
 			width: 64px;
@@ -240,7 +240,7 @@ onMounted(() => {
 			outline: none;
 
 			&::placeholder {
-				color: $text-color-lighter;
+				color: $main-dark-gray;
 			}
 
 			&::-webkit-outer-spin-button,

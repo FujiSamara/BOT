@@ -4,7 +4,7 @@ import { BaseSchema, FilterSchema, SearchSchema } from "@/types";
 import { Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-interface SearchModelIn {
+export interface SearchModelIn {
 	schemas: {
 		pattern: string; // Pattern in format: parent.child.grandson...
 		groups: number[];
@@ -14,7 +14,7 @@ interface SearchModelIn {
 	placeholder?: string;
 }
 
-interface SearchModelOut {
+export interface SearchModelOut {
 	onInput: (value: string) => void;
 	style?: string;
 	placeholder?: string;
@@ -29,6 +29,7 @@ export const useSearch = (
 	const values = modelsIn.map((_) => "");
 	const errors: Ref<string | undefined>[] = modelsIn.map((_) => ref(undefined));
 	const modelsOut: SearchModelOut[] = [];
+	const neededLetter = 3;
 	const listeners = modelsIn.map((_, index) => {
 		const onModelChanged = (value: string) => {
 			modelsOut[index].value.value = value;
@@ -64,19 +65,24 @@ export const useSearch = (
 				delete query[`${modelIn.name}Search`];
 			}
 
+			if (term.length && term.length < neededLetter) {
+				errors[index].value = `Необходимо минимум ${neededLetter} символа`;
+				continue;
+			}
+
 			for (const schema of modelIn.schemas) {
 				const fields = schema.pattern.split(".");
 
-				if (term.length > 3) {
-					const searchSchema = applyPattern(fields, term);
+				const searchSchema = applyPattern(fields, term);
 
-					searchSchema.groups = schema.groups;
+				searchSchema.groups = schema.groups;
 
-					result.push(searchSchema);
-				}
+				result.push(searchSchema);
 			}
 		}
 		await router.replace({ query: query });
+
+		if (result.length === 0 && table.searchQuery.value.length === 0) return;
 
 		table.searchQuery.value = result;
 	};
@@ -90,11 +96,16 @@ export const useSearch = (
 			const value = values[index];
 			const error = errors[index];
 
-			if (table.visibleRows.value.length === 0 && value) {
-				error.value = "Соответствия не найдены";
-			} else {
-				error.value = undefined;
+			let newError = undefined;
+
+			if (value) {
+				if (table.visibleRows.value.length === 0) {
+					newError = "Совпадения не найдены";
+				} else if (value.length < neededLetter) {
+					newError = `Необходимо минимум ${neededLetter} символа`;
+				}
 			}
+			error.value = newError;
 		}
 	});
 
@@ -131,14 +142,14 @@ const applyPattern = (fields: string[], term: string): SearchSchema => {
 	return result;
 };
 
-interface EntitySearchModelIn {
+export interface EntitySearchModelIn {
 	pattern: string; // Pattern in format: parent.child.grandson...
 	groups: number[];
 	entity: BaseEntity<BaseSchema>;
 	id: number;
 }
 
-interface EntitySearchModelOut {
+export interface EntitySearchModelOut {
 	entities: BaseEntity<BaseSchema>[];
 	exist: Ref<boolean>;
 }

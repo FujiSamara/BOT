@@ -54,7 +54,7 @@ onUnmounted(() => {
 		@include field;
 
 		&.active {
-			background-color: $fuji-blue;
+			background-color: $main-accent-blue;
 
 			span {
 				color: white;
@@ -89,6 +89,7 @@ onUnmounted(() => {
 
 		list-style: none;
 		padding: 24px;
+		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		transition: opacity 0.5s;
 
@@ -112,7 +113,7 @@ onUnmounted(() => {
 				@include checkbox;
 
 				&.disabled.checked {
-					background-color: $disabled-bg-color;
+					background-color: $stroke-gray;
 				}
 			}
 		}

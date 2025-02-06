@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DropDownMenu from "@/components/DropDownMenu.vue";
 import EntitySelect from "@/components/entity/EntitySelect.vue";
-import { BaseEntity } from "@/components/entity";
+import { BaseEntity, SelectType } from "@/components/entity";
 
 const props = defineProps({
 	style: {
@@ -24,8 +24,10 @@ const props = defineProps({
 		</template>
 		<template #menu>
 			<EntitySelect
+				class="e-select"
 				v-for="entity in props.entities"
 				:entity="entity"
+				:select-type="SelectType.MultiSelectInput"
 			></EntitySelect>
 		</template>
 	</DropDownMenu>
@@ -41,5 +43,9 @@ const props = defineProps({
 			mask-image: url("@/assets/icons/filter.svg");
 		}
 	}
+}
+
+.e-select {
+	width: 248px;
 }
 </style>

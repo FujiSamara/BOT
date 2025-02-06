@@ -10,11 +10,15 @@ const props = defineProps({
 	cell: {
 		type: Object as PropType<Cell>,
 	},
+	photoDisabled: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits(["photoOpen", "photoClose"]);
+
 const networkStore = useNetworkStore();
 
 const documentViewVisible = ref(false);
-const documentLoading = ref(false);
 const documents: Ref<Array<DocumentSchema>> = ref([]);
 const initialDocumentIndex: Ref<number> = ref(1);
 
@@ -27,6 +31,10 @@ const linkClicked = async (cellLine: CellLine) => {
 };
 
 const openPhoto = (cell: Cell, index: number) => {
+	if (props.photoDisabled) {
+		return;
+	}
+
 	const docs: Array<DocumentSchema> = [];
 	for (const [i, cellLine] of cell.cellLines.entries()) {
 		if (cellLine.isImage) {
@@ -36,8 +44,8 @@ const openPhoto = (cell: Cell, index: number) => {
 			docs.push({ name: cellLine.value, href: cellLine.href, forceHref: true });
 		}
 	}
+	emits("photoOpen");
 	documentViewVisible.value = true;
-	documentLoading.value = true;
 	documents.value = docs;
 };
 </script>
@@ -64,7 +72,10 @@ const openPhoto = (cell: Cell, index: number) => {
 						@click.stop="() => openPhoto(props.cell!, cellLineIndex)"
 						v-if="cellLine.isImage"
 						class="c-image"
-						:class="{ blinking: documentLoading }"
+						:class="{
+							active: documentViewVisible,
+							disabled: props.photoDisabled,
+						}"
 					></div>
 				</div>
 				<p :style="{ color: cellLine.color }" v-if="cellLine.href.length === 0">
@@ -79,8 +90,10 @@ const openPhoto = (cell: Cell, index: number) => {
 					v-if="documentViewVisible"
 					:documents="documents"
 					:index="initialDocumentIndex"
-					@close="documentViewVisible = false"
-					@ready="documentLoading = false"
+					@close="
+						documentViewVisible = false;
+						emits('photoClose');
+					"
 				></DocumentView>
 			</Transition>
 		</Suspense>
@@ -112,7 +125,7 @@ const openPhoto = (cell: Cell, index: number) => {
 			cursor: default;
 
 			.c-link {
-				color: $fuji-blue;
+				color: $main-accent-blue;
 				transition: color 0.25s;
 				text-decoration: underline;
 				user-select: none;
@@ -120,13 +133,13 @@ const openPhoto = (cell: Cell, index: number) => {
 				transition: color 0.25s;
 
 				&:hover {
-					color: $text-color;
+					color: $main-dark-gray;
 				}
 			}
 
 			.c-image {
 				background-color: currentColor;
-				color: $text-color;
+				color: $main-dark-gray;
 				width: 20px;
 				height: 20px;
 				fill: currentColor;
@@ -138,24 +151,17 @@ const openPhoto = (cell: Cell, index: number) => {
 				transition: color 0.25s;
 
 				&:hover {
-					color: $fuji-blue;
+					color: $main-accent-blue;
 					cursor: pointer;
 				}
 
-				&.blinking {
-					animation-duration: 0.75s;
-					animation-name: blinking;
-					animation-iteration-count: infinite;
-					animation-direction: alternate;
+				&.disabled {
+					color: $sec-dark-gray-25;
+					cursor: default;
+				}
 
-					@keyframes blinking {
-						from {
-							color: $fuji-blue;
-						}
-						to {
-							color: $text-color;
-						}
-					}
+				&.active {
+					color: $sec-accent-blue-50;
 				}
 			}
 		}

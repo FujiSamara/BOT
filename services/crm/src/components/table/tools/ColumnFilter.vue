@@ -105,7 +105,7 @@ watch(headersHidden, () => {
 		@include checkbox;
 
 		&.disabled.checked {
-			background-color: $disabled-bg-color;
+			background-color: $stroke-gray;
 		}
 	}
 }

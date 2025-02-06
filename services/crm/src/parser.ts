@@ -6,7 +6,7 @@ import {
 	WorkerSchema,
 } from "@types";
 import * as config from "@/config";
-import { Cell, CellLine } from "@/table";
+import { Cell, CellLine } from "@/components/table";
 
 export function formatWorker(worker: WorkerSchema): Cell {
 	if (!worker) return new Cell();
@@ -36,6 +36,39 @@ export function formatDateTime(dateString: string): Cell {
 	return new Cell(new CellLine(formattedDate));
 }
 
+//#region Date
+export function validateFormattedDate(dateString: string): boolean {
+	// First check for the pattern
+	if (!/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(dateString)) return false;
+
+	// Parse the date parts to integers
+	var parts = dateString.split(".");
+	var day = parseInt(parts[0], 10);
+	var month = parseInt(parts[1], 10);
+	var year = parseInt(parts[2], 10);
+
+	// Check the ranges of month and year
+	if (year < 1000 || year > 3000 || month == 0 || month > 12) return false;
+
+	var monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+	// Adjust for leap years
+	if (year % 400 == 0 || (year % 100 != 0 && year % 4 == 0))
+		monthLength[1] = 29;
+
+	// Check the range of the day
+	return day > 0 && day <= monthLength[month - 1];
+}
+
+export function formattedDateToDate(dateString: string): Date {
+	const parts = dateString.split(".").map((val) => parseInt(val));
+
+	const newString = `${parts[1]}.${parts[0]}.${parts[2]}`;
+	const date = new Date(newString);
+
+	return date;
+}
+
 export function formatDate(dateString: string): Cell {
 	if (!dateString) {
 		return new Cell(new CellLine());
@@ -50,7 +83,22 @@ export function formatDate(dateString: string): Cell {
 		date.getFullYear();
 	return new Cell(new CellLine(formattedDate));
 }
+//#endregion
 
+//#region Time
+export function validateFormattedTime(timeString: string): boolean {
+	return /^([0-1]?[0-9]|2[0-4]):([0-5][0-9])(:[0-5][0-9])$/.test(timeString);
+}
+export function formattedTimeToTime(timeString: string): Date {
+	const parts = timeString.split(":").map((val) => parseInt(val));
+
+	const date = new Date();
+	date.setHours(parts[0]);
+	date.setMinutes(parts[1]);
+	date.setSeconds(parts[2]);
+
+	return date;
+}
 export function formatTime(dateString: string): Cell {
 	if (!dateString) {
 		return new Cell(new CellLine());
@@ -66,6 +114,7 @@ export function formatTime(dateString: string): Cell {
 
 	return new Cell(new CellLine(formattedDate));
 }
+//#endregion
 
 export function formatExpenditure(expenditure: ExpenditureSchema): Cell {
 	return new Cell(new CellLine(expenditure.name));

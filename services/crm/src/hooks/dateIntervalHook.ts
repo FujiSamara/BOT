@@ -3,16 +3,18 @@ import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
 import { useRoute, useRouter } from "vue-router";
 
-export const useDateInterval = async (
-	table: Table<BaseSchema>,
-	column: string,
-): Promise<{
+export interface DateIntervalModelOut {
 	submit: (from: Date, to: Date) => void;
 	unset: () => void;
 	from: Date | undefined;
 	to: Date | undefined;
 	exist: Ref<boolean>;
-}> => {
+}
+
+export const useDateInterval = async (
+	table: Table<BaseSchema>,
+	column: string,
+): Promise<DateIntervalModelOut> => {
 	const router = useRouter();
 	const route = useRoute();
 

@@ -3,14 +3,19 @@ import gsap from "gsap";
 export function onBeforeEnter(el: any) {
 	el.style.opacity = 0;
 	el.style.height = 0;
+	el.style.paddingTop = 0;
+	el.style.marginTop = 0;
+	el.style.paddingBottom = 0;
 	el.style.overflow = "hidden";
 }
 
 export function onEnter(el: any, done: any) {
 	gsap.to(el, {
 		opacity: 1,
-		height: "fit-content",
-		clear: "padding",
+		paddingTop: "15px",
+		paddingBottom: "15px",
+		marginTop: "8px",
+		height: "48px",
 		delay: el.dataset.index * 0.15,
 		onComplete: done,
 	});
@@ -20,7 +25,9 @@ export function onLeave(el: any, done: any) {
 	gsap.to(el, {
 		opacity: 0,
 		height: 0,
-		padding: 0,
+		paddingTop: 0,
+		marginTop: 0,
+		paddingBottom: 0,
 		delay: el.dataset.index * 0.15,
 		onComplete: done,
 	});

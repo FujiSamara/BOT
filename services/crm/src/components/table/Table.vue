@@ -1,5 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, Ref, useTemplateRef, watch } from "vue";
+import {
+	computed,
+	nextTick,
+	onMounted,
+	PropType,
+	ref,
+	Ref,
+	useTemplateRef,
+	watch,
+} from "vue";
 import TableCellContainer from "@/components/table/TableCellContainer.vue";
 import Checkbox from "@/components/UI/Checkbox.vue";
 import { BaseSchema } from "@/types";
@@ -8,18 +17,23 @@ import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	table: {
-		type: Table<BaseSchema>,
+		type: Object as PropType<Table<BaseSchema>>,
 		required: true,
 	},
 	blockLoading: {
 		type: Boolean,
 	},
 });
+const emits = defineEmits<{
+	(e: "rowClick", index: number): void;
+	(e: "cellClick", rowIndex: number, cellIndex: number): void;
+}>();
 
 const router = useRouter();
 const route = useRoute();
 
 const tableRef = useTemplateRef("table");
+const photoOpenned = ref(false);
 
 const resizeCells = () => {
 	const cells = tableRef.value!.getElementsByClassName("t-cell");
@@ -176,7 +190,12 @@ onMounted(() => {
 					</div>
 				</TableCellContainer>
 			</div>
-			<div class="t-row" v-for="(row, index) in rows" :key="row.id">
+			<div
+				class="t-row"
+				v-for="(row, index) in rows"
+				:key="row.id"
+				@click="emits('rowClick', index)"
+			>
 				<TableCellContainer id="-1" class="t-cell check">
 					<Checkbox
 						:checked="table.checked.value[index].value"
@@ -188,11 +207,15 @@ onMounted(() => {
 					</Checkbox>
 				</TableCellContainer>
 				<TableCellContainer
-					:id="index"
+					:id="cellIndex"
 					class="t-cell"
-					v-for="(cell, index) in row.columns"
-					:key="index"
+					v-for="(cell, cellIndex) in row.columns"
+					:key="cellIndex"
 					:cell="cell"
+					@click="emits('cellClick', index, cellIndex)"
+					@photo-open="photoOpenned = true"
+					@photo-close="photoOpenned = false"
+					:photo-disabled="photoOpenned"
 				>
 				</TableCellContainer>
 			</div>
@@ -214,7 +237,7 @@ onMounted(() => {
 
 	overflow-x: auto;
 
-	background-color: $table-bg-color;
+	background-color: $main-white;
 
 	.load-button {
 		@include field;
@@ -228,7 +251,7 @@ onMounted(() => {
 			.tool-icon {
 				&.search {
 					mask-image: url("@/assets/icons/loop.svg");
-					color: #090c2f99;
+					color: $main-dark-gray;
 				}
 			}
 		}
@@ -238,7 +261,7 @@ onMounted(() => {
 			.tool-icon-wrapper {
 				.tool-icon {
 					&.search {
-						color: $fuji-blue;
+						color: $main-accent-blue;
 					}
 				}
 			}
@@ -251,12 +274,13 @@ onMounted(() => {
 		align-items: center;
 
 		gap: 32px;
-		height: 64px;
-		min-height: 64px;
-		max-height: 64px;
+		height: var(--row-height);
+		min-height: var(--row-height);
+		max-height: var(--row-height);
 		width: fit-content;
 
 		border-radius: 8px;
+		border: 1px solid transparent;
 
 		padding: 8px 24px;
 
@@ -264,15 +288,17 @@ onMounted(() => {
 		font-family: Wix Madefor Display;
 		font-weight: 500;
 		line-height: 17.64px;
-		color: $text-color;
+		color: $main-accent-blue;
+
+		transition: border-color 0.25s;
 
 		&.titles {
 			font-size: 16px;
 			line-height: 20.16px;
 
-			height: 72px;
-			min-height: 72px;
-			max-height: 72px;
+			height: 84px;
+			min-height: 84px;
+			max-height: 84px;
 
 			.t-cell {
 				white-space: nowrap;
@@ -310,11 +336,16 @@ onMounted(() => {
 		}
 
 		&:nth-child(even) {
-			background-color: $row-bg-color;
+			background-color: $bg-accent-blue-3;
 		}
 
 		.check {
 			width: fit-content;
+		}
+
+		&:not(:first-child):hover {
+			border-color: $sec-active-blue;
+			background-color: $sec-active-blue-10;
 		}
 	}
 }

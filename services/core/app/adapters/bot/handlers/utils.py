@@ -336,12 +336,12 @@ async def handle_documents(
 
 
 async def handle_documents_form(
-    message: Message, state: FSMContext, document_type: StatesGroup
+    message: Message, state: FSMContext, document_type: StatesGroup, text: str = ""
 ):
     await state.set_state(document_type)
     await try_delete_message(message)
     msg = await message.answer(
-        text=hbold("Прикрепите документы:"),
+        text=hbold("Прикрепите документы:" + text),
         reply_markup=create_reply_keyboard("Готово", "Сбросить"),
     )
     await state.update_data(msg=msg)

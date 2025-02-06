@@ -1,5 +1,5 @@
 import { Table } from "@/components/table";
-import { WorkTimeSchema as WorktimeSchema } from "@/types";
+import { BaseSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	DateTimeSmartField,
@@ -9,6 +9,33 @@ import {
 	WorkerSmartField,
 } from "@/components/table/field";
 import * as parser from "@/parser";
+import {
+	EntitySearchModelOut,
+	SearchModelOut,
+	useSearch,
+	useEntitySearch,
+} from "@/hooks/tableSearchHook";
+import {
+	DateIntervalModelOut,
+	useDateInterval,
+} from "@/hooks/dateIntervalHook";
+import {
+	DepartmentEntity,
+	FloatInputEntity,
+	PostEntity,
+	SelectType,
+	WorkerEntity,
+	DateEntity,
+	TimeEntity,
+} from "@/components/entity";
+import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
+
+interface WorktimePanelData {
+	searchList: SearchModelOut[];
+	entitySearchList: EntitySearchModelOut;
+	dateInterval: DateIntervalModelOut;
+	rowEditor: RowEditor;
+}
 
 export class WorktimeTable extends Table<WorktimeSchema> {
 	constructor() {
@@ -34,6 +61,92 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 		this._aliases.set("fine", "Штраф");
 		this._aliases.set("photo_b64", "Фото");
 	}
+}
+
+export async function setupWorktime(
+	table: Table<BaseSchema>,
+): Promise<WorktimePanelData> {
+	const searchList = useSearch(table, {
+		schemas: [
+			{
+				pattern: "worker",
+				groups: [0],
+			},
+		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
+		name: "general",
+	});
+	const entitySearchList = useEntitySearch(
+		table,
+		{
+			entity: new DepartmentEntity(),
+			pattern: "department",
+			groups: [0],
+			id: 0,
+		},
+		{
+			entity: new PostEntity(),
+			pattern: "post",
+			groups: [1],
+			id: 1,
+		},
+	);
+	const dateInterval = await useDateInterval(table, "day");
+	const rowEditor = useRowEditor(
+		table,
+		[
+			{
+				entity: new WorkerEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "worker",
+			},
+			{
+				entity: new DepartmentEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "department",
+			},
+			{
+				entity: new PostEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "post",
+			},
+			{
+				entity: new TimeEntity(true, "Начало смены"),
+				type: SelectType.Time,
+				name: "work_begin",
+			},
+			{
+				entity: new TimeEntity(false, "Конец смены"),
+				type: SelectType.Time,
+				name: "work_end",
+			},
+			{
+				entity: new DateEntity(true, "День"),
+				type: SelectType.Date,
+				name: "day",
+			},
+			{
+				entity: new FloatInputEntity(false, "Оценка"),
+				type: SelectType.Input,
+				name: "rating",
+			},
+			{
+				entity: new FloatInputEntity(false, "Штраф"),
+				type: SelectType.Input,
+				name: "fine",
+			},
+		],
+		"Создать явку",
+		"Изменить явку",
+	);
+
+	return {
+		entitySearchList,
+		searchList,
+		dateInterval,
+		rowEditor,
+	};
 }
 
 export class WorkTimeEditor extends Editor {

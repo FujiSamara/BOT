@@ -22,7 +22,7 @@ from app.infra.database.models import (
     MaterialValues,
     WorkerFingerprint,
     FingerprintAttempt,
-    WorkerPassport,
+    WorkerDocument,
     WorkerChildren,
 )
 from app.adapters.input.admin.converters import (
@@ -252,7 +252,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.medical_records_availability,
         Worker.citizenship,
         Worker.can_use_crm,
-        Worker.passport,
+        Worker.documents,
         Worker.snils,
         Worker.inn,
         Worker.registration,
@@ -261,6 +261,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.official_work,
     ]
     can_export = False
 
@@ -289,7 +290,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.citizenship: "Гражданство",
         Worker.can_use_crm: "Может использовать CRM",
         Worker.password: "Пароль",
-        Worker.passport: "Паспорт",
+        Worker.documents: "Документы",
         Worker.snils: "СНИЛС",
         Worker.inn: "ИНН",
         Worker.registration: "Регистрация",
@@ -298,6 +299,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date: "Даты рождения детей",
         Worker.military_ticket: "Военный билет",
         Worker.patent: "Патент",
+        Worker.official_work: "Официально трудоустроен",
     }
 
     form_columns = [
@@ -320,7 +322,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.citizenship,
         Worker.can_use_crm,
         Worker.password,
-        Worker.passport,
+        Worker.documents,
         Worker.snils,
         Worker.inn,
         Worker.registration,
@@ -329,6 +331,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.official_work,
     ]
 
     form_ajax_refs = {
@@ -358,7 +361,30 @@ class WorkerView(ModelView, model=Worker):
 
     @staticmethod
     def files_format(inst, column):
-        return WorkerBidView.files_format(inst, column)
+        documents: list[WorkerDocument] = getattr(inst, column)
+        urls: list[FileOutSchema] = []
+        for doc in documents:
+            url = services.get_file_data(doc.document)
+            if url:
+                urls.append(url)
+
+        return urls
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        or_stmt = or_(
+            Worker.f_name.ilike(f"%{term}%"),
+            Worker.l_name.ilike(f"%{term}%"),
+            Worker.o_name.ilike(f"%{term}%"),
+        )
+
+        for state, text in worker_status_dict.items():
+            if text.lower() == term.lower():
+                or_stmt = Worker.state == state
+                break
+
+        workers = select(Worker).filter(or_stmt)
+        return workers
 
     async def on_model_change(self, data: dict, model: Worker, is_created, request):
         if "password" in data and data["password"] != model.password:
@@ -367,34 +393,34 @@ class WorkerView(ModelView, model=Worker):
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
-        Worker.passport: files_format,
+        Worker.documents: files_format,
     }
     column_formatters_detail = column_formatters
 
     form_converter = WorkerConverter
 
 
-class WorkerPassportView(ModelView, model=WorkerPassport):
-    name = "Паспорт работника"
-    name_plural = "Паспорта работников"
+class WorkerDocumentView(ModelView, model=WorkerDocument):
+    name = "Документ работника"
+    name_plural = "Документы работников"
 
     can_create = True
     can_edit = True
     can_export = False
 
     column_list = [
-        WorkerPassport.id,
-        WorkerPassport.worker,
-        WorkerPassport.document,
+        WorkerDocument.id,
+        WorkerDocument.worker,
+        WorkerDocument.document,
     ]
 
     column_sortable_list = [
-        WorkerPassport.id,
+        WorkerDocument.id,
     ]
 
     column_labels = {
-        WorkerPassport.worker: "Работник",
-        WorkerPassport.document: "Паспорт",
+        WorkerDocument.worker: "Работник",
+        WorkerDocument.document: "Документ",
     }
 
     form_ajax_refs = {
@@ -414,19 +440,19 @@ class WorkerPassportView(ModelView, model=WorkerPassport):
             )
         )
 
-        return select(WorkerPassport).filter(
-            WorkerPassport.worker_id.in_(workers_id),
+        return select(WorkerDocument).filter(
+            WorkerDocument.worker_id.in_(workers_id),
         )
 
     async def on_model_change(
-        self, data: dict, model: WorkerPassport, is_created, request
+        self, data: dict, model: WorkerDocument, is_created, request
     ):
         from pathlib import Path
 
         if "document" in data and "worker" in data:
             worker_id = int(data["worker"])
             document = data["document"]
-            filename = f"photo_worker_passport_{worker_id}"
+            filename = f"photo_worker_document_{worker_id}"
             filename += (
                 f"_{services.get_last_worker_passport_id(worker_id=worker_id) + 1}"
             )
@@ -502,10 +528,11 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.department: "Предприятия",
         WorkerBid.work_permission: "Разрешение на работу",
         WorkerBid.worksheet: "Анкета",
-        WorkerBid.passport: "Паспорт",
+        WorkerBid.passport: "Документы",
         WorkerBid.state: "Статус",
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
+        WorkerBid.official_work: "Официальное трудоустройство",
     }
 
     column_list = [
@@ -533,6 +560,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.department,
         WorkerBid.state,
         WorkerBid.comment,
+        WorkerBid.official_work,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -598,6 +626,22 @@ class WorkerBidView(ModelView, model=WorkerBid):
                 urls.append(url)
 
         return urls
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        or_stmt = or_(
+            WorkerBid.f_name.ilike(f"%{term}%"),
+            WorkerBid.l_name.ilike(f"%{term}%"),
+            WorkerBid.o_name.ilike(f"%{term}%"),
+        )
+
+        for state, text in approval_status_dict.items():
+            if text.lower() == term.lower():
+                or_stmt = WorkerBid.state == state
+                break
+
+        workers = select(WorkerBid).filter(or_stmt)
+        return workers
 
     can_create = False
     can_export = False
@@ -809,7 +853,7 @@ class WorkTimeAdminView(ModelView, model=WorkTime):
         WorkTime.company: "Компания",
         WorkTime.work_begin: "Начало работы",
         WorkTime.work_end: "Конец работы",
-        WorkTime.work_duration: "Продолжительность (мин)",
+        WorkTime.work_duration: "Продолжительность (часы и доли часа)",
         WorkTime.day: "День",
         WorkTime.rating: "Рейтинг",
         WorkTime.fine: "Штраф",

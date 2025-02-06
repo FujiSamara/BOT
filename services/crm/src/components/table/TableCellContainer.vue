@@ -16,7 +16,11 @@ const props = defineProps({
 	cell: {
 		type: Object as PropType<Cell>,
 	},
+	photoDisabled: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits(["photoOpen", "photoClose"]);
 
 const cellWrapperRef = useTemplateRef("cellWrapper");
 const hintRef = useTemplateRef("hint");
@@ -78,12 +82,23 @@ onUnmounted(() => {
 		@mouseleave="hintVisible = false"
 		:class="{ highlight: hintAvailable }"
 	>
-		<TableCell class="cell" :cell="props.cell">
+		<TableCell
+			class="cell"
+			:cell="props.cell"
+			:photo-disabled="props.photoDisabled"
+			@photo-close="emits('photoClose')"
+			@photo-open="emits('photoOpen')"
+		>
 			<slot></slot>
 		</TableCell>
 		<Transition name="fade">
 			<div ref="hint" class="hint" v-show="hintAvailable && hintVisible">
-				<TableCell :cell="props.cell">
+				<TableCell
+					:cell="props.cell"
+					:photo-disabled="props.photoDisabled"
+					@photo-close="emits('photoClose')"
+					@photo-open="emits('photoOpen')"
+				>
 					<slot></slot>
 				</TableCell>
 			</div>
@@ -106,7 +121,7 @@ onUnmounted(() => {
 	background-color: transparent;
 
 	&.highlight {
-		background-color: $row-bg-color;
+		background-color: $bg-accent-blue-3;
 	}
 
 	.hint {
@@ -124,9 +139,10 @@ onUnmounted(() => {
 
 		z-index: 2;
 		border-radius: 8px;
-		border: 1px $border-color solid;
+		border: 1px $stroke-gray solid;
 		padding: 16px;
-		background-color: $table-bg-color;
+		background-color: $main-white;
+		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		.cell {
 			max-width: max-content;

@@ -283,11 +283,14 @@ create_worker_bid_menu_button = InlineKeyboardButton(
 worker_bid_history_button = InlineKeyboardButton(
     text="История согласования", callback_data="get_worker_bid_history"
 )
-
+worker_bid_pending_button = InlineKeyboardButton(
+    text="Ожидающие заявки", callback_data="get_worker_bid_pending"
+)
 
 worker_bid_menu = InlineKeyboardMarkup(
     inline_keyboard=[
         [create_worker_bid_menu_button],
+        [worker_bid_pending_button],
         [worker_bid_history_button],
         [main_menu_button],
     ]
@@ -324,6 +327,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     work_permission = data.get("work_permission")
     birth_date = data.get("birth_date")
     phone_number = data.get("phone_number")
+    official_work = data.get("official_work")
 
     if not l_name:
         l_name = ""
@@ -383,6 +387,15 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         form_complete = False
     else:
         phone_number += " ✅"
+
+    if official_work is None:
+        official_work = ""
+        form_complete = False
+    else:
+        if official_work == 1:
+            official_work = "Да"
+        else:
+            official_work = "Нет"
 
     buttons = [
         [
@@ -454,6 +467,16 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
+                text="Официальное трудоустройство",
+                callback_data="get_worker_bid_official_work",
+            ),
+            InlineKeyboardButton(
+                text=official_work,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
                 text="Анкета",
                 callback_data="get_worker_bid_worksheet_form",
             ),
@@ -464,7 +487,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="Паспорт",
+                text="Документы",
                 callback_data="get_worker_bid_passport_form",
             ),
             InlineKeyboardButton(
@@ -577,6 +600,63 @@ async def get_create_worker_bid_birthdate_menu(
             [
                 InlineKeyboardButton(
                     text="Дата верна", callback_data="set_worker_bid_birth_date"
+                )
+            ]
+        )
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+async def get_update_documents_menu(
+    data: dict,
+    bid_id: int,
+) -> InlineKeyboardMarkup:
+    from app.adapters.bot.handlers.worker_bids.schemas import (
+        WorkerBidCallbackData,
+        BidViewMode,
+    )
+
+    docs = data.get("docs")
+    form_complete = True
+    if docs is None or len(docs) == 0:
+        docs = ""
+        form_complete = False
+    else:
+        docs = f"{len(docs)} ✅"
+
+    buttons = [
+        [
+            InlineKeyboardButton(
+                text="Документы",
+                callback_data=WorkerBidCallbackData(
+                    id=bid_id,
+                    mode=BidViewMode.full_with_update,
+                    endpoint_name="update_documents",
+                ).pack(),
+            ),
+            InlineKeyboardButton(text=docs, callback_data="dummy"),
+        ],
+        [
+            InlineKeyboardButton(
+                text=back,
+                callback_data=WorkerBidCallbackData(
+                    id=bid_id,
+                    mode=BidViewMode.full_with_update,
+                    endpoint_name="bid",
+                ).pack(),
+            )
+        ],
+    ]
+
+    if form_complete:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Отправить документы",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid_id,
+                        mode=BidViewMode.full_with_update,
+                        endpoint_name="save_update",
+                    ).pack(),
                 )
             ]
         )

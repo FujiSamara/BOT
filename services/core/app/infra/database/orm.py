@@ -43,7 +43,8 @@ from app.infra.database.models import (
     Subordination,
     MaterialValues,
     Company,
-    WorkerPassport,
+    WorkerDocument,
+    WorkerBidDocumentRequest,
 )
 from app.schemas import (
     BidSchema,
@@ -69,6 +70,7 @@ from app.schemas import (
     AccountLoginsSchema,
     MaterialValuesSchema,
     CompanySchema,
+    WorkerBidDocumentRequestSchema,
 )
 
 
@@ -165,7 +167,7 @@ def find_bid_by_column(column: any, value: any) -> BidSchema:
         return BidSchema.model_validate(raw_bid)
 
 
-def find_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
+def get_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     """
     Returns worker bid in database by `column` with `value`.
     If worker bid not exist return `None`.
@@ -290,12 +292,52 @@ def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
         return [BidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
-def get_workers_bids_by_sender(sender: WorkerSchema) -> list[BidSchema]:
+def get_workers_bids_history_sender(
+    sender: WorkerSchema, limit: int = 15
+) -> list[BidSchema]:
     """
     Returns all bids in database by worker.
     """
     with session.begin() as s:
-        raw_bids = s.query(WorkerBid).filter(WorkerBid.sender_id == sender.id).all()
+        raw_bids = (
+            s.execute(
+                select(WorkerBid)
+                .filter(
+                    WorkerBid.sender_id == sender.id,
+                    or_(
+                        WorkerBid.state == ApprovalStatus.denied,
+                        WorkerBid.state == ApprovalStatus.approved,
+                    ),
+                )
+                .order_by(WorkerBid.id.desc())
+                .limit(limit=limit)
+            )
+            .scalars()
+            .all()
+        )
+        return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
+
+
+def get_workers_bids_pending_sender(
+    sender: WorkerSchema, limit: int = 15
+) -> list[BidSchema]:
+    """
+    Returns all bids in database by worker.
+    """
+    with session.begin() as s:
+        raw_bids = (
+            s.execute(
+                select(WorkerBid)
+                .filter(
+                    WorkerBid.sender_id == sender.id,
+                    WorkerBid.state == ApprovalStatus.pending_approval,
+                )
+                .order_by(WorkerBid.id.desc())
+                .limit(limit=limit)
+            )
+            .scalars()
+            .all()
+        )
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
 
 
@@ -725,6 +767,7 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
             sender=sender,
             birth_date=bid.birth_date,
             phone_number=bid.phone_number,
+            official_work=bid.official_work,
         )
 
         s.add(worker_bid)
@@ -775,6 +818,8 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.sender = sender
         cur_bid.security_service_state = bid.security_service_state
         cur_bid.accounting_service_state = bid.accounting_service_state
+        cur_bid.comment = bid.comment
+        cur_bid.security_service_comment = bid.security_service_comment
 
 
 def get_expenditures() -> list[ExpenditureSchema]:
@@ -1231,13 +1276,15 @@ def get_repairman_by_department_id_and_executor_type(
             return None
 
 
-def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema:
+def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema | None:
     with session.begin() as s:
         restaurant_manager: Worker = (
             s.execute(select(Department).filter(Department.id == department_id))
             .scalars()
             .first()
         ).restaurant_manager
+        if restaurant_manager is None:
+            return None
         return WorkerSchema.model_validate(restaurant_manager)
 
 
@@ -2543,7 +2590,13 @@ def find_worker_bids_by_column(column: any, value: any) -> list[WorkerBidSchema]
     If worker bid not exist return `None`.
     """
     with session.begin() as s:
-        raw_bids = s.execute(select(WorkerBid).filter(column == value)).scalars().all()
+        raw_bids = (
+            s.execute(
+                select(WorkerBid).filter(column == value).order_by(WorkerBid.id.desc())
+            )
+            .scalars()
+            .all()
+        )
         if not raw_bids:
             return None
         return [WorkerBidSchema.model_validate(raw_bid) for raw_bid in raw_bids]
@@ -2580,7 +2633,7 @@ def get_territorial_director(department_id: int) -> WorkerSchema | None:
         return WorkerSchema.model_validate(raw_department.territorial_director)
 
 
-def add_worker(record: WorkerSchema) -> bool:
+def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
     """
     Add worker to database
 
@@ -2619,11 +2672,12 @@ def add_worker(record: WorkerSchema) -> bool:
             actual_residence=record.actual_residence,
             children=record.children,
             military_ticket=record.military_ticket,
+            official_work=record.official_work,
         )
         s.add(worker)
 
-        for doc in record.passport:
-            file = WorkerPassport(
+        for doc in documents:
+            file = WorkerDocument(
                 worker=worker,
                 document=doc.document,
             )
@@ -2640,18 +2694,14 @@ def get_last_worker_id() -> int:
 
 def get_subordinates_in_departments(
     chief_id: int,
-    scopes: list[FujiScope] = [],
     l_name: str | None = None,
 ) -> list[WorkerSchema]:
     with session.begin() as s:
-        departments = (
+        territorial_director_departments = (
             s.execute(
                 select(Department)
                 .filter(
-                    or_(
-                        Department.territorial_manager_id == chief_id,
-                        Department.territorial_director_id == chief_id,
-                    )
+                    Department.territorial_director_id == chief_id,
                 )
                 .order_by(Department.id)
             )
@@ -2659,25 +2709,44 @@ def get_subordinates_in_departments(
             .all()
         )
 
-        stmt = select(Worker).join(
-            PostScope, onclause=Worker.post_id == PostScope.post_id
+        territorial_manager_departments = (
+            s.execute(
+                select(Department)
+                .filter(
+                    Department.territorial_manager_id == chief_id,
+                    *[
+                        Department.id != department.id
+                        for department in territorial_director_departments
+                    ],
+                )
+                .order_by(Department.id)
+            )
+            .scalars()
+            .all()
         )
-
-        if l_name is not None:
-            stmt = stmt.filter(Worker.l_name.like(l_name))
-        else:
-            or_filter = False
-            for scope in scopes:
-                or_filter = or_(PostScope.scope == scope, or_filter)
-            stmt = stmt.filter(or_filter)
-
-        or_filter = False
-        for department in departments:
-            or_filter = or_(or_filter, Worker.department_id == department.id)
-
-        stmt = stmt.filter(or_filter)
         raw_workers = (
-            s.execute(stmt.group_by(Worker.id).order_by(Worker.id)).scalars().all()
+            s.execute(
+                select(Worker).filter(
+                    Worker.id != chief_id,
+                    *[
+                        Worker.id != department.territorial_director_id
+                        for department in territorial_manager_departments
+                    ],
+                    or_(
+                        *{
+                            Worker.department_id == department.id
+                            for department in (
+                                territorial_director_departments
+                                + territorial_manager_departments
+                            )
+                        },
+                        False,
+                    ),
+                    Worker.l_name == l_name if l_name is not None else True,
+                )
+            )
+            .scalars()
+            .all()
         )
         return [WorkerSchema.model_validate(raw_worker) for raw_worker in raw_workers]
 
@@ -2708,4 +2777,64 @@ def get_last_worker_passport_id(worker_id: int) -> int:
         )
         if raw_worker is None:
             return 0
-        return len(WorkerSchema.model_validate(raw_worker).passport)
+        return len(raw_worker.documents)
+
+
+def get_last_index_worker_documents(worker_bid_id: int):
+    with session.begin() as s:
+        return s.execute(
+            select(func.count(WorkerBidPassport.worker_bid_id)).filter(
+                WorkerBidPassport.worker_bid_id == worker_bid_id
+            )
+        ).scalar()
+
+
+def update_worker_bid_documents(
+    documents: list[DocumentSchema],
+    bid_id: int,
+) -> bool:
+    with session.begin() as s:
+        worker_bid = (
+            s.execute(select(WorkerBid).filter(WorkerBid.id == bid_id))
+            .scalars()
+            .first()
+        )
+        for document in documents:
+            s.add(WorkerBidPassport(worker_bid=worker_bid, document=document.document))
+    return True
+
+
+def get_worker_bid_documents_requests(
+    bid_id: int,
+) -> list[WorkerBidDocumentRequestSchema]:
+    with session.begin() as s:
+        raw_bids = (
+            s.execute(
+                select(WorkerBidDocumentRequest)
+                .filter(WorkerBidDocumentRequest.worker_bid_id == bid_id)
+                .order_by(WorkerBidDocumentRequest.id)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            WorkerBidDocumentRequestSchema.model_validate(raw_bid)
+            for raw_bid in raw_bids
+        ]
+
+
+def add_worker_bids_documents_requests(
+    sender_id: int,
+    bid_id: int,
+    date: datetime,
+    message: str,
+) -> bool:
+    with session.begin() as s:
+        raw_model = WorkerBidDocumentRequest(
+            sender_id=sender_id,
+            worker_bid_id=bid_id,
+            date=date,
+            message=message,
+        )
+        s.add(raw_model)
+    return True
