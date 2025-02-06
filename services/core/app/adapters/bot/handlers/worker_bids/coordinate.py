@@ -191,17 +191,16 @@ class WorkerBidCoordinationFactory:
                     ).pack(),
                 )
             )
-        if self.state_column != WorkerBid.security_service_state:
-            buttons.append(
-                InlineKeyboardButton(
-                    text="Скачать все документы",
-                    callback_data=WorkerBidCallbackData(
-                        id=callback_data.id,
-                        mode=callback_data.mode,
-                        endpoint_name=f"download_all_docs_{self.name}",
-                    ).pack(),
-                )
+        buttons.append(
+            InlineKeyboardButton(
+                text="Скачать все документы",
+                callback_data=WorkerBidCallbackData(
+                    id=callback_data.id,
+                    mode=callback_data.mode,
+                    endpoint_name=f"download_all_docs_{self.name}",
+                ).pack(),
             )
+        )
         if getattr(bid, self.name + "_state") == ApprovalStatus.pending_approval:
             buttons.append(
                 InlineKeyboardButton(
@@ -321,7 +320,7 @@ class WorkerBidCoordinationFactory:
         media: list[InputMediaDocument] = [
             InputMediaDocument(
                 media=BufferedInputFile(
-                    file=await zip_manager.create_zip(),
+                    file=zip_manager.create_zip(),
                     filename=f"Документы_{bid.f_name}_{bid.l_name[0]}_{bid.o_name[0] or 'о'}.zip",
                 )
             )
