@@ -455,9 +455,8 @@ async def update_technical_request_by_territorial_director(
             )
             return False
 
-        message = (
-            f"Техническая заявка с номером {request.id} закрыта как не релевантная."
-        )
+        message = f"Техническая заявка с номером {request.id} закрыта как не релевантная.\nПроизводство: {request.department.name}"
+
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.worker.telegram_id,
             message=message,
@@ -524,6 +523,7 @@ async def update_technical_request_by_territorial_director(
             logger.error(
                 f"Executor for technical request with id {request.id} for stage {request.state} wasn't found"
             )
+        message += f"\nПроизводство: {request.department.name}"
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.worker.telegram_id,
             message=message,
@@ -972,21 +972,21 @@ async def set_not_relevant_state(
     else:
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.worker.telegram_id,
-            message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.",
+            message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
             request_id=request_id,
             end_point="WR_TR_show_form_history",
         )
         if request.state == ApprovalStatus.pending:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.repairman.telegram_id,
-                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.",
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
                 request_id=request_id,
                 end_point="RM_TR_show_form_history",
             )
         elif request.state == ApprovalStatus.pending_approval:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.appraiser.telegram_id,
-                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.",
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
                 request_id=request_id,
                 end_point="AR_TR_show_form_history",
             )
@@ -1002,7 +1002,7 @@ async def set_not_relevant_state(
         else:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=chief_technician.telegram_id,
-                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.",
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
                 request_id=request_id,
                 end_point="show_CT_TR_admin_form",
             )
@@ -1013,7 +1013,7 @@ async def set_not_relevant_state(
             if extensive_director.telegram_id is not None:
                 await notify_worker_by_telegram_id_in_technical_request(
                     telegram_id=extensive_director.telegram_id,
-                    message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.",
+                    message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
                     request_id=request_id,
                     end_point="ED_TR_show_form_active",
                 )
@@ -1025,7 +1025,7 @@ async def set_not_relevant_state(
         else:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=territorial_director.telegram_id,
-                message=f"У Вас новая техническая заявка на проверку.\nНомер заявки {request_id}.",
+                message=f"У Вас новая техническая заявка на проверку.\nНомер заявки {request_id}.\nПроизводство: {request.department.name}",
                 request_id=request_id,
                 end_point="TD_TR_show_pending_form",
             )

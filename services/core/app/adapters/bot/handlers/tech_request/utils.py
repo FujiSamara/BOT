@@ -120,12 +120,12 @@ async def show_form(
 
     if request.not_relevant_description is not None:
         text_form += f"Не релевантно по причине: {request.not_relevant_description}\n"
-        text_form += f"Дата: {request.not_relevant_date}"
+        text_form += f"Дата: {request.not_relevant_date.strftime(settings.date_format)}\n"
     if request.not_relevant_confirmation_description is not None:
         text_form += (
             f"Комментарий ТД: {request.not_relevant_confirmation_description}\n"
         )
-        text_form += f"Дата: {request.not_relevant_confirmation_date}"
+        text_form += f"Дата: {request.not_relevant_confirmation_date.strftime(settings.date_format)}\n"
 
     if request.close_date:
         text_form += (
