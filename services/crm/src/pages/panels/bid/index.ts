@@ -1,7 +1,7 @@
 import axios from "axios";
 import { computed } from "vue";
 import { Table } from "@/components/table";
-import { BidSchema } from "@/types";
+import { BaseSchema, BidSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	BoolSmartField,
@@ -12,7 +12,26 @@ import {
 	InputSmartField,
 } from "@/components/table/field";
 import * as parser from "@/parser";
+import {
+	EntitySearchModelOut,
+	SearchModelOut,
+	useEntitySearch,
+	useSearch,
+} from "@/hooks/tableSearchHook";
+import {
+	DateIntervalModelOut,
+	useDateInterval,
+} from "@/hooks/dateIntervalHook";
+import { RowEditor } from "@/hooks/rowEditorHook";
+import { DepartmentEntity, ExpenditureEntity } from "@/components/entity";
 
+interface BidPanelData {
+	searchList: SearchModelOut[];
+	entitySearchList: EntitySearchModelOut;
+	dateInterval: DateIntervalModelOut;
+}
+
+// Bid
 export class BidTable extends Table<BidSchema> {
 	constructor(options?: {
 		getEndpoint?: string;
@@ -98,6 +117,44 @@ export class BidTable extends Table<BidSchema> {
 		this.forceRefresh();
 	}
 }
+export async function setupBid(
+	table: Table<BaseSchema>,
+): Promise<BidPanelData> {
+	const searchList = useSearch(table, {
+		schemas: [
+			{
+				pattern: "worker",
+				groups: [0],
+			},
+		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
+		name: "general",
+	});
+	const entitySearchList = useEntitySearch(
+		table,
+		{
+			entity: new DepartmentEntity(),
+			pattern: "department",
+			groups: [0],
+			id: 0,
+		},
+		{
+			entity: new ExpenditureEntity(),
+			pattern: "expenditure",
+			groups: [1],
+			id: 1,
+		},
+	);
+	const dateInterval = await useDateInterval(table, "day");
+
+	return {
+		entitySearchList,
+		searchList,
+		dateInterval,
+	};
+}
+
 export class FACAndCCBidTable extends BidTable {
 	constructor() {
 		super({

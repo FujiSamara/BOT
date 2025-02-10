@@ -2,6 +2,7 @@ import { Access, PanelData } from "@types";
 import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
+import { BidTable } from "@/pages/panels/bid";
 
 const panels: Array<PanelData> = [
 	{
@@ -25,12 +26,21 @@ const panels: Array<PanelData> = [
 	{
 		label: "Табель",
 		routeName: "table-timesheets",
-		iconURL: "/img/watch.svg",
+		iconURL: "/img/timesheet.svg",
 		active: false,
 		name: "timesheet",
 		create: TimesheetTable,
 		accesses: [Access.Worktime],
 		withUpdatingLoop: false,
+	},
+	{
+		label: "Заявки",
+		routeName: "table-bids",
+		iconURL: "/img/watch.svg",
+		active: false,
+		name: "bid",
+		create: BidTable,
+		accesses: [Access.Bid],
 	},
 ];
 

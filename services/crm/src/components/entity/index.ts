@@ -2,6 +2,7 @@ import { computed, ComputedRef, ref, Ref } from "vue";
 import {
 	DepartmentSchema,
 	DocumentSchema,
+	ExpenditureSchema,
 	PostSchema,
 	WorkerSchema,
 } from "@/types";
@@ -396,5 +397,21 @@ export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 
 	protected format(value: WorkerSchema): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
+	}
+}
+
+export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
+	public placeholder = "Статья";
+
+	protected async onSubmit(val: string): Promise<void> {
+		const service = new EntityService<ExpenditureSchema>("expenditure");
+
+		const expenditures = await service.searchEntities(val);
+
+		this._searchEntities.value = expenditures.sort(this.sortComparator);
+	}
+
+	protected format(value: ExpenditureSchema): string {
+		return value.name;
 	}
 }
