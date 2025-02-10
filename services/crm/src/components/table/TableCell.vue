@@ -106,62 +106,64 @@ const openPhoto = (cell: Cell, index: number) => {
 
 	.cell-line-list {
 		display: flex;
-		align-items: center;
+		flex-direction: column;
 		gap: 8px;
 
 		list-style: none;
 		margin: 0;
 		padding: 0;
 
-		p {
-			margin: 0;
-			cursor: default;
-		}
-
-		.c-link-wrapper {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			cursor: default;
-
-			.c-link {
-				color: $main-accent-blue;
-				transition: color 0.25s;
-				text-decoration: underline;
-				user-select: none;
-				cursor: pointer;
-				transition: color 0.25s;
-
-				&:hover {
-					color: $main-dark-gray;
-				}
+		.cell-line {
+			p {
+				margin: 0;
+				cursor: default;
 			}
 
-			.c-image {
-				background-color: currentColor;
-				color: $main-dark-gray;
-				width: 20px;
-				height: 20px;
-				fill: currentColor;
+			.c-link-wrapper {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				cursor: default;
 
-				mask-size: contain;
-				mask-image: url("@/assets/icons/image.svg");
-				mask-repeat: no-repeat;
-
-				transition: color 0.25s;
-
-				&:hover {
+				.c-link {
 					color: $main-accent-blue;
+					transition: color 0.25s;
+					text-decoration: underline;
+					user-select: none;
 					cursor: pointer;
+					transition: color 0.25s;
+
+					&:hover {
+						color: $main-dark-gray;
+					}
 				}
 
-				&.disabled {
-					color: $sec-dark-gray-25;
-					cursor: default;
-				}
+				.c-image {
+					background-color: currentColor;
+					color: $main-dark-gray;
+					width: 20px;
+					height: 20px;
+					fill: currentColor;
 
-				&.active {
-					color: $sec-accent-blue-50;
+					mask-size: contain;
+					mask-image: url("@/assets/icons/image.svg");
+					mask-repeat: no-repeat;
+
+					transition: color 0.25s;
+
+					&:hover {
+						color: $main-accent-blue;
+						cursor: pointer;
+					}
+
+					&.disabled {
+						color: $sec-dark-gray-25;
+						cursor: default;
+					}
+
+					&.active {
+						color: $sec-accent-blue-50;
+					}
 				}
 			}
 		}

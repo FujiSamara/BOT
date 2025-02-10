@@ -199,6 +199,7 @@ export function formatMultilineString(multilineString: string): Cell {
 		cellLines.push(
 			...multiline
 				.split("\n")
+				.filter((val) => val)
 				.map((val) => new CellLine(val, undefined, colors[currentColorIndex])),
 		);
 		currentColorIndex++;

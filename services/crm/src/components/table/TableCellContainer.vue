@@ -35,7 +35,9 @@ const checkOverflow = () => {
 
 	const element = (cellWrapperRef.value as HTMLElement)
 		.children[0] as HTMLElement;
-	hintAvailable.value = element.scrollHeight > element.offsetHeight;
+	hintAvailable.value =
+		element.scrollHeight > element.offsetHeight ||
+		element.scrollWidth > element.offsetWidth;
 };
 const observer = new MutationObserver(checkOverflow);
 
@@ -60,6 +62,9 @@ const mouseEnter = async () => {
 
 	if (rect.left < cellParent.offsetLeft) {
 		hint.style.right = `calc(100% - ${cellParent.offsetLeft - rect.left}px)`;
+	}
+	if (rect.top > cellParent.offsetTop) {
+		hint.style.bottom = `${-cellParent.offsetTop + rect.top}px`;
 	}
 };
 
@@ -125,6 +130,8 @@ onUnmounted(() => {
 	}
 
 	.hint {
+		display: flex;
+		align-items: center;
 		position: absolute;
 
 		bottom: 0;
@@ -132,10 +139,9 @@ onUnmounted(() => {
 
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		width: fit-content;
 
-		white-space: nowrap;
+		width: 224px;
+		max-height: 300px;
 
 		z-index: 2;
 		border-radius: 8px;
@@ -145,7 +151,7 @@ onUnmounted(() => {
 		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		.cell {
-			max-width: max-content;
+			overflow-y: auto;
 		}
 	}
 
