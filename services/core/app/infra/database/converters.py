@@ -57,6 +57,7 @@ scope_decode_dict = {
     FujiScope.bot_subordinates_menu: "Бот меню сотрудники",
     FujiScope.bot_worker_bid_security_coordinate: "Бот согласование кандидатов СБ",
     FujiScope.bot_worker_bid_accounting_coordinate: "Бот согласование кандидатов бухгалтерия",
+    FujiScope.bot_worker_bid_iiko: "Бот согласование кандидатов добавление в IIKO",
     FujiScope.bot_cleaning_request_cleaner: "Бот клининговые заявки клинер",
     FujiScope.bot_cleaning_request_territorial_manager: "Бот клининговые заявки ТУ",
 }

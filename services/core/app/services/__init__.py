@@ -141,6 +141,7 @@ from app.services.worker_bid import (
     get_worker_bid_documents_requests,
     add_worker_bids_documents_requests,
     update_worker_bid_documents,
+    update_view_state_worker_bid,
 )
 from app.services.worktime import (
     create_worktime,
@@ -317,6 +318,7 @@ __all__ = [
     "get_worker_bid_documents_requests",
     "add_worker_bids_documents_requests",
     "update_worker_bid_documents",
+    "update_view_state_worker_bid",
     "get_cleaning_problem_names",
     "create_cleaning_request",
     "get_departments_names_for_cleaner",
