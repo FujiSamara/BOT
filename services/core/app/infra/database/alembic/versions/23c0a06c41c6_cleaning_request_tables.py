@@ -1,7 +1,7 @@
 """cleaning request tables
 
 Revision ID: 23c0a06c41c6
-Revises: 242dff4d09c0
+Revises: f8875a2f4074
 Create Date: 2025-01-07 12:50:20.411469
 
 """
@@ -52,6 +52,7 @@ old_options = (
     "bot_coordinate_worker_bid",
     "bot_worker_bid_security_coordinate",
     "bot_worker_bid_accounting_coordinate",
+    "bot_worker_bid_iiko",
 )
 new_options = sorted(
     old_options
@@ -64,7 +65,7 @@ table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "23c0a06c41c6"
-down_revision: Union[str, None] = "242dff4d09c0"
+down_revision: Union[str, None] = "f8875a2f4074"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
