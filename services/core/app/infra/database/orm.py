@@ -2688,6 +2688,7 @@ def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
             children=record.children,
             military_ticket=record.military_ticket,
             official_work=record.official_work,
+            iiko_id=record.iiko_id,
         )
         s.add(worker)
 
