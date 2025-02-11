@@ -79,7 +79,7 @@ const starClicked = () => {
 			<div class="tool-icon search"></div>
 		</div>
 		<input
-			@focusin="active = true"
+			@focusin="active = !props.readonly"
 			:disabled="disabled"
 			@focusout="active = false"
 			:placeholder="props.placeholder"
