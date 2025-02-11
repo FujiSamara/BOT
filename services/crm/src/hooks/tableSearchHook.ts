@@ -142,10 +142,11 @@ const applyPattern = (fields: string[], term: string): SearchSchema => {
 	return result;
 };
 
-export interface EntitySearchModelIn {
+export interface EntitySearchModelIn<T, E extends BaseEntity<T>> {
 	pattern: string; // Pattern in format: parent.child.grandson...
 	groups: number[];
-	entity: BaseEntity<BaseSchema>;
+	entity: E;
+	filter?: (entity: E) => FilterSchema | FilterSchema[]; // Custom filter for entity
 	id: number;
 }
 
@@ -156,7 +157,7 @@ export interface EntitySearchModelOut {
 
 export const useEntitySearch = (
 	table: Table<BaseSchema>,
-	...modelsIn: EntitySearchModelIn[]
+	...modelsIn: EntitySearchModelIn<any, any>[]
 ): EntitySearchModelOut => {
 	const modelOut: EntitySearchModelOut = {
 		entities: modelsIn.map((val) => val.entity),
@@ -170,13 +171,26 @@ export const useEntitySearch = (
 			const filters: FilterSchema[] = [];
 
 			for (const entity of selected) {
-				const fields = [...modelIn.pattern.split("."), "id"];
+				let filter = [];
 
-				const filter = applyFilterPattern(fields, entity.id);
-				filter.groups = modelIn.groups;
-				filter.id = modelIn.id;
+				if (modelIn.filter) {
+					const res = modelIn.filter(entity);
+					if (res instanceof Array) {
+						filter.push(...res);
+					} else {
+						filter.push(res);
+					}
+				} else {
+					const fields = [...modelIn.pattern.split("."), "id"];
+					filter.push(applyFilterPattern(fields, entity.id));
+				}
 
-				filters.push(filter);
+				filter.forEach((fil) => {
+					fil.groups = modelIn.groups;
+					fil.id = modelIn.id;
+				});
+
+				filters.push(...filter);
 			}
 
 			const temp = [...table.filterQuery.value];

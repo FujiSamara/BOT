@@ -23,7 +23,15 @@ import {
 	useDateInterval,
 } from "@/hooks/dateIntervalHook";
 import { RowEditor } from "@/hooks/rowEditorHook";
-import { DepartmentEntity, ExpenditureEntity } from "@/components/entity";
+import {
+	DepartmentEntity,
+	EnumEntity,
+	ExpenditureEntity,
+} from "@/components/entity";
+import {
+	filterBidByStatus,
+	BidState,
+} from "@/pages/panels/bid/bidStatusFilter";
 
 interface BidPanelData {
 	searchList: SearchModelOut[];
@@ -145,8 +153,33 @@ export async function setupBid(
 			groups: [1],
 			id: 1,
 		},
+		{
+			entity: new EnumEntity(
+				[
+					{ value: BidState.Fac, formatted: "Согласование ЦФО" },
+					{ value: BidState.CC, formatted: "Согласование ЦЗ" },
+					{ value: BidState.Paralegal, formatted: "Согласование ЮК" },
+					{ value: BidState.KRU, formatted: "Согласование КРУ" },
+					{
+						value: BidState.FinancialDirectorPending,
+						formatted: "Согласование финансовый директор",
+					},
+					{ value: BidState.TellerPending, formatted: "Согласование кассир" },
+					{ value: BidState.TellerApproved, formatted: "Выплачена" },
+					{ value: BidState.Denied, formatted: "Отклонена" },
+				],
+				false,
+				false,
+				0,
+				"Статус",
+			),
+			pattern: "",
+			groups: [2],
+			id: 2,
+			filter: filterBidByStatus,
+		},
 	);
-	const dateInterval = await useDateInterval(table, "day");
+	const dateInterval = await useDateInterval(table, "create_date");
 
 	return {
 		entitySearchList,

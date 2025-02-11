@@ -352,6 +352,34 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	}
 }
 
+export interface EnumRecord {
+	formatted: string;
+	value: string;
+}
+
+export class EnumEntity extends InputSelectEntity<EnumRecord> {
+	constructor(
+		protected _values: EnumRecord[],
+		required: boolean = false,
+		monoMode: boolean = false,
+		neededWord: number = 3,
+		placeholder?: string,
+	) {
+		super(required, monoMode, neededWord, placeholder);
+		if (neededWord === 0) this.onSubmit("");
+	}
+
+	protected async onSubmit(value: string): Promise<void> {
+		this._searchEntities.value = this._values.filter((val) =>
+			val.formatted.startsWith(value),
+		);
+	}
+
+	protected format(value: EnumRecord): string {
+		return value.formatted;
+	}
+}
+
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 	public placeholder = "Предприятие";
 
