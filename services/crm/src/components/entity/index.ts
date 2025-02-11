@@ -245,6 +245,14 @@ export class StringInputEntity extends InputEntity<string> {
 	}
 }
 
+export class BidStatusEntity extends StringInputEntity {
+	protected format(value: string): string {
+		const cell = parser.formatMultilineString(value);
+
+		return cell.cellLines.map((line) => line.value).join(" ");
+	}
+}
+
 export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 
@@ -253,8 +261,9 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		private monoMode: boolean = false,
 		public neededWord: number = 3,
 		placeholder?: string,
+		readonly?: boolean,
 	) {
-		super(required, placeholder);
+		super(required, placeholder, readonly);
 	}
 
 	public loading: Ref<boolean> = ref(false);
@@ -377,8 +386,9 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 		monoMode: boolean = false,
 		neededWord: number = 3,
 		placeholder?: string,
+		readonly?: boolean,
 	) {
-		super(required, monoMode, neededWord, placeholder);
+		super(required, monoMode, neededWord, placeholder, readonly);
 		if (neededWord === 0) this.onSubmit("");
 	}
 

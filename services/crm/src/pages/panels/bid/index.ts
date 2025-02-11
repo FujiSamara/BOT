@@ -24,11 +24,15 @@ import {
 } from "@/hooks/dateIntervalHook";
 import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 import {
+	BidStatusEntity,
+	DateEntity,
 	DepartmentEntity,
 	EnumEntity,
 	ExpenditureEntity,
 	FloatInputEntity,
 	SelectType,
+	StringInputEntity,
+	WorkerEntity,
 } from "@/components/entity";
 import {
 	filterBidByStatus,
@@ -217,6 +221,51 @@ export async function setupBid(table: Table<BidSchema>): Promise<BidPanelData> {
 				entity: new DepartmentEntity(true, true),
 				type: SelectType.MonoSelectInput,
 				name: "department",
+			},
+			{
+				entity: new WorkerEntity(false, true, 3, "Сотрудник", true),
+				type: SelectType.MonoSelectInput,
+				name: "worker",
+			},
+			{
+				entity: new StringInputEntity(true, "Цель"),
+				type: SelectType.Input,
+				name: "purpose",
+			},
+			{
+				entity: new DateEntity(false, "Дата создания", true),
+				type: SelectType.Date,
+				name: "create_date",
+			},
+			{
+				entity: new DateEntity(false, "Дата закрытия", true),
+				type: SelectType.Date,
+				name: "close_date",
+			},
+			// Documents
+			{
+				entity: new BidStatusEntity(false, "Статус", true),
+				type: SelectType.Input,
+				name: "status",
+			},
+			{
+				entity: new EnumEntity(
+					[
+						{ value: "Текущая", formatted: "Текущая" },
+						{ value: "Инвестиционная", formatted: "Инвестиционная" },
+					],
+					true,
+					true,
+					0,
+					"Тип деятельности",
+				),
+				type: SelectType.MonoSelectInput,
+				name: "activity_type",
+			},
+			{
+				entity: new StringInputEntity(false, "Комментарий"),
+				type: SelectType.Input,
+				name: "comment",
 			},
 		],
 		"Создать заявку",

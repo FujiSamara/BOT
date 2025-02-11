@@ -7,6 +7,7 @@ export interface RowField {
 	entity: BaseEntity<any>;
 	type: SelectType;
 	name: string;
+	active?: boolean;
 }
 
 export enum EditorMode {
@@ -98,6 +99,10 @@ export function useRowEditor<T extends BaseSchema>(
 		active.value = true;
 		title.value = createTitle;
 		mode.value = EditorMode.Create;
+
+		for (const field of fields) {
+			if (field.entity.readonly) field.active = false;
+		}
 	};
 
 	const save = async () => {
