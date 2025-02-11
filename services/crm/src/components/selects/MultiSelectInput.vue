@@ -19,6 +19,9 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "select", index: number): void;
@@ -42,6 +45,7 @@ const list = computed(() => {
 			@submit="(val: string) => emits('submit', val)"
 			:error="props.error"
 			:placeholder="props.placeholder"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<TransitionGroup
 			:css="false"

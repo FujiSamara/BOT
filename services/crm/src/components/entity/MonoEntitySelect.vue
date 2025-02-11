@@ -42,6 +42,7 @@ const error = computed(() => {
 			@select="(index: number) => entity.select(index)"
 			@close="() => entity.restoreSaved()"
 			:required="entity.required"
+			:readonly="entity.readonly"
 		>
 		</MonoSelectInput>
 	</div>

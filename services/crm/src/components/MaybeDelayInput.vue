@@ -30,6 +30,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -80,6 +83,7 @@ const starClicked = () => {
 			:id="useId()"
 			ref="input"
 			autocomplete="off"
+			:readonly="props.readonly"
 		/>
 		<Transition name="fade">
 			<span

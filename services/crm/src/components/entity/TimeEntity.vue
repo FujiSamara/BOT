@@ -41,6 +41,7 @@ const error = computed(() => {
 			:error="error"
 			@submit="(val) => (entity.formattedField.value = val)"
 			@close="focusOut"
+			:readonly="entity.readonly"
 		></TimeSelectInput>
 	</div>
 </template>

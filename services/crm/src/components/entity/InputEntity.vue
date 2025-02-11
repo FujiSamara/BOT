@@ -31,6 +31,7 @@ const error = computed(() => {
 			:with-edit-mark="true"
 			:error-left-align="true"
 			:required="entity.required"
+			:readonly="entity.readonly"
 		></MaybeDelayInput>
 	</div>
 </template>

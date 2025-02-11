@@ -19,6 +19,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -65,6 +68,7 @@ const submit = (val: Date) => {
 			:with-edit-mark="true"
 			:error-left-align="true"
 			:required="props.required"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<Transition name="fade">
 			<DateCalendar

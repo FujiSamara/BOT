@@ -22,6 +22,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "select", index: number): void;
@@ -57,6 +60,7 @@ const focusOut = () => {
 			:with-edit-mark="true"
 			:error-left-align="true"
 			:required="props.required"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<Transition name="fade">
 			<div class="msi-list-wrapepr" v-show="list.length">
