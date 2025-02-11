@@ -145,12 +145,14 @@
     border: 1px solid $sec-arrantion-red;
   }
 
-  &:hover,
-  &.active {
-    border-color: $main-accent-blue;
+  &:not(.readonly) {
+    &:hover,
+    &.active {
+      border-color: $main-accent-blue;
 
-    .tool-icon-wrapper .tool-icon {
-      color: $main-accent-blue;
+      .tool-icon-wrapper .tool-icon {
+        color: $main-accent-blue;
+      }
     }
   }
 

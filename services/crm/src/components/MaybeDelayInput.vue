@@ -68,7 +68,12 @@ const starClicked = () => {
 <template>
 	<div
 		class="search-input"
-		:class="{ active: active, disabled: disabled, error: error !== undefined }"
+		:class="{
+			active: active,
+			disabled: disabled,
+			error: error !== undefined,
+			readonly: props.readonly,
+		}"
 	>
 		<div class="tool-icon-wrapper" v-if="props.withSearchIcon">
 			<div class="tool-icon search"></div>
@@ -97,7 +102,7 @@ const starClicked = () => {
 		</Transition>
 		<Transition name="fade">
 			<div
-				v-if="props.withEditMark && error === undefined"
+				v-if="props.withEditMark && error === undefined && !props.readonly"
 				class="tool-icon-wrapper edit"
 			>
 				<div class="tool-icon edit"></div>
@@ -196,6 +201,12 @@ const starClicked = () => {
 				left: unset;
 				top: unset;
 			}
+		}
+	}
+
+	&.readonly {
+		input {
+			cursor: default;
 		}
 	}
 
