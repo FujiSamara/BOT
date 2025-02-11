@@ -419,7 +419,7 @@ async def create_worker_bid(
         iiko_service_state=ApprovalStatus.pending,
         security_service_comment=None,
         accounting_service_comment=None,
-        iiko_service_comment=None,
+        iiko_worker_id=None,
         sender=sender,
         comment=None,
         birth_date=birth_date,

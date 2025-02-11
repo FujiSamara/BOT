@@ -412,18 +412,18 @@ async def set_comment_int(message: Message, state: FSMContext):
     await try_delete_message(data["msg"])
 
     id: int = data["id"]
-    state: int = data["status"]
+    status: int = data["status"]
     state_column_name: str = data["state_column_name"]
     get_menu: Callable = data["get_menu"]
+    await state.clear()
+
     try:
         iiko_id = int(message.text)
-
-        await state.set_state(Base.none)
 
         if not await update_worker_bid_bot(
             bid_id=id,
             state_column_name=state_column_name,
-            state=ApprovalStatus.approved if state == 1 else ApprovalStatus.denied,
+            state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
             comment=iiko_id,
         ):
             msg = await try_edit_or_answer(
@@ -433,6 +433,8 @@ async def set_comment_int(message: Message, state: FSMContext):
             msg = await try_edit_or_answer(
                 message=message, text=hbold("Успешно!"), return_message=True
             )
+
+        await state.set_state(Base.none)
         await sleep(3)
         await try_delete_message(msg)
         await get_menu(message)
