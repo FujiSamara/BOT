@@ -53,6 +53,7 @@ async def show_form(
     text_form = (
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(settings.date_format)
+        + f"\nНомер заявки: {request.id}"
         + f"\nОписание:\n{request.description}\n\
 Адрес: {request.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
