@@ -56,6 +56,7 @@ old_options = (
     "bot_subordinates_menu",
     "bot_worker_bid_security_coordinate",
     "bot_worker_bid_accounting_coordinate",
+    "bot_worker_bid_iiko",
 )
 new_options = sorted(old_options + ("bot_technical_request_department_director",))
 table_columns = {"post_scopes": ["scope"]}

@@ -665,9 +665,9 @@ async def save_close_request(
 ):
     data = await state.get_data()
     if "request_id" not in data:
-        raise ValueError()
+        raise ValueError("Technical request id wasn't found")
     if "description" not in data:
-        raise ValueError()
+        raise ValueError("Technical request description wasn't found")
 
     if not await set_not_relevant_state(
         request_id=data.get("request_id"),

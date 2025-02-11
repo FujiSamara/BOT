@@ -254,8 +254,7 @@ async def notify_worker_by_telegram_id(
         await get_bot().send_message(
             chat_id=id, text=message, reply_markup=reply_markup
         )
-    except Exception as e:
-        print(e)
+    except Exception:
         return None
 
 
