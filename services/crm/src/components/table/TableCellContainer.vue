@@ -28,6 +28,17 @@ const hintRef = useTemplateRef("hint");
 const hintVisible = ref(false);
 const hintAvailable = ref(false);
 
+const resizeHint = () => {
+	if (!hintRef.value) {
+		return;
+	}
+
+	const element = hintRef.value;
+
+	window.getComputedStyle(element).opacity; // Force dom to rerender component.
+	element.style.width = "max-content";
+};
+
 const checkOverflow = () => {
 	if (!cellWrapperRef.value) {
 		return;
@@ -66,6 +77,8 @@ const mouseEnter = async () => {
 	if (rect.top > cellParent.offsetTop) {
 		hint.style.bottom = `${-cellParent.offsetTop + rect.top}px`;
 	}
+
+	resizeHint();
 };
 
 onMounted(() => {
@@ -140,7 +153,8 @@ onUnmounted(() => {
 		display: flex;
 		flex-direction: column;
 
-		width: 224px;
+		width: var(--max-hint-width);
+		max-width: var(--max-hint-width);
 		max-height: 300px;
 
 		z-index: 2;
