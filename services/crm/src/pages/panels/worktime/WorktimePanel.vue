@@ -74,9 +74,7 @@ const setup = await setupWorktime(props.table);
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
 
-		<Transition name="fade">
-			<RowEditor :editor="setup.rowEditor"></RowEditor>
-		</Transition>
+		<RowEditor :editor="setup.rowEditor"></RowEditor>
 	</div>
 </template>
 
