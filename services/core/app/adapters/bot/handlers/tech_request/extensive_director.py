@@ -22,7 +22,6 @@ from app.adapters.bot.handlers.tech_request.utils import (
 from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
 from app.adapters.bot.handlers.tech_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
-    notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
@@ -332,13 +331,17 @@ async def save_change_executor(
     data = await state.get_data()
     request_id = callback_data.request_id
     repairman_full_name = data.get("repairman_full_name").split(" ")
-    repairman_TG_id = update_tech_request_executor(
-        request_id=request_id, repairman_full_name=repairman_full_name
-    )
-    if repairman_TG_id:
-        await notify_worker_by_telegram_id(
-            id=repairman_TG_id, message=text.notification_repairman
+    await state.clear()
+    if not (
+        await update_tech_request_executor(
+            request_id=request_id,
+            repairman_full_name=repairman_full_name,
+            department_name=data.get("department_name"),
         )
+    ):
+        raise ValueError(f"Executor of technical request {request_id} wasn't update")
+
+    await state.set_state(Base.none)
     await show_active_request_form(
         callback=callback, callback_data=callback_data, state=state
     )

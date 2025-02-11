@@ -17,7 +17,6 @@ from app.adapters.bot.handlers.utils import (
     download_file,
     handle_documents,
     handle_documents_form,
-    notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
@@ -309,20 +308,14 @@ async def save_repair(
     for doc in photo:
         photo_files.append(await download_file(doc))
 
-    request_data = update_technical_request_from_repairman(
-        photo_files=photo_files, request_id=callback_data.request_id
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_appraiser
-        + f"\n На предприятие: {request_data['department_name']}",
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["worker_telegram_id"], message=text.notification_worker
-    )
-
+    if not (
+        await update_technical_request_from_repairman(
+            photo_files=photo_files, request_id=callback_data.request_id
+        )
+    ):
+        raise ValueError(
+            f"Technical request with id: {callback_data.request_id} wasn't update by executor"
+        )
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
@@ -561,15 +554,17 @@ async def save_CT_TR_admin_form(
 ):
     request_id = callback_data.request_id
     repairman_full_name = (await state.get_data()).get("repairman_full_name").split(" ")
-    repairman_TG_id = update_tech_request_executor(
-        request_id=request_id, repairman_full_name=repairman_full_name
-    )
     data = await state.get_data()
-    await notify_worker_by_telegram_id(
-        id=repairman_TG_id,
-        message=f"Вас назначили на заявку {request_id}\nНа предприятие: {data.get('department_name')}",
-    )
     await state.clear()
+    if not (
+        await update_tech_request_executor(
+            request_id=request_id,
+            repairman_full_name=repairman_full_name,
+            department_name=data.get("department_name"),
+        )
+    ):
+        raise ValueError(f"Executor of technical request {request_id} wasn't update")
+
     await state.set_state(Base.none)
     await show_tech_req_format(callback=callback)
 

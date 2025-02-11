@@ -561,8 +561,8 @@ async def update_technical_request_by_territorial_director(
     return True
 
 
-def update_tech_request_executor(
-    request_id: int, repairman_full_name: list[str]
+async def update_tech_request_executor(
+    request_id: int, repairman_full_name: list[str], department_name: str
 ) -> int:
     """
     Update executor in technical request return telegram id
@@ -578,7 +578,14 @@ def update_tech_request_executor(
         request_id=request_id, repairman_id=repairman.id
     ):
         logger.error(f"Technical request with id: {request_id} wasn't update executor")
-    return repairman.x
+        return False
+    await notify_worker_by_telegram_id_in_technical_request(
+        telegram_id=repairman.telegram_id,
+        message=f"Вас назначили на заявку {request_id}\nНа предприятие: {department_name}",
+        request_id=request_id,
+        end_point="RM_TR_repair_waiting_form",
+    )
+    return True
 
 
 def update_technical_request_problem(request_id: int, problem_id: int):
