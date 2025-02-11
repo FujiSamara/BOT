@@ -93,7 +93,7 @@ const starClicked = () => {
 		<Transition name="fade">
 			<span
 				class="required"
-				v-if="!active && props.required && !value"
+				v-if="!active && props.required && !value && !props.readonly"
 				@click="starClicked"
 			>
 				<span class="stub">{{ props.placeholder }}</span>
