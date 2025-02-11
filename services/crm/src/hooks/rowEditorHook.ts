@@ -1,5 +1,6 @@
 import { BaseEntity, SelectType } from "@/components/entity";
 import { Table } from "@/components/table";
+import { BaseSchema } from "@/types";
 import { Ref, ref } from "vue";
 
 export interface RowField {
@@ -8,38 +9,57 @@ export interface RowField {
 	name: string;
 }
 
+export enum EditorMode {
+	Create,
+	View,
+	Edit,
+}
+
 export interface RowEditor {
 	active: Ref<boolean>;
 	close: () => void;
 	save: () => void;
 	edit: (index: number) => void;
+	view: (index: number) => void;
 	create: () => void;
 	fields: RowField[];
 	title: Ref<string>;
+	mode: Ref<EditorMode>;
 }
 
-export const useRowEditor = (
-	table: Table<any>,
+export function useRowEditor<T extends BaseSchema>(
+	table: Table<T>,
 	fields: RowField[],
 	createTitle: string,
-	editTitle: string,
-): RowEditor => {
+	getTitle: (model: T) => string,
+): RowEditor {
 	const active = ref(false);
 	const title = ref("");
-	const isCreating = ref(false);
+
+	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
+
+	const mode = ref(EditorMode.View);
 	let editIndex = -1;
 
 	const close = () => {
 		active.value = false;
-		if (!isCreating.value) {
-			fields.forEach((f) => f.entity.clear());
+
+		switch (mode.value) {
+			case EditorMode.View:
+				for (let index = 0; index < fields.length; index++) {
+					const field = fields[index];
+					field.entity.readonly = readonlyStates[index];
+				}
+				fields.forEach((f) => f.entity.clear());
+				break;
+			case EditorMode.Edit:
+				fields.forEach((f) => f.entity.clear());
+				break;
 		}
 	};
 
-	const edit = (index: number) => {
+	const load = (index: number) => {
 		active.value = true;
-		title.value = editTitle;
-		isCreating.value = false;
 		const model = table.getModel(index);
 		editIndex = index;
 
@@ -53,10 +73,31 @@ export const useRowEditor = (
 		}
 	};
 
+	const edit = (index: number) => {
+		mode.value = EditorMode.Edit;
+		title.value = getTitle(table.getModel(index));
+
+		load(index);
+	};
+
+	const view = (index: number) => {
+		title.value = getTitle(table.getModel(index));
+		mode.value = EditorMode.View;
+
+		load(index);
+
+		for (let index = 0; index < fields.length; index++) {
+			const field = fields[index];
+
+			readonlyStates[index] = field.entity.readonly as boolean;
+			field.entity.readonly = true;
+		}
+	};
+
 	const create = () => {
 		active.value = true;
 		title.value = createTitle;
-		isCreating.value = true;
+		mode.value = EditorMode.Create;
 	};
 
 	const save = async () => {
@@ -69,12 +110,12 @@ export const useRowEditor = (
 			result[field.name] = field.entity.getResult();
 		}
 
-		if (isCreating.value) {
+		if (mode.value === EditorMode.Create) {
 			await table.create(result);
 		} else {
 			await table.update(result, editIndex);
 		}
 	};
 
-	return { active, close, edit, create, save, fields, title };
-};
+	return { active, close, edit, create, save, view, fields, title, mode };
+}

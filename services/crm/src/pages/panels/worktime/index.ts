@@ -138,7 +138,7 @@ export async function setupWorktime(
 			},
 		],
 		"Создать явку",
-		"Изменить явку",
+		(_) => "Изменить явку",
 	);
 
 	return {

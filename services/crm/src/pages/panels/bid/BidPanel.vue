@@ -6,15 +6,15 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
+import RowEditor from "@/components/table/RowEditor.vue";
 
 import { Table as BaseTable } from "@/components/table";
-import { BaseSchema } from "@/types";
 import { PropType } from "vue";
 import { setupBid } from "@/pages/panels/bid";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<BaseSchema>>,
+		type: Object as PropType<BaseTable<any>>,
 		required: true,
 	},
 });
@@ -61,11 +61,17 @@ const setup = await setupBid(props.table);
 				</div>
 			</div>
 		</div>
-		<Table class="table" :table="props.table"></Table>
+		<Table
+			class="table"
+			:table="props.table"
+			@rowClick="setup.rowEditor.view"
+		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
+
+		<RowEditor :editor="setup.rowEditor"></RowEditor>
 	</div>
 </template>
 

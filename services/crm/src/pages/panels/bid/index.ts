@@ -1,7 +1,7 @@
 import axios from "axios";
 import { computed } from "vue";
 import { Table } from "@/components/table";
-import { BaseSchema, BidSchema } from "@/types";
+import { BidSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	BoolSmartField,
@@ -22,11 +22,13 @@ import {
 	DateIntervalModelOut,
 	useDateInterval,
 } from "@/hooks/dateIntervalHook";
-import { RowEditor } from "@/hooks/rowEditorHook";
+import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 import {
 	DepartmentEntity,
 	EnumEntity,
 	ExpenditureEntity,
+	FloatInputEntity,
+	SelectType,
 } from "@/components/entity";
 import {
 	filterBidByStatus,
@@ -37,6 +39,7 @@ interface BidPanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
+	rowEditor: RowEditor;
 }
 
 // Bid
@@ -125,9 +128,7 @@ export class BidTable extends Table<BidSchema> {
 		this.forceRefresh();
 	}
 }
-export async function setupBid(
-	table: Table<BaseSchema>,
-): Promise<BidPanelData> {
+export async function setupBid(table: Table<BidSchema>): Promise<BidPanelData> {
 	const searchList = useSearch(table, {
 		schemas: [
 			{
@@ -184,11 +185,49 @@ export async function setupBid(
 		},
 	);
 	const dateInterval = await useDateInterval(table, "create_date");
+	const rowEditor = useRowEditor(
+		table,
+		[
+			{
+				entity: new FloatInputEntity(true, "Сумма"),
+				type: SelectType.Input,
+				name: "amount",
+			},
+			{
+				entity: new EnumEntity(
+					[
+						{ value: "card", formatted: "Безналичная" },
+						{ value: "cash", formatted: "Наличная" },
+						{ value: "taxi", formatted: "Требуется такси" },
+					],
+					true,
+					true,
+					0,
+					"Тип оплаты",
+				),
+				type: SelectType.MonoSelectInput,
+				name: "payment_type",
+			},
+			{
+				entity: new ExpenditureEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "expenditure",
+			},
+			{
+				entity: new DepartmentEntity(true, true),
+				type: SelectType.MonoSelectInput,
+				name: "department",
+			},
+		],
+		"Создать заявку",
+		(model: BidSchema) => `Заявка №${model.id}`,
+	);
 
 	return {
 		entitySearchList,
 		searchList,
 		dateInterval,
+		rowEditor,
 	};
 }
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BlurModal from "@/components/BlurModal.vue";
-import { RowEditor } from "@/hooks/rowEditorHook";
+import { EditorMode, RowEditor } from "@/hooks/rowEditorHook";
 import { PropType } from "vue";
 import EntitySelect from "../entity/EntitySelect.vue";
 import DefaultButton from "../UI-new/DefaultButton.vue";
@@ -53,7 +53,11 @@ const save = () => {
 			:entity="field.entity"
 			:select-type="field.type"
 		></EntitySelect>
-		<DefaultButton @click="save" title="Сохранить"></DefaultButton>
+		<DefaultButton
+			v-if="editor.mode.value !== EditorMode.View"
+			@click="save"
+			title="Сохранить"
+		></DefaultButton>
 	</BlurModal>
 </template>
 

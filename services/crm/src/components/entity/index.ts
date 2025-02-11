@@ -84,7 +84,7 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 		},
 	});
 
-	protected abstract onSubmit(_: string): Promise<void>;
+	protected async onSubmit(_: string): Promise<void> {}
 
 	public clear() {
 		this._inputValue.value = "";
@@ -229,6 +229,19 @@ export class FloatInputEntity extends InputEntity<number> {
 		if (!Number.isNaN(num)) {
 			this._selectedEntities.value = [num];
 		}
+	}
+}
+
+export class StringInputEntity extends InputEntity<string> {
+	public error: ComputedRef<string | undefined> = computed(() => {
+		if (this.overrideError.value !== undefined) {
+			return this.overrideError.value;
+		}
+		return;
+	});
+
+	protected async onSubmit(val: string): Promise<void> {
+		this._selectedEntities.value = [val];
 	}
 }
 
@@ -377,6 +390,14 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 
 	protected format(value: EnumRecord): string {
 		return value.formatted;
+	}
+
+	public init(value: EnumRecord | string): void {
+		if (typeof value === "string") {
+			value = this._values.find((val) => val.value === value)!;
+		}
+
+		super.init(value);
 	}
 }
 
