@@ -192,21 +192,21 @@ export function formatMultilineString(multilineString: string): Cell {
 	const multilines: Array<string> = multilineString.split("/next/");
 	const cellLines: Array<CellLine> = [];
 
-	const colors = [undefined, "#1a11d1", "#d1c111"];
+	const colors = [undefined, "#1a11d1"];
 	let currentColorIndex = 0;
 
 	for (const multiline of multilines) {
 		cellLines.push(
 			...multiline
 				.split("\n")
-				.filter((val) => val)
+				.filter((val) => val && val !== "\n")
 				.map((val) => new CellLine(val, undefined, colors[currentColorIndex])),
 		);
 		currentColorIndex++;
 		currentColorIndex %= colors.length;
 	}
 
-	return new Cell(...cellLines);
+	return new Cell(...cellLines.reverse());
 }
 
 export function capitalize(val: string) {
