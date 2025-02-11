@@ -371,7 +371,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 
 	protected async onSubmit(value: string): Promise<void> {
 		this._searchEntities.value = this._values.filter((val) =>
-			val.formatted.startsWith(value),
+			val.formatted.toLowerCase().includes(value.toLowerCase()),
 		);
 	}
 

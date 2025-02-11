@@ -28,7 +28,7 @@ export function onLeave(el: any, done: any) {
 		paddingTop: 0,
 		marginTop: 0,
 		paddingBottom: 0,
-		delay: el.dataset.index * 0.15,
+		delay: 0,
 		onComplete: done,
 	});
 }
