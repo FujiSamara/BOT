@@ -307,6 +307,11 @@ class TechnicalRequestSchema(BaseSchemaPK):
 
     repairman_worktime: int | None = 0
 
+    not_relevant_description: str | None = None
+    not_relevant_date: datetime.datetime | None = None
+    not_relevant_confirmation_date: datetime.datetime | None = None
+    not_relevant_confirmation_description: str | None = None
+
 
 class AccountLoginsSchema(BaseSchemaPK):
     worker: WorkerSchema
