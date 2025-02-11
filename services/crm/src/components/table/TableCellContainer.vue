@@ -37,6 +37,7 @@ const resizeHint = () => {
 
 	window.getComputedStyle(element).opacity; // Force dom to rerender component.
 	element.style.width = "max-content";
+	window.getComputedStyle(element).opacity; // Force dom to rerender component.
 };
 
 const checkOverflow = () => {
@@ -60,25 +61,22 @@ const mouseEnter = async () => {
 	if (!hintRef.value || !cellWrapperRef.value) {
 		return;
 	}
+	resizeHint();
 
 	const hint = hintRef.value as HTMLElement;
 	const cellWrapper = cellWrapperRef.value as HTMLElement;
-	const cellParent = cellWrapper.parentElement as HTMLElement;
 
-	hint.style.right = "100%";
 	hintVisible.value = true;
 
 	await nextTick();
-	const rect = hint.getBoundingClientRect();
+	const rect = cellWrapper.getBoundingClientRect();
 
-	if (rect.left < cellParent.offsetLeft) {
-		hint.style.right = `calc(100% - ${cellParent.offsetLeft - rect.left}px)`;
+	let top = rect.top + rect.height - hint.offsetHeight;
+	if (top < 0) {
+		top = 0;
 	}
-	if (rect.top > cellParent.offsetTop) {
-		hint.style.bottom = `${-cellParent.offsetTop + rect.top}px`;
-	}
-
-	resizeHint();
+	hint.style.top = `${top}px`;
+	hint.style.left = `${rect.left - hint.offsetWidth}px`;
 };
 
 onMounted(() => {
@@ -145,10 +143,7 @@ onUnmounted(() => {
 	.hint {
 		display: flex;
 		align-items: center;
-		position: absolute;
-
-		bottom: 0;
-		right: 100%;
+		position: fixed;
 
 		display: flex;
 		flex-direction: column;
