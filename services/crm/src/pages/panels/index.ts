@@ -36,7 +36,7 @@ const panels: Array<PanelData> = [
 	{
 		label: "Заявки",
 		routeName: "table-bids",
-		iconURL: "/img/watch.svg",
+		iconURL: "/img/coins.svg",
 		active: false,
 		name: "bid",
 		create: BidTable,
