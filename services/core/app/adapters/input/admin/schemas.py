@@ -743,6 +743,10 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
         TechnicalRequest.repairman_worktime: "Заявка в исполнение",
+        TechnicalRequest.not_relevant_date: "Дата отправки заявки на проверку релевантности",
+        TechnicalRequest.not_relevant_description: "Комментарий при отправки на проверку релевантности",
+        TechnicalRequest.not_relevant_confirmation_date: "Дата проверки на релевантность",
+        TechnicalRequest.not_relevant_confirmation_description: "Комментарий после проверки на релевантность",
     }
 
     column_list = [
@@ -822,6 +826,8 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.reopen_repair_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_confirmation_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_deadline_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_date: WorkerBidView.datetime_format,
     }
 
     column_formatters_detail = column_formatters

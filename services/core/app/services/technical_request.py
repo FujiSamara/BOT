@@ -21,9 +21,31 @@ from app.schemas import (
     DocumentSchema,
 )
 
-from aiogram.types import InlineKeyboardButton
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.kb import create_inline_keyboard
+
+async def notify_worker_by_telegram_id_in_technical_request(
+    telegram_id, message: str, request_id: int, end_point: str
+):
+    from app.adapters.bot.kb import create_inline_keyboard
+    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
+    from app.adapters.bot import text
+    from app.adapters.bot.handlers.tech_request.schemas import (
+        ShowRequestCallbackData,
+    )
+    from aiogram.types import InlineKeyboardButton
+
+    await notify_worker_by_telegram_id(
+        id=telegram_id,
+        message=message,
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text=text.view,
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    end_point=end_point,
+                ).pack(),
+            )
+        ),
+    )
 
 
 def counting_date_sla(sla: int):
@@ -89,7 +111,6 @@ async def create_technical_request(
     telegram_id: int,
     department_name: str,
 ) -> bool:
-    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text
 
     """
@@ -164,54 +185,34 @@ async def create_technical_request(
                 f"The chief technician wasn't found at department {request.department.id}"
             )
         else:
-            await notify_worker_by_telegram_id(
-                id=chief_technician.telegram_id,
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=chief_technician.telegram_id,
                 message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
-                reply_markup=create_inline_keyboard(
-                    InlineKeyboardButton(
-                        text=text.view,
-                        callback_data=ShowRequestCallbackData(
-                            request_id=last_technical_request_id + 1,
-                            end_point="show_CT_TR_admin_form",
-                        ).pack(),
-                    )
-                ),
+                request_id=last_technical_request_id + 1,
+                end_point="show_CT_TR_admin_form",
             )
-        directors_extensive_development = orm.get_workers_with_scope(
-            FujiScope.bot_technical_request_department_director
+
+        extensive_directors = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_extensive_director
         )
-        if directors_extensive_development == []:
+        if extensive_directors == []:
             logger.error(
                 f"The Directors of Extensive Development wasn't found at department {request.department.id}"
             )
         else:
-            for director_extensive_development in directors_extensive_development:
-                await notify_worker_by_telegram_id(
-                    id=director_extensive_development.telegram_id,
+            for extensive_director in extensive_directors:
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=extensive_director.telegram_id,
                     message=f"Заявка с номером {last_technical_request_id + 1} передана в исполнение.\nПредприятие: {request.department.name}",
-                    reply_markup=create_inline_keyboard(
-                        InlineKeyboardButton(
-                            text=text.view,
-                            callback_data=ShowRequestCallbackData(
-                                request_id=last_technical_request_id + 1,
-                                end_point="DD_TR_show_form_active",
-                            ).pack(),
-                        )
-                    ),
+                    request_id=last_technical_request_id + 1,
+                    end_point="ED_TR_show_form_active",
                 )
-        await notify_worker_by_telegram_id(
-            id=request.repairman.telegram_id,
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.repairman.telegram_id,
             message=text.notification_repairman
             + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=text.view,
-                    callback_data=ShowRequestCallbackData(
-                        request_id=last_technical_request_id + 1,
-                        end_point="RM_TR_repair_waiting_form",
-                    ).pack(),
-                )
-            ),
+            request_id=last_technical_request_id + 1,
+            end_point="RM_TR_repair_waiting_form",
         )
 
     return True
@@ -220,7 +221,6 @@ async def create_technical_request(
 async def update_technical_request_from_repairman(
     photo_files: list[UploadFile], request_id: int
 ) -> bool:
-    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text
 
     """
@@ -249,7 +249,8 @@ async def update_technical_request_from_repairman(
 
     else:
         request.repair_date = cur_date
-
+        if request.open_date.date() == cur_date.date():
+            request.repairman_worktime = cur_date.hour - max(request.open_date.hour, 9)
         documents = []
         for index, doc in enumerate(photo_files):
             suffix = Path(doc.filename).suffix
@@ -267,32 +268,18 @@ async def update_technical_request_from_repairman(
         logger.error(f"Technical problem with id {request.id} record wasn't updated")
         return False
     else:
-        await notify_worker_by_telegram_id(
-            id=request.appraiser.telegram_id,
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.appraiser.telegram_id,
             message=text.notification_appraiser
             + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=text.view,
-                    callback_data=ShowRequestCallbackData(
-                        request_id=request_id,
-                        end_point="AR_TR_show_form_waiting",
-                    ).pack(),
-                )
-            ),
+            request_id=request_id,
+            end_point="AR_TR_show_form_waiting",
         )
-        await notify_worker_by_telegram_id(
-            id=request.worker.telegram_id,
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.worker.telegram_id,
             message=text.notification_worker + f"\nЗаявка {request_id} на проверке ТУ.",
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=text.view,
-                    callback_data=ShowRequestCallbackData(
-                        request_id=request_id,
-                        end_point="WR_TR_show_form_history",
-                    ).pack(),
-                )
-            ),
+            request_id=request_id,
+            end_point="WR_TR_show_form_history",
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -301,40 +288,27 @@ async def update_technical_request_from_repairman(
                 f"The chief technician wasn't found at department {request.department.id}"
             )
         else:
-            await notify_worker_by_telegram_id(
-                id=chief_technician.telegram_id,
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=chief_technician.telegram_id,
                 message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
-                reply_markup=create_inline_keyboard(
-                    InlineKeyboardButton(
-                        text=text.view,
-                        callback_data=ShowRequestCallbackData(
-                            request_id=request_id,
-                            end_point="show_CT_TR_admin_form",
-                        ).pack(),
-                    )
-                ),
+                request_id=request_id,
+                end_point="show_CT_TR_admin_form",
             )
-        directors_extensive_development = orm.get_workers_with_scope(
-            FujiScope.bot_technical_request_department_director
+
+        extensive_directors = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_extensive_director
         )
-        if directors_extensive_development == []:
+        if extensive_directors == []:
             logger.error(
                 f"The Director of Extensive Development wasn't found at department {request.department.id}"
             )
         else:
-            for director_extensive_development in directors_extensive_development:
-                await notify_worker_by_telegram_id(
-                    id=director_extensive_development.telegram_id,
+            for extensive_director in extensive_directors:
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=extensive_director.telegram_id,
                     message=f"Заявка с номером {request_id} на проверке ТУ.\nПредприятие: {request.department.name}",
-                    reply_markup=create_inline_keyboard(
-                        InlineKeyboardButton(
-                            text=text.view,
-                            callback_data=ShowRequestCallbackData(
-                                request_id=request_id,
-                                end_point="DD_TR_show_form_active",
-                            ).pack(),
-                        )
-                    ),
+                    request_id=request_id,
+                    end_point="ED_TR_show_form_active",
                 )
 
     return True
@@ -343,7 +317,6 @@ async def update_technical_request_from_repairman(
 async def update_technical_request_from_appraiser(
     mark: int, request_id: int, description: Optional[str]
 ) -> bool:
-    from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text
 
     """
@@ -391,96 +364,205 @@ async def update_technical_request_from_appraiser(
         return False
     else:
         if mark == 1 and request.state == ApprovalStatus.pending:
-            await notify_worker_by_telegram_id(
-                id=request.repairman.telegram_id,
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
                 + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
-                reply_markup=create_inline_keyboard(
-                    InlineKeyboardButton(
-                        text=text.view,
-                        callback_data=ShowRequestCallbackData(
-                            request_id=request_id,
-                            end_point="RM_TR_show_form_rework",
-                        ).pack(),
-                    )
-                ),
+                request_id=request_id,
+                end_point="RM_TR_show_form_rework",
             )
+
             chief_technician = orm.get_chief_technician(request.department.id)
             if chief_technician is None:
                 logger.error(
                     f"The chief technician wasn't found at department {request.department.id}"
                 )
             else:
-                await notify_worker_by_telegram_id(
-                    id=chief_technician.telegram_id,
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=chief_technician.telegram_id,
                     message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
-                    reply_markup=create_inline_keyboard(
-                        InlineKeyboardButton(
-                            text=text.view,
-                            callback_data=ShowRequestCallbackData(
-                                request_id=request_id,
-                                end_point="show_CT_TR_admin_form",
-                            ).pack(),
-                        )
-                    ),
+                    request_id=request_id,
+                    end_point="show_CT_TR_admin_form",
                 )
 
-            directors_extensive_development = orm.get_workers_with_scope(
-                FujiScope.bot_technical_request_department_director
+            extensive_directors = orm.get_workers_with_scope(
+                FujiScope.bot_technical_request_extensive_director
             )
-            if directors_extensive_development == []:
+            if extensive_directors == []:
                 logger.error(
                     f"The Director of Extensive Development wasn't found at department {request.department.id}"
                 )
             else:
-                for director_extensive_development in directors_extensive_development:
-                    await notify_worker_by_telegram_id(
-                        id=director_extensive_development.telegram_id,
+                for extensive_director in extensive_directors:
+                    await notify_worker_by_telegram_id_in_technical_request(
+                        telegram_id=extensive_director.telegram_id,
                         message=f"Заявка с номером {request_id} отправлена на доработку.\nПредприятие: {request.department.name}",
-                        reply_markup=create_inline_keyboard(
-                            InlineKeyboardButton(
-                                text=text.view,
-                                callback_data=ShowRequestCallbackData(
-                                    request_id=request_id,
-                                    end_point="DD_TR_show_form_active",
-                                ).pack(),
-                            )
-                        ),
+                        request_id=request_id,
+                        end_point="ED_TR_show_form_active",
                     )
-            await notify_worker_by_telegram_id(
-                id=request.worker.telegram_id,
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.worker.telegram_id,
                 message=text.notification_worker
                 + f"\nЗаявка {request_id} отправлена на доработку.",
-                reply_markup=create_inline_keyboard(
-                    InlineKeyboardButton(
-                        text=text.view,
-                        callback_data=ShowRequestCallbackData(
-                            request_id=request_id,
-                            end_point="WR_TR_show_form_history",
-                        ).pack(),
-                    )
-                ),
+                request_id=request_id,
+                end_point="WR_TR_show_form_history",
             )
         else:
-            await notify_worker_by_telegram_id(
-                id=request.worker.telegram_id,
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.worker.telegram_id,
                 message=text.notification_worker + f"\nЗаявка {request_id} закрыта.",
-                reply_markup=create_inline_keyboard(
-                    InlineKeyboardButton(
-                        text=text.view,
-                        callback_data=ShowRequestCallbackData(
-                            request_id=request_id,
-                            end_point="WR_TR_show_form_history",
-                        ).pack(),
-                    )
-                ),
+                request_id=request_id,
+                end_point="WR_TR_show_form_history",
             )
 
     return True
 
 
-def update_tech_request_executor(
-    request_id: int, repairman_full_name: list[str]
+def get_active_state_by_columns(request: TechnicalRequestSchema):
+    for key, val in {
+        "repair_date": ApprovalStatus.pending,
+        "confirmation_date": ApprovalStatus.pending_approval,
+        "reopen_repair_date": ApprovalStatus.pending,
+        "reopen_confirmation_date": ApprovalStatus.pending_approval,
+    }.items():
+        if getattr(request, key) is None:
+            return val
+    return ApprovalStatus.skipped if request.score == 1 else ApprovalStatus.approved
+
+
+async def update_technical_request_by_territorial_director(
+    id: int,
+    correct_option: bool,
+    description: str,
+) -> bool:
+    request = orm.get_technical_requests_by_column(
+        column=TechnicalRequest.id,
+        value=id,
+    )
+    if request == []:
+        logger.error(f"Technical request with id: {id} wasn't found")
+    request = request[0]
+
+    request.not_relevant_confirmation_description = description
+    request.not_relevant_confirmation_date = datetime.now()
+
+    if correct_option:
+        request.close_date = datetime.now()
+        request.close_description = description
+        if not orm.update_technical_request_from_territorial_director(request=request):
+            logger.error(
+                f"Technical request with id {request.id} wasn't update by department director"
+            )
+            return False
+
+        message = f"Техническая заявка с номером {request.id} закрыта как не релевантная.\nПроизводство: {request.department.name}"
+
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.worker.telegram_id,
+            message=message,
+            request_id=request.id,
+            end_point="WR_TR_show_form_history",
+        )
+
+        chief_technician = orm.get_chief_technician(request.department.id)
+        if chief_technician is None:
+            logger.error(
+                f"Chief technician in department with id: {request.department.id} wasn't found"
+            )
+        else:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=chief_technician.telegram_id,
+                message=message,
+                request_id=request.id,
+                end_point="show_CT_TR_admin_form",
+            )
+
+        extensive_directors = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_extensive_director
+        )
+        for extensive_director in extensive_directors:
+            if extensive_director is None:
+                logger.error("Extensive directors weren't found")
+            else:
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=extensive_director.telegram_id,
+                    message=message,
+                    request_id=request.id,
+                    end_point="ED_TR_show_form_history",
+                )
+    else:
+        request.state = get_active_state_by_columns(request=request)
+        if not orm.update_technical_request_from_territorial_director(request=request):
+            logger.error(
+                f"Technical request with id {request.id} wasn't update by department director"
+            )
+            return False
+
+        if request.state == ApprovalStatus.pending:
+            message = f"Техническая заявка с номером {request.id} восстановлена и ожидает выполнения"
+
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.repairman.telegram_id,
+                message=message,
+                request_id=request.id,
+                end_point="RM_TR_show_form_rework"
+                if request.reopen_repair_date is None
+                else "RM_TR_repair_waiting_form",
+            )
+
+        elif request.state == ApprovalStatus.pending_approval:
+            message = f"Техническая заявка с номером {request.id} восстановлена и ожидает оценки"
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.appraiser.telegram_id,
+                message=message,
+                request_id=request.id,
+                end_point="AR_TR_show_form_waiting",
+            )
+        else:
+            message = f"Техническая заявка с номером {request.id} закрыта"
+            logger.error(
+                f"Executor for technical request with id {request.id} for stage {request.state} wasn't found"
+            )
+        message += f"\nПроизводство: {request.department.name}"
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.worker.telegram_id,
+            message=message,
+            request_id=request.id,
+            end_point="WR_TR_show_form_history",
+        )
+
+        chief_technician = orm.get_chief_technician(request.department.id)
+        if chief_technician is None:
+            logger.error(
+                f"Chief technician in department with id: {request.department.id} wasn't found"
+            )
+        else:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=chief_technician.telegram_id,
+                message=message,
+                request_id=request.id,
+                end_point="show_CT_TR_admin_form",
+            )
+
+        extensive_directors = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_extensive_director
+        )
+        for extensive_director in extensive_directors:
+            if extensive_director is None:
+                logger.error("Extensive directors weren't found")
+            else:
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=extensive_director.telegram_id,
+                    message=message,
+                    request_id=request.id,
+                    end_point="ED_TR_show_form_active",
+                )
+
+    return True
+
+
+async def update_tech_request_executor(
+    request_id: int, repairman_full_name: list[str], department_name: str
 ) -> int:
     """
     Update executor in technical request return telegram id
@@ -496,7 +578,14 @@ def update_tech_request_executor(
         request_id=request_id, repairman_id=repairman.id
     ):
         logger.error(f"Technical request with id: {request_id} wasn't update executor")
-    return repairman.x
+        return False
+    await notify_worker_by_telegram_id_in_technical_request(
+        telegram_id=repairman.telegram_id,
+        message=f"Вас назначили на заявку {request_id}\nНа предприятие: {department_name}",
+        request_id=request_id,
+        end_point="RM_TR_repair_waiting_form",
+    )
+    return True
 
 
 def update_technical_request_problem(request_id: int, problem_id: int):
@@ -520,7 +609,7 @@ def get_all_waiting_technical_requests_for_worker(
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id, TechnicalRequest.close_date],
             [worker.id, null()],
-        )[:-16:-1]
+        )
 
     return requests
 
@@ -552,9 +641,33 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.confirmation_date,
                 ],
                 [repairman.id, ApprovalStatus.pending, department_id, null()],
-            )[:-16:-1]
+            )
 
             return requests
+
+
+def get_all_pending_technical_requests_for_territorial_director(
+    department_name: str,
+):
+    try:
+        department_id = (orm.find_departments_by_name(department_name)[0]).id
+    except IndexError:
+        logger.error(f"Department with name: {department_name} wasn't found")
+    else:
+        requests = orm.get_technical_requests_by_columns(
+            [
+                TechnicalRequest.state,
+                TechnicalRequest.department_id,
+                TechnicalRequest.close_date,
+            ],
+            [
+                ApprovalStatus.not_relevant,
+                department_id,
+                null(),
+            ],
+        )
+
+        return requests
 
 
 def get_all_rework_technical_requests_for_repairman(
@@ -612,17 +725,16 @@ def get_all_waiting_technical_requests_for_appraiser(
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
-            )[:-16:-1]
+            )
 
             return requests
 
 
-def get_all_active_technical_requests_for_department_director(
-    telegram_id: int,
-    department_name: str,
+def get_all_active_technical_requests_for_extensive_director(
+    department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
-    Return all waiting technical requests by Telegram id for department_director
+    Return all waiting technical requests by Telegram id for extensive_director
     """
     try:
         department = orm.find_departments_by_name(department_name)[0]
@@ -632,7 +744,8 @@ def get_all_active_technical_requests_for_department_director(
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
             history_flag=False,
-        )[:-16:-1]
+            limit=limit,
+        )
         return requests
 
 
@@ -686,7 +799,7 @@ def get_all_history_technical_requests_for_appraiser(
                 ],
                 [appraiser.id, department_id],
                 history=True,
-            )[:-16:-1]
+            )
 
             return requests
 
@@ -704,13 +817,13 @@ def get_all_history_technical_requests_for_worker(
     else:
         requests = orm.get_technical_requests_by_columns(
             [TechnicalRequest.worker_id], [worker.id], history=True
-        )[:-16:-1]
+        )
 
         return requests
 
 
-def get_all_history_technical_requests_for_department_director(
-    department_name: str,
+def get_all_history_technical_requests_for_extensive_director(
+    department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -723,9 +836,24 @@ def get_all_history_technical_requests_for_department_director(
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
             history_flag=True,
-        )[:-16:-1]
+            limit=limit,
+        )
 
         return requests
+
+
+def get_all_history_technical_requests_territorial_director(
+    department_name: str,
+):
+    department = orm.find_departments_by_name(department_name)
+    if department == []:
+        logger.error(f"Department with name: {department_name} wasn't found")
+        return []
+    department = department[0]
+
+    return orm.get_all_history_technical_requests_territorial_director(
+        department_id=department.id
+    )
 
 
 def _get_departments_names_for_employee(
@@ -771,6 +899,14 @@ def get_departments_names_for_appraiser(
     )
 
 
+def get_departments_names_for_territorial_director(
+    telegram_id: int,
+) -> list[str]:
+    return _get_departments_names_for_employee(
+        telegram_id=telegram_id, worker_column=Department.territorial_director_id
+    )
+
+
 def get_departments_names_for_chief_technician(
     telegram_id: int,
 ) -> list[str]:
@@ -780,7 +916,7 @@ def get_departments_names_for_chief_technician(
 
 
 def get_all_active_requests_in_department_for_chief_technician(
-    department_name: str,
+    department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all request in department
@@ -790,7 +926,9 @@ def get_all_active_requests_in_department_for_chief_technician(
     except IndexError:
         logger.error(f"Department with name: {department_name} wasn't found")
     else:
-        requests = orm.get_all_active_requests_in_department(department_id)[:-16:-1]
+        requests = orm.get_all_active_requests_in_department_for_chief_technician(
+            department_id, limit
+        )
         return requests
 
 
@@ -809,30 +947,96 @@ def get_all_worker_in_group(
     return workers
 
 
-def close_request(
+async def set_not_relevant_state(
     request_id: int,
     description: str,
     telegram_id: int,
-) -> int:
+) -> bool:
     """
     Close request by acceptor_post
     Return creator TG id
     """
     cur_date = datetime.now()
-    acceptor_post_id = (
+    request = orm.get_technical_requests_by_column(TechnicalRequest.id, request_id)
+    if request == []:
+        logger.error(f"Technical request with id: {request_id} wasn't found")
+        return False
+    request = request[0]
+    if request.state not in [ApprovalStatus.pending, ApprovalStatus.pending_approval]:
+        return False
+
+    request.not_relevant_description = description
+    request.not_relevant_date = cur_date
+    request.acceptor_post = (
         orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
-    ).post.id
-    tg_id = orm.close_request(
-        request_id=request_id,
-        description=description,
-        close_date=cur_date,
-        acceptor_post_id=acceptor_post_id,
-    )
+    ).post
 
-    if not tg_id:
-        logger.error(f"Request with id: {request_id} wasn't close")
-
-    return tg_id
+    if not orm.set_not_relevant_state(
+        request=request,
+    ):
+        logger.error(f"Technical request with id: {request_id} wasn't update")
+        return False
+    else:
+        await notify_worker_by_telegram_id_in_technical_request(
+            telegram_id=request.worker.telegram_id,
+            message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
+            request_id=request_id,
+            end_point="WR_TR_show_form_history",
+        )
+        if request.state == ApprovalStatus.pending:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.repairman.telegram_id,
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
+                request_id=request_id,
+                end_point="RM_TR_show_form_history",
+            )
+        elif request.state == ApprovalStatus.pending_approval:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=request.appraiser.telegram_id,
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
+                request_id=request_id,
+                end_point="AR_TR_show_form_history",
+            )
+        else:
+            logger.error(
+                f"Responsible by state {request.state} for technical request with id: {request_id} wasn't found"
+            )
+        chief_technician = orm.get_chief_technician(department_id=request.department.id)
+        if chief_technician is None:
+            logger.error(
+                f"Chief technician for technical request with id: {request_id} wasn't found"
+            )
+        else:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=chief_technician.telegram_id,
+                message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
+                request_id=request_id,
+                end_point="show_CT_TR_admin_form",
+            )
+        extensive_directors = orm.get_workers_with_scope(
+            FujiScope.bot_technical_request_extensive_director
+        )
+        for extensive_director in extensive_directors:
+            if extensive_director.telegram_id is not None:
+                await notify_worker_by_telegram_id_in_technical_request(
+                    telegram_id=extensive_director.telegram_id,
+                    message=f"Техническая заявка с номером {request_id} передана на проверку релевантности.\nПроизводство: {request.department.name}",
+                    request_id=request_id,
+                    end_point="ED_TR_show_form_active",
+                )
+        territorial_director = orm.get_territorial_director(request.department.id)
+        if territorial_director is None:
+            logger.error(
+                f"Territorial director for technical request with id: {request_id} wasn't found"
+            )
+        else:
+            await notify_worker_by_telegram_id_in_technical_request(
+                telegram_id=territorial_director.telegram_id,
+                message=f"У Вас новая техническая заявка на проверку.\nНомер заявки {request_id}.\nПроизводство: {request.department.name}",
+                request_id=request_id,
+                end_point="TD_TR_show_pending_form",
+            )
+    return True
 
 
 def get_request_count_in_departments_by_tg_id(
@@ -847,8 +1051,13 @@ def get_request_count_in_departments_by_tg_id(
     return orm.get_count_req_in_departments(state=state, worker_id=worker_id)
 
 
-def get_request_count_in_departments(state: ApprovalStatus) -> tuple[str, int]:
-    return orm.get_count_req_in_departments(state)
+def get_request_count_in_departments(
+    state: ApprovalStatus, department_names: list[str]
+) -> tuple[str, int]:
+    if department_names == []:
+        return []
+    departments_id = orm.get_departments_id_by_names(department_names)
+    return orm.get_count_req_in_departments(state=state, departments_id=departments_id)
 
 
 def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:
@@ -879,4 +1088,4 @@ def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:
                 request.repairman_worktime += worktime - (
                     request.open_date.hour - start_work_day
                 )
-    orm.update_technical_requests(requests)
+    orm.update_technical_requests_worktime(requests)
