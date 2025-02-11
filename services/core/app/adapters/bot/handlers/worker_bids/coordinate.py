@@ -370,15 +370,16 @@ async def set_comment_str(message: Message, state: FSMContext):
     await state.set_state(Base.none)
 
     id: int = data["id"]
-    state: int = data["status"]
+    status: int = data["status"]
     await try_delete_message(message)
     state_column_name: str = data["state_column_name"]
     get_menu: Callable = data["get_menu"]
+    await state.clear()
 
     if not await update_worker_bid_bot(
         bid_id=id,
         state_column_name=state_column_name,
-        state=ApprovalStatus.approved if state == 1 else ApprovalStatus.denied,
+        state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
         comment=message.text,
     ):
         msg = await try_edit_or_answer(
