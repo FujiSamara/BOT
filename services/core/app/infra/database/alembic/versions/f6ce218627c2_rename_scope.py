@@ -1,7 +1,7 @@
 """rename scope bot_technical_request_department_director
 
 Revision ID: f6ce218627c2
-Revises: f8875a2f4074
+Revises: 1fb43aa474af
 Create Date: 2025-02-05 15:40:40.321929
 
 """
@@ -11,7 +11,7 @@ from app.infra.database.alembic.enum import rename_enum
 
 # revision identifiers, used by Alembic.
 revision: str = "f6ce218627c2"
-down_revision: Union[str, None] = "f8875a2f4074"
+down_revision: Union[str, None] = "1fb43aa474af"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
