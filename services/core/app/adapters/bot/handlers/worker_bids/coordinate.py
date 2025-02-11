@@ -108,6 +108,11 @@ class WorkerBidCoordinationFactory:
             ),
             WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
         )
+        router.callback_query.register(
+            self.seek_docs_accounting_service,
+            WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
+            WorkerBidCallbackData.filter(F.endpoint_name == f"seek_docs_{self.name}"),
+        )
 
     async def get_menu(self, message: CallbackQuery | Message):
         if isinstance(message, CallbackQuery):
@@ -362,6 +367,31 @@ class WorkerBidCoordinationFactory:
             ),
         )
 
+    async def seek_docs_accounting_service(
+        self,
+        callback: CallbackQuery,
+        callback_data: WorkerBidCallbackData,
+        state: FSMContext,
+    ):
+        msg = await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Перечислите документы"),
+            return_message=True,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"get_pending_bid_{self.name}",
+                    ).pack(),
+                )
+            ),
+        )
+        await state.update_data(id=callback_data.id, msg=msg)
+
+        await state.set_state(WorkerBidCoordination.seek_documents)
+
 
 @router.message(
     WorkerBidCoordination.comment_str,
@@ -466,23 +496,6 @@ async def set_comment_int(message: Message, state: FSMContext):
                 )
             ),
         )
-
-
-@router.callback_query(
-    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
-    WorkerBidCallbackData.filter(F.endpoint_name == "seek_docs_accounting_service"),
-)
-async def seek_docs_accounting_service(
-    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
-):
-    msg = await try_edit_or_answer(
-        message=callback.message,
-        text=hbold("Перечислите документы"),
-        return_message=True,
-    )
-    await state.update_data(id=callback_data.id, msg=msg)
-
-    await state.set_state(WorkerBidCoordination.seek_documents)
 
 
 @router.message(WorkerBidCoordination.seek_documents)
