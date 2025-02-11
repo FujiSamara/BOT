@@ -303,9 +303,19 @@ class WorkerBidCoordinationFactory:
             text=hbold(
                 "Введите комментарий:"
                 if self.comment_state is WorkerBidCoordination.comment_str
-                else "Введите табельный номер:"
+                else "Введите табельный номер:",
             ),
             return_message=True,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="К заявке",
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{self.name}",
+                    ).pack(),
+                )
+            ),
         )
         await state.update_data(
             msg=message, get_menu=self.get_menu, state_column_name=self.name

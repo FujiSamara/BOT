@@ -1,7 +1,7 @@
 """drop iiko coment add iiko_worker_id
 
 Revision ID: 1fb43aa474af
-Revises: f8875a2f4074
+Revises: 5ce7a56ae4a7
 Create Date: 2025-02-10 11:42:30.620540
 
 """
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "1fb43aa474af"
-down_revision: Union[str, None] = "f8875a2f4074"
+down_revision: Union[str, None] = "5ce7a56ae4a7"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
