@@ -142,11 +142,9 @@ onUnmounted(() => {
 
 	.hint {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		position: fixed;
-
-		display: flex;
-		flex-direction: column;
 
 		width: var(--max-hint-width);
 		max-width: var(--max-hint-width);
@@ -166,7 +164,6 @@ onUnmounted(() => {
 
 	.cell {
 		overflow: hidden;
-		max-width: 100%;
 		max-height: 100%;
 	}
 }
