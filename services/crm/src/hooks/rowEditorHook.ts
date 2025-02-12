@@ -110,6 +110,7 @@ export function useRowEditor<T extends BaseSchema>(
 
 		for (const field of fields) {
 			field.active = !field.entity.readonly;
+			field.entity.withTitle = true;
 		}
 	};
 
