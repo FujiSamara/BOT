@@ -211,6 +211,7 @@ const starClicked = () => {
 	}
 
 	.required {
+		user-select: none;
 		span {
 			color: $sec-arrantion-red;
 			font-family: Wix Madefor Display;
