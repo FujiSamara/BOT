@@ -17,10 +17,10 @@ from app.adapters.bot import text
 from app.infra.database.models import ApprovalStatus
 from app.services.technical_request import (
     get_technical_request_by_id,
-    get_cleaning_request_by_id,
     get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
 )
+from app.services.cleaning_request import get_cleaning_request_by_id
 
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
@@ -446,8 +446,8 @@ def department_names_with_count(
             return [f"{dep_count[1]} {dep_count[0]}" for dep_count in request_count]
     else:
         request_count = get_request_count_in_departments(
-            state=state, department_names=department_names
-        , model=model)
+            state=state, department_names=department_names, model=model
+        )
     out_department_names = []
     if len(department_names) > 0:
         for department_name, count in request_count:
