@@ -600,7 +600,7 @@ async def ar_rate_kb(
 
 # endregion
 
-# region Department director
+# region Extensive director
 
 ed_button = InlineKeyboardButton(
     text="Технические заявки директор", callback_data="get_ED_TR"

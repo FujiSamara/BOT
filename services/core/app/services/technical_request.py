@@ -26,6 +26,7 @@ from app.adapters.bot.handlers.department_request.schemas import (
     RequestType,
 )
 
+
 async def notify_worker_by_telegram_id_in_technical_request(
     telegram_id, message: str, request_id: int, end_point: str
 ):
@@ -283,7 +284,7 @@ async def update_technical_request_from_repairman(
             message=text.notification_worker_TR
             + f"\nЗаявка {request_id} на проверке ТУ.",
             request_id=request_id,
-                        req_type=1,
+            req_type=1,
             end_point="WR_DR_show_form_waiting",
         )
 
@@ -410,7 +411,7 @@ async def update_technical_request_from_appraiser(
                 message=text.notification_worker_TR
                 + f"\nЗаявка {request_id} отправлена на доработку.",
                 request_id=request_id,
-                            req_type=1,
+                req_type=1,
                 end_point="WR_DR_show_form_waiting",
             )
         else:
@@ -418,7 +419,7 @@ async def update_technical_request_from_appraiser(
                 telegram_id=request.worker.telegram_id,
                 message=text.notification_worker_TR + f"\nЗаявка {request_id} закрыта.",
                 request_id=request_id,
-                            req_type=1,
+                req_type=1,
                 end_point="WR_DR_show_form_history",
             )
 
@@ -654,6 +655,25 @@ def get_all_waiting_technical_requests_for_repairman(
         return requests
 
 
+def get_all_active_technical_requests_for_extensive_director(
+    department_name: str, limit: int = 15
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for extensive_director
+    """
+    try:
+        department = orm.find_departments_by_name(department_name)[0]
+    except IndexError:
+        logger.error(f"Department with name {department_name} wasn't found")
+    else:
+        requests = orm.get_all_technical_requests_in_department(
+            department_id=department.id,
+            history_flag=False,
+            limit=limit,
+        )
+        return requests
+
+
 def get_all_pending_technical_requests_for_territorial_director(
     department_name: str,
 ):
@@ -674,6 +694,9 @@ def get_all_pending_technical_requests_for_territorial_director(
                 null(),
             ],
         )
+
+        return requests
+
 
 def get_all_rework_technical_requests_for_repairman(
     telegram_id: int,
@@ -1066,14 +1089,16 @@ def get_request_count_in_departments_by_tg_id(
 
 
 def get_request_count_in_departments(
-    
-    state: ApprovalStatus, department_names: list[str]
-, model: TechnicalRequest | CleaningRequest
+    state: ApprovalStatus,
+    department_names: list[str],
+    model: TechnicalRequest | CleaningRequest,
 ) -> tuple[str, int]:
     if department_names == []:
         return []
     departments_id = orm.get_departments_id_by_names(department_names)
-    return orm.get_count_req_in_departments(state=state, departments_id=departments_id, model=model)
+    return orm.get_count_req_in_departments(
+        state=state, departments_id=departments_id, model=model
+    )
 
 
 def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:

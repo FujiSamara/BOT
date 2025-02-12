@@ -1505,13 +1505,14 @@ def set_not_relevant_state(request: TechnicalRequestSchema) -> bool:
 def get_count_req_in_departments(
     state: ApprovalStatus,
     model: TechnicalRequest | CleaningRequest,
-   
-    worker_id: int | None = None,,
+    worker_id: int | None = None,
     departments_id: list[int] = [],
 ) -> list[tuple[str, int]]:
     """Count model requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        stmt = select(Department.name, func.count(getattr(model, "id"))).join(Department)
+        stmt = select(Department.name, func.count(getattr(model, "id"))).join(
+            Department
+        )
 
         if worker_id is not None:
             match state:
@@ -1539,14 +1540,16 @@ def get_count_req_in_departments(
             stmt = stmt.filter(
                 or_(
                     *[
-                        TechnicalRequest.department_id == department_id
+                        getattr(model, "department_id") == department_id
                         for department_id in departments_id
                     ]
                 )
             )
             if state == ApprovalStatus.not_relevant:
                 stmt = stmt.filter(
-                    and_(getattr(model, "close_date") == null(),getattr(model, "state")== state,
+                    and_(
+                        getattr(model, "close_date") == null(),
+                        getattr(model, "state") == state,
                     )
                 )
             else:
