@@ -33,9 +33,6 @@ async def notify_worker_by_telegram_id_in_technical_request(
     from app.adapters.bot.kb import create_inline_keyboard
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text
-    from app.adapters.bot.handlers.tech_request.schemas import (
-        ShowRequestCallbackData,
-    )
     from aiogram.types import InlineKeyboardButton
 
     await notify_worker_by_telegram_id(
