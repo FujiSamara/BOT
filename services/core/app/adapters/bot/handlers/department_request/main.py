@@ -8,9 +8,9 @@ from app.adapters.bot.handlers.department_request import (
 )
 from app.adapters.bot.handlers.department_request.technician import (
     chief_technician,
-    extensive_director,
     territorial_director,
 )
+from services.core.app.adapters.bot.handlers.department_request.technician import department_director
 
 router = Router(name="department_request_main")
 
@@ -23,6 +23,6 @@ router.include_routers(
     chief_technician.router,
     appraiser.router,
     local_handlers.router,
-    extensive_director.router,
+    department_director.router,
     territorial_director.router,
 )
