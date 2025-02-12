@@ -49,7 +49,7 @@ const save = () => {
 		@close="editor.close"
 	>
 		<EntitySelect
-			v-for="field in editor.fields.filter((val) => !val.active)"
+			v-for="field in editor.fields.filter((val) => val.active)"
 			:entity="field.entity"
 			:select-type="field.type"
 		></EntitySelect>

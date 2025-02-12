@@ -42,6 +42,8 @@ export function useRowEditor<T extends BaseSchema>(
 	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
 	const mode = ref(EditorMode.View);
 
+	fields.forEach((f) => (f.active = true));
+
 	const close = () => {
 		active.value = false;
 
@@ -56,6 +58,8 @@ export function useRowEditor<T extends BaseSchema>(
 			case EditorMode.Edit:
 				fields.forEach((f) => f.entity.clear());
 				break;
+			case EditorMode.Create:
+				fields.forEach((f) => (f.active = true));
 		}
 	};
 
@@ -101,7 +105,7 @@ export function useRowEditor<T extends BaseSchema>(
 		mode.value = EditorMode.Create;
 
 		for (const field of fields) {
-			if (field.entity.readonly) field.active = false;
+			field.active = !field.entity.readonly;
 		}
 	};
 
@@ -111,7 +115,7 @@ export function useRowEditor<T extends BaseSchema>(
 		const result: any = {};
 
 		for (const field of fields) {
-			if (!field.entity.completed.value) continue;
+			if (!field.entity.completed.value || field.entity.readonly) continue;
 			result[field.name] = field.entity.getResult();
 		}
 
