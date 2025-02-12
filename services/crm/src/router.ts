@@ -45,6 +45,12 @@ const routes = [
 						component: async () =>
 							await import("@/pages/panels/bid/BidPanel.vue"),
 					},
+					{
+						name: "table-my-bids",
+						path: "mybid",
+						component: async () =>
+							await import("@/pages/panels/bid/MyBidPanel.vue"),
+					},
 				],
 			},
 			{

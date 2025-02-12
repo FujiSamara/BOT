@@ -2,7 +2,7 @@ import { Access, PanelData } from "@types";
 import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
-import { BidTable } from "@/pages/panels/bid";
+import { BidTable, MyBidTable } from "@/pages/panels/bid";
 
 const panels: Array<PanelData> = [
 	{
@@ -41,6 +41,15 @@ const panels: Array<PanelData> = [
 		name: "bid",
 		create: BidTable,
 		accesses: [Access.Bid],
+	},
+	{
+		label: "Мои заявки",
+		routeName: "table-my-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "mybid",
+		create: MyBidTable,
+		accesses: [Access.MyBid],
 	},
 ];
 
