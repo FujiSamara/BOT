@@ -28,7 +28,10 @@ from app.adapters.bot.handlers.department_request.utils import (
     show_form_technician,
     show_form_cleaning,
 )
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    RequestType,
+)
 from app.adapters.bot.handlers.department_request import kb as department_kb
 
 from app.services import (
@@ -298,19 +301,22 @@ async def show_worker_waiting_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form_technician(
-        callback=callback,
-        callback_data=callback_data,
-        state=state,
-        buttons=buttons,
-        history_or_waiting_button=department_kb.wr_waiting,
-    ) if callback_data.req_type != 2 else await show_form_cleaning(
-        callback=callback,
-        callback_data=callback_data,
-        state=state,
-        buttons=buttons,
-        history_or_waiting_button=department_kb.wr_waiting,
-    )
+    if callback_data.req_type == RequestType.TR.value:
+        await show_form_technician(
+            callback=callback,
+            callback_data=callback_data,
+            state=state,
+            buttons=buttons,
+            history_or_waiting_button=department_kb.wr_waiting,
+        )
+    else:
+        await show_form_cleaning(
+            callback=callback,
+            callback_data=callback_data,
+            state=state,
+            buttons=buttons,
+            history_or_waiting_button=department_kb.wr_waiting,
+        )
 
 
 @router.callback_query(F.data == department_kb.wr_history.callback_data)
@@ -319,7 +325,9 @@ async def change_history_type(callback: CallbackQuery):
         InlineKeyboardButton(
             text="Технические заявки",
             callback_data=ShowRequestCallbackData(
-                request_id=-1, end_point="WR_DR_history_menu", req_type=21
+                request_id=-1,
+                end_point="WR_DR_history_menu",
+                req_type=RequestType.TR.value,
             ).pack(),
         ),
         InlineKeyboardButton(
@@ -327,7 +335,7 @@ async def change_history_type(callback: CallbackQuery):
             callback_data=ShowRequestCallbackData(
                 request_id=-1,
                 end_point="WR_DR_history_menu",
-                req_type=2,
+                req_type=RequestType.CR.value,
             ).pack(),
         ),
         InlineKeyboardButton(
@@ -382,19 +390,22 @@ async def show_worker_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form_technician(
-        callback=callback,
-        callback_data=callback_data,
-        state=state,
-        buttons=buttons,
-        history_or_waiting_button=department_kb.wr_history,
-    ) if callback_data.req_type != 2 else await show_form_cleaning(
-        callback=callback,
-        callback_data=callback_data,
-        state=state,
-        buttons=buttons,
-        history_or_waiting_button=department_kb.wr_history,
-    )
+    if callback_data.req_type == RequestType.TR.value:
+        await show_form_technician(
+            callback=callback,
+            callback_data=callback_data,
+            state=state,
+            buttons=buttons,
+            history_or_waiting_button=department_kb.wr_history,
+        )
+    else:
+        await show_form_cleaning(
+            callback=callback,
+            callback_data=callback_data,
+            state=state,
+            buttons=buttons,
+            history_or_waiting_button=department_kb.wr_history,
+        )
 
 
 @router.callback_query(F.data == "send_WR_TR_CR")

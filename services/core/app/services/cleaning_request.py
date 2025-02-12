@@ -306,7 +306,7 @@ async def update_cleaning_request_from_cleaner(
                     text=t.view,
                     callback_data=ShowRequestCallbackData(
                         request_id=request_id,
-                        req_type=2,
+                        req_type=RequestType.CR.value,
                         end_point="WR_DR_show_form_waiting",
                     ).pack(),
                 )
@@ -374,7 +374,7 @@ def get_all_waiting_cleaning_requests_for_appraiser(
 
     requests = orm.get_last_cleaning_requests_by_columns(
         and_col=[
-            CleaningRequest.appraiser,
+            CleaningRequest.appraiser_id,
             CleaningRequest.department_id,
             CleaningRequest.state,
         ],
@@ -457,7 +457,7 @@ async def update_cleaning_request_from_appraiser(
                         text=t.view,
                         callback_data=ShowRequestCallbackData(
                             request_id=request_id,
-                            req_type=2,
+                            req_type=RequestType.CR.value,
                             end_point="WR_DR_show_form_waiting",
                         ).pack(),
                     )
@@ -472,7 +472,7 @@ async def update_cleaning_request_from_appraiser(
                         text=t.view,
                         callback_data=ShowRequestCallbackData(
                             request_id=request_id,
-                            req_type=2,
+                            req_type=RequestType.CR.value,
                             end_point="WR_DR_show_form_history",
                         ).pack(),
                     )

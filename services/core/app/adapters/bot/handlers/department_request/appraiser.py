@@ -59,7 +59,7 @@ class CoordinationFactory:
         self.department_menu_button = menu_button
         change_department_button = InlineKeyboardButton(
             text="Выбрать предприятие",
-            callback_data=f"set_{self.problem_type.name}_department_TM",
+            callback_data=f"set_{self.problem_type.name}_department_AR",
         )
         self.change_department_menu = kb.create_inline_keyboard(
             change_department_button,
@@ -68,14 +68,14 @@ class CoordinationFactory:
 
         self.waiting_button = InlineKeyboardButton(
             text="Ожидающие заявки",
-            callback_data=f"get_{self.problem_type.name}_waiting_TM",
+            callback_data=f"get_{self.problem_type.name}_waiting_AR",
         )
         self.history_button = InlineKeyboardButton(
             text="История заявок",
-            callback_data=f"get_{self.problem_type.name}_history_TM",
+            callback_data=f"get_{self.problem_type.name}_history_AR",
         )
         self.menu_button = InlineKeyboardButton(
-            text=text.back, callback_data=f"get_{self.problem_type.name}_menu_TM"
+            text=text.back, callback_data=f"get_{self.problem_type.name}_menu_AR"
         )
         self.menu_markup = kb.create_inline_keyboard(
             self.waiting_button,
@@ -101,7 +101,7 @@ class CoordinationFactory:
         router.callback_query.register(
             self.show_history_form,
             ShowRequestCallbackData.filter(
-                F.end_point == f"{self.problem_type.name}_show_form_history_TM"
+                F.end_point == f"{self.problem_type.name}_show_form_history_AR"
             ),
         )
         router.callback_query.register(
@@ -185,7 +185,7 @@ class CoordinationFactory:
             case RequestType.TR:
                 reply_markup = (
                     department_kb.create_kb_with_end_point_TR(
-                        end_point=f"{self.problem_type.name}_show_form_history_TM",
+                        end_point=f"{self.problem_type.name}_show_form_history_AR",
                         menu_button=self.menu_button,
                         requests=(
                             get_all_history_technical_requests_for_appraiser(
@@ -197,7 +197,7 @@ class CoordinationFactory:
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
-                    end_point=f"{self.problem_type.name}_show_form_history_TM",
+                    end_point=f"{self.problem_type.name}_show_form_history_AR",
                     menu_button=self.menu_button,
                     requests=get_all_history_cleaning_requests_for_appraiser(
                         tg_id=callback.message.chat.id,
@@ -274,8 +274,8 @@ class CoordinationFactory:
     async def show_waiting_form(
         self,
         callback: CallbackQuery,
-        state: FSMContext,
         callback_data: ShowRequestCallbackData,
+        state: FSMContext,
     ):
         buttons: list[list[InlineKeyboardButton]] = [
             [

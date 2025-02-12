@@ -280,9 +280,11 @@ async def update_technical_request_from_repairman(
             telegram_id=request.worker.telegram_id,
             message=text.notification_worker_TR
             + f"\nЗаявка {request_id} на проверке ТУ.",
-            request_id=request_id,
-            req_type=1,
-            end_point="WR_DR_show_form_waiting",
+            callback_data=ShowRequestCallbackData(
+                request_id=request_id,
+                req_type=RequestType.TR.value,
+                end_point="WR_DR_show_form_waiting",
+            ).pack(),
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -407,19 +409,22 @@ async def update_technical_request_from_appraiser(
                 telegram_id=request.worker.telegram_id,
                 message=text.notification_worker_TR
                 + f"\nЗаявка {request_id} отправлена на доработку.",
-                request_id=request_id,
-                req_type=1,
-                end_point="WR_DR_show_form_waiting",
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    req_type=RequestType.TR.value,
+                    end_point="WR_DR_show_form_waiting",
+                ).pack(),
             )
         else:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.worker.telegram_id,
                 message=text.notification_worker_TR + f"\nЗаявка {request_id} закрыта.",
-                request_id=request_id,
-                req_type=1,
-                end_point="WR_DR_show_form_history",
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    req_type=RequestType.TR.value,
+                    end_point="WR_DR_show_form_waiting",
+                ).pack(),
             )
-
     return True
 
 
