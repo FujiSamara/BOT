@@ -62,7 +62,7 @@ onUnmounted(() => {
 
 			.tool-icon-wrapper {
 				.tool-icon {
-					color: white;
+					color: white !important;
 				}
 			}
 		}
