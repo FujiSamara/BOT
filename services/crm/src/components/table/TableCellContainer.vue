@@ -35,9 +35,19 @@ const resizeHint = () => {
 
 	const element = hintRef.value;
 
+	const maxGrantedWidth = parseInt(
+		window
+			.getComputedStyle(document.documentElement)
+			.getPropertyValue("--max-hint-width"),
+	);
+
 	window.getComputedStyle(element).opacity; // Force dom to rerender component.
 	element.style.width = "max-content";
 	window.getComputedStyle(element).opacity; // Force dom to rerender component.
+
+	if (element.offsetWidth > maxGrantedWidth) {
+		element.style.width = `${maxGrantedWidth}px`;
+	}
 };
 
 const checkOverflow = () => {
@@ -45,11 +55,11 @@ const checkOverflow = () => {
 		return;
 	}
 
-	const element = (cellWrapperRef.value as HTMLElement)
+	const cellElement = (cellWrapperRef.value as HTMLElement)
 		.children[0] as HTMLElement;
 	hintAvailable.value =
-		element.scrollHeight > element.offsetHeight ||
-		element.scrollWidth > element.offsetWidth;
+		cellElement.scrollHeight > cellElement.offsetHeight ||
+		cellElement.scrollWidth > cellElement.offsetWidth;
 };
 const observer = new MutationObserver(checkOverflow);
 
@@ -61,7 +71,6 @@ const mouseEnter = async () => {
 	if (!hintRef.value || !cellWrapperRef.value) {
 		return;
 	}
-	resizeHint();
 
 	const hint = hintRef.value as HTMLElement;
 	const cellWrapper = cellWrapperRef.value as HTMLElement;
@@ -69,6 +78,8 @@ const mouseEnter = async () => {
 	hintVisible.value = true;
 
 	await nextTick();
+	resizeHint();
+
 	const rect = cellWrapper.getBoundingClientRect();
 
 	let top = rect.top + rect.height - hint.offsetHeight;
@@ -146,9 +157,8 @@ onUnmounted(() => {
 		align-items: center;
 		position: fixed;
 
-		width: var(--max-hint-width);
-		max-width: var(--max-hint-width);
 		max-height: 300px;
+		width: var(--max-hint-width);
 
 		z-index: 2;
 		border-radius: 8px;
@@ -158,13 +168,16 @@ onUnmounted(() => {
 		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		.cell {
-			overflow-y: auto;
+			overflow: auto;
+			max-width: 100%;
+			max-height: 100%;
 		}
 	}
 
 	.cell {
 		overflow: hidden;
-		max-height: 100%;
+		width: 100%;
+		height: 100%;
 	}
 }
 </style>
