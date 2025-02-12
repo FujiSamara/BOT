@@ -7,6 +7,11 @@ from app.infra.database.models import FujiScope
 from app.adapters.bot.handlers.utils import notify_workers_by_scope
 from typing import Any
 from aiogram.types import InlineKeyboardButton
+from app.adapters.bot.handlers.worker_bids.schemas import (
+    WorkerBidCallbackData,
+    WorkerBidPagesCallbackData,
+    BidViewMode,
+)
 
 
 def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
@@ -73,15 +78,17 @@ def get_worker_pending_bids_btns(
     state_column: Any,
     buttons: list[InlineKeyboardButton],
     name: str,
+    page_callback_data: WorkerBidPagesCallbackData,
 ):
     from app.services import get_pending_approval_bids
-    from app.adapters.bot.handlers.worker_bids.schemas import (
-        WorkerBidCallbackData,
-        BidViewMode,
-    )
     from app.infra.database.models import WorkerBid
 
-    bids = get_pending_approval_bids(state_column) or []
+    bids = (
+        get_pending_approval_bids(
+            state_column=state_column, offset=page_callback_data.page
+        )
+        or []
+    )
     if state_column == WorkerBid.accounting_service_state:
         for bid in bids:
             match bid.view_state:
@@ -116,3 +123,21 @@ def get_worker_pending_bids_btns(
                     ).pack(),
                 )
             )
+    if len(bids) == 20:
+        buttons.append(
+            InlineKeyboardButton(
+                text="Следующая страница",
+                callback_data=WorkerBidPagesCallbackData(
+                    page=page_callback_data.page + 1
+                ),
+            )
+        )
+    if page_callback_data.page > 0:
+        buttons.append(
+            InlineKeyboardButton(
+                text="Предыдущая страница",
+                callback_data=WorkerBidPagesCallbackData(
+                    page=page_callback_data.page - 1
+                ),
+            )
+        )

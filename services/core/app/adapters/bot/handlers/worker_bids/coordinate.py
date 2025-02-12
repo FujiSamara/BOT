@@ -33,6 +33,7 @@ from app.adapters.bot.handlers.worker_bids.utils import (
 from app.adapters.bot import text
 from app.adapters.bot.handlers.worker_bids.schemas import (
     WorkerBidCallbackData,
+    WorkerBidPagesCallbackData,
     BidViewMode,
 )
 from app.infra.database.models import ApprovalStatus, WorkerBid, ViewStatus
@@ -82,6 +83,9 @@ class WorkerBidCoordinationFactory:
             F.data == self.get_pending_worker_bids_btn.callback_data,
         )
         router.callback_query.register(
+            self.get_pending_worker_bids, WorkerBidPagesCallbackData.filter()
+        )
+        router.callback_query.register(
             self.get_pending_bid,
             WorkerBidCallbackData.filter(
                 F.endpoint_name == f"get_pending_bid_{self.name}",
@@ -116,12 +120,25 @@ class WorkerBidCoordinationFactory:
             reply_markup=self.coordinate_worker_bid_menu,
         )
 
-    async def get_pending_worker_bids(self, message: CallbackQuery | Message):
+    async def get_pending_worker_bids(
+        self,
+        message: CallbackQuery | Message,
+        state: FSMContext,
+        page_callback_data: WorkerBidPagesCallbackData | None = None,
+    ):
         if isinstance(message, CallbackQuery):
             message = message.message
+            await state.update_data(page=page_callback_data.page)
+        else:
+            page_callback_data = WorkerBidPagesCallbackData(
+                (await state.get_data()).get("page") or 0
+            )
         buttons = []
         get_worker_pending_bids_btns(
-            state_column=self.state_column, buttons=buttons, name=self.name
+            state_column=self.state_column,
+            buttons=buttons,
+            name=self.name,
+            page_callback_data=page_callback_data,
         )
         buttons.append(
             InlineKeyboardButton(

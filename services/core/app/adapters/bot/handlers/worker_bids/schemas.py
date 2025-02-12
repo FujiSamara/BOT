@@ -15,7 +15,12 @@ class WorkerBidCallbackData(CallbackData, prefix="worker_bid"):
     mode: BidViewMode
     endpoint_name: str
     doc_type: str = "0"
+    page: int = 0
     state: int | None = None
+
+
+class WorkerBidPagesCallbackData(CallbackData, prefix="worker_bid_pages"):
+    page: int = 0
 
 
 class CandidatesCoordinationCallbackData(CallbackData, prefix="worker_coordination"):

@@ -431,7 +431,7 @@ async def create_worker_bid(
 
 
 def get_pending_approval_bids(
-    state_column, limit: int = 20
+    state_column, limit: int = 20, offset: int = 0
 ) -> list[WorkerBidSchema] | None:
     return orm.find_worker_bids_by_column(
         state_column, ApprovalStatus.pending_approval, limit=limit
