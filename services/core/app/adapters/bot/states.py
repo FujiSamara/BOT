@@ -123,12 +123,18 @@ class AppraiserRequestForm(StatesGroup):
     description = State()
 
 
-class DepartmentDirectorRequestForm(StatesGroup):
+class ExtensiveDirectorRequestForm(StatesGroup):
     department = State()
     executor = State()
     group = State()
     problem = State()
     description = State()
+
+
+class TerritorialDirectorRequestForm(StatesGroup):
+    department = State()
+    description = State()
+    correct = State()
 
 
 # Personal Cabinet form

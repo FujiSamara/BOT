@@ -48,7 +48,8 @@ from app.adapters.bot.handlers.department_request.kb import (
     ct_button,  # chief technician
     AR_TR_button,  # territorial manager tech req
     AR_CR_button,  # territorial manager cleaning req
-    dd_button,  # department director
+    ed_button,  # extensive director
+    td_button,  # territorial director
 )
 import asyncio
 
@@ -71,7 +72,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_repairman: repairman_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
         FujiScope.bot_technical_request_appraiser: AR_TR_button,
-        FujiScope.bot_technical_request_department_director: dd_button,
+        FujiScope.bot_technical_request_extensive_director: ed_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
         FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
@@ -81,6 +82,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_worker_bid_security_coordinate: get_coordinate_worker_bids_SS_btn,
         FujiScope.bot_worker_bid_accounting_coordinate: get_coordinate_worker_bids_AS_btn,
         FujiScope.bot_worker_bid_iiko: get_coordinate_worker_bids_iiko_btn,
+        FujiScope.bot_technical_request_department_director: td_button,
         FujiScope.bot_cleaning_request_cleaner: cleaner_button,
         FujiScope.bot_cleaning_request_territorial_manager: AR_CR_button,
     }

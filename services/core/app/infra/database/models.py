@@ -67,7 +67,7 @@ class FujiScope(enum.Enum):
     bot_technical_request_repairman = 15
     bot_technical_request_chief_technician = 16
     bot_technical_request_appraiser = 17
-    bot_technical_request_department_director = 21
+    bot_technical_request_extensive_director = 21
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
@@ -78,8 +78,9 @@ class FujiScope(enum.Enum):
     bot_worker_bid_security_coordinate = 35
     bot_worker_bid_accounting_coordinate = 36
     bot_worker_bid_iiko = 37
-    bot_cleaning_request_cleaner = 38
-    bot_cleaning_request_territorial_manager = 39
+    bot_technical_request_department_director = 38
+    bot_cleaning_request_cleaner = 39
+    bot_cleaning_request_territorial_manager = 40
 
 
 class DepartmentType(enum.Enum):
@@ -1068,6 +1069,13 @@ class TechnicalRequest(Base):
     )
 
     repairman_worktime: Mapped[int] = mapped_column(nullable=True)
+
+    not_relevant_description: Mapped[str] = mapped_column(nullable=True)
+    not_relevant_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    not_relevant_confirmation_date: Mapped[datetime.datetime] = mapped_column(
+        nullable=True
+    )
+    not_relevant_confirmation_description: Mapped[str] = mapped_column(nullable=True)
 
 
 # endregion

@@ -1299,7 +1299,7 @@ def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema 
 
 def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
     """
-    Return WorkerSchema for territorial manager by department id
+    Return WorkerSchema of territorial manager by department id
     """
     with session.begin() as s:
         territorial_manager: Worker = (
@@ -1317,18 +1317,20 @@ def get_technical_requests_by_columns(
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
     """
     with session.begin() as s:
-        query = s.query(TechnicalRequest)
+        stmt = select(TechnicalRequest)
         for column, value in zip(columns, values):
-            query = query.filter(column == value)
+            stmt = stmt.filter(column == value)
         if history:
-            query = query.filter(
-                or_(
-                    TechnicalRequest.state == ApprovalStatus.approved,
-                    TechnicalRequest.state == ApprovalStatus.skipped,
-                    TechnicalRequest.state == ApprovalStatus.not_relevant,
-                )
+            stmt = stmt.filter(TechnicalRequest.close_date != null())
+        raw_models = (
+            s.execute(
+                stmt.order_by(
+                    TechnicalRequest.id.desc() if history else TechnicalRequest.id
+                ).limit(limit=limit)
             )
-        raw_models = query.order_by(TechnicalRequest.id.desc()).limit(limit).all()
+            .scalars()
+            .all()
+        )
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -1338,31 +1340,29 @@ def get_all_technical_requests_in_department(
     department_id: int, history_flag: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
-    Returns all TechnicalRequest as TechnicalRequestSchema for department director.
+    Returns all TechnicalRequest as TechnicalRequestSchema for extensive director.
     """
     with session.begin() as s:
-        query = s.query(TechnicalRequest).filter(
+        stmt = select(TechnicalRequest).filter(
             TechnicalRequest.department_id == department_id,
         )
 
         if history_flag:
-            query = query.filter(
-                or_(
-                    TechnicalRequest.state == ApprovalStatus.approved,
-                    TechnicalRequest.state == ApprovalStatus.skipped,
-                    TechnicalRequest.state == ApprovalStatus.not_relevant,
-                )
-            )
-        else:
-            query = query.filter(
-                and_(
-                    TechnicalRequest.state != ApprovalStatus.approved,
-                    TechnicalRequest.state != ApprovalStatus.skipped,
-                    TechnicalRequest.state != ApprovalStatus.not_relevant,
-                )
-            )
+            stmt = stmt.filter(TechnicalRequest.close_date != null())
 
-        raw_models = query.limit(limit).order_by(TechnicalRequest.id.desc()).all()
+        else:
+            stmt = stmt.filter(TechnicalRequest.close_date == null())
+
+        raw_models = (
+            s.execute(
+                stmt.order_by(
+                    TechnicalRequest.id.desc() if history_flag else TechnicalRequest.id
+                ).limit(limit=limit)
+            )
+            .scalars()
+            .all()
+        )
+
         return [
             TechnicalRequestSchema.model_validate(raw_model) for raw_model in raw_models
         ]
@@ -1459,8 +1459,8 @@ def get_departments_names_for_repairman(
         ]
 
 
-def get_all_active_requests_in_department(
-    department_id: int,
+def get_all_active_requests_in_department_for_chief_technician(
+    department_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -1469,7 +1469,8 @@ def get_all_active_requests_in_department(
                 TechnicalRequest.department_id == department_id,
                 TechnicalRequest.close_date == null(),
             )
-            .order_by(TechnicalRequest.id.desc())
+            .order_by(TechnicalRequest.id)
+            .limit(limit=limit)
             .all()
         )
         return [
@@ -1483,42 +1484,39 @@ def get_departments() -> list[DepartmentSchema]:
         return [DepartmentSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-def close_request(
-    request_id: int,
-    description: str,
-    close_date: datetime,
-    acceptor_post_id: int,
-) -> int:
+def set_not_relevant_state(request: TechnicalRequestSchema) -> bool:
     """
-    Close request by Chief Technician or Department Director
+    Set not relevant state for request by Chief Technician or Extensive Director
     Return creator TG id
     """
     with session.begin() as s:
         cur_request = (
-            s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
+            s.query(TechnicalRequest).filter(TechnicalRequest.id == request.id).first()
         )
+        if cur_request is None:
+            return False
         cur_request.state = ApprovalStatus.not_relevant
-        cur_request.close_description = description
-        cur_request.close_date = close_date
-        cur_request.acceptor_post = (
-            s.query(Post).filter(Post.id == acceptor_post_id).first()
-        )
-        return (WorkerSchema.model_validate(cur_request.worker)).telegram_id
+        cur_request.not_relevant_description = request.not_relevant_description
+        cur_request.not_relevant_date = request.not_relevant_date
+        cur_request.acceptor_post_id = request.acceptor_post.id
+    return True
 
 
 def get_count_req_in_departments(
     state: ApprovalStatus,
     model: TechnicalRequest | CleaningRequest,
-    worker_id: int | None = None,
+   
+    worker_id: int | None = None,,
+    departments_id: list[int] = [],
 ) -> list[tuple[str, int]]:
     """Count model requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        stm = select(Department.name, func.count(getattr(model, "id"))).join(Department)
+        stmt = select(Department.name, func.count(getattr(model, "id"))).join(Department)
 
         if worker_id is not None:
             match state:
                 case ApprovalStatus.pending:
-                    stm = stm.filter(
+                    stmt = stmt.filter(
                         and_(
                             getattr(
                                 model,
@@ -1531,22 +1529,36 @@ def get_count_req_in_departments(
                         )
                     )
                 case ApprovalStatus.pending_approval:
-                    stm = stm.filter(
+                    stmt = stmt.filter(
                         and_(
                             getattr(model, "appraiser_id") == worker_id,
                             getattr(model, "state") == state,
                         )
                     )
         else:
-            stm = stm.filter(
+            stmt = stmt.filter(
                 or_(
-                    getattr(model, "state") == ApprovalStatus.pending,
-                    getattr(model, "state") == ApprovalStatus.pending_approval,
+                    *[
+                        TechnicalRequest.department_id == department_id
+                        for department_id in departments_id
+                    ]
                 )
             )
+            if state == ApprovalStatus.not_relevant:
+                stmt = stmt.filter(
+                    and_(getattr(model, "close_date") == null(),getattr(model, "state")== state,
+                    )
+                )
+            else:
+                stmt = stmt.filter(
+                    or_(
+                        getattr(model, "state") == ApprovalStatus.pending,
+                        getattr(model, "state") == ApprovalStatus.pending_approval,
+                    )
+                )
 
         departments_names_counts = s.execute(
-            stm.group_by(Department.name).order_by(Department.name)
+            stmt.group_by(Department.name).order_by(Department.name)
         ).all()
 
         return departments_names_counts
@@ -2587,7 +2599,7 @@ def get_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
         ]
 
 
-def update_technical_requests(
+def update_technical_requests_worktime(
     schemas: list[TechnicalRequestSchema],
 ) -> None:
     for schema in schemas:
@@ -2875,6 +2887,69 @@ def update_view_state_worker_bid(worker_bid_id: int, state: ViewStatus):
             .where(WorkerBid.id == worker_bid_id)
             .values(view_state=state)
         )
+
+
+def update_technical_request_from_territorial_director(
+    request: TechnicalRequestSchema,
+) -> bool:
+    with session.begin() as s:
+        cur_req = (
+            s.execute(
+                select(TechnicalRequest).filter(TechnicalRequest.id == request.id)
+            )
+            .scalars()
+            .first()
+        )
+        if cur_req is None:
+            return False
+
+        cur_req.close_date = request.close_date
+        cur_req.state = request.state
+        cur_req.not_relevant_confirmation_date = request.not_relevant_confirmation_date
+        cur_req.not_relevant_confirmation_description = (
+            request.not_relevant_confirmation_description
+        )
+        cur_req.close_description = request.close_description
+
+    return True
+
+
+def get_departments_id_by_names(departments_name: list[str]) -> list[int]:
+    with session.begin() as s:
+        return (
+            s.execute(
+                select(Department.id).filter(
+                    or_(
+                        *[
+                            Department.name == department_name
+                            for department_name in departments_name
+                        ]
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+
+def get_all_history_technical_requests_territorial_director(
+    department_id: int,
+) -> list[TechnicalRequestSchema]:
+    with session.begin() as s:
+        raw_requests = (
+            s.execute(
+                select(TechnicalRequest).filter(
+                    TechnicalRequest.department_id == department_id,
+                    TechnicalRequest.not_relevant_confirmation_date != null(),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            TechnicalRequestSchema.model_validate(raw_request)
+            for raw_request in raw_requests
+        ]
 
 
 # region Cleaning requests
