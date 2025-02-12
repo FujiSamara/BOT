@@ -11,7 +11,8 @@ const emits = defineEmits(["click"]);
 
 <template>
 	<button>
-		<span>
+		<slot></slot>
+		<span v-if="props.title">
 			{{ props.title }}
 		</span>
 	</button>
