@@ -5,6 +5,8 @@ const props = defineProps({
 		required: true,
 	},
 });
+
+const emits = defineEmits(["click"]);
 </script>
 
 <template>
