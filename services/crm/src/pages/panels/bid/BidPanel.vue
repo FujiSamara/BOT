@@ -11,6 +11,7 @@ import RowEditor from "@/components/table/RowEditor.vue";
 import { Table as BaseTable } from "@/components/table";
 import { PropType } from "vue";
 import { setupBid } from "@/pages/panels/bid";
+import CoordinationControl from "./CoordinationControl.vue";
 
 const props = defineProps({
 	table: {
@@ -71,7 +72,11 @@ const setup = await setupBid(props.table);
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
 
-		<RowEditor :editor="setup.rowEditor"></RowEditor>
+		<RowEditor :editor="setup.rowEditor">
+			<template #view>
+				<CoordinationControl :editor="setup.rowEditor"></CoordinationControl>
+			</template>
+		</RowEditor>
 	</div>
 </template>
 

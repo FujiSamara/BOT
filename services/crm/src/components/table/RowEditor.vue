@@ -7,7 +7,7 @@ import DefaultButton from "../UI-new/DefaultButton.vue";
 
 const props = defineProps({
 	editor: {
-		type: Object as PropType<RowEditor>,
+		type: Object as PropType<RowEditor<any>>,
 		required: true,
 	},
 });
@@ -58,7 +58,9 @@ const save = () => {
 			@click="save"
 			title="Сохранить"
 		></DefaultButton>
-		<slot></slot>
+		<slot name="view"></slot>
+		<slot name="create"></slot>
+		<slot name="edit"></slot>
 	</BlurModal>
 </template>
 
