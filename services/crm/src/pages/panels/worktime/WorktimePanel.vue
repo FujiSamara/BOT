@@ -10,13 +10,13 @@ import CreateButton from "@/components/UI-new/CreateButton.vue";
 import RowEditor from "@/components/table/RowEditor.vue";
 
 import { Table as BaseTable } from "@/components/table";
-import { BaseSchema } from "@/types";
+import { WorkTimeSchema } from "@/types";
 import { PropType } from "vue";
 import { setupWorktime } from "@/pages/panels/worktime";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<BaseSchema>>,
+		type: Object as PropType<BaseTable<WorkTimeSchema>>,
 		required: true,
 	},
 });

@@ -16,7 +16,7 @@ export enum EditorMode {
 	Edit,
 }
 
-export interface RowEditor {
+export interface RowEditor<T extends BaseSchema> {
 	active: Ref<boolean>;
 	close: () => void;
 	save: () => void;
@@ -26,6 +26,8 @@ export interface RowEditor {
 	fields: RowField[];
 	title: Ref<string>;
 	mode: Ref<EditorMode>;
+	modelIndex: Ref<number | undefined>;
+	table: Table<T>;
 }
 
 export function useRowEditor<T extends BaseSchema>(
@@ -33,14 +35,12 @@ export function useRowEditor<T extends BaseSchema>(
 	fields: RowField[],
 	createTitle: string,
 	getTitle: (model: T) => string,
-): RowEditor {
+): RowEditor<T> {
 	const active = ref(false);
 	const title = ref("");
-
+	const modelIndex: Ref<number | undefined> = ref(undefined);
 	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
-
 	const mode = ref(EditorMode.View);
-	let editIndex = -1;
 
 	const close = () => {
 		active.value = false;
@@ -62,7 +62,7 @@ export function useRowEditor<T extends BaseSchema>(
 	const load = (index: number) => {
 		active.value = true;
 		const model = table.getModel(index);
-		editIndex = index;
+		modelIndex.value = index;
 
 		for (const field of fields) {
 			const name = field.name;
@@ -118,9 +118,21 @@ export function useRowEditor<T extends BaseSchema>(
 		if (mode.value === EditorMode.Create) {
 			await table.create(result);
 		} else {
-			await table.update(result, editIndex);
+			if (modelIndex.value) await table.update(result, modelIndex.value);
 		}
 	};
 
-	return { active, close, edit, create, save, view, fields, title, mode };
+	return {
+		active,
+		close,
+		edit,
+		create,
+		save,
+		view,
+		fields,
+		title,
+		mode,
+		modelIndex,
+		table,
+	};
 }

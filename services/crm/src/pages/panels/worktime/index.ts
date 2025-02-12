@@ -1,5 +1,5 @@
 import { Table } from "@/components/table";
-import { BaseSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
+import { WorkTimeSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	DateTimeSmartField,
@@ -34,7 +34,7 @@ interface WorktimePanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
-	rowEditor: RowEditor;
+	rowEditor: RowEditor<WorkTimeSchema>;
 }
 
 export class WorktimeTable extends Table<WorktimeSchema> {
@@ -64,7 +64,7 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 }
 
 export async function setupWorktime(
-	table: Table<BaseSchema>,
+	table: Table<WorkTimeSchema>,
 ): Promise<WorktimePanelData> {
 	const searchList = useSearch(table, {
 		schemas: [
