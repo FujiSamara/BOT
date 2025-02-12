@@ -43,6 +43,7 @@ old_options = (
     "bot_technical_request_chief_technician",
     "bot_technical_request_appraiser",
     "bot_technical_request_department_director",
+    "bot_technical_request_extensive_director",
     "bot_bid_it_worker",
     "bot_bid_it_repairman",
     "bot_bid_it_tm",
