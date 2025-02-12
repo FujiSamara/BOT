@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Checkbox from "@/components/UI/Checkbox.vue";
+import Checkbox from "@/components/UI-new/Checkbox.vue";
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
 import * as animations from "@/components/selects/multiSelectAnimations";
