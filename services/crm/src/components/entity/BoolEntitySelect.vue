@@ -14,7 +14,7 @@ const entity = props.entity;
 
 <template>
 	<div class="e-select">
-		<span v-if="entity.withTitle" class="title">{{ entity.placeholder }}</span>
+		<span class="title">{{ entity.placeholder }}</span>
 		<Checkbox
 			class="checkbox"
 			:checked="entity.checked.value"
