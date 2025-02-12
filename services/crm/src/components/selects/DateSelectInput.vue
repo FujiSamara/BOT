@@ -57,7 +57,11 @@ const submit = (val: Date) => {
 </script>
 
 <template>
-	<div class="msi-wrapper" @focusin="active = true" @focusout="focusOut">
+	<div
+		class="msi-wrapper"
+		@focusin="active = !props.readonly"
+		@focusout="focusOut"
+	>
 		<MaybeDelayInput
 			class="msi-input"
 			:value="value"
