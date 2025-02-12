@@ -39,8 +39,12 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 """
     if bid.security_service_comment is not None and bid.security_service_comment != "":
         bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
-    if bid.comment is not None and bid.comment != "":
-        bid_info += f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.comment}"
+    if bid.accounting_service_comment is not None:
+        bid_info += (
+            f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.accounting_service_comment}"
+        )
+    if bid.iiko_worker_id is not None:
+        bid_info += f"\n\n{hbold('Табельный номер')}: {bid.iiko_worker_id}"
     documents_requests = get_worker_bid_documents_requests(bid.id)
     if documents_requests != []:
         bid_info += f"\n\n{hbold('История запросов на дополнение документов')}"
