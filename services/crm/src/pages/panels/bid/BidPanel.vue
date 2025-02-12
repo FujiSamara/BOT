@@ -8,14 +8,13 @@ import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
 import RowEditor from "@/components/table/RowEditor.vue";
 
-import { Table as BaseTable } from "@/components/table";
 import { PropType } from "vue";
-import { setupBid } from "@/pages/panels/bid";
+import { BidTable, setupBid } from "@/pages/panels/bid";
 import CoordinationControl from "./CoordinationControl.vue";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<any>>,
+		type: Object as PropType<BidTable>,
 		required: true,
 	},
 });

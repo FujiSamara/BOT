@@ -132,7 +132,7 @@ export class BidTable extends Table<BidSchema> {
 		this.forceRefresh();
 	}
 }
-export async function setupBid(table: Table<BidSchema>): Promise<BidPanelData> {
+export async function setupBid(table: BidTable): Promise<BidPanelData> {
 	const searchList = useSearch(table, {
 		schemas: [
 			{
