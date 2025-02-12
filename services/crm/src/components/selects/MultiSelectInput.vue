@@ -76,6 +76,7 @@ const list = computed(() => {
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;

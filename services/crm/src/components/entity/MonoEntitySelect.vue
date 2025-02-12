@@ -33,6 +33,7 @@ const error = computed(() => {
 
 <template>
 	<div class="e-select">
+		<span v-if="entity.withTitle" class="title">{{ entity.placeholder }}</span>
 		<MonoSelectInput
 			:error="error"
 			:placeholder="entity.placeholder"
@@ -48,4 +49,6 @@ const error = computed(() => {
 	</div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+@import "@/components/entity/entity.scss";
+</style>

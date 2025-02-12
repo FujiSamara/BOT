@@ -25,6 +25,7 @@ import {
 import { RowEditor, useRowEditor } from "@/hooks/rowEditorHook";
 import {
 	BidStatusEntity,
+	BoolEntity,
 	DateEntity,
 	DepartmentEntity,
 	EnumEntity,
@@ -216,6 +217,11 @@ export async function setupBid(table: BidTable): Promise<BidPanelData> {
 				entity: new ExpenditureEntity(true, true),
 				type: SelectType.MonoSelectInput,
 				name: "expenditure",
+			},
+			{
+				entity: new BoolEntity("Счет в ЭДО"),
+				type: SelectType.Checkbox,
+				name: "need_edm",
 			},
 			{
 				entity: new DepartmentEntity(true, true),

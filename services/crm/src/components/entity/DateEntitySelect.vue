@@ -34,6 +34,7 @@ const error = computed(() => {
 
 <template>
 	<div class="e-select">
+		<span v-if="entity.withTitle" class="title">{{ entity.placeholder }}</span>
 		<DateSelectInput
 			:required="entity.required"
 			:placeholder="entity.placeholder"
@@ -47,10 +48,13 @@ const error = computed(() => {
 </template>
 
 <style scoped lang="scss">
+@import "@/components/entity/entity.scss";
+
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;

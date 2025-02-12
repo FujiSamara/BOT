@@ -60,7 +60,9 @@ export function useRowEditor<T extends BaseSchema>(
 				break;
 			case EditorMode.Create:
 				fields.forEach((f) => (f.active = true));
+				break;
 		}
+		fields.forEach((f) => (f.entity.withTitle = false));
 	};
 
 	const load = (index: number) => {
@@ -81,6 +83,7 @@ export function useRowEditor<T extends BaseSchema>(
 	const edit = (index: number) => {
 		mode.value = EditorMode.Edit;
 		title.value = getTitle(table.getModel(index));
+		fields.forEach((f) => (f.entity.withTitle = true));
 
 		load(index);
 	};
@@ -88,6 +91,7 @@ export function useRowEditor<T extends BaseSchema>(
 	const view = (index: number) => {
 		title.value = getTitle(table.getModel(index));
 		mode.value = EditorMode.View;
+		fields.forEach((f) => (f.entity.withTitle = true));
 
 		load(index);
 

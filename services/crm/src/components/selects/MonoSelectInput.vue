@@ -99,6 +99,7 @@ const focusOut = () => {
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;

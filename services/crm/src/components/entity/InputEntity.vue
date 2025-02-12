@@ -21,6 +21,7 @@ const error = computed(() => {
 
 <template>
 	<div class="e-select">
+		<span v-if="entity.withTitle" class="title">{{ entity.placeholder }}</span>
 		<MaybeDelayInput
 			class="msi-input"
 			:value="entity.formattedField.value"
@@ -37,8 +38,10 @@ const error = computed(() => {
 </template>
 
 <style scoped lang="scss">
+@import "@/components/entity/entity.scss";
+
 .msi-input {
-	width: 100%;
+	flex-grow: 1;
 	height: 48px;
 }
 </style>

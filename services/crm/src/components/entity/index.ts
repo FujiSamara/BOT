@@ -17,6 +17,7 @@ export enum SelectType {
 	Input,
 	Date,
 	Time,
+	Checkbox,
 }
 
 export class BaseEntity<T> {
@@ -30,6 +31,7 @@ export class BaseEntity<T> {
 		() => this.overrideError.value,
 	);
 	public overrideError: Ref<string | undefined> = ref();
+	public withTitle: boolean = false;
 
 	constructor(
 		public required: boolean = false,
@@ -60,6 +62,27 @@ export class BaseEntity<T> {
 	public clear() {
 		this._selectedEntities.value = [];
 	}
+}
+
+export class BoolEntity extends BaseEntity<boolean> {
+	constructor(
+		placeholder?: string,
+		readonly?: boolean,
+		defaultValue: boolean = false,
+	) {
+		super(false, placeholder, readonly);
+
+		this.checked.value = defaultValue;
+	}
+
+	public checked = computed({
+		get: () => {
+			return this._selectedEntities.value[0];
+		},
+		set: (val) => {
+			this._selectedEntities.value = [val];
+		},
+	});
 }
 
 export class DocumentEntity extends BaseEntity<DocumentSchema> {
