@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, PropType, useTemplateRef } from "vue";
+import { computed, PropType, useTemplateRef } from "vue";
 import { DocumentSchema } from "@/types";
 import { fileToDocumentSchema } from "@/parser";
 import DefaultButton from "../UI-new/DefaultButton.vue";
@@ -28,8 +28,6 @@ const emits = defineEmits<{
 }>();
 
 const inputRef = useTemplateRef("input");
-const wrapperRef = useTemplateRef("wrapper");
-const outerRef = useTemplateRef("outer");
 
 const showAdd = computed(() => {
 	return (!props.onlyOne || props.documents.length === 0) && !props.readonly;
@@ -48,22 +46,10 @@ const addFile = async (event: Event) => {
 	}
 	emits("submit", documents);
 };
-
-const lockWidth = () => {
-	if (!wrapperRef.value || !outerRef.value) return;
-	outerRef.value.style.width = `${outerRef.value.offsetWidth}px`;
-	outerRef.value.style.width = `${outerRef.value.offsetWidth}px`;
-	wrapperRef.value.style.width = `${wrapperRef.value.offsetWidth}px`;
-	wrapperRef.value.style.maxWidth = `${wrapperRef.value.offsetWidth}px`;
-};
-
-onMounted(() => {
-	lockWidth();
-});
 </script>
 
 <template>
-	<div class="ds-wrapper" ref="wrapper">
+	<div class="ds-wrapper">
 		<input
 			type="file"
 			:multiple="!props.onlyOne"
@@ -71,7 +57,7 @@ onMounted(() => {
 			@change.prevent="addFile"
 		/>
 		<!-- Hint + Docs + Delete -->
-		<div class="ds-outer" ref="outer">
+		<div class="ds-outer">
 			<!-- Hint -->
 			<Transition name="fade" mode="out-in">
 				<div
@@ -146,6 +132,9 @@ onMounted(() => {
 			gap: 10px;
 
 			height: 100%;
+			width: 0;
+			min-width: 0;
+			flex-grow: 1;
 
 			.hint {
 				background-color: transparent;
@@ -179,17 +168,26 @@ onMounted(() => {
 				}
 			}
 
+			::-webkit-scrollbar {
+				display: none;
+			}
+
 			.documents {
 				display: flex;
 				flex-direction: row;
-				flex-grow: 0;
 				gap: 10px;
 
 				height: 100%;
+				width: fit-content;
+				min-width: 0;
+				flex-grow: 0;
+
 				padding: 0;
 				margin: 0;
 
-				overflow-x: hidden;
+				overflow-x: scroll;
+				-ms-overflow-style: none; /* IE и Edge */
+				scrollbar-width: none; /* Firefox */
 				list-style: none;
 
 				.document {
@@ -197,6 +195,7 @@ onMounted(() => {
 					padding: 8px 14px;
 
 					max-width: 110px;
+					min-width: 110px;
 					width: 110px;
 					max-height: 100%;
 
@@ -208,14 +207,19 @@ onMounted(() => {
 					border-radius: 4px;
 					background-color: $bg-light-blue;
 
+					white-space: nowrap;
+
 					text-overflow: ellipsis;
 					overflow: hidden;
 				}
 			}
 
 			.delete {
+				min-width: 110px;
 				width: 110px;
 				height: 100%;
+
+				flex-grow: 1;
 
 				background-color: $sec-arrantion-red;
 
