@@ -109,6 +109,8 @@ const openPhoto = (cell: Cell, index: number) => {
 		flex-direction: column;
 		gap: 4px;
 
+		width: fit-content;
+
 		list-style: none;
 		margin: 0;
 		padding: 0;
