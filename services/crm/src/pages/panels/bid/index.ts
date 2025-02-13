@@ -133,6 +133,10 @@ export class BidTable extends Table<BidSchema> {
 
 		this.forceRefresh();
 	}
+
+	public orderDisabled(header: string): boolean {
+		return ["Документы", "Статус"].includes(header);
+	}
 }
 export async function setupBid(table: BidTable): Promise<BidPanelData> {
 	const searchList = useSearch(table, {

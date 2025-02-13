@@ -61,6 +61,10 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 		this._aliases.set("fine", "Штраф");
 		this._aliases.set("photo_b64", "Фото");
 	}
+
+	public orderDisabled(header: string): boolean {
+		return ["Фото"].includes(header);
+	}
 }
 
 export async function setupWorktime(
