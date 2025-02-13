@@ -279,7 +279,7 @@ class WorkerBidCoordinationFactory:
         if len(media) > 0:
             msgs = await callback.message.answer_media_group(
                 media=media,
-                )
+            )
             await state.update_data(msgs=msgs)
             await msgs[0].reply(
                 text=hbold("Выберите действие:")
