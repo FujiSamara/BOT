@@ -13,7 +13,7 @@ const props = defineProps({
 const editor = props.editor;
 
 const accept = async () => {
-	if (!editor.modelIndex.value) {
+	if (editor.modelIndex.value === undefined) {
 		throw Error("Model index is undefined");
 	}
 	await editor.table.approve(editor.modelIndex.value, true);
@@ -21,7 +21,7 @@ const accept = async () => {
 };
 
 const decline = async () => {
-	if (!editor.modelIndex.value) {
+	if (editor.modelIndex.value === undefined) {
 		throw Error("Model index is undefined");
 	}
 	await editor.table.reject(editor.modelIndex.value, true, "");
@@ -33,12 +33,12 @@ const decline = async () => {
 	<div class="cc-wrapper">
 		<DefaultButton
 			class="decline"
-			@click="accept"
+			@click="decline"
 			title="Отказать"
 		></DefaultButton>
 		<DefaultButton
 			class="accept"
-			@click="decline"
+			@click="accept"
 			title="Согласовать"
 		></DefaultButton>
 	</div>
