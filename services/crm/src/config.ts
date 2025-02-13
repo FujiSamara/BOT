@@ -15,7 +15,7 @@ export const accessesDict: any = {
 	crm_budget: Access.Budget,
 	crm_expenditure: Access.Expenditure,
 	crm_fac_cc_bid: Access.FAC_CCbid,
-	crm_paralegal_bid: Access.CCSupervisorBid,
+	crm_paralegal_bid: Access.ParalegalBid,
 	authenticated: Access.Authed,
 	crm_my_bid: Access.MyBid,
 	crm_archive_bid: Access.ArchiveBid,

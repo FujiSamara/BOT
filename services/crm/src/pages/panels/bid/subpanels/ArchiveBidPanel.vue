@@ -9,12 +9,11 @@ import DateFilter from "@/components/table/tools/DateFilter.vue";
 import RowEditor from "@/components/table/RowEditor.vue";
 
 import { PropType } from "vue";
-import { BidTable, setupBid } from "@/pages/panels/bid";
-import CoordinationControl from "./CoordinationControl.vue";
+import { ArchiveBidTable, setupBid } from "@/pages/panels/bid";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BidTable>,
+		type: Object as PropType<ArchiveBidTable>,
 		required: true,
 	},
 });
@@ -71,11 +70,7 @@ const setup = await setupBid(props.table);
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
 
-		<RowEditor :editor="setup.rowEditor">
-			<template #view>
-				<CoordinationControl :editor="setup.rowEditor"></CoordinationControl>
-			</template>
-		</RowEditor>
+		<RowEditor :editor="setup.rowEditor"></RowEditor>
 	</div>
 </template>
 

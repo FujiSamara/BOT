@@ -43,13 +43,47 @@ const routes = [
 						name: "table-bids",
 						path: "bid",
 						component: async () =>
-							await import("@/pages/panels/bid/BidPanel.vue"),
+							await import("@/pages/panels/bid/subpanels/BidPanel.vue"),
+					},
+					{
+						name: "table-readonly-bids",
+						path: "readonlybid",
+						component: async () =>
+							await import("@/pages/panels/bid/subpanels/BidReadOnlyPanel.vue"),
+					},
+					{
+						name: "table-fac-cc-bids",
+						path: "facccbid",
+						component: async () =>
+							await import("@/pages/panels/bid/subpanels/FACAndCCBidPanel.vue"),
+					},
+					{
+						name: "table-fac-cc-history-bids",
+						path: "faccchistorybid",
+						component: async () =>
+							await import(
+								"@/pages/panels/bid/subpanels/FACAndCCHistoryBidPanel.vue"
+							),
+					},
+					{
+						name: "table-paralegal-bids",
+						path: "paralegalbid",
+						component: async () =>
+							await import(
+								"@/pages/panels/bid/subpanels/ParalegalBidPanel.vue"
+							),
 					},
 					{
 						name: "table-my-bids",
 						path: "mybid",
 						component: async () =>
-							await import("@/pages/panels/bid/MyBidPanel.vue"),
+							await import("@/pages/panels/bid/subpanels/MyBidPanel.vue"),
+					},
+					{
+						name: "table-archive-bids",
+						path: "archivebid",
+						component: async () =>
+							await import("@/pages/panels/bid/subpanels/ArchiveBidPanel.vue"),
 					},
 				],
 			},

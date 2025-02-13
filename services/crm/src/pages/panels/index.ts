@@ -2,7 +2,13 @@ import { Access, PanelData } from "@types";
 import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
-import { BidTable, MyBidTable } from "@/pages/panels/bid";
+import {
+	BidTable,
+	FACAndCCBidHistoryTable,
+	FACAndCCBidTable,
+	MyBidTable,
+	ParalegalBidTable,
+} from "@/pages/panels/bid";
 
 const panels: Array<PanelData> = [
 	{
@@ -34,13 +40,49 @@ const panels: Array<PanelData> = [
 		withUpdatingLoop: false,
 	},
 	{
-		label: "Заявки",
+		label: "Заявки (админ)",
 		routeName: "table-bids",
 		iconURL: "/img/coins.svg",
 		active: false,
 		name: "bid",
 		create: BidTable,
 		accesses: [Access.Bid],
+	},
+	{
+		label: "Заявки",
+		routeName: "table-readonly-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "readonlybid",
+		create: BidTable,
+		accesses: [Access.BidReadOnly],
+	},
+	{
+		label: "Заявки на согласование",
+		routeName: "table-fac-cc-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "facccbid",
+		create: FACAndCCBidTable,
+		accesses: [Access.FAC_CCbid],
+	},
+	{
+		label: "История согласование",
+		routeName: "table-fac-cc-history-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "faccchistorybid",
+		create: FACAndCCBidHistoryTable,
+		accesses: [Access.FAC_CCbid],
+	},
+	{
+		label: "Заявки Юристконсульт",
+		routeName: "table-paralegal-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "paralegalbid",
+		create: ParalegalBidTable,
+		accesses: [Access.ParalegalBid],
 	},
 	{
 		label: "Мои заявки",
@@ -50,6 +92,15 @@ const panels: Array<PanelData> = [
 		name: "mybid",
 		create: MyBidTable,
 		accesses: [Access.MyBid],
+	},
+	{
+		label: "Архив заявок",
+		routeName: "table-archive-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "archivebid",
+		create: BidTable,
+		accesses: [Access.ArchiveBid],
 	},
 ];
 
