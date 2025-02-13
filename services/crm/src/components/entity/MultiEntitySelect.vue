@@ -19,7 +19,7 @@ const error = computed(() => {
 
 	if (
 		entity.formattedField.value.length &&
-		entity.formattedField.value.length < entity.neededWord
+		entity.formattedField.value.length < entity.neededLetter
 	) {
 		return "";
 	}

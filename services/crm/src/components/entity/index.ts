@@ -301,7 +301,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	constructor(
 		required: boolean = false,
 		private monoMode: boolean = false,
-		public neededWord: number = 3,
+		public neededLetter: number = 3,
 		placeholder?: string,
 		readonly?: boolean,
 	) {
@@ -343,7 +343,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		},
 		set: async (val: string) => {
 			this._inputValue.value = val;
-			if (val.length < this.neededWord) {
+			if (val.length < this.neededLetter) {
 				this._searchEntities.value = [];
 				return;
 			}
@@ -401,7 +401,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			this._searchEntities.value = [];
 		} else {
 			this._inputValue.value = "";
-			if (this.neededWord) this._searchEntities.value = [];
+			if (this.neededLetter) this._searchEntities.value = [];
 		}
 	}
 	public init(value: T) {

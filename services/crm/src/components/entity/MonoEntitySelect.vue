@@ -19,9 +19,9 @@ const error = computed(() => {
 
 	if (
 		entity.formattedField.value.length &&
-		entity.formattedField.value.length < entity.neededWord
+		entity.formattedField.value.length < entity.neededLetter
 	) {
-		return `Необходимо минимум ${entity.neededWord} символа`;
+		return `Необходимо минимум ${entity.neededLetter} символа`;
 	}
 	if (entity.notFound.value) {
 		return "Совпадения не найдены";
