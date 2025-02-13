@@ -145,12 +145,26 @@
     border: 1px solid $sec-arrantion-red;
   }
 
-  &:hover,
-  &.active {
-    border-color: $main-accent-blue;
+  &:not(.readonly) {
+    &:hover,
+    &.active {
+      border-color: $main-accent-blue;
 
-    .tool-icon-wrapper .tool-icon {
-      color: $main-accent-blue;
+      .tool-icon-wrapper .tool-icon {
+        color: $main-accent-blue;
+      }
+    }
+  }
+
+  &.error {
+    border-color: $sec-arrantion-red !important;
+
+    .tool-icon-wrapper > .tool-icon {
+      color: $sec-arrantion-red !important;
+    }
+
+    span {
+      color: $sec-arrantion-red !important;
     }
   }
 
@@ -166,18 +180,6 @@
 
     span {
       color: $main-dark-gray !important;
-    }
-  }
-
-  &.error {
-    border-color: $sec-arrantion-red;
-
-    .tool-icon-wrapper > .tool-icon {
-      color: $sec-arrantion-red;
-    }
-
-    span {
-      color: $sec-arrantion-red;
     }
   }
 }

@@ -1,10 +1,12 @@
 from app.schemas import WorkerBidSchema
-from app.infra.database.models import ApprovalStatus
+from app.infra.database.models import ApprovalStatus, ViewStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
 from app.services import get_worker_by_id, get_worker_bid_documents_requests
 from app.infra.database.models import FujiScope
 from app.adapters.bot.handlers.utils import notify_workers_by_scope
+from typing import Any
+from aiogram.types import InlineKeyboardButton
 
 
 def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
@@ -65,3 +67,52 @@ async def notify_accounting(worker_id: int):
         FujiScope.bot_worker_bid_accounting_coordinate,
         message=f"{worker.l_name} {worker.f_name} {worker.o_name} успешно прошёл стажировку",
     )
+
+
+def get_worker_pending_bids_btns(
+    state_column: Any,
+    buttons: list[InlineKeyboardButton],
+    name: str,
+):
+    from app.services import get_pending_approval_bids
+    from app.adapters.bot.handlers.worker_bids.schemas import (
+        WorkerBidCallbackData,
+        BidViewMode,
+    )
+    from app.infra.database.models import WorkerBid
+
+    bids = get_pending_approval_bids(state_column) or []
+    if state_column == WorkerBid.accounting_service_state:
+        for bid in bids:
+            match bid.view_state:
+                case ViewStatus.viewed:
+                    symbol = "👁"
+                case ViewStatus.pending:
+                    symbol = "⏰"
+                case ViewStatus.pending_approval:
+                    symbol = "✉️"
+                case _:
+                    symbol = ""
+
+            buttons.append(
+                InlineKeyboardButton(
+                    text=f"{symbol} {bid.id} {bid.l_name} {bid.f_name[0]} {bid.o_name[0]} {bid.post.name}",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{name}",
+                    ).pack(),
+                )
+            )
+    else:
+        for bid in bids:
+            buttons.append(
+                InlineKeyboardButton(
+                    text=f"{bid.id} {bid.l_name} {bid.f_name[0]} {bid.o_name[0]} {bid.post.name}",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{name}",
+                    ).pack(),
+                )
+            )

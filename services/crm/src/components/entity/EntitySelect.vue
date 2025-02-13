@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { BaseEntity, SelectType } from ".";
 import { PropType } from "vue";
+import { BaseEntity, SelectType } from "@/components/entity";
 import MultiEntitySelect from "@/components/entity/MultiEntitySelect.vue";
 import MonoEntitySelect from "@/components/entity/MonoEntitySelect.vue";
 import InputEntity from "@/components/entity/InputEntity.vue";
-import DocumentSelect from "@/components/selects/DocumentSelect.vue";
+import DocumentEntitySelect from "@/components/entity/DocumentEntitySelect.vue";
 import DateEntitySelect from "@/components/entity/DateEntitySelect.vue";
 import TimeEntity from "@/components/entity/TimeEntity.vue";
+import BoolEntitySelect from "@/components/entity/BoolEntitySelect.vue";
 
 const props = defineProps({
 	entity: {
@@ -27,6 +28,7 @@ const monoDocumentSelect = props.selectType === SelectType.MonoDocument;
 const multiDocumentSelect = props.selectType === SelectType.MultiDocument;
 const dateSelect = props.selectType === SelectType.Date;
 const timeSelect = props.selectType === SelectType.Time;
+const checkboxSelect = props.selectType === SelectType.Checkbox;
 </script>
 
 <template>
@@ -34,11 +36,15 @@ const timeSelect = props.selectType === SelectType.Time;
 		<MultiEntitySelect v-if="multiSelect" :entity="entity"></MultiEntitySelect>
 		<MonoEntitySelect v-if="monoSelect" :entity="entity"></MonoEntitySelect>
 		<InputEntity v-if="defaultInput" :entity="entity"></InputEntity>
-		<DocumentSelect
+		<DocumentEntitySelect
 			v-if="monoDocumentSelect || multiDocumentSelect"
-		></DocumentSelect>
+			:only-one="monoDocumentSelect"
+			:entity="entity"
+		></DocumentEntitySelect>
+		<!--TODO: complete-->
 		<DateEntitySelect v-if="dateSelect" :entity="entity"></DateEntitySelect>
 		<TimeEntity v-if="timeSelect" :entity="entity"></TimeEntity>
+		<BoolEntitySelect v-if="checkboxSelect" :entity="entity"></BoolEntitySelect>
 	</div>
 </template>
 

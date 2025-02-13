@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { PropType } from "vue";
+
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/MaybeDelayInput.vue";
@@ -9,19 +11,16 @@ import DateFilter from "@/components/table/tools/DateFilter.vue";
 import CreateButton from "@/components/UI-new/CreateButton.vue";
 import RowEditor from "@/components/table/RowEditor.vue";
 
-import { Table as BaseTable } from "@/components/table";
-import { WorkTimeSchema } from "@/types";
-import { PropType } from "vue";
-import { setupWorktime } from "@/pages/panels/worktime";
+import { MyBidTable, setupBid } from "@/pages/panels/bid";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<WorkTimeSchema>>,
+		type: Object as PropType<MyBidTable>,
 		required: true,
 	},
 });
 
-const setup = await setupWorktime(props.table);
+const setup = await setupBid(props.table);
 </script>
 
 <template>
@@ -67,14 +66,14 @@ const setup = await setupWorktime(props.table);
 		<Table
 			class="table"
 			:table="props.table"
-			@rowClick="setup.rowEditor.edit"
+			@rowClick="setup.rowEditor.view"
 		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
 
-		<RowEditor :editor="setup.rowEditor"></RowEditor>
+		<RowEditor :editor="setup.rowEditor"> </RowEditor>
 	</div>
 </template>
 

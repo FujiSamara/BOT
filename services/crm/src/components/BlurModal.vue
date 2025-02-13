@@ -62,11 +62,11 @@ onUnmounted(() => {
 	.bm-window {
 		display: flex;
 		flex-direction: column;
+		position: relative;
 
-		overflow-y: scroll;
-
-		gap: 24px;
-		padding: 16px;
+		padding-left: 16px;
+		padding-right: 16px;
+		padding-bottom: 16px;
 		border-radius: 16px;
 		width: 640px;
 		min-height: 100px;
@@ -79,14 +79,21 @@ onUnmounted(() => {
 			display: flex;
 			flex-direction: row;
 			justify-content: space-between;
+			position: sticky;
+			top: 0;
 
-			padding: 8px 16px;
+			z-index: 1;
+
+			padding-bottom: 24px;
+			padding-top: 24px;
 
 			color: $main-dark-gray;
 			font-family: Wix Madefor Display;
 			font-size: 16px;
 			font-weight: 500;
 			line-height: 20.16px;
+
+			background-color: inherit;
 
 			.icon-wrapper {
 				display: flex;

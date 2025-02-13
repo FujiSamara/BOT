@@ -2,6 +2,7 @@ import { computed, ComputedRef, ref, Ref } from "vue";
 import {
 	DepartmentSchema,
 	DocumentSchema,
+	ExpenditureSchema,
 	PostSchema,
 	WorkerSchema,
 } from "@/types";
@@ -16,6 +17,7 @@ export enum SelectType {
 	Input,
 	Date,
 	Time,
+	Checkbox,
 }
 
 export class BaseEntity<T> {
@@ -29,6 +31,7 @@ export class BaseEntity<T> {
 		() => this.overrideError.value,
 	);
 	public overrideError: Ref<string | undefined> = ref();
+	public withTitle: boolean = false;
 
 	constructor(
 		public required: boolean = false,
@@ -61,9 +64,49 @@ export class BaseEntity<T> {
 	}
 }
 
+export class BoolEntity extends BaseEntity<boolean> {
+	constructor(
+		placeholder?: string,
+		readonly?: boolean,
+		defaultValue: boolean = false,
+	) {
+		super(false, placeholder, readonly);
+
+		this.checked.value = defaultValue;
+		this._selectedEntities.value[0] = defaultValue;
+		this.completed.value = true;
+	}
+
+	public checked = computed({
+		get: () => {
+			return this._selectedEntities.value[0];
+		},
+		set: (val) => {
+			this._selectedEntities.value = [val];
+		},
+	});
+}
+
 export class DocumentEntity extends BaseEntity<DocumentSchema> {
+	public completed = computed(() => this._selectedEntities.value.length !== 0);
+
 	protected format(value: DocumentSchema): string {
 		return value.name;
+	}
+
+	public submit(value: DocumentSchema | DocumentSchema[]) {
+		if (!(value instanceof Array)) {
+			value = [value];
+		}
+		this._selectedEntities.value = [...this._selectedEntities.value, ...value];
+	}
+
+	public init(value: DocumentSchema | DocumentSchema[]): void {
+		this.submit(value);
+	}
+
+	public getResult() {
+		return this._selectedEntities.value;
 	}
 }
 
@@ -83,7 +126,7 @@ export abstract class InputEntity<T> extends BaseEntity<T> {
 		},
 	});
 
-	protected abstract onSubmit(_: string): Promise<void>;
+	protected async onSubmit(_: string): Promise<void> {}
 
 	public clear() {
 		this._inputValue.value = "";
@@ -231,16 +274,38 @@ export class FloatInputEntity extends InputEntity<number> {
 	}
 }
 
+export class StringInputEntity extends InputEntity<string> {
+	public error: ComputedRef<string | undefined> = computed(() => {
+		if (this.overrideError.value !== undefined) {
+			return this.overrideError.value;
+		}
+		return;
+	});
+
+	protected async onSubmit(val: string): Promise<void> {
+		this._selectedEntities.value = [val];
+	}
+}
+
+export class BidStatusEntity extends StringInputEntity {
+	protected format(value: string): string {
+		const cell = parser.formatMultilineString(value);
+
+		return cell.cellLines.map((line) => line.value).join(" ");
+	}
+}
+
 export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 
 	constructor(
 		required: boolean = false,
 		private monoMode: boolean = false,
-		public neededWord: number = 3,
+		public neededLetter: number = 3,
 		placeholder?: string,
+		readonly?: boolean,
 	) {
-		super(required, placeholder);
+		super(required, placeholder, readonly);
 	}
 
 	public loading: Ref<boolean> = ref(false);
@@ -278,7 +343,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		},
 		set: async (val: string) => {
 			this._inputValue.value = val;
-			if (val.length < this.neededWord) {
+			if (val.length < this.neededLetter) {
 				this._searchEntities.value = [];
 				return;
 			}
@@ -306,6 +371,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 
 		if (this.monoMode) {
 			this._selectedEntities.value = [this._searchEntities.value[index]];
+			this._inputValue.value = this.format(this._searchEntities.value[index]);
 			this.restoreSaved();
 			return;
 		}
@@ -335,7 +401,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			this._searchEntities.value = [];
 		} else {
 			this._inputValue.value = "";
-			this._searchEntities.value = [];
+			if (this.neededLetter) this._searchEntities.value = [];
 		}
 	}
 	public init(value: T) {
@@ -348,6 +414,47 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 	public clear() {
 		super.clear();
 		this._searchEntities.value = [];
+	}
+}
+
+export interface EnumRecord {
+	formatted: string;
+	value: string;
+}
+
+export class EnumEntity extends InputSelectEntity<EnumRecord> {
+	constructor(
+		protected _values: EnumRecord[],
+		required: boolean = false,
+		monoMode: boolean = false,
+		neededWord: number = 3,
+		placeholder?: string,
+		readonly?: boolean,
+	) {
+		super(required, monoMode, neededWord, placeholder, readonly);
+		if (neededWord === 0) this.onSubmit("");
+	}
+
+	protected async onSubmit(value: string): Promise<void> {
+		this._searchEntities.value = this._values.filter((val) =>
+			val.formatted.toLowerCase().includes(value.toLowerCase()),
+		);
+	}
+
+	protected format(value: EnumRecord): string {
+		return value.formatted;
+	}
+
+	public init(value: EnumRecord | string): void {
+		if (typeof value === "string") {
+			value = this._values.find((val) => val.value === value)!;
+		}
+
+		super.init(value);
+	}
+
+	public getResult() {
+		return this._selectedEntities.value[0].value;
 	}
 }
 
@@ -396,5 +503,21 @@ export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 
 	protected format(value: WorkerSchema): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
+	}
+}
+
+export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
+	public placeholder = "Статья";
+
+	protected async onSubmit(val: string): Promise<void> {
+		const service = new EntityService<ExpenditureSchema>("expenditure");
+
+		const expenditures = await service.searchEntities(val);
+
+		this._searchEntities.value = expenditures.sort(this.sortComparator);
+	}
+
+	protected format(value: ExpenditureSchema): string {
+		return value.name;
 	}
 }

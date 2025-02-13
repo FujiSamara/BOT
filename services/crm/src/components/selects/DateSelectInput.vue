@@ -19,6 +19,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -54,7 +57,11 @@ const submit = (val: Date) => {
 </script>
 
 <template>
-	<div class="msi-wrapper" @focusin="active = true" @focusout="focusOut">
+	<div
+		class="msi-wrapper"
+		@focusin="active = !props.readonly"
+		@focusout="focusOut"
+	>
 		<MaybeDelayInput
 			class="msi-input"
 			:value="value"
@@ -65,6 +72,7 @@ const submit = (val: Date) => {
 			:with-edit-mark="true"
 			:error-left-align="true"
 			:required="props.required"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<Transition name="fade">
 			<DateCalendar

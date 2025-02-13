@@ -30,6 +30,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -65,13 +68,18 @@ const starClicked = () => {
 <template>
 	<div
 		class="search-input"
-		:class="{ active: active, disabled: disabled, error: error !== undefined }"
+		:class="{
+			active: active,
+			disabled: disabled,
+			error: error !== undefined,
+			readonly: props.readonly,
+		}"
 	>
 		<div class="tool-icon-wrapper" v-if="props.withSearchIcon">
 			<div class="tool-icon search"></div>
 		</div>
 		<input
-			@focusin="active = true"
+			@focusin="active = !props.readonly"
 			:disabled="disabled"
 			@focusout="active = false"
 			:placeholder="props.placeholder"
@@ -80,28 +88,26 @@ const starClicked = () => {
 			:id="useId()"
 			ref="input"
 			autocomplete="off"
+			:readonly="props.readonly"
 		/>
 		<Transition name="fade">
 			<span
 				class="required"
-				v-if="!active && props.required && !value"
+				v-if="!active && props.required && !value && !props.readonly"
 				@click="starClicked"
 			>
 				<span class="stub">{{ props.placeholder }}</span>
 				<span>*</span>
 			</span>
 		</Transition>
-		<Transition name="fade">
+		<Transition name="fade" mode="out-in">
 			<div
-				v-if="props.withEditMark && error === undefined"
+				v-if="props.withEditMark && error === undefined && !props.readonly"
 				class="tool-icon-wrapper edit"
 			>
 				<div class="tool-icon edit"></div>
 			</div>
-		</Transition>
-
-		<Transition name="fade">
-			<div class="error-wrapper" v-show="error !== undefined">
+			<div class="error-wrapper" v-else-if="error !== undefined">
 				<Transition name="fade">
 					<span
 						v-if="active && error"
@@ -195,7 +201,14 @@ const starClicked = () => {
 		}
 	}
 
+	&.readonly {
+		input {
+			cursor: default;
+		}
+	}
+
 	.required {
+		user-select: none;
 		span {
 			color: $sec-arrantion-red;
 			font-family: Wix Madefor Display;

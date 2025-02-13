@@ -1,5 +1,5 @@
 import { Table } from "@/components/table";
-import { BaseSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
+import { WorkTimeSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
 import { Editor } from "@/components/table/editor";
 import {
 	DateTimeSmartField,
@@ -34,7 +34,7 @@ interface WorktimePanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
-	rowEditor: RowEditor;
+	rowEditor: RowEditor<WorkTimeSchema>;
 }
 
 export class WorktimeTable extends Table<WorktimeSchema> {
@@ -61,10 +61,14 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 		this._aliases.set("fine", "Штраф");
 		this._aliases.set("photo_b64", "Фото");
 	}
+
+	public orderDisabled(header: string): boolean {
+		return ["Фото"].includes(header);
+	}
 }
 
 export async function setupWorktime(
-	table: Table<BaseSchema>,
+	table: Table<WorkTimeSchema>,
 ): Promise<WorktimePanelData> {
 	const searchList = useSearch(table, {
 		schemas: [
@@ -138,7 +142,7 @@ export async function setupWorktime(
 			},
 		],
 		"Создать явку",
-		"Изменить явку",
+		(_) => "Изменить явку",
 	);
 
 	return {

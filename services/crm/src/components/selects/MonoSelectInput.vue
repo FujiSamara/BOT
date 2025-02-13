@@ -22,6 +22,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "select", index: number): void;
@@ -46,7 +49,11 @@ const focusOut = () => {
 </script>
 
 <template>
-	<div class="msi-wrapper" @focusin="active = true" @focusout="focusOut">
+	<div
+		class="msi-wrapper"
+		@focusin="active = !props.readonly"
+		@focusout="focusOut"
+	>
 		<MaybeDelayInput
 			class="msi-input"
 			:value="searchValue"
@@ -57,6 +64,7 @@ const focusOut = () => {
 			:with-edit-mark="true"
 			:error-left-align="true"
 			:required="props.required"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<Transition name="fade">
 			<div class="msi-list-wrapepr" v-show="list.length">
@@ -91,6 +99,7 @@ const focusOut = () => {
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;
@@ -130,6 +139,8 @@ const focusOut = () => {
 				width: 100%;
 
 				span {
+					white-space: nowrap;
+
 					font-family: Wix Madefor Display;
 					font-size: 14px;
 					font-weight: 500;

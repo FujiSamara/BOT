@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Checkbox from "@/components/UI/Checkbox.vue";
+import Checkbox from "@/components/UI-new/Checkbox.vue";
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import { computed, PropType, ref } from "vue";
 import * as animations from "@/components/selects/multiSelectAnimations";
@@ -18,6 +18,9 @@ const props = defineProps({
 	searchValue: {
 		type: String,
 		required: true,
+	},
+	readonly: {
+		type: Boolean,
 	},
 });
 const emits = defineEmits<{
@@ -42,6 +45,7 @@ const list = computed(() => {
 			@submit="(val: string) => emits('submit', val)"
 			:error="props.error"
 			:placeholder="props.placeholder"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 		<TransitionGroup
 			:css="false"
@@ -72,6 +76,8 @@ const list = computed(() => {
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
+	flex-grow: 1;
+	max-width: 100%;
 
 	.msi-input {
 		width: 100%;

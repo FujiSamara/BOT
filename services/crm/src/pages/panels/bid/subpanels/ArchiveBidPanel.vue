@@ -6,22 +6,19 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
-import CreateButton from "@/components/UI-new/CreateButton.vue";
 import RowEditor from "@/components/table/RowEditor.vue";
 
-import { Table as BaseTable } from "@/components/table";
-import { WorkTimeSchema } from "@/types";
 import { PropType } from "vue";
-import { setupWorktime } from "@/pages/panels/worktime";
+import { ArchiveBidTable, setupBid } from "@/pages/panels/bid";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<WorkTimeSchema>>,
+		type: Object as PropType<ArchiveBidTable>,
 		required: true,
 	},
 });
 
-const setup = await setupWorktime(props.table);
+const setup = await setupBid(props.table);
 </script>
 
 <template>
@@ -29,7 +26,6 @@ const setup = await setupWorktime(props.table);
 		<div class="toolbar">
 			<div class="tb-outer-group">
 				<div class="tb-group">
-					<CreateButton @click="setup.rowEditor.create()"></CreateButton>
 					<SearchInput
 						v-for="(search, index) in setup.searchList"
 						:style="search.style"
@@ -67,7 +63,7 @@ const setup = await setupWorktime(props.table);
 		<Table
 			class="table"
 			:table="props.table"
-			@rowClick="setup.rowEditor.edit"
+			@rowClick="setup.rowEditor.view"
 		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"

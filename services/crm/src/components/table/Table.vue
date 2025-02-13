@@ -10,7 +10,7 @@ import {
 	watch,
 } from "vue";
 import TableCellContainer from "@/components/table/TableCellContainer.vue";
-import Checkbox from "@/components/UI/Checkbox.vue";
+import Checkbox from "@/components/UI-new/Checkbox.vue";
 import { BaseSchema } from "@/types";
 import { Table } from "@/components/table";
 import { useRoute, useRouter } from "vue-router";

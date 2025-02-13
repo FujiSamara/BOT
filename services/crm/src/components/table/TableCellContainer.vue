@@ -28,14 +28,38 @@ const hintRef = useTemplateRef("hint");
 const hintVisible = ref(false);
 const hintAvailable = ref(false);
 
+const resizeHint = () => {
+	if (!hintRef.value) {
+		return;
+	}
+
+	const element = hintRef.value;
+
+	const maxGrantedWidth = parseInt(
+		window
+			.getComputedStyle(document.documentElement)
+			.getPropertyValue("--max-hint-width"),
+	);
+
+	window.getComputedStyle(element).opacity; // Force dom to rerender component.
+	element.style.width = "max-content";
+	window.getComputedStyle(element).opacity; // Force dom to rerender component.
+
+	if (element.offsetWidth > maxGrantedWidth) {
+		element.style.width = `${maxGrantedWidth}px`;
+	}
+};
+
 const checkOverflow = () => {
 	if (!cellWrapperRef.value) {
 		return;
 	}
 
-	const element = (cellWrapperRef.value as HTMLElement)
+	const cellElement = (cellWrapperRef.value as HTMLElement)
 		.children[0] as HTMLElement;
-	hintAvailable.value = element.scrollHeight > element.offsetHeight;
+	hintAvailable.value =
+		cellElement.scrollHeight > cellElement.offsetHeight ||
+		cellElement.scrollWidth > cellElement.offsetWidth;
 };
 const observer = new MutationObserver(checkOverflow);
 
@@ -50,17 +74,20 @@ const mouseEnter = async () => {
 
 	const hint = hintRef.value as HTMLElement;
 	const cellWrapper = cellWrapperRef.value as HTMLElement;
-	const cellParent = cellWrapper.parentElement as HTMLElement;
 
-	hint.style.right = "100%";
 	hintVisible.value = true;
 
 	await nextTick();
-	const rect = hint.getBoundingClientRect();
+	resizeHint();
 
-	if (rect.left < cellParent.offsetLeft) {
-		hint.style.right = `calc(100% - ${cellParent.offsetLeft - rect.left}px)`;
+	const rect = cellWrapper.getBoundingClientRect();
+
+	let top = rect.top + rect.height - hint.offsetHeight;
+	if (top < 0) {
+		top = 0;
 	}
+	hint.style.top = `${top}px`;
+	hint.style.left = `${rect.left - hint.offsetWidth}px`;
 };
 
 onMounted(() => {
@@ -125,17 +152,13 @@ onUnmounted(() => {
 	}
 
 	.hint {
-		position: absolute;
-
-		bottom: 0;
-		right: 100%;
-
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		width: fit-content;
+		align-items: center;
+		position: fixed;
 
-		white-space: nowrap;
+		max-height: 300px;
+		width: var(--max-hint-width);
 
 		z-index: 2;
 		border-radius: 8px;
@@ -145,14 +168,17 @@ onUnmounted(() => {
 		box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.1);
 
 		.cell {
-			max-width: max-content;
+			overflow: auto;
+			max-width: 100%;
+			max-height: 100%;
+			height: 100%;
 		}
 	}
 
 	.cell {
 		overflow: hidden;
-		max-width: 100%;
-		max-height: 100%;
+		width: 100%;
+		height: fit-content;
 	}
 }
 </style>

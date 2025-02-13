@@ -34,6 +34,7 @@ const error = computed(() => {
 
 <template>
 	<div class="e-select">
+		<span v-if="entity.withTitle" class="title">{{ entity.placeholder }}</span>
 		<TimeSelectInput
 			:required="entity.required"
 			:placeholder="entity.placeholder"
@@ -41,15 +42,19 @@ const error = computed(() => {
 			:error="error"
 			@submit="(val) => (entity.formattedField.value = val)"
 			@close="focusOut"
+			:readonly="entity.readonly"
 		></TimeSelectInput>
 	</div>
 </template>
 
 <style scoped lang="scss">
+@import "@/components/entity/entity.scss";
+
 .msi-wrapper {
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;

@@ -20,6 +20,9 @@ const props = defineProps({
 		type: Boolean,
 		default: false,
 	},
+	readonly: {
+		type: Boolean,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -54,6 +57,7 @@ const focusOut = () => {
 			:error-left-align="true"
 			:required="props.required"
 			:disabled="props.disabled"
+			:readonly="props.readonly"
 		></MaybeDelayInput>
 	</div>
 </template>
@@ -63,6 +67,7 @@ const focusOut = () => {
 	display: flex;
 	flex-direction: column;
 	position: relative;
+	flex-grow: 1;
 
 	.msi-input {
 		width: 100%;
