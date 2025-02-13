@@ -171,13 +171,14 @@ onUnmounted(() => {
 			overflow: auto;
 			max-width: 100%;
 			max-height: 100%;
+			height: 100%;
 		}
 	}
 
 	.cell {
 		overflow: hidden;
 		width: 100%;
-		height: 100%;
+		height: fit-content;
 	}
 }
 </style>

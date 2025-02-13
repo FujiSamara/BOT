@@ -102,7 +102,7 @@ const openPhoto = (cell: Cell, index: number) => {
 
 <style scoped lang="scss">
 .cell {
-	margin: auto 0;
+	margin: auto;
 
 	.cell-line-list {
 		display: flex;
