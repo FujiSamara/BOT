@@ -28,6 +28,7 @@ import {
 	BoolEntity,
 	DateEntity,
 	DepartmentEntity,
+	DocumentEntity,
 	EnumEntity,
 	ExpenditureEntity,
 	FloatInputEntity,
@@ -267,6 +268,11 @@ export async function setupBid(table: BidTable): Promise<BidPanelData> {
 				),
 				type: SelectType.MonoSelectInput,
 				name: "activity_type",
+			},
+			{
+				entity: new DocumentEntity(true, "Документы"),
+				type: SelectType.MultiDocument,
+				name: "documents",
 			},
 			{
 				entity: new StringInputEntity(false, "Комментарий"),

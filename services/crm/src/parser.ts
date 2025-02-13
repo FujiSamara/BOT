@@ -219,3 +219,14 @@ export function formatFloat(val: number): Cell {
 	}
 	return new Cell(new CellLine(val.toFixed(2).toString()));
 }
+
+export async function fileToDocumentSchema(val: File): Promise<DocumentSchema> {
+	const document = new Blob([await val.arrayBuffer()], {
+		type: "application/octet-stream",
+	});
+	return {
+		name: val.name,
+		href: "",
+		file: document,
+	};
+}

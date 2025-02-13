@@ -18,7 +18,7 @@
 
 	&:hover {
 		background-color: $main-white;
-		color: $bg-accent-blue-3;
+		color: $main-accent-blue;
 	}
 
 	.tool-icon-wrapper {

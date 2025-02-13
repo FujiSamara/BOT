@@ -10,7 +10,7 @@ const emits = defineEmits(["click"]);
 </script>
 
 <template>
-	<button>
+	<button @click="emits('click')">
 		<slot></slot>
 		<span v-if="props.title">
 			{{ props.title }}

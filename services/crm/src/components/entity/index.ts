@@ -89,6 +89,17 @@ export class DocumentEntity extends BaseEntity<DocumentSchema> {
 	protected format(value: DocumentSchema): string {
 		return value.name;
 	}
+
+	public submit(value: DocumentSchema | DocumentSchema[]) {
+		if (!(value instanceof Array)) {
+			value = [value];
+		}
+		this._selectedEntities.value = [...this._selectedEntities.value, ...value];
+	}
+
+	public init(value: DocumentSchema | DocumentSchema[]): void {
+		this.submit(value);
+	}
 }
 
 export abstract class InputEntity<T> extends BaseEntity<T> {
