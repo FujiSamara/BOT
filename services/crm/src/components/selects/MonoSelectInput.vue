@@ -139,7 +139,7 @@ const focusOut = () => {
 				width: 100%;
 
 				span {
-					max-height: 100%;
+					white-space: nowrap;
 
 					font-family: Wix Madefor Display;
 					font-size: 14px;

@@ -371,6 +371,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 
 		if (this.monoMode) {
 			this._selectedEntities.value = [this._searchEntities.value[index]];
+			this._inputValue.value = this.format(this._searchEntities.value[index]);
 			this.restoreSaved();
 			return;
 		}
@@ -390,11 +391,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			throw new Error("Restoring saved must call only in monoMode.");
 		}
 
-		if (
-			this._inputValue.value === "" &&
-			this._selectedEntities.value.length &&
-			this.neededWord !== 0
-		) {
+		if (this._inputValue.value === "" && this._selectedEntities.value.length) {
 			this.remove(0);
 		}
 
@@ -404,7 +401,7 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			this._searchEntities.value = [];
 		} else {
 			this._inputValue.value = "";
-			this._searchEntities.value = [];
+			if (this.neededWord) this._searchEntities.value = [];
 		}
 	}
 	public init(value: T) {
