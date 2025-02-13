@@ -1136,7 +1136,6 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
         WorkerFingerprint.id,
         WorkerFingerprint.worker_id,
         WorkerFingerprint.department_id,
-        WorkerFingerprint.department_hex,
         WorkerFingerprint.cell_number,
         WorkerFingerprint.rfid_card,
     ]
@@ -1149,10 +1148,14 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     column_labels = {
         WorkerFingerprint.worker_id: "Сотрудники",
         WorkerFingerprint.department_id: "Департамент",
-        WorkerFingerprint.department_hex: "Номер СУКД устройства",
         WorkerFingerprint.cell_number: "Номер ячейки",
         WorkerFingerprint.rfid_card: "РФИД карты",
     }
+
+    column_searchable_list = [
+        WorkerFingerprint.worker_id,
+        WorkerFingerprint.department_id,
+    ]
 
 
 class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
@@ -1180,3 +1183,7 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
         FingerprintAttempt.department: "Номер устройства СКУД",
         FingerprintAttempt.event_dttm: "Время авторизации",
     }
+
+    column_searchable_list = [
+        FingerprintAttempt.department,
+    ]
