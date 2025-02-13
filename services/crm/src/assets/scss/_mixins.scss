@@ -156,6 +156,18 @@
     }
   }
 
+  &.error {
+    border-color: $sec-arrantion-red !important;
+
+    .tool-icon-wrapper > .tool-icon {
+      color: $sec-arrantion-red !important;
+    }
+
+    span {
+      color: $sec-arrantion-red !important;
+    }
+  }
+
   &.disabled {
     background-color: #eeeeee !important;
     border-color: #cdcdcd !important;
@@ -168,18 +180,6 @@
 
     span {
       color: $main-dark-gray !important;
-    }
-  }
-
-  &.error {
-    border-color: $sec-arrantion-red;
-
-    .tool-icon-wrapper > .tool-icon {
-      color: $sec-arrantion-red;
-    }
-
-    span {
-      color: $sec-arrantion-red;
     }
   }
 }

@@ -100,17 +100,14 @@ const starClicked = () => {
 				<span>*</span>
 			</span>
 		</Transition>
-		<Transition name="fade">
+		<Transition name="fade" mode="out-in">
 			<div
 				v-if="props.withEditMark && error === undefined && !props.readonly"
 				class="tool-icon-wrapper edit"
 			>
 				<div class="tool-icon edit"></div>
 			</div>
-		</Transition>
-
-		<Transition name="fade">
-			<div class="error-wrapper" v-show="error !== undefined">
+			<div class="error-wrapper" v-else-if="error !== undefined">
 				<Transition name="fade">
 					<span
 						v-if="active && error"

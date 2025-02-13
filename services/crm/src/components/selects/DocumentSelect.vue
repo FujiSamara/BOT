@@ -21,6 +21,13 @@ const props = defineProps({
 	required: {
 		type: Boolean,
 	},
+	error: {
+		type: String,
+	},
+	errorLeftAlign: {
+		type: Boolean,
+		default: false,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", documents: DocumentSchema[]): void;
@@ -49,7 +56,7 @@ const addFile = async (event: Event) => {
 </script>
 
 <template>
-	<div class="ds-wrapper">
+	<div class="ds-wrapper" :class="{ error: error !== undefined }">
 		<input
 			type="file"
 			:multiple="!props.onlyOne"
@@ -91,10 +98,10 @@ const addFile = async (event: Event) => {
 			</Transition>
 		</div>
 
-		<!-- Add -->
-		<Transition name="fade">
+		<!-- Add + Error -->
+		<Transition name="fade" mode="out-in">
 			<DefaultButton
-				v-if="showAdd"
+				v-if="showAdd && error === undefined"
 				class="add"
 				title=""
 				@click="() => inputRef?.click()"
@@ -102,6 +109,20 @@ const addFile = async (event: Event) => {
 				<div class="tool-icon-wrapper"><div class="tool-icon plus"></div></div>
 				<span>{{ createTitle }}</span>
 			</DefaultButton>
+			<div class="error-wrapper" v-else-if="error !== undefined">
+				<Transition name="fade">
+					<span
+						v-if="error"
+						class="tool-message"
+						:class="{ left: props.errorLeftAlign }"
+					>
+						{{ error }}
+					</span>
+				</Transition>
+				<div class="tool-icon-wrapper">
+					<div class="tool-icon error"></div>
+				</div>
+			</div>
 		</Transition>
 	</div>
 </template>
@@ -199,7 +220,7 @@ const addFile = async (event: Event) => {
 					width: 110px;
 					max-height: 100%;
 
-					color: $main-accent-blue;
+					color: $main-accent-blue !important;
 					font-family: Wix Madefor Display;
 					font-size: 12px;
 					font-weight: 500;
@@ -241,12 +262,6 @@ const addFile = async (event: Event) => {
 		}
 	}
 
-	&:not(.readonly) {
-		&:hover .tool-icon-wrapper .tool-icon {
-			color: $main-white;
-		}
-	}
-
 	button.add {
 		margin-left: auto;
 
@@ -256,7 +271,6 @@ const addFile = async (event: Event) => {
 		height: 32px;
 
 		background-color: $main-accent-blue;
-		border-color: $main-accent-blue;
 		transition: background-color 0.25s;
 
 		span {
@@ -293,12 +307,58 @@ const addFile = async (event: Event) => {
 		}
 	}
 
+	.error-wrapper {
+		position: relative;
+		display: flex;
+		flex-direction: row;
+
+		background-color: inherit;
+		z-index: 1;
+
+		.tool-icon-wrapper {
+			.tool-icon {
+				width: 16px;
+				height: 16px;
+				&.error {
+					mask-image: url("@/assets/icons/alert.svg");
+					color: $sec-arrantion-red;
+				}
+			}
+		}
+
+		.tool-message {
+			left: 100%;
+			top: 0;
+
+			&.left {
+				position: relative;
+				left: unset;
+				top: unset;
+			}
+		}
+	}
+
 	input[type="file"] {
 		width: 0;
 		overflow: hidden;
 		opacity: 0;
 		display: inline;
 		position: absolute;
+	}
+
+	&:not(.readonly) {
+		&:hover .tool-icon-wrapper .tool-icon {
+			color: $main-white;
+		}
+	}
+
+	&.error {
+		button.add {
+			.tool-icon-wrapper .tool-icon,
+			span {
+				color: $main-white !important;
+			}
+		}
 	}
 }
 </style>

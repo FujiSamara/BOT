@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PropType } from "vue";
+import { computed, PropType } from "vue";
 import { DocumentEntity } from "@/components/entity";
 import DocumentSelect from "@/components/selects/DocumentSelect.vue";
 
@@ -13,6 +13,12 @@ const props = defineProps({
 	},
 });
 const entity = props.entity;
+
+const error = computed(() => {
+	if (entity.error.value) {
+		return entity.error.value;
+	}
+});
 </script>
 
 <template>
@@ -26,6 +32,8 @@ const entity = props.entity;
 			:readonly="entity.readonly"
 			@submit="(docs) => entity.submit(docs)"
 			@clear="() => entity.clear()"
+			:error="error"
+			:error-left-align="true"
 		></DocumentSelect>
 	</div>
 </template>
