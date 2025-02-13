@@ -216,6 +216,7 @@ const addFile = async (event: Event) => {
 
 			.delete {
 				min-width: 110px;
+				max-width: 110px;
 				width: 110px;
 				height: 100%;
 
