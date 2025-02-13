@@ -73,6 +73,8 @@ export class BoolEntity extends BaseEntity<boolean> {
 		super(false, placeholder, readonly);
 
 		this.checked.value = defaultValue;
+		this._selectedEntities.value[0] = defaultValue;
+		this.completed.value = true;
 	}
 
 	public checked = computed({
@@ -86,6 +88,8 @@ export class BoolEntity extends BaseEntity<boolean> {
 }
 
 export class DocumentEntity extends BaseEntity<DocumentSchema> {
+	public completed = computed(() => this._selectedEntities.value.length !== 0);
+
 	protected format(value: DocumentSchema): string {
 		return value.name;
 	}
@@ -99,6 +103,10 @@ export class DocumentEntity extends BaseEntity<DocumentSchema> {
 
 	public init(value: DocumentSchema | DocumentSchema[]): void {
 		this.submit(value);
+	}
+
+	public getResult() {
+		return this._selectedEntities.value;
 	}
 }
 
@@ -382,7 +390,11 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 			throw new Error("Restoring saved must call only in monoMode.");
 		}
 
-		if (this._inputValue.value === "" && this._selectedEntities.value.length) {
+		if (
+			this._inputValue.value === "" &&
+			this._selectedEntities.value.length &&
+			this.neededWord !== 0
+		) {
 			this.remove(0);
 		}
 
@@ -442,6 +454,10 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 		}
 
 		super.init(value);
+	}
+
+	public getResult() {
+		return this._selectedEntities.value[0].value;
 	}
 }
 

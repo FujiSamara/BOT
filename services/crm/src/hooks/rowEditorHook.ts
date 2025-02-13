@@ -126,6 +126,7 @@ export function useRowEditor<T extends BaseSchema>(
 
 		if (mode.value === EditorMode.Create) {
 			await table.create(result);
+			fields.forEach((f) => f.entity.clear());
 		} else {
 			if (modelIndex.value) await table.update(result, modelIndex.value);
 		}

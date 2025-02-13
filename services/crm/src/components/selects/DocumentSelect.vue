@@ -56,7 +56,10 @@ const addFile = async (event: Event) => {
 </script>
 
 <template>
-	<div class="ds-wrapper" :class="{ error: error !== undefined }">
+	<div
+		class="ds-wrapper"
+		:class="{ error: error !== undefined, readonly: props.readonly }"
+	>
 		<input
 			type="file"
 			:multiple="!props.onlyOne"
@@ -270,6 +273,7 @@ const addFile = async (event: Event) => {
 		width: 144px;
 		height: 32px;
 
+		border-color: $main-accent-blue;
 		background-color: $main-accent-blue;
 		transition: background-color 0.25s;
 
