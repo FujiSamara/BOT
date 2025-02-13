@@ -1171,7 +1171,6 @@ class WorkerFingerprint(Base):
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
-    department_hex: Mapped[str] = mapped_column(nullable=False)
     cell_number: Mapped[int] = mapped_column(nullable=True)
     rfid_card: Mapped[str] = mapped_column(nullable=True)
 
