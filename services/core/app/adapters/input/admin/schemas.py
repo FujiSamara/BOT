@@ -1142,9 +1142,8 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
 
     column_list = [
         WorkerFingerprint.id,
-        WorkerFingerprint.worker_id,
-        WorkerFingerprint.department_id,
-        WorkerFingerprint.department_hex,
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
         WorkerFingerprint.cell_number,
         WorkerFingerprint.rfid_card,
     ]
@@ -1155,12 +1154,37 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     ]
 
     column_labels = {
-        WorkerFingerprint.worker_id: "Сотрудники",
-        WorkerFingerprint.department_id: "Департамент",
-        WorkerFingerprint.department_hex: "Номер СУКД устройства",
+        WorkerFingerprint.worker: "Сотрудник",
+        WorkerFingerprint.department: "Департамент",
         WorkerFingerprint.cell_number: "Номер ячейки",
         WorkerFingerprint.rfid_card: "РФИД карты",
     }
+
+    column_searchable_list = [
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        department_ids = Select(Department.id).where(
+            Department.name.ilike(f"""%{term}%""")
+        )
+        workers_ids = Select(Worker.id).where(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        workers = select(WorkerFingerprint).filter(
+            or_(
+                WorkerFingerprint.department_id.in_(department_ids),
+                WorkerFingerprint.worker_id.in_(workers_ids),
+            )
+        )
+        return workers
 
 
 class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
@@ -1188,3 +1212,7 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
         FingerprintAttempt.department: "Номер устройства СКУД",
         FingerprintAttempt.event_dttm: "Время авторизации",
     }
+
+    column_searchable_list = [
+        FingerprintAttempt.department,
+    ]
