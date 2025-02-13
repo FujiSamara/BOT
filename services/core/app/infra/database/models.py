@@ -28,6 +28,12 @@ class WorkerStatus(enum.Enum):
     dismissal = 6
 
 
+class ViewStatus(enum.Enum):
+    viewed = 1
+    pending = 2
+    pending_approval = 3
+
+
 class Gender(enum.Enum):
     man = 1
     woman = 2
@@ -61,7 +67,7 @@ class FujiScope(enum.Enum):
     bot_technical_request_repairman = 15
     bot_technical_request_chief_technician = 16
     bot_technical_request_appraiser = 17
-    bot_technical_request_department_director = 21
+    bot_technical_request_extensive_director = 21
     bot_bid_it_worker = 22
     bot_bid_it_repairman = 23
     bot_bid_it_tm = 24
@@ -71,6 +77,8 @@ class FujiScope(enum.Enum):
     bot_subordinates_menu = 34
     bot_worker_bid_security_coordinate = 35
     bot_worker_bid_accounting_coordinate = 36
+    bot_worker_bid_iiko = 37
+    bot_technical_request_department_director = 38
 
 
 class DepartmentType(enum.Enum):
@@ -97,6 +105,10 @@ approvalstatus = Annotated[
 workerstatus = Annotated[
     WorkerStatus,
     mapped_column(Enum(WorkerStatus), default=WorkerStatus.pending_approval),
+]
+viewstatus = Annotated[
+    ViewStatus,
+    mapped_column(Enum(ViewStatus), default=ViewStatus.pending_approval),
 ]
 
 
@@ -453,6 +465,7 @@ class Worker(Base):
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
         relationship("WorkerBidDocumentRequest", back_populates="sender")
     )
+    passport_str: Mapped[str] = mapped_column(nullable=True)
 
 
 class WorkerDocument(Base):
@@ -588,6 +601,7 @@ class WorkerBid(Base):
     l_name: Mapped[str] = mapped_column(nullable=False)
     o_name: Mapped[str] = mapped_column(nullable=False)
     create_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
 
     post_id: Mapped[int] = mapped_column(ForeignKey("posts.id"), nullable=False)
     post: Mapped["Post"] = relationship("Post", back_populates="workers_bids")
@@ -613,15 +627,19 @@ class WorkerBid(Base):
         "WorkerBidWorkPermission", cascade="all,delete", back_populates="worker_bid"
     )
 
+    view_state: Mapped[viewstatus] = mapped_column(nullable=True)
     state: Mapped[approvalstatus]
     security_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
     accounting_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
+    iiko_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
 
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
+    accounting_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
+    iiko_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
 
     official_work: Mapped[bool] = mapped_column(nullable=True)
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
@@ -1028,6 +1046,13 @@ class TechnicalRequest(Base):
 
     repairman_worktime: Mapped[int] = mapped_column(nullable=True)
 
+    not_relevant_description: Mapped[str] = mapped_column(nullable=True)
+    not_relevant_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    not_relevant_confirmation_date: Mapped[datetime.datetime] = mapped_column(
+        nullable=True
+    )
+    not_relevant_confirmation_description: Mapped[str] = mapped_column(nullable=True)
+
 
 # endregion
 
@@ -1146,7 +1171,6 @@ class WorkerFingerprint(Base):
 
     worker_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
-    department_hex: Mapped[str] = mapped_column(nullable=False)
     cell_number: Mapped[int] = mapped_column(nullable=True)
     rfid_card: Mapped[str] = mapped_column(nullable=True)
 

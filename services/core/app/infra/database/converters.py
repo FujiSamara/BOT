@@ -47,7 +47,7 @@ scope_decode_dict = {
     FujiScope.bot_technical_request_repairman: "Бот технические заявки исполнитель",
     FujiScope.bot_technical_request_chief_technician: "Бот технические заявки главный техник",
     FujiScope.bot_technical_request_appraiser: "Бот технические заявки оценка",
-    FujiScope.bot_technical_request_department_director: "Бот технические заявки директор",
+    FujiScope.bot_technical_request_extensive_director: "Бот технические заявки ДЭР",
     FujiScope.bot_bid_it_worker: "Бот подача IT заявки",
     FujiScope.bot_bid_it_repairman: "Бот IT заявки исполнитель",
     FujiScope.bot_bid_it_tm: "Бот IT заявки ТУ",
@@ -57,6 +57,8 @@ scope_decode_dict = {
     FujiScope.bot_subordinates_menu: "Бот меню сотрудники",
     FujiScope.bot_worker_bid_security_coordinate: "Бот согласование кандидатов СБ",
     FujiScope.bot_worker_bid_accounting_coordinate: "Бот согласование кандидатов бухгалтерия",
+    FujiScope.bot_worker_bid_iiko: "Бот согласование кандидатов добавление в IIKO",
+    FujiScope.bot_technical_request_department_director: "Бот технические заявки ТД",
 }
 
 

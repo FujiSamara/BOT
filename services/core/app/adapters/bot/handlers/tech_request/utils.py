@@ -15,7 +15,7 @@ from aiogram.utils.markdown import hbold
 from app.adapters.bot import text
 
 from app.infra.database.models import ApprovalStatus
-from app.services import (
+from app.services.technical_request import (
     get_technical_request_by_id,
     get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
@@ -53,6 +53,7 @@ async def show_form(
     text_form = (
         f"{hbold(request.problem.problem_name)} от "
         + request.open_date.date().strftime(settings.date_format)
+        + f"\nНомер заявки: {request.id}"
         + f"\nОписание:\n{request.description}\n\
 Адрес: {request.department.address}\n\
 ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
@@ -70,9 +71,9 @@ async def show_form(
             text_form += "В процессе выполнения"
         case ApprovalStatus.pending_approval:
             text_form += "Ожидание оценки от ТУ"
-        case ApprovalStatus.denied:
-            text_form += "Отправлено на доработку"
         case ApprovalStatus.skipped:
+            text_form += "Не выполнено"
+        case ApprovalStatus.denied:
             text_form += "Не выполнено"
         case ApprovalStatus.not_relevant:
             text_form += "Не актуально"
@@ -119,6 +120,17 @@ async def show_form(
         text_form += (
             "Комментарий при закрытие заявки: " + request.close_description + "\n \n"
         )
+
+    if request.not_relevant_description is not None:
+        text_form += f"Не релевантно по причине: {request.not_relevant_description}\n"
+        text_form += (
+            f"Дата: {request.not_relevant_date.strftime(settings.date_format)}\n"
+        )
+    if request.not_relevant_confirmation_description is not None:
+        text_form += (
+            f"Комментарий ТД: {request.not_relevant_confirmation_description}\n"
+        )
+        text_form += f"Дата: {request.not_relevant_confirmation_date.strftime(settings.date_format)}\n"
 
     if request.close_date:
         text_form += (
@@ -275,16 +287,20 @@ async def handle_department(
 
 
 def department_names_with_count(
-    state: ApprovalStatus, department_names: list[str], tg_id: int | None = None
-):
-    if department_names == []:
-        return []
+    state: ApprovalStatus,
+    department_names: list[str],
+    tg_id: int | None = None,
+) -> list[str]:
     if tg_id is not None:
         request_count = get_request_count_in_departments_by_tg_id(
             state=state, tg_id=tg_id
         )
+        if department_names == []:
+            return [f"{dep_count[1]} {dep_count[0]}" for dep_count in request_count]
     else:
-        request_count = get_request_count_in_departments(state=state)
+        request_count = get_request_count_in_departments(
+            state=state, department_names=department_names
+        )
     out_department_names = []
     if len(department_names) > 0:
         for department_name, count in request_count:

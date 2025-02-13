@@ -222,13 +222,16 @@ class WorkerView(ModelView, model=Worker):
     column_sortable_list = [
         Worker.state,
         Worker.id,
+        Worker.post,
+        Worker.employment_date,
     ]
     column_list = [
         Worker.l_name,
         Worker.f_name,
-        Worker.o_name,
         Worker.phone_number,
         Worker.state,
+        Worker.post,
+        Worker.employment_date,
     ]
 
     column_details_list = [
@@ -261,6 +264,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.children_born_date,
         Worker.military_ticket,
         Worker.patent,
+        Worker.passport_str,
         Worker.official_work,
     ]
     can_export = False
@@ -300,11 +304,12 @@ class WorkerView(ModelView, model=Worker):
         Worker.military_ticket: "Военный билет",
         Worker.patent: "Патент",
         Worker.official_work: "Официально трудоустроен",
+        Worker.passport_str: "Паспорт",
     }
 
     form_columns = [
-        Worker.f_name,
         Worker.l_name,
+        Worker.f_name,
         Worker.o_name,
         Worker.state,
         Worker.phone_number,
@@ -332,6 +337,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.military_ticket,
         Worker.patent,
         Worker.official_work,
+        Worker.passport_str,
     ]
 
     form_ajax_refs = {
@@ -390,6 +396,30 @@ class WorkerView(ModelView, model=Worker):
         if "password" in data and data["password"] != model.password:
             data["password"] = encrypt_password(data["password"])
 
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
+
     async def delete_model(self, request: Request, pk) -> None:
         from app.adapters.output.file.delete_files import (
             delete_files_for_model_by_id,
@@ -412,7 +442,7 @@ class WorkerView(ModelView, model=Worker):
 
 
 class WorkerDocumentView(ModelView, model=WorkerDocument):
-    name = "Документ сотрудник"
+    name = "Документ сотрудника"
     name_plural = "Документы сотрудников"
 
     can_create = True
@@ -555,22 +585,21 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.create_date: "Дата создания",
         WorkerBid.comment: "Комментарий",
         WorkerBid.official_work: "Официальное трудоустройство",
+        WorkerBid.close_date: "Дата закрытия заявки",
     }
 
     column_list = [
         WorkerBid.id,
-        WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
         WorkerBid.o_name,
         WorkerBid.post,
         WorkerBid.department,
         WorkerBid.state,
-        WorkerBid.comment,
+        WorkerBid.close_date,
     ]
 
     column_details_list = [
-        WorkerBid.id,
         WorkerBid.create_date,
         WorkerBid.l_name,
         WorkerBid.f_name,
@@ -583,6 +612,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.state,
         WorkerBid.comment,
         WorkerBid.official_work,
+        WorkerBid.close_date,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -593,6 +623,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.id,
         WorkerBid.o_name,
         WorkerBid.f_name,
+        WorkerBid.state,
+        WorkerBid.post,
+        WorkerBid.close_date,
     ]
 
     form_columns = [WorkerBid.comment]
@@ -705,6 +738,30 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
     column_formatters_detail = column_formatters
 
+    def sort_query(self, stmt, request: Request):
+        from sqlalchemy import asc, desc
+
+        sort_by = request.query_params.get("sortBy", None)
+        sort = request.query_params.get("sort", "asc")
+
+        if sort_by:
+            sort_fields = [(sort_by, sort == "desc")]
+        else:
+            sort_fields = self._get_default_sort()
+
+        for sort_field, is_desc in sort_fields:
+            model = self.model
+
+            if sort_field == "post":
+                sort_field = sort_field + "_id"
+
+            if is_desc:
+                stmt = stmt.order_by(desc(getattr(model, sort_field)))
+            else:
+                stmt = stmt.order_by(asc(getattr(model, sort_field)))
+
+        return stmt
+
 
 class TechnicalRequestView(ModelView, model=TechnicalRequest):
     details_template = "tech_req_details.html"
@@ -733,6 +790,10 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
         TechnicalRequest.repairman_worktime: "Заявка в исполнение",
+        TechnicalRequest.not_relevant_date: "Дата отправки заявки на проверку релевантности",
+        TechnicalRequest.not_relevant_description: "Комментарий при отправки на проверку релевантности",
+        TechnicalRequest.not_relevant_confirmation_date: "Дата проверки на релевантность",
+        TechnicalRequest.not_relevant_confirmation_description: "Комментарий после проверки на релевантность",
     }
 
     column_list = [
@@ -812,6 +873,8 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.reopen_repair_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_confirmation_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_deadline_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_date: WorkerBidView.datetime_format,
     }
 
     column_formatters_detail = column_formatters
@@ -1138,9 +1201,8 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
 
     column_list = [
         WorkerFingerprint.id,
-        WorkerFingerprint.worker_id,
-        WorkerFingerprint.department_id,
-        WorkerFingerprint.department_hex,
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
         WorkerFingerprint.cell_number,
         WorkerFingerprint.rfid_card,
     ]
@@ -1151,12 +1213,37 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     ]
 
     column_labels = {
-        WorkerFingerprint.worker_id: "Сотрудник",
-        WorkerFingerprint.department_id: "Департамент",
-        WorkerFingerprint.department_hex: "Номер СУКД устройства",
+        WorkerFingerprint.worker: "Сотрудник",
+        WorkerFingerprint.department: "Департамент",
         WorkerFingerprint.cell_number: "Номер ячейки",
         WorkerFingerprint.rfid_card: "РФИД карты",
     }
+
+    column_searchable_list = [
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        department_ids = Select(Department.id).where(
+            Department.name.ilike(f"""%{term}%""")
+        )
+        workers_ids = Select(Worker.id).where(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        workers = select(WorkerFingerprint).filter(
+            or_(
+                WorkerFingerprint.department_id.in_(department_ids),
+                WorkerFingerprint.worker_id.in_(workers_ids),
+            )
+        )
+        return workers
 
 
 class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
@@ -1184,3 +1271,7 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
         FingerprintAttempt.department: "Номер устройства СКУД",
         FingerprintAttempt.event_dttm: "Время авторизации",
     }
+
+    column_searchable_list = [
+        FingerprintAttempt.department,
+    ]

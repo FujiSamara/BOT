@@ -39,13 +39,15 @@ from app.adapters.bot.kb import (
     get_coordinate_worker_bids_SS_btn,
     get_coordinate_worker_bids_AS_btn,
     get_candidates_coordinate_menu_btn,
+    get_coordinate_worker_bids_iiko_btn,
 )
 from app.adapters.bot.handlers.tech_request.kb import (
     wr_menu_button,  # worker
     rm_button,  # repairman
     ct_button,  # chief technician
-    tm_button,  # territorial manager
-    dd_button,  # department director
+    ar_button,  # appraiser
+    ed_button,  # extensive director
+    td_button,  # territorial director
 )
 import asyncio
 
@@ -67,8 +69,8 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_technical_request_worker: wr_menu_button,
         FujiScope.bot_technical_request_repairman: rm_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_appraiser: tm_button,
-        FujiScope.bot_technical_request_department_director: dd_button,
+        FujiScope.bot_technical_request_appraiser: ar_button,
+        FujiScope.bot_technical_request_extensive_director: ed_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
         FujiScope.bot_bid_it_tm: get_it_tm_menu_btn,
@@ -77,6 +79,8 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_subordinates_menu: get_candidates_coordinate_menu_btn,
         FujiScope.bot_worker_bid_security_coordinate: get_coordinate_worker_bids_SS_btn,
         FujiScope.bot_worker_bid_accounting_coordinate: get_coordinate_worker_bids_AS_btn,
+        FujiScope.bot_worker_bid_iiko: get_coordinate_worker_bids_iiko_btn,
+        FujiScope.bot_technical_request_department_director: td_button,
     }
 
 
