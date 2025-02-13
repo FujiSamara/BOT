@@ -25,6 +25,10 @@ async def update_equipment_status(
     from app.adapters.bot.handlers.utils import (
         notify_workers_by_scope,
     )
+    from app.adapters.bot.kb import create_inline_keyboard, get_incidents_btn
+    from app.adapters.bot.text import view
+    from aiogram.types import InlineKeyboardButton
+    from app.adapters.bot.handlers.monitoring.schemas import IncidentCallbackData
 
     if (
         department := orm.find_department_by_column(
@@ -57,6 +61,16 @@ async def update_equipment_status(
             f"""Оборудование не доступно!
 Предприятие: {equipment_status.department.name}
 Тип оборудования: {equipment_status.equipment_name}""",
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=view,
+                    callback_data=IncidentCallbackData(
+                        id=id,
+                        with_confirm=True,
+                        callback_from=get_incidents_btn.callback_data,
+                    ).pack(),
+                )
+            ),
         )
     else:
         if last_incident is not None:
