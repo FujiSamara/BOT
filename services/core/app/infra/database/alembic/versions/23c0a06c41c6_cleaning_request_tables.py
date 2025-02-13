@@ -74,7 +74,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     c_enum.update_enum(old_options, new_options, "fujiscope", table_columns)
 
-    op.create_table(
+    cleaning_problems_table = op.create_table(
         "cleaning_problems",
         sa.Column("problem_name", sa.String(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -170,6 +170,17 @@ def upgrade() -> None:
     op.create_foreign_key(
         "departments_cleaner_id_fkey", "departments", "workers", ["cleaner_id"], ["id"]
     )
+    for id, name in enumerate(
+        [
+            "чистка диванов и кресел",
+            "мойка фасадов",
+            "чистка тепловых завес",
+            "чистка кондиционеров",
+            "стирка штор",
+            "чистка холодильников",
+        ]
+    ):
+        op.bulk_insert(cleaning_problems_table, [{"id": id + 1, "name": name}])
 
 
 def downgrade() -> None:
