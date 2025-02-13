@@ -1159,7 +1159,9 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
 
     @staticmethod
     def search_query(stmt: Select, term: str):
-        department_ids = Select(Department.id).where(Department.name.ilike(f"""%{term}%"""))
+        department_ids = Select(Department.id).where(
+            Department.name.ilike(f"""%{term}%""")
+        )
         workers_ids = Select(Worker.id).where(
             or_(
                 Worker.f_name.ilike(f"%{term}%"),
@@ -1171,10 +1173,11 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
         workers = select(WorkerFingerprint).filter(
             or_(
                 WorkerFingerprint.department_id.in_(department_ids),
-                WorkerFingerprint.worker_id.in_(workers_ids)
+                WorkerFingerprint.worker_id.in_(workers_ids),
             )
         )
         return workers
+
 
 class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
     name = "Попытки авторизаций на СКУДЕ"
