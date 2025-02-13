@@ -2,15 +2,6 @@ import axios from "axios";
 import { computed } from "vue";
 import { Table } from "@/components/table";
 import { BidSchema } from "@/types";
-import { Editor } from "@/components/table/editor";
-import {
-	BoolSmartField,
-	DepartmentSmartField,
-	DocumentSmartField,
-	EnumSmartField,
-	ExpenditureSmartField,
-	InputSmartField,
-} from "@/components/table/field";
 import * as parser from "@/parser";
 import {
 	EntitySearchModelOut,
@@ -369,62 +360,5 @@ export class ArchiveBidTable extends BidTable {
 			approveEndpoint: "/archive",
 			rejectEndpoint: "/archive",
 		});
-	}
-}
-
-export class BidEditor extends Editor {
-	constructor(_instance?: any) {
-		super();
-
-		this.fields = [
-			new InputSmartField("Cумма", "amount", undefined, true, true),
-			new EnumSmartField(
-				"Тип оплаты",
-				"payment_type",
-				["cash", "card", "taxi"],
-				undefined,
-				true,
-				(val) => {
-					switch (val) {
-						case "cash":
-							return "Наличная";
-						case "card":
-							return "Безналичная";
-						case "taxi":
-							return "Требуется такси";
-					}
-					return val;
-				},
-				true,
-			),
-			new ExpenditureSmartField(
-				"Статья",
-				"expenditure",
-				undefined,
-				true,
-				undefined,
-				true,
-			),
-			new BoolSmartField("Счет в ЭДО", "need_edm", "Нет"),
-			new DepartmentSmartField(
-				"Производство",
-				"department",
-				undefined,
-				true,
-				true,
-			),
-			new InputSmartField("Цель", "purpose", undefined, true, true),
-			new EnumSmartField(
-				"Тип деятельности",
-				"activity_type",
-				["Инвестиционная", "Текущая"],
-				undefined,
-				true,
-				undefined,
-				true,
-			),
-			new DocumentSmartField("Документы", "documents", undefined, true),
-			new InputSmartField("Комментарий", "comment"),
-		];
 	}
 }

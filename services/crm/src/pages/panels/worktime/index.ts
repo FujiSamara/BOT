@@ -1,13 +1,5 @@
 import { Table } from "@/components/table";
 import { WorkTimeSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
-import { Editor } from "@/components/table/editor";
-import {
-	DateTimeSmartField,
-	DepartmentSmartField,
-	InputSmartField,
-	PostSmartField,
-	WorkerSmartField,
-} from "@/components/table/field";
 import * as parser from "@/parser";
 import {
 	EntitySearchModelOut,
@@ -151,38 +143,4 @@ export async function setupWorktime(
 		dateInterval,
 		rowEditor,
 	};
-}
-
-export class WorkTimeEditor extends Editor {
-	constructor(_instance?: any) {
-		super();
-		this.fields = [
-			new WorkerSmartField("Работник", "worker", _instance?.worker, true, true),
-			new DepartmentSmartField(
-				"Производство",
-				"department",
-				_instance?.department,
-				true,
-				true,
-			),
-			new PostSmartField("Должность", "post", _instance?.post, true, true),
-			new DateTimeSmartField(
-				"Начало смены",
-				"work_begin",
-				_instance?.work_begin,
-				true,
-				true,
-			),
-			new DateTimeSmartField("Конец смены", "work_end", _instance?.work_end),
-			new DateTimeSmartField("День", "day", _instance?.day, true, true, "date"),
-			new InputSmartField(
-				"Длительность работы",
-				"work_duration",
-				_instance?.work_duration,
-				false,
-			),
-			new InputSmartField("Оценка", "rating", _instance?.rating),
-			new InputSmartField("Штраф", "fine", _instance?.fine),
-		];
-	}
 }
