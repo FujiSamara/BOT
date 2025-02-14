@@ -466,6 +466,7 @@ class Worker(Base):
         relationship("WorkerBidDocumentRequest", back_populates="sender")
     )
     passport_str: Mapped[str] = mapped_column(nullable=True)
+    iiko_id: Mapped[int] = mapped_column(nullable=True)
 
 
 class WorkerDocument(Base):
@@ -639,7 +640,7 @@ class WorkerBid(Base):
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
     accounting_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
-    iiko_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
+    iiko_worker_id: Mapped[int] = mapped_column(nullable=True)
 
     official_work: Mapped[bool] = mapped_column(nullable=True)
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (

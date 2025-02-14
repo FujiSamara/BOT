@@ -57,7 +57,8 @@ class WorkerBidUpdate(StatesGroup):
 
 
 class WorkerBidCoordination(StatesGroup):
-    comment = State()
+    comment_str = State()
+    comment_int = State()
     seek_documents = State()
 
 
