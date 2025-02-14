@@ -57,7 +57,8 @@ class WorkerBidUpdate(StatesGroup):
 
 
 class WorkerBidCoordination(StatesGroup):
-    comment = State()
+    comment_str = State()
+    comment_int = State()
     seek_documents = State()
 
 
@@ -122,12 +123,18 @@ class AppraiserRequestForm(StatesGroup):
     description = State()
 
 
-class DepartmentDirectorRequestForm(StatesGroup):
+class ExtensiveDirectorRequestForm(StatesGroup):
     department = State()
     executor = State()
     group = State()
     problem = State()
     description = State()
+
+
+class TerritorialDirectorRequestForm(StatesGroup):
+    department = State()
+    description = State()
+    correct = State()
 
 
 # Persconal Cabinet form

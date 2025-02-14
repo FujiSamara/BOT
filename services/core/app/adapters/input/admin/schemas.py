@@ -272,8 +272,8 @@ class WorkerView(ModelView, model=Worker):
     name_plural = "Сотрудники"
     name = "Сотрудник"
     column_labels = {
-        Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
+        Worker.f_name: "Имя",
         Worker.o_name: "Отчество",
         Worker.state: "Статус",
         Worker.subordination_chief: "Руководитель",
@@ -305,6 +305,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.patent: "Патент",
         Worker.official_work: "Официально трудоустроен",
         Worker.passport_str: "Паспорт",
+        Worker.iiko_id: "Табельный номер",
     }
 
     form_columns = [
@@ -338,6 +339,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.patent,
         Worker.official_work,
         Worker.passport_str,
+        Worker.iiko_id,
     ]
 
     form_ajax_refs = {
@@ -551,8 +553,8 @@ class WorkerBidView(ModelView, model=WorkerBid):
     details_template = "worker_bid_details.html"
 
     column_labels = {
-        WorkerBid.f_name: "Имя",
         WorkerBid.l_name: "Фамилия",
+        WorkerBid.f_name: "Имя",
         WorkerBid.o_name: "Отчество",
         WorkerBid.post: "Должность",
         WorkerBid.department: "Предприятия",
@@ -564,6 +566,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.comment: "Комментарий",
         WorkerBid.official_work: "Официальное трудоустройство",
         WorkerBid.close_date: "Дата закрытия заявки",
+        WorkerBid.security_service_comment: "Комментарий СБ",
+        WorkerBid.accounting_service_comment: "Комментарий бухгалтерии",
+        WorkerBid.iiko_worker_id: "Табельный номер",
     }
 
     column_list = [
@@ -591,6 +596,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.comment,
         WorkerBid.official_work,
         WorkerBid.close_date,
+        WorkerBid.security_service_comment,
+        WorkerBid.accounting_service_comment,
+        WorkerBid.iiko_service_state,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
@@ -743,6 +751,10 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.worker: "Создатель",
         TechnicalRequest.acceptor_post: "Должность закрывшего",
         TechnicalRequest.repairman_worktime: "Заявка в исполнение",
+        TechnicalRequest.not_relevant_date: "Дата отправки заявки на проверку релевантности",
+        TechnicalRequest.not_relevant_description: "Комментарий при отправки на проверку релевантности",
+        TechnicalRequest.not_relevant_confirmation_date: "Дата проверки на релевантность",
+        TechnicalRequest.not_relevant_confirmation_description: "Комментарий после проверки на релевантность",
     }
 
     column_list = [
@@ -822,6 +834,8 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
         TechnicalRequest.reopen_repair_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_confirmation_date: WorkerBidView.datetime_format,
         TechnicalRequest.reopen_deadline_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_confirmation_date: WorkerBidView.datetime_format,
+        TechnicalRequest.not_relevant_date: WorkerBidView.datetime_format,
     }
 
     column_formatters_detail = column_formatters
@@ -1128,9 +1142,8 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
 
     column_list = [
         WorkerFingerprint.id,
-        WorkerFingerprint.worker_id,
-        WorkerFingerprint.department_id,
-        WorkerFingerprint.department_hex,
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
         WorkerFingerprint.cell_number,
         WorkerFingerprint.rfid_card,
     ]
@@ -1141,12 +1154,37 @@ class WorkerFingerprintView(ModelView, model=WorkerFingerprint):
     ]
 
     column_labels = {
-        WorkerFingerprint.worker_id: "Сотрудники",
-        WorkerFingerprint.department_id: "Департамент",
-        WorkerFingerprint.department_hex: "Номер СУКД устройства",
+        WorkerFingerprint.worker: "Сотрудник",
+        WorkerFingerprint.department: "Департамент",
         WorkerFingerprint.cell_number: "Номер ячейки",
         WorkerFingerprint.rfid_card: "РФИД карты",
     }
+
+    column_searchable_list = [
+        WorkerFingerprint.worker,
+        WorkerFingerprint.department,
+    ]
+
+    @staticmethod
+    def search_query(stmt: Select, term: str):
+        department_ids = Select(Department.id).where(
+            Department.name.ilike(f"""%{term}%""")
+        )
+        workers_ids = Select(Worker.id).where(
+            or_(
+                Worker.f_name.ilike(f"%{term}%"),
+                Worker.l_name.ilike(f"%{term}%"),
+                Worker.o_name.ilike(f"%{term}%"),
+            )
+        )
+
+        workers = select(WorkerFingerprint).filter(
+            or_(
+                WorkerFingerprint.department_id.in_(department_ids),
+                WorkerFingerprint.worker_id.in_(workers_ids),
+            )
+        )
+        return workers
 
 
 class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
@@ -1174,3 +1212,7 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
         FingerprintAttempt.department: "Номер устройства СКУД",
         FingerprintAttempt.event_dttm: "Время авторизации",
     }
+
+    column_searchable_list = [
+        FingerprintAttempt.department,
+    ]

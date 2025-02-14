@@ -121,6 +121,7 @@ class WorkerSchema(BaseSchemaPK):
     military_ticket: str | None = None
     patent: str | None = None
     official_work: bool | None = None
+    iiko_id: int | None = None
 
 
 class WorkerChildrenSchema(BaseSchemaPK):
@@ -208,7 +209,7 @@ class WorkerBidSchema(BaseSchemaPK):
     comment: str | None = None
     security_service_comment: str | None = None
     accounting_service_comment: str | None = None
-    iiko_service_comment: str | None = None
+    iiko_worker_id: int | None = None
 
     official_work: bool | None = None
     document_request: list["WorkerBidDocumentRequestSchema"] = []
@@ -305,6 +306,11 @@ class TechnicalRequestSchema(BaseSchemaPK):
     department: DepartmentSchema
 
     repairman_worktime: int | None = 0
+
+    not_relevant_description: str | None = None
+    not_relevant_date: datetime.datetime | None = None
+    not_relevant_confirmation_date: datetime.datetime | None = None
+    not_relevant_confirmation_description: str | None = None
 
 
 class AccountLoginsSchema(BaseSchemaPK):

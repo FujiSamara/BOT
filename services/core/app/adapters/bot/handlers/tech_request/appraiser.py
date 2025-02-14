@@ -39,20 +39,20 @@ from app.infra.database.models import ApprovalStatus
 router = Router(name="technical_request_appraiser")
 
 
-@router.callback_query(F.data == tech_kb.tm_button.callback_data)
+@router.callback_query(F.data == tech_kb.ar_button.callback_data)
 async def show_tech_req_menu_cb(callback: CallbackQuery):
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.tm_button.text),
-        reply_markup=tech_kb.tm_change_department_menu,
+        text=hbold(tech_kb.ar_button.text),
+        reply_markup=tech_kb.ar_change_department_menu,
     )
 
 
 async def show_tech_req_menu_ms(message: Message):
     await try_edit_or_answer(
         message=message,
-        text=hbold(tech_kb.tm_button.text),
-        reply_markup=tech_kb.tm_change_department_menu,
+        text=hbold(tech_kb.ar_button.text),
+        reply_markup=tech_kb.ar_change_department_menu,
     )
 
 
@@ -87,22 +87,22 @@ async def set_department(message: Message, state: FSMContext):
         message=message,
         state=state,
         departments_names=department_names,
-        reply_markup=tech_kb.tm_menu_markup,
+        reply_markup=tech_kb.ar_menu_markup,
     ):
         await show_tech_req_menu_ms(message)
 
 
-@router.callback_query(F.data == tech_kb.tm_menu_button.callback_data)
+@router.callback_query(F.data == tech_kb.ar_menu_button.callback_data)
 async def show_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Предприятие: {department_name}"),
-        reply_markup=tech_kb.tm_menu_markup,
+        reply_markup=tech_kb.ar_menu_markup,
     )
 
 
-@router.callback_query(F.data == tech_kb.tm_history.callback_data)
+@router.callback_query(F.data == tech_kb.ar_history.callback_data)
 async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_appraiser(
@@ -115,7 +115,7 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
         text=hbold("История заявок"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="AR_TR_show_form_history",
-            menu_button=tech_kb.tm_menu_button,
+            menu_button=tech_kb.ar_menu_button,
             requests=requests,
         ),
     )
@@ -133,11 +133,11 @@ async def show_history_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.tm_history,
+        history_or_waiting_button=tech_kb.ar_history,
     )
 
 
-@router.callback_query(F.data == tech_kb.tm_waiting.callback_data)
+@router.callback_query(F.data == tech_kb.ar_waiting.callback_data)
 async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_waiting_technical_requests_for_appraiser(
@@ -149,7 +149,7 @@ async def show_waiting_menu(callback: CallbackQuery, state: FSMContext):
         text=hbold("Ожидающие заявки"),
         reply_markup=tech_kb.create_kb_with_end_point(
             end_point="AR_TR_show_form_waiting",
-            menu_button=tech_kb.tm_menu_button,
+            menu_button=tech_kb.ar_menu_button,
             requests=requests,
         ),
     )
@@ -177,7 +177,7 @@ async def show_waiting_form(
         callback_data=callback_data,
         state=state,
         buttons=buttons,
-        history_or_waiting_button=tech_kb.tm_waiting,
+        history_or_waiting_button=tech_kb.ar_waiting,
     )
 
 
@@ -188,7 +188,7 @@ async def show_rate_form_cb(
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Оценить заявку"),
-        reply_markup=await tech_kb.tm_rate_kb(state=state, callback_data=callback_data),
+        reply_markup=await tech_kb.ar_rate_kb(state=state, callback_data=callback_data),
     )
 
 
@@ -197,7 +197,7 @@ async def show_rate_form_ms(message: Message, state: FSMContext):
     await try_edit_or_answer(
         message=message,
         text=hbold("Оценить заявку"),
-        reply_markup=await tech_kb.tm_rate_kb(
+        reply_markup=await tech_kb.ar_rate_kb(
             state=state,
             callback_data=ShowRequestCallbackData(
                 request_id=data.get("request_id"),
@@ -296,6 +296,6 @@ async def save_rate(
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=message,
-        text=hbold(tech_kb.tm_button.text),
-        reply_markup=tech_kb.tm_change_department_menu,
+        text=hbold(tech_kb.ar_button.text),
+        reply_markup=tech_kb.ar_change_department_menu,
     )

@@ -404,19 +404,19 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
 
     buttons = [
         [
-            InlineKeyboardButton(text="Имя", callback_data="get_worker_bid_fname_form"),
-            InlineKeyboardButton(
-                text=str(f_name),
-                callback_data="dummy",
-            ),
-        ],
-        [
             InlineKeyboardButton(
                 text="Фамилия",
                 callback_data="get_worker_bid_lname_form",
             ),
             InlineKeyboardButton(
                 text=str(l_name),
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(text="Имя", callback_data="get_worker_bid_fname_form"),
+            InlineKeyboardButton(
+                text=str(f_name),
                 callback_data="dummy",
             ),
         ],

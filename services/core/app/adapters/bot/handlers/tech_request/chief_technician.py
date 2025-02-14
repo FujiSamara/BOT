@@ -17,7 +17,6 @@ from app.adapters.bot.handlers.utils import (
     download_file,
     handle_documents,
     handle_documents_form,
-    notify_worker_by_telegram_id,
     try_delete_message,
     try_edit_or_answer,
 )
@@ -28,7 +27,7 @@ from app.adapters.bot.handlers.tech_request.utils import (
 )
 
 from app.services import (
-    close_request,
+    set_not_relevant_state,
     get_all_history_technical_requests_for_repairman,
     get_all_worker_in_group,
     get_all_rework_technical_requests_for_repairman,
@@ -46,15 +45,10 @@ router = Router(name="technical_request_chief_technician")
 
 
 @router.callback_query(F.data == tech_kb.ct_button.callback_data)
-async def show_tech_req_format_cb(callback: CallbackQuery):
-    await try_edit_or_answer(
-        message=callback.message,
-        text=hbold(tech_kb.ct_button.text),
-        reply_markup=tech_kb.ct_rm,
-    )
+async def show_tech_req_format(message: Message | CallbackQuery):
+    if isinstance(message, CallbackQuery):
+        message = message.message
 
-
-async def show_tech_req_format_ms(message: Message):
     await try_edit_or_answer(
         message=message,
         text=hbold(tech_kb.ct_button.text),
@@ -92,7 +86,7 @@ async def set_department(message: Message, state: FSMContext):
         ),
         reply_markup=tech_kb.ct_menu_markup,
     ):
-        await show_tech_req_format_ms(message)
+        await show_tech_req_format(message)
 
 
 # region Own requests
@@ -314,20 +308,14 @@ async def save_repair(
     for doc in photo:
         photo_files.append(await download_file(doc))
 
-    request_data = update_technical_request_from_repairman(
-        photo_files=photo_files, request_id=callback_data.request_id
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["territorial_manager_telegram_id"],
-        message=text.notification_appraiser
-        + f"\n На предприятие: {request_data['department_name']}",
-    )
-
-    await notify_worker_by_telegram_id(
-        id=request_data["worker_telegram_id"], message=text.notification_worker
-    )
-
+    if not (
+        await update_technical_request_from_repairman(
+            photo_files=photo_files, request_id=callback_data.request_id
+        )
+    ):
+        raise ValueError(
+            f"Technical request with id: {callback_data.request_id} wasn't update by executor"
+        )
     await state.set_state(Base.none)
     await try_edit_or_answer(
         message=callback.message,
@@ -384,7 +372,7 @@ async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         callback.message,
         text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="show_CT_TR_admin_form",
             menu_button=tech_kb.ct_button,
             requests=requests,
@@ -538,7 +526,7 @@ async def set_executor(message: Message, state: FSMContext):
     await try_delete_message(message)
 
     if message.text == text.back:
-        await show_tech_req_format_ms(message)
+        await show_tech_req_format(message)
     else:
         LFO_workers = [
             " ".join([repairman.l_name, repairman.f_name, repairman.o_name])
@@ -566,17 +554,19 @@ async def save_CT_TR_admin_form(
 ):
     request_id = callback_data.request_id
     repairman_full_name = (await state.get_data()).get("repairman_full_name").split(" ")
-    repairman_TG_id = update_tech_request_executor(
-        request_id=request_id, repairman_full_name=repairman_full_name
-    )
     data = await state.get_data()
-    await notify_worker_by_telegram_id(
-        id=repairman_TG_id,
-        message=f"Вас назначили на заявку {request_id}\nНа предприятие: {data.get('department_name')}",
-    )
     await state.clear()
+    if not (
+        await update_tech_request_executor(
+            request_id=request_id,
+            repairman_full_name=repairman_full_name,
+            department_name=data.get("department_name"),
+        )
+    ):
+        raise ValueError(f"Executor of technical request {request_id} wasn't update")
+
     await state.set_state(Base.none)
-    await show_tech_req_format_cb(callback=callback)
+    await show_tech_req_format(callback=callback)
 
 
 @router.callback_query(
@@ -669,19 +659,25 @@ async def save_close_request(
     callback: CallbackQuery, callback_data: ShowRequestCallbackData, state: FSMContext
 ):
     data = await state.get_data()
-    creator_tg_id = close_request(
+    if "request_id" not in data:
+        raise ValueError("Technical request id wasn't found")
+    if "description" not in data:
+        raise ValueError("Technical request description wasn't found")
+
+    if not await set_not_relevant_state(
         request_id=data.get("request_id"),
         description=data.get("description"),
         telegram_id=callback.message.chat.id,
-    )
-    if creator_tg_id:
-        await notify_worker_by_telegram_id(
-            id=creator_tg_id,
-            message=text.notification_worker,
+    ):
+        raise ValueError(
+            f"Technical request with id: {data.get('request_id')} wasn't update"
         )
-    await show_admin_menu(
-        callback=callback,
-        state=state,
+
+    await state.clear()
+    await state.set_state(Base.none)
+
+    await show_tech_req_format(
+        message=callback.message,
     )
 
 
