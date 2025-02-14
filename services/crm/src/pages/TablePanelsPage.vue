@@ -106,7 +106,7 @@ loadPanels();
 				<template v-if="Component && currentTable !== undefined">
 					<Transition mode="out-in" name="fade">
 						<KeepAlive>
-							<Suspense timeout="0">
+							<Suspense timeout="300">
 								<!-- main content -->
 								<component :table="currentTable" class="panel" :is="Component">
 								</component>

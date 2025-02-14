@@ -1,6 +1,11 @@
 import { Table } from "@/components/table";
-import { ExpenditureSchema } from "@/types";
+import { ExpenditureSchema, RouteData } from "@/types";
 import * as parser from "@/parser";
+import { SearchModelOut, useSearch } from "@/hooks/tableSearchHook";
+
+interface ExpenditurePanelData {
+	searchList: SearchModelOut[];
+}
 
 export class ExpenditureTable extends Table<ExpenditureSchema> {
 	constructor() {
@@ -20,4 +25,31 @@ export class ExpenditureTable extends Table<ExpenditureSchema> {
 		this._aliases.set("paralegal", "Юрисконсульт");
 		this._aliases.set("creator", "Создал");
 	}
+}
+
+export async function setupExpenditre(
+	table: ExpenditureTable,
+	routeData: RouteData,
+): Promise<ExpenditurePanelData> {
+	const searchList = await useSearch(table, routeData, {
+		schemas: [
+			{
+				pattern: "fac",
+				groups: [0],
+			},
+			{
+				pattern: "chapter",
+				groups: [1],
+			},
+			{
+				pattern: "name",
+				groups: [2],
+			},
+		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
+		name: "general",
+	});
+
+	return { searchList };
 }

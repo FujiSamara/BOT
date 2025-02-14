@@ -1,7 +1,6 @@
 import { ref, Ref } from "vue";
 import { Table } from "@/components/table";
-import { BaseSchema } from "@/types";
-import { useRoute, useRouter } from "vue-router";
+import { BaseSchema, RouteData } from "@/types";
 
 export interface DateIntervalModelOut {
 	submit: (from: Date, to: Date) => void;
@@ -14,11 +13,11 @@ export interface DateIntervalModelOut {
 export const useDateInterval = async (
 	table: Table<BaseSchema>,
 	column: string,
+	routeData: RouteData,
 ): Promise<DateIntervalModelOut> => {
-	const router = useRouter();
-	const route = useRoute();
-
 	const exist = ref(false);
+	const route = routeData.route;
+	const router = routeData.router;
 
 	const submit = async (from: Date, to: Date, silent: boolean = false) => {
 		await change({ from, to }, silent);

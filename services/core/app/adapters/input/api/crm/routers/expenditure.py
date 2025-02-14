@@ -37,15 +37,15 @@ async def get_expenditures(
     return services.get_expenditures_at_page(page, records_per_page, query)
 
 
-@router.get("/find")
+@router.get("/by/name")
 async def find_expenditures(
-    record: str, _: User = Security(get_user, scopes=["authenticated"])
+    name: str, _: User = Security(get_user, scopes=["authenticated"])
 ) -> list[ExpenditureSchema]:
     """Finds expenditures by given `record`.
 
     Search is carried out by name and chapter.
     """
-    return services.find_expenditures(record)
+    return services.find_expenditures(name)
 
 
 @router.post("/")

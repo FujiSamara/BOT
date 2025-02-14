@@ -1,8 +1,7 @@
 import { BaseEntity } from "@/components/entity";
 import { Table } from "@/components/table";
-import { BaseSchema, FilterSchema, SearchSchema } from "@/types";
-import { Ref, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { BaseSchema, FilterSchema, RouteData, SearchSchema } from "@/types";
+import { nextTick, Ref, ref, watch } from "vue";
 
 export interface SearchModelIn {
 	schemas: {
@@ -22,10 +21,11 @@ export interface SearchModelOut {
 	value: Ref<string>;
 }
 
-export const useSearch = (
+export const useSearch = async (
 	table: Table<BaseSchema>,
+	routeData: RouteData,
 	...modelsIn: SearchModelIn[]
-): SearchModelOut[] => {
+): Promise<SearchModelOut[]> => {
 	const values = modelsIn.map((_) => "");
 	const errors: Ref<string | undefined>[] = modelsIn.map((_) => ref(undefined));
 	const modelsOut: SearchModelOut[] = [];
@@ -39,8 +39,8 @@ export const useSearch = (
 		return onModelChanged;
 	});
 
-	const router = useRouter();
-	const route = useRoute();
+	const route = routeData.route;
+	const router = routeData.router;
 
 	// Fills values from routes
 	for (let index = 0; index < modelsIn.length; index++) {
@@ -81,7 +81,7 @@ export const useSearch = (
 			}
 		}
 		await router.replace({ query: query });
-
+		await nextTick();
 		if (result.length === 0 && table.searchQuery.value.length === 0) return;
 
 		table.searchQuery.value = result;
@@ -119,7 +119,7 @@ export const useSearch = (
 		});
 	}
 
-	onInput();
+	await onInput();
 
 	return modelsOut;
 };

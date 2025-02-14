@@ -117,17 +117,21 @@ const toMonth = (month: number): string => {
 	});
 };
 
-const monthChoosed = (currentMonth: number) => {
-	month.value = currentMonth;
-	if (props.lockMode === undefined || props.lockMode !== CalendarType.Month) {
-		step.value = CalendarType.Day;
-		return;
-	}
-
-	if (props.date && currentMonth === month.value) {
+const monthChoosed = (choosedMonth: number) => {
+	if (
+		props.date &&
+		choosedMonth === month.value &&
+		props.lockMode === CalendarType.Month
+	) {
 		if (props.blockUnset) return;
 		month.value = undefined;
 		emits("unset");
+		return;
+	}
+
+	month.value = choosedMonth;
+	if (props.lockMode === undefined || props.lockMode !== CalendarType.Month) {
+		step.value = CalendarType.Day;
 		return;
 	}
 

@@ -294,7 +294,7 @@ export class ExpenditureSmartField extends InputSmartField {
 	}
 	protected async setter(newValue: any): Promise<void> {
 		const resp = await this._network.withAuthChecking(
-			axios.get(`${this._endpoint}/find?record=${newValue}`),
+			axios.get(`${this._endpoint}/by/name?name=${newValue}`),
 		);
 
 		this._tipList.value = resp.data;

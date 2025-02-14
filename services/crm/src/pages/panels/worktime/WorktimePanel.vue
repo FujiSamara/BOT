@@ -13,6 +13,7 @@ import { Table as BaseTable } from "@/components/table";
 import { WorkTimeSchema } from "@/types";
 import { PropType } from "vue";
 import { setupWorktime } from "@/pages/panels/worktime";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	table: {
@@ -21,7 +22,9 @@ const props = defineProps({
 	},
 });
 
-const setup = await setupWorktime(props.table);
+const route = useRoute();
+const router = useRouter();
+const setup = await setupWorktime(props.table, { router, route });
 </script>
 
 <template>

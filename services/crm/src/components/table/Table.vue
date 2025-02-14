@@ -146,6 +146,7 @@ onMounted(() => {
 			tag="div"
 			style="display: inline-block; width: fit-content"
 			:duration="{ enter: 1500, leave: 500 }"
+			appear
 		>
 			<div class="t-row titles" v-if="titles.length !== 0" :key="-1">
 				<TableCellContainer id="-1" class="t-cell check">
