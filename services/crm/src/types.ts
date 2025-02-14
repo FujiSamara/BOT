@@ -1,16 +1,40 @@
-import { ShallowRef } from "vue";
+import { Table } from "@/components/table";
+import {
+	LocationQueryRaw,
+	RouteLocationNormalizedLoaded,
+	Router,
+} from "vue-router";
 
-export interface NavigationData {
-	id: number;
-	imageSrc: string;
+export interface LinkData {
 	label: string;
-	isActive: boolean;
-	notifyCount?: number;
+	iconURL: string;
+	routeName: string;
+	active: boolean;
+	name?: string;
+	query?: LocationQueryRaw;
+}
+
+export interface RouteData {
+	router: Router;
+	route: RouteLocationNormalizedLoaded<any>;
+}
+
+export interface PanelData extends LinkData {
+	accesses: Access[];
+	name: string;
+	create: { new (): Table<BaseSchema> };
+	withUpdatingLoop?: boolean;
 }
 
 export interface Token {
 	access_token: string;
 	token_type: string;
+}
+
+export interface InfoSchema {
+	record_count: number;
+	all_record_count: number;
+	page_count: number;
 }
 
 export enum Access {
@@ -20,7 +44,7 @@ export enum Access {
 	Budget,
 	Admin,
 	FAC_CCbid,
-	CCSupervisorBid,
+	ParalegalBid,
 	Worktime,
 	Authed,
 	MyBid,
@@ -35,7 +59,7 @@ export const accessesDict: any = {
 	crm_budget: Access.Budget,
 	crm_expenditure: Access.Expenditure,
 	crm_fac_cc_bid: Access.FAC_CCbid,
-	crm_paralegal_bid: Access.CCSupervisorBid,
+	crm_paralegal_bid: Access.ParalegalBid,
 	authenticated: Access.Authed,
 	crm_my_bid: Access.MyBid,
 	crm_archive_bid: Access.ArchiveBid,
@@ -45,10 +69,18 @@ export const accessesDict: any = {
 	crm_accountant_card_bid: Access.AccountantCardBid,
 };
 
-export interface PanelData extends NavigationData {
-	panel: ShallowRef<any>;
-	access: Access;
+export enum DateType {
+	Interval = "Интервал",
+	Month = "Месяц",
+	Day = "День",
 }
+
+export enum CalendarType {
+	Day,
+	Month,
+}
+
+// #region Schemas
 
 export interface BaseSchema {
 	id: number;
@@ -117,3 +149,77 @@ export interface WorkTimeSchema extends BaseSchema {
 	rating?: Number;
 	fine?: Number;
 }
+
+export interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+export interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
+}
+
+export interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
+export interface FilterSchema {
+	id?: number;
+	column: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
+}
+
+export interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
+}
+
+export interface TimesheetSchema extends BaseSchema {
+	worker_fullname: string;
+	post_name: string;
+	total_hours: number;
+}
+// #endregion
+
+// #region Query
+export interface OrderBySchema {
+	column: string;
+	desc: boolean;
+}
+
+export interface SearchSchema {
+	column: string;
+	term: string;
+	dependencies?: Array<SearchSchema>;
+	groups?: Array<number>;
+}
+
+export interface DateSchema {
+	column: string;
+	start: Date;
+	end: Date;
+}
+
+export interface FilterSchema {
+	column: string;
+	value: any;
+	dependencies?: Array<FilterSchema>;
+	groups?: Array<number>;
+}
+
+export interface QuerySchema {
+	search_query?: Array<SearchSchema>;
+	order_by_query?: OrderBySchema;
+	date_query?: DateSchema;
+	filter_query?: Array<FilterSchema>;
+}
+// #endregion

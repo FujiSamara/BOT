@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { Access, accessesDict, Token } from "@/types";
+import { Access, accessesDict, Token } from "@types";
 import axios, { AxiosError, AxiosResponse } from "axios";
 import * as config from "@/config";
 import { inject } from "vue";
@@ -27,21 +27,28 @@ export const useNetworkStore = defineStore("network", {
 			$cookies: $cookies,
 			username: undefined,
 			errors: new Array<string>(),
+			authing: false,
+			authorized: false,
 		};
 	},
 	actions: {
 		async auth(): Promise<boolean> {
 			const url = `${config.fullBackendURL}/${config.authEndpoint}/`;
+			this.authing = true;
 
 			return await axios
 				.get(url)
-				.then(() => {
-					const access_token = this.$cookies.get("access_token");
-					this.setUserData(access_token);
+				.then((resp) => {
+					this.setUserData(resp.data.access_token);
+					this.authing = false;
+					this.authorized = true;
 
 					return true;
 				})
-				.catch(() => false);
+				.catch(() => {
+					this.authing = false;
+					return false;
+				});
 		},
 		async login(username: string, password: string): Promise<boolean> {
 			const url = `${config.fullBackendURL}/${config.authEndpoint}/token`;
@@ -62,6 +69,9 @@ export const useNetworkStore = defineStore("network", {
 				.then((resp) => {
 					const data: Token = resp.data;
 					this.setCredentials(data.access_token, data.token_type);
+					this.setUserData(data.access_token);
+
+					this.authorized = true;
 
 					return true;
 				})
@@ -87,7 +97,7 @@ export const useNetworkStore = defineStore("network", {
 			this.$cookies.remove("access_token");
 			this.$cookies.remove("token_type");
 			axios.defaults.headers.common["Authorization"] = undefined;
-			router.push({ name: "login" });
+			this.authorized = false;
 		},
 		async withAuthChecking(
 			handler: Promise<AxiosResponse<any, any>>,
