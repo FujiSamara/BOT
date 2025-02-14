@@ -1,7 +1,7 @@
 import axios from "axios";
 import { computed } from "vue";
 import { Table } from "@/components/table";
-import { BidSchema } from "@/types";
+import { BidSchema, RouteData } from "@/types";
 import * as parser from "@/parser";
 import {
 	EntitySearchModelOut,
@@ -129,8 +129,11 @@ export class BidTable extends Table<BidSchema> {
 		return ["Документы", "Статус"].includes(header);
 	}
 }
-export async function setupBid(table: BidTable): Promise<BidPanelData> {
-	const searchList = useSearch(table, {
+export async function setupBid(
+	table: BidTable,
+	routeData: RouteData,
+): Promise<BidPanelData> {
+	const searchList = await useSearch(table, routeData, {
 		schemas: [
 			{
 				pattern: "worker",
@@ -185,7 +188,7 @@ export async function setupBid(table: BidTable): Promise<BidPanelData> {
 			filter: filterBidByStatus,
 		},
 	);
-	const dateInterval = await useDateInterval(table, "create_date");
+	const dateInterval = await useDateInterval(table, "create_date", routeData);
 	const rowEditor = useRowEditor(
 		table,
 		[

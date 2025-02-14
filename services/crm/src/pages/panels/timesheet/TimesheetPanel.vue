@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { computed, PropType } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/MaybeDelayInput.vue";
@@ -7,62 +10,21 @@ import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
 
-import { Table as BaseTable } from "@/components/table";
-import { BaseSchema } from "@/types";
-import { useEntitySearch, useSearch } from "@/hooks/tableSearchHook";
-import { computed, PropType } from "vue";
-import { useDateInterval } from "@/hooks/dateIntervalHook";
-import { DepartmentEntity, PostEntity } from "@/components/entity";
+import { setupTimesheet, TimesheetTable } from "@/pages/panels/timesheet";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<BaseSchema>>,
+		type: Object as PropType<TimesheetTable>,
 		required: true,
 	},
 });
 
-const searchList = useSearch(props.table, {
-	schemas: [
-		{
-			pattern: "l_name",
-			groups: [0],
-		},
-		{
-			pattern: "f_name",
-			groups: [1],
-		},
-		{
-			pattern: "o_name",
-			groups: [2],
-		},
-		{
-			pattern: "post",
-			groups: [3],
-		},
-	],
-	placeholder: "Поиск",
-	style: "height: 100%; width: 170px",
-	name: "general",
-});
-const entitySearchList = useEntitySearch(
-	props.table,
-	{
-		entity: new DepartmentEntity(),
-		pattern: "department",
-		groups: [0],
-		id: 0,
-	},
-	{
-		entity: new PostEntity(),
-		pattern: "post",
-		groups: [1],
-		id: 1,
-	},
-);
-const dateInterval = await useDateInterval(props.table, "");
+const route = useRoute();
+const router = useRouter();
+const setup = await setupTimesheet(props.table, { router, route });
 
 const filtersExist = computed(
-	() => dateInterval.exist.value && entitySearchList.exist.value,
+	() => setup.dateInterval.exist.value && setup.entitySearchList.exist.value,
 );
 </script>
 
@@ -72,7 +34,7 @@ const filtersExist = computed(
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<SearchInput
-						v-for="(search, index) in searchList"
+						v-for="(search, index) in setup.searchList"
 						:style="search.style"
 						:placeholder="search.placeholder"
 						:error="search.error.value"
@@ -81,10 +43,10 @@ const filtersExist = computed(
 						:id="index"
 					></SearchInput>
 					<DateFilter
-						:from="dateInterval.from"
-						:to="dateInterval.to"
-						@unset="dateInterval.unset"
-						@submit="dateInterval.submit"
+						:from="setup.dateInterval.from"
+						:to="setup.dateInterval.to"
+						@unset="setup.dateInterval.unset"
+						@submit="setup.dateInterval.submit"
 						:block-unset="!props.table.blockLoop.value"
 					></DateFilter>
 				</div>
@@ -97,7 +59,7 @@ const filtersExist = computed(
 					></ColumnFilter>
 					<SearchFilter
 						:style="'height: 48px'"
-						:entities="entitySearchList.entities"
+						:entities="setup.entitySearchList.entities"
 					></SearchFilter>
 					<ExportToExcel
 						:table="props.table"

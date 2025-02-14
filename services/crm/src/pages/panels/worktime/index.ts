@@ -1,5 +1,9 @@
 import { Table } from "@/components/table";
-import { WorkTimeSchema, WorkTimeSchema as WorktimeSchema } from "@/types";
+import {
+	RouteData,
+	WorkTimeSchema,
+	WorkTimeSchema as WorktimeSchema,
+} from "@/types";
 import * as parser from "@/parser";
 import {
 	EntitySearchModelOut,
@@ -61,8 +65,9 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 
 export async function setupWorktime(
 	table: Table<WorkTimeSchema>,
+	routeData: RouteData,
 ): Promise<WorktimePanelData> {
-	const searchList = useSearch(table, {
+	const searchList = await useSearch(table, routeData, {
 		schemas: [
 			{
 				pattern: "worker",
@@ -88,7 +93,7 @@ export async function setupWorktime(
 			id: 1,
 		},
 	);
-	const dateInterval = await useDateInterval(table, "day");
+	const dateInterval = await useDateInterval(table, "day", routeData);
 	const rowEditor = useRowEditor(
 		table,
 		[

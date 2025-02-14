@@ -11,6 +11,7 @@ import CoordinationControl from "@/pages/panels/bid/CoordinationControl.vue";
 
 import { PropType } from "vue";
 import { FACAndCCBidTable, setupBid } from "@/pages/panels/bid";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
 	table: {
@@ -19,7 +20,9 @@ const props = defineProps({
 	},
 });
 
-const setup = await setupBid(props.table);
+const route = useRoute();
+const router = useRouter();
+const setup = await setupBid(props.table, { router, route });
 </script>
 
 <template>

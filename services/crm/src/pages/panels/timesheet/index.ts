@@ -2,8 +2,25 @@ import Holidays from "date-holidays";
 
 import { Table } from "@/components/table";
 import { colors } from "@/config";
-import { TimesheetSchema } from "@/types";
+import { RouteData, TimesheetSchema } from "@/types";
+import {
+	DateIntervalModelOut,
+	useDateInterval,
+} from "@/hooks/dateIntervalHook";
+import {
+	EntitySearchModelOut,
+	SearchModelOut,
+	useEntitySearch,
+	useSearch,
+} from "@/hooks/tableSearchHook";
+import { DepartmentEntity, PostEntity } from "@/components/entity";
 import * as parser from "@/parser";
+
+interface TimesheetPanelData {
+	searchList: SearchModelOut[];
+	entitySearchList: EntitySearchModelOut;
+	dateInterval: DateIntervalModelOut;
+}
 
 export class TimesheetTable extends Table<TimesheetSchema> {
 	private holidays: Holidays = new Holidays("RU");
@@ -48,4 +65,55 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		if (this.holidays.isHoliday(date) || date.getDay() % 6 === 0)
 			return colors.holiday;
 	}
+}
+
+export async function setupTimesheet(
+	table: TimesheetTable,
+	routeData: RouteData,
+): Promise<TimesheetPanelData> {
+	const searchList = await useSearch(table, routeData, {
+		schemas: [
+			{
+				pattern: "l_name",
+				groups: [0],
+			},
+			{
+				pattern: "f_name",
+				groups: [1],
+			},
+			{
+				pattern: "o_name",
+				groups: [2],
+			},
+			{
+				pattern: "post",
+				groups: [3],
+			},
+		],
+		placeholder: "Поиск",
+		style: "height: 100%; width: 170px",
+		name: "general",
+	});
+	const entitySearchList = useEntitySearch(
+		table,
+		{
+			entity: new DepartmentEntity(),
+			pattern: "department",
+			groups: [0],
+			id: 0,
+		},
+		{
+			entity: new PostEntity(),
+			pattern: "post",
+			groups: [1],
+			id: 1,
+		},
+	);
+	const dateInterval = await useDateInterval(table, "", routeData);
+
+	return {
+		entitySearchList,
+		searchList,
+		dateInterval,
+	};
 }

@@ -1,41 +1,25 @@
 <script setup lang="ts">
+import { PropType } from "vue";
+import { useRoute, useRouter } from "vue-router";
+
 import Table from "@/components/table/Table.vue";
 import TablePagination from "@/components/table/TablePagination.vue";
 import SearchInput from "@/components/MaybeDelayInput.vue";
 import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 // import DateFilter from "@/components/table/tools/DateFilter.vue";
 
-import { Table as BaseTable } from "@/components/table";
-import { BaseSchema } from "@/types";
-import { useSearch } from "@/hooks/tableSearchHook";
-import { PropType } from "vue";
+import { ExpenditureTable, setupExpenditre } from "@/pages/panels/expenditure";
 
 const props = defineProps({
 	table: {
-		type: Object as PropType<BaseTable<BaseSchema>>,
+		type: Object as PropType<ExpenditureTable>,
 		required: true,
 	},
 });
 
-const searchList = useSearch(props.table, {
-	schemas: [
-		{
-			pattern: "fac",
-			groups: [0],
-		},
-		{
-			pattern: "chapter",
-			groups: [1],
-		},
-		{
-			pattern: "name",
-			groups: [2],
-		},
-	],
-	placeholder: "Поиск",
-	style: "height: 100%; width: 170px",
-	name: "general",
-});
+const route = useRoute();
+const router = useRouter();
+const setup = await setupExpenditre(props.table, { router, route });
 </script>
 
 <template>
@@ -44,7 +28,7 @@ const searchList = useSearch(props.table, {
 			<div class="tb-outer-group">
 				<div class="tb-group">
 					<SearchInput
-						v-for="(search, index) in searchList"
+						v-for="(search, index) in setup.searchList"
 						:style="search.style"
 						:placeholder="search.placeholder"
 						:error="search.error.value"
