@@ -1,0 +1,38 @@
+// Main
+$main-white: #ffffff;
+$main-dark-gray: #474747;
+$main-accent-blue: rgba(0, 43, 77, 1);
+
+// BG
+$bg-light-blue: #f3f6fa;
+$bg-accent-blue-3: #2e5ffa08;
+
+// Stroke
+$stroke-green: #107c41;
+$stroke-light-blue: #f0f1f5;
+$stroke-gray: #cbcbcb;
+
+// Secondary
+$sec-arrantion-red: #ce274b;
+$sec-dark-gray-25: #47474740;
+$sec-accent-blue-50: #2e5ffa80;
+$sec-not-active-bg: #eeeeee;
+$sec-not-active-fill: #cdcdcd99;
+$sec-day-off: #519bca;
+$sec-gray-blue: #6b6d82;
+$sec-active-blue: rgba(142, 169, 229, 1);
+$sec-active-blue-10: rgba(142, 169, 229, 0.1);
+
+// Sizes
+$sidebar-width: 256px;
+$folded-sidebar-width: 72px;
+$table-pagination-height: 82px;
+$table-toollbar-height: 48px;
+
+:root {
+  --table-pagination-height: $table-pagination-height;
+  --table-toollbar-height: $table-toollbar-height;
+  --max-cell-width: 200px;
+  --row-height: 72px;
+  --max-hint-width: 250px;
+}

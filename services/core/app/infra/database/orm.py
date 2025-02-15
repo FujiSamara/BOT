@@ -827,7 +827,7 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.comment = bid.comment
         cur_bid.security_service_comment = bid.security_service_comment
         cur_bid.accounting_service_comment = bid.accounting_service_comment
-        cur_bid.iiko_service_comment = bid.iiko_service_comment
+        cur_bid.iiko_worker_id = bid.iiko_worker_id
         cur_bid.close_date = bid.close_date
 
 
@@ -2711,6 +2711,7 @@ def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
             children=record.children,
             military_ticket=record.military_ticket,
             official_work=record.official_work,
+            iiko_id=record.iiko_id,
         )
         s.add(worker)
 
