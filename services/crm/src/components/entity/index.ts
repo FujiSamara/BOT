@@ -1,5 +1,6 @@
 import { computed, ComputedRef, ref, Ref } from "vue";
 import {
+	BaseSchema,
 	DepartmentSchema,
 	DocumentSchema,
 	ExpenditureSchema,
@@ -295,7 +296,9 @@ export class BidStatusEntity extends StringInputEntity {
 	}
 }
 
-export abstract class InputSelectEntity<T> extends InputEntity<T> {
+export abstract class InputSelectEntity<
+	T extends BaseSchema,
+> extends InputEntity<T> {
 	protected _searchEntities: Ref<T[]> = ref([]);
 
 	constructor(
@@ -415,6 +418,9 @@ export abstract class InputSelectEntity<T> extends InputEntity<T> {
 		super.clear();
 		this._searchEntities.value = [];
 	}
+
+	/**Loads and marks entity with id=`id` as selected. */
+	public abstract load(id: number): Promise<void>;
 }
 
 export interface EnumRecord {
@@ -422,9 +428,13 @@ export interface EnumRecord {
 	value: string;
 }
 
-export class EnumEntity extends InputSelectEntity<EnumRecord> {
+interface EnumRecordSchema extends BaseSchema, EnumRecord {}
+
+export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
+	protected _values: EnumRecordSchema[] = [];
+
 	constructor(
-		protected _values: EnumRecord[],
+		values: EnumRecord[],
 		required: boolean = false,
 		monoMode: boolean = false,
 		neededWord: number = 3,
@@ -432,6 +442,8 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 		readonly?: boolean,
 	) {
 		super(required, monoMode, neededWord, placeholder, readonly);
+		this._values = values.map((val, i) => ({ ...val, id: i }));
+
 		if (neededWord === 0) this.onSubmit("");
 	}
 
@@ -445,7 +457,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 		return value.formatted;
 	}
 
-	public init(value: EnumRecord | string): void {
+	public init(value: EnumRecordSchema | string): void {
 		if (typeof value === "string") {
 			value = this._values.find((val) => val.value === value)!;
 		}
@@ -456,9 +468,18 @@ export class EnumEntity extends InputSelectEntity<EnumRecord> {
 	public getResult() {
 		return this._selectedEntities.value[0].value;
 	}
+
+	public async load(id: number): Promise<void> {
+		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+		this._searchEntities.value = [
+			...this._selectedEntities.value,
+			this._values.find((val) => val.id === id)!,
+		];
+	}
 }
 
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
+	public async load(id: number): Promise<void> {}
 	public placeholder = "Предприятие";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -475,6 +496,7 @@ export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 }
 
 export class PostEntity extends InputSelectEntity<PostSchema> {
+	public async load(id: number): Promise<void> {}
 	public placeholder = "Должность";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -491,6 +513,7 @@ export class PostEntity extends InputSelectEntity<PostSchema> {
 }
 
 export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
+	public async load(id: number): Promise<void> {}
 	public placeholder = "Сотрудник";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -507,6 +530,7 @@ export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 }
 
 export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
+	public async load(id: number): Promise<void> {}
 	public placeholder = "Статья";
 
 	protected async onSubmit(val: string): Promise<void> {

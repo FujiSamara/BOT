@@ -1,7 +1,8 @@
-import { BaseEntity } from "@/components/entity";
+import { BaseEntity, InputSelectEntity } from "@/components/entity";
 import { Table } from "@/components/table";
 import { BaseSchema, FilterSchema, RouteData, SearchSchema } from "@/types";
 import { nextTick, Ref, ref, watch } from "vue";
+import { base64UrlDecode, base64UrlEncode } from "@/parser";
 
 export interface SearchModelIn {
 	schemas: {
@@ -142,11 +143,14 @@ const applyPattern = (fields: string[], term: string): SearchSchema => {
 	return result;
 };
 
-export interface EntitySearchModelIn<T, E extends BaseEntity<T>> {
+export interface EntitySearchModelIn<
+	T extends BaseSchema,
+	E extends InputSelectEntity<T>,
+> {
 	pattern: string; // Pattern in format: parent.child.grandson...
 	groups: number[];
 	entity: E;
-	filter?: (entity: E) => FilterSchema | FilterSchema[]; // Custom filter for entity
+	filter?: (entity: T) => FilterSchema | FilterSchema[]; // Custom filter for entity
 	id: number;
 }
 
@@ -155,18 +159,73 @@ export interface EntitySearchModelOut {
 	exist: Ref<boolean>;
 }
 
-export const useEntitySearch = (
+export const useEntitySearch = async (
 	table: Table<BaseSchema>,
-	...modelsIn: EntitySearchModelIn<any, any>[]
-): EntitySearchModelOut => {
+	routeData: RouteData,
+	...modelsIn: EntitySearchModelIn<any, InputSelectEntity<any>>[]
+): Promise<EntitySearchModelOut> => {
 	const modelOut: EntitySearchModelOut = {
 		entities: modelsIn.map((val) => val.entity),
 		exist: ref(false),
 	};
 
+	const route = routeData.route;
+	const router = routeData.router;
+
+	const serializeEntitySearchFilter = () => {
+		let result = "";
+
+		for (const modelIn of modelsIn) {
+			const selected = modelIn.entity.selectedEntities.value;
+
+			for (const entity of selected) {
+				result += `${modelIn.id}=${entity.id};`;
+			}
+		}
+
+		return base64UrlEncode(result);
+	};
+
+	const loadSerializedSearch = async (payload: string) => {
+		const decoded = base64UrlDecode(payload);
+		const data = decoded.split(";").map((val) => {
+			const field = val.split("=");
+
+			return { modelId: parseInt(field[0]), entityId: parseInt(field[1]) };
+		});
+
+		for (const modelIn of modelsIn) {
+			const filters = data.filter((val) => val.modelId === modelIn.id);
+
+			for (const filter of filters) {
+				await modelIn.entity.load(filter.entityId);
+			}
+		}
+	};
+
+	const loadQuery = async () => {
+		const query = { ...route.query };
+
+		if ("entitySearch" in query) {
+			const payload = query["entitySearch"] as string;
+			await loadSerializedSearch(payload);
+		}
+	};
+	const saveQuery = async () => {
+		const query = { ...route.query };
+
+		query["entitySearch"] = serializeEntitySearchFilter();
+
+		if (query["entitySearch"] === "") {
+			delete query["entitySearch"];
+		}
+
+		await router.replace({ query: query });
+	};
+
 	for (let index = 0; index < modelsIn.length; index++) {
 		const modelIn = modelsIn[index];
-		watch(modelIn.entity.selectedEntities, () => {
+		watch(modelIn.entity.selectedEntities, async () => {
 			const selected = modelIn.entity.selectedEntities.value;
 			const filters: FilterSchema[] = [];
 
@@ -222,6 +281,8 @@ export const useEntitySearch = (
 
 			modelOut.exist.value = tempSet.intersection(idSet).size > 0;
 			table.filterQuery.value = temp;
+
+			await saveQuery();
 		});
 	}
 

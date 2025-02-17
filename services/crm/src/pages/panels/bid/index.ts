@@ -148,8 +148,9 @@ export async function setupBid(
 		style: "height: 100%; width: 170px",
 		name: "general",
 	});
-	const entitySearchList = useEntitySearch(
+	const entitySearchList = await useEntitySearch(
 		table,
+		routeData,
 		{
 			entity: new DepartmentEntity(),
 			pattern: "department",
