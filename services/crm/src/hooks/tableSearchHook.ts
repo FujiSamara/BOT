@@ -188,11 +188,14 @@ export const useEntitySearch = async (
 
 	const loadSerializedSearch = async (payload: string) => {
 		const decoded = base64UrlDecode(payload);
-		const data = decoded.split(";").map((val) => {
-			const field = val.split("=");
+		const data = decoded
+			.split(";")
+			.filter((val) => val)
+			.map((val) => {
+				const field = val.split("=");
 
-			return { modelId: parseInt(field[0]), entityId: parseInt(field[1]) };
-		});
+				return { modelId: parseInt(field[0]), entityId: parseInt(field[1]) };
+			});
 
 		for (const modelIn of modelsIn) {
 			const filters = data.filter((val) => val.modelId === modelIn.id);
@@ -285,6 +288,8 @@ export const useEntitySearch = async (
 			await saveQuery();
 		});
 	}
+
+	await loadQuery();
 
 	return modelOut;
 };

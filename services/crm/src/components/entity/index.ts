@@ -474,7 +474,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 
 	public async load(id: number): Promise<void> {
 		if (this._selectedEntities.value.some((val) => val.id === id)) return;
-		this._searchEntities.value = [
+		this._selectedEntities.value = [
 			...this._selectedEntities.value,
 			this._values.find((val) => val.id === id)!,
 		];
@@ -482,7 +482,6 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 }
 
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
-	public async load(id: number): Promise<void> {}
 	public placeholder = "Предприятие";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -496,10 +495,13 @@ export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 	protected format(value: DepartmentSchema): string {
 		return value.name;
 	}
+
+	public async load(id: number): Promise<void> {
+		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+	}
 }
 
 export class PostEntity extends InputSelectEntity<PostSchema> {
-	public async load(id: number): Promise<void> {}
 	public placeholder = "Должность";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -513,10 +515,13 @@ export class PostEntity extends InputSelectEntity<PostSchema> {
 	protected format(value: DepartmentSchema): string {
 		return value.name;
 	}
+
+	public async load(id: number): Promise<void> {
+		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+	}
 }
 
 export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
-	public async load(id: number): Promise<void> {}
 	public placeholder = "Сотрудник";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -530,10 +535,13 @@ export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 	protected format(value: WorkerSchema): string {
 		return `${value.l_name} ${value.f_name} ${value.o_name}`;
 	}
+
+	public async load(id: number): Promise<void> {
+		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+	}
 }
 
 export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
-	public async load(id: number): Promise<void> {}
 	public placeholder = "Статья";
 
 	protected async onSubmit(val: string): Promise<void> {
@@ -546,5 +554,9 @@ export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
 
 	protected format(value: ExpenditureSchema): string {
 		return value.name;
+	}
+
+	public async load(id: number): Promise<void> {
+		if (this._selectedEntities.value.some((val) => val.id === id)) return;
 	}
 }
