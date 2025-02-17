@@ -46,6 +46,10 @@ const focusOut = () => {
 
 	emits("close");
 };
+
+const onSubmit = (val: string) => {
+	if (active.value) emits("submit", val);
+};
 </script>
 
 <template>
@@ -57,7 +61,7 @@ const focusOut = () => {
 		<MaybeDelayInput
 			class="msi-input"
 			:value="searchValue"
-			@submit="(val: string) => emits('submit', val)"
+			@submit="onSubmit"
 			:error="props.error"
 			:placeholder="props.placeholder"
 			:with-search-icon="false"
