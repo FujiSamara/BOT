@@ -74,6 +74,14 @@ const routes = [
 							),
 					},
 					{
+						name: "table-accountant-card-bids",
+						path: "accountantcardbid",
+						component: async () =>
+							await import(
+								"@/pages/panels/bid/subpanels/AccountantCardBidPanel.vue"
+							),
+					},
+					{
 						name: "table-my-bids",
 						path: "mybid",
 						component: async () =>
