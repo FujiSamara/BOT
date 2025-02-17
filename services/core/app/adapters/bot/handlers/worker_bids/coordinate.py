@@ -266,21 +266,32 @@ class WorkerBidCoordinationFactory:
         callback_data: WorkerBidCallbackData,
         state: FSMContext,
     ):
+        import time
+
         bid = get_worker_bid_by_id(callback_data.id)
-        media: list[InputMediaDocument] = []
-        for photo in getattr(bid, callback_data.doc_type):
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=await photo.document.read(),
-                        filename=photo.document.filename,
+        msgs: list[Message] = []
+        docs_len = len(getattr(bid, callback_data.doc_type))
+
+        for iteration in range(docs_len // 10 + (1 if docs_len % 10 != 0 else 0)):
+            media: list[InputMediaDocument] = []
+
+            for photo in getattr(bid, callback_data.doc_type)[
+                iteration * 10 : iteration * 10 + 9
+            ]:
+                media.append(
+                    InputMediaDocument(
+                        media=BufferedInputFile(
+                            file=await photo.document.read(),
+                            filename=photo.document.filename,
+                        )
                     )
                 )
+
+            msgs += await callback.message.answer_media_group(
+                media=media,
             )
+
         await try_delete_message(callback.message)
-        msgs = await callback.message.answer_media_group(
-            media=media,
-        )
         await state.update_data(msgs=msgs)
         await msgs[0].reply(
             text=hbold("Выберите действие:"),
