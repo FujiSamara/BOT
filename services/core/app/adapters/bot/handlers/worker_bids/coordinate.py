@@ -266,8 +266,6 @@ class WorkerBidCoordinationFactory:
         callback_data: WorkerBidCallbackData,
         state: FSMContext,
     ):
-        import time
-
         bid = get_worker_bid_by_id(callback_data.id)
         msgs: list[Message] = []
         docs_len = len(getattr(bid, callback_data.doc_type))
