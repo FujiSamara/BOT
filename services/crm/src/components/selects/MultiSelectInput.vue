@@ -35,6 +35,10 @@ const list = computed(() => {
 	}
 	return props.searchList;
 });
+
+const onSubmit = (val: string) => {
+	if (active.value) emits("submit", val);
+};
 </script>
 
 <template>
@@ -42,7 +46,7 @@ const list = computed(() => {
 		<MaybeDelayInput
 			class="msi-input"
 			:value="searchValue"
-			@submit="(val: string) => emits('submit', val)"
+			@submit="onSubmit"
 			:error="props.error"
 			:placeholder="props.placeholder"
 			:readonly="props.readonly"

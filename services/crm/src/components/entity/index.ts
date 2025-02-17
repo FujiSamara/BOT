@@ -373,8 +373,11 @@ export abstract class InputSelectEntity<
 		const el = this.entitiesList.value[index];
 
 		if (this.monoMode) {
-			this._selectedEntities.value = [this._searchEntities.value[index]];
-			this._inputValue.value = this.format(this._searchEntities.value[index]);
+			const selected = this._searchEntities.value.find(
+				(val) => this.format(val) === el.value,
+			)!;
+			this._selectedEntities.value = [selected];
+			this._inputValue.value = this.format(selected);
 			this.restoreSaved();
 			return;
 		}
