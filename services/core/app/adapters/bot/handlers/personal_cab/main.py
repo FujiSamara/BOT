@@ -1,5 +1,4 @@
 import asyncio
-import pathlib
 from typing import Optional
 from aiogram import F, Router
 from aiogram.types import (
@@ -7,12 +6,9 @@ from aiogram.types import (
     Message,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
-    Document,
-    PhotoSize,
 )
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
-from fastapi import UploadFile
 
 from app.infra.config import settings
 
@@ -32,7 +28,6 @@ from app.adapters.bot.kb import (
     get_per_cab_mat_vals_button,
     set_per_cab_department_button,
     get_per_cab_dismissal_button,
-    get_menu_changing_form_button,
     get_per_cab_worktimes_button,
     main_menu_button,
     create_reply_keyboard,
@@ -42,9 +37,6 @@ from app.adapters.bot.states import PersonalCabinet, Base
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,
     try_delete_message,
-    handle_documents_form,
-    handle_documents,
-    download_file,
 )
 from app.adapters.bot.handlers.personal_cab import utils
 from app.adapters.bot.handlers.personal_cab.schemas import (
@@ -73,9 +65,6 @@ async def get_personal_data(message: CallbackQuery | Message):
         or FujiScope.admin in worker.post.scopes
     ):
         buttons.append([set_per_cab_department_button])
-
-    if FujiScope.admin in worker.post.scopes:
-        buttons.append([get_menu_changing_form_button])
 
     buttons.append([main_menu_button])
 
@@ -191,43 +180,6 @@ async def set_department(message: Message, state: FSMContext):
                     ),
                 )
             await state.set_state(Base.none)
-
-
-# Documents
-@router.callback_query(F.data == get_menu_changing_form_button.callback_data)
-async def get_menu_changing_form(callback: CallbackQuery, state: FSMContext):
-    await handle_documents_form(callback.message, state, PersonalCabinet.menu)
-
-
-@router.message(PersonalCabinet.menu)
-async def set_documents(message: Message, state: FSMContext):
-    def condition(documents: list[Document | PhotoSize]) -> str | None:
-        if len(documents) > 1:
-            return "Меню должно быть одно!"
-
-    async def clear_state_with_success_caller(message: Message, state: FSMContext):
-        data = await state.get_data()
-        documents: list[Document | PhotoSize] = data["menu_document"]
-
-        if len(documents) == 0:
-            await state.clear()
-            await get_personal_data(message)
-            return
-
-        document: UploadFile = await download_file(documents[0])
-
-        path = pathlib.Path(settings.storage_path) / "menu.pdf"
-        data = await document.read()
-
-        with open(path, "wb") as f:
-            f.write(data)
-
-        await state.clear()
-        await get_personal_data(message)
-
-    await handle_documents(
-        message, state, "menu_document", clear_state_with_success_caller, condition
-    )
 
 
 # Worktimes

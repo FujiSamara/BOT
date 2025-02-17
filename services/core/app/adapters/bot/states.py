@@ -140,4 +140,7 @@ class TerritorialDirectorRequestForm(StatesGroup):
 # Persconal Cabinet form
 class PersonalCabinet(StatesGroup):
     department = State()
+
+
+class Extra(StatesGroup):
     menu = State()
