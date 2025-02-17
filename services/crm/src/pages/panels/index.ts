@@ -3,6 +3,7 @@ import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
 import {
+	AccountantCardBidTable,
 	BidTable,
 	FACAndCCBidHistoryTable,
 	FACAndCCBidTable,
@@ -83,6 +84,15 @@ const panels: Array<PanelData> = [
 		name: "paralegalbid",
 		create: ParalegalBidTable,
 		accesses: [Access.ParalegalBid],
+	},
+	{
+		label: "Заявки бухгалтера",
+		routeName: "table-accountant-card-bids",
+		iconURL: "/img/coins.svg",
+		active: false,
+		name: "accountantcardbid",
+		create: AccountantCardBidTable,
+		accesses: [Access.AccountantCardBid],
 	},
 	{
 		label: "Мои заявки",
