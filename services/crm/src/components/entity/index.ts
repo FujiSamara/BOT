@@ -483,6 +483,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 	public placeholder = "Предприятие";
+	protected _service = new EntityService<ExpenditureSchema>("post");
 
 	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<DepartmentSchema>("department");
@@ -498,11 +499,17 @@ export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 
 	public async load(id: number): Promise<void> {
 		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+
+		const entity = await this._service.getEntityByID(id);
+
+		if (entity !== undefined)
+			this._selectedEntities.value = [...this._selectedEntities.value, entity];
 	}
 }
 
 export class PostEntity extends InputSelectEntity<PostSchema> {
 	public placeholder = "Должность";
+	protected _service = new EntityService<ExpenditureSchema>("post");
 
 	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<PostSchema>("post");
@@ -518,6 +525,11 @@ export class PostEntity extends InputSelectEntity<PostSchema> {
 
 	public async load(id: number): Promise<void> {
 		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+
+		const entity = await this._service.getEntityByID(id);
+
+		if (entity !== undefined)
+			this._selectedEntities.value = [...this._selectedEntities.value, entity];
 	}
 }
 
@@ -543,11 +555,10 @@ export class WorkerEntity extends InputSelectEntity<WorkerSchema> {
 
 export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
 	public placeholder = "Статья";
+	protected _service = new EntityService<ExpenditureSchema>("expenditure");
 
 	protected async onSubmit(val: string): Promise<void> {
-		const service = new EntityService<ExpenditureSchema>("expenditure");
-
-		const expenditures = await service.searchEntities(val);
+		const expenditures = await this._service.searchEntities(val);
 
 		this._searchEntities.value = expenditures.sort(this.sortComparator);
 	}
@@ -558,5 +569,10 @@ export class ExpenditureEntity extends InputSelectEntity<ExpenditureSchema> {
 
 	public async load(id: number): Promise<void> {
 		if (this._selectedEntities.value.some((val) => val.id === id)) return;
+
+		const entity = await this._service.getEntityByID(id);
+
+		if (entity !== undefined)
+			this._selectedEntities.value = [...this._selectedEntities.value, entity];
 	}
 }
