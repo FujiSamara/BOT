@@ -90,7 +90,7 @@ def update_expenditure(expenditure: ExpenditureSchema) -> None:
         logger.error("Expenditure wasn't updated.")
 
 
-def get_expenditure_by_id(id: int) -> ExpenditureSchema:
+def get_expenditure_by_id(id: int) -> ExpenditureSchema | None:
     """Finds expenditure by this `id`."""
     return orm.find_expenditure_by_column(Expenditure.id, id)
 
