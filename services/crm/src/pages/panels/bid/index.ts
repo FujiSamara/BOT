@@ -143,6 +143,10 @@ export async function setupBid(
 				pattern: "id",
 				groups: [1],
 			},
+			{
+				pattern: "amount",
+				groups: [2],
+			},
 		],
 		placeholder: "Поиск",
 		style: "height: 100%; width: 170px",
