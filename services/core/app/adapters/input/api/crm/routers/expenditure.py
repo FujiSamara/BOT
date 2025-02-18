@@ -48,6 +48,14 @@ async def find_expenditures(
     return services.find_expenditures(name)
 
 
+@router.get("/{id}")
+async def get_post_by_id(
+    id: int, _: User = Security(get_user, scopes=["authenticated"])
+) -> ExpenditureSchema | None:
+    """Returns expenditure by given `id`."""
+    return services.get_expenditure_by_id(id)
+
+
 @router.post("/")
 async def create_expenditure(
     schema: ExpenditureSchema,
