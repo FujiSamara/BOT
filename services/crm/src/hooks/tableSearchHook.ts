@@ -211,7 +211,13 @@ export const useEntitySearch = async (
 
 		if ("entitySearch" in query) {
 			const payload = query["entitySearch"] as string;
-			await loadSerializedSearch(payload);
+			try {
+				await loadSerializedSearch(payload);
+			} catch (e) {
+				console.log(e);
+				delete query["entitySearch"];
+				return;
+			}
 		}
 	};
 	const saveQuery = async () => {
