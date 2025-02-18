@@ -903,10 +903,10 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
     return True
 
 
-def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
+def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema | None:
     """
-    Returns updated expenditure in database by `column` with `value`.
-    If updated expenditure not exist return `None`.
+    Returns expenditure in database by `column` with `value`.
+    If expenditure not exist return `None`.
     """
     with session.begin() as s:
         raw_expenditure = s.query(Expenditure).filter(column == value).first()
