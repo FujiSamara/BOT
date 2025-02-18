@@ -107,4 +107,10 @@ export default class EntityService<T extends BaseSchema> {
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		return resp.data;
 	}
+
+	public async getEntityByID(id: number): Promise<T | undefined> {
+		const url = `${this._endpoint}/${this.entityName}/${id}`;
+		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+		return resp.data;
+	}
 }
