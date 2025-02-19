@@ -290,9 +290,10 @@ class WorkerBidCoordinationFactory:
             else:
                 deleted_files_count += 1
 
-            msgs += await callback.message.answer_media_group(
-                media=media,
-            )
+            if len(media) > 0:
+                msgs += await callback.message.answer_media_group(
+                    media=media,
+                )
 
         await try_delete_message(callback.message)
         await state.update_data(msgs=msgs)
