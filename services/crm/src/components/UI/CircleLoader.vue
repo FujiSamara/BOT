@@ -1,5 +1,5 @@
 <template>
-	<span class="loader-wrapper"></span>
+	<span class="loader"></span>
 </template>
 <script lang="ts">
 export default {
@@ -7,7 +7,7 @@ export default {
 };
 </script>
 <style scoped>
-.loader-wrapper {
+.loader {
 	width: 48px;
 	height: 48px;
 	border-radius: 50%;

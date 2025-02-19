@@ -566,7 +566,7 @@ async def save_CT_TR_admin_form(
         raise ValueError(f"Executor of technical request {request_id} wasn't update")
 
     await state.set_state(Base.none)
-    await show_tech_req_format(callback=callback)
+    await show_tech_req_format(callback)
 
 
 @router.callback_query(

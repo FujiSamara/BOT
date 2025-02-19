@@ -1,6 +1,7 @@
 from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
+from typing import Any
 
 from app.infra.logging import logger
 
@@ -136,6 +137,7 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         children_born_date=[],
         military_ticket=None,
         official_work=worker_bid.official_work,
+        iiko_id=worker_bid.iiko_worker_id,
     )
     if orm.add_worker(worker, passport):
         return worker.id
@@ -205,7 +207,7 @@ async def update_worker_bid_bot(
     bid_id,
     state_column_name: str,
     state: ApprovalStatus,
-    comment: str,
+    comment: Any,
 ) -> bool:
     """
     Updates worker bid state and comment to specified `state` by `bid_id` if bid exist.
@@ -253,11 +255,11 @@ async def update_worker_bid_bot(
         case "iiko_service":
             stage = "iiko"
             worker_bid.iiko_service_state = state
-            worker_bid.iiko_service_comment = comment
+            worker_bid.iiko_worker_id = comment
 
             worker_bid.close_date = datetime.now()
             worker_bid.state = state
-            worker_bid.comment = comment
+            worker_bid.comment = worker_bid.accounting_service_comment
         case _:
             logger.error("State for worker bid not found")
 
@@ -417,7 +419,7 @@ async def create_worker_bid(
         iiko_service_state=ApprovalStatus.pending,
         security_service_comment=None,
         accounting_service_comment=None,
-        iiko_service_comment=None,
+        iiko_worker_id=None,
         sender=sender,
         comment=None,
         birth_date=birth_date,

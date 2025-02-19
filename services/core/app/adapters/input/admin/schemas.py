@@ -272,8 +272,8 @@ class WorkerView(ModelView, model=Worker):
     name_plural = "Сотрудники"
     name = "Сотрудник"
     column_labels = {
-        Worker.f_name: "Имя",
         Worker.l_name: "Фамилия",
+        Worker.f_name: "Имя",
         Worker.o_name: "Отчество",
         Worker.state: "Статус",
         Worker.subordination_chief: "Руководитель",
@@ -305,6 +305,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.patent: "Патент",
         Worker.official_work: "Официально трудоустроен",
         Worker.passport_str: "Паспорт",
+        Worker.iiko_id: "Табельный номер",
     }
 
     form_columns = [
@@ -338,6 +339,7 @@ class WorkerView(ModelView, model=Worker):
         Worker.patent,
         Worker.official_work,
         Worker.passport_str,
+        Worker.iiko_id,
     ]
 
     form_ajax_refs = {
@@ -573,8 +575,8 @@ class WorkerBidView(ModelView, model=WorkerBid):
     details_template = "worker_bid_details.html"
 
     column_labels = {
-        WorkerBid.f_name: "Имя",
         WorkerBid.l_name: "Фамилия",
+        WorkerBid.f_name: "Имя",
         WorkerBid.o_name: "Отчество",
         WorkerBid.post: "Должность",
         WorkerBid.department: "Предприятия",
@@ -586,6 +588,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.comment: "Комментарий",
         WorkerBid.official_work: "Официальное трудоустройство",
         WorkerBid.close_date: "Дата закрытия заявки",
+        WorkerBid.security_service_comment: "Комментарий СБ",
+        WorkerBid.accounting_service_comment: "Комментарий бухгалтерии",
+        WorkerBid.iiko_worker_id: "Табельный номер",
     }
 
     column_list = [
@@ -613,6 +618,9 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.comment,
         WorkerBid.official_work,
         WorkerBid.close_date,
+        WorkerBid.security_service_comment,
+        WorkerBid.accounting_service_comment,
+        WorkerBid.iiko_service_state,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]

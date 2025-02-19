@@ -23,7 +23,7 @@ export default {
 	-webkit-transition: 0.5s;
 	flex-shrink: 0;
 }
-.button:hover {
+.button:not(.disabled):hover {
 	transform: scale(1.02);
 	-webkit-transition: 0.5s;
 	transition: 0.5s;

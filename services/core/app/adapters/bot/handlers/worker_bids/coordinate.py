@@ -58,6 +58,7 @@ class WorkerBidCoordinationFactory:
         approve_button_text: str = "Согласовать",
         pending_text: str = "Ожидающие заявки",
         with_decline: bool = True,
+        comment_state: WorkerBidCoordination = WorkerBidCoordination.comment_str,
     ):
         self.router = router
         self.name = name
@@ -66,6 +67,7 @@ class WorkerBidCoordinationFactory:
         self.approve_button_text = approve_button_text
         self.pending_text = pending_text
         self.with_decline = with_decline
+        self.comment_state = comment_state
         self.get_pending_worker_bids_btn = InlineKeyboardButton(
             text="Ожидающие заявки",
             callback_data=f"get_pending_coordinate_worker_bids_{self.name}",
@@ -107,6 +109,11 @@ class WorkerBidCoordinationFactory:
             ),
             WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
         )
+        router.callback_query.register(
+            self.seek_docs_accounting_service,
+            WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
+            WorkerBidCallbackData.filter(F.endpoint_name == f"seek_docs_{self.name}"),
+        )
 
     async def get_menu(self, message: CallbackQuery | Message):
         if isinstance(message, CallbackQuery):
@@ -144,6 +151,7 @@ class WorkerBidCoordinationFactory:
         callback_data: WorkerBidCallbackData,
         state: FSMContext,
     ):
+        await state.set_state(Base.none)
         data = await state.get_data()
         if "msgs" in data.keys():
             for msg in data["msgs"]:
@@ -260,27 +268,39 @@ class WorkerBidCoordinationFactory:
         state: FSMContext,
     ):
         bid = get_worker_bid_by_id(callback_data.id)
-        media: list[InputMediaDocument] = []
+        msgs: list[Message] = []
+        docs_len = len(getattr(bid, callback_data.doc_type))
         deleted_files_count = 0
-        for photo in getattr(bid, callback_data.doc_type):
-            if photo.document.filename != settings.stubname:
-                media.append(
-                    InputMediaDocument(
-                        media=BufferedInputFile(
-                            file=await photo.document.read(),
-                            filename=photo.document.filename,
+
+        for iteration in range(docs_len // 10 + (1 if docs_len % 10 != 0 else 0)):
+            media: list[InputMediaDocument] = []
+
+            for photo in getattr(bid, callback_data.doc_type)[
+                iteration * 10 : iteration * 10 + 9
+            ]:
+                if photo.document.filename != settings.stubname:
+                    media.append(
+                        InputMediaDocument(
+                            media=BufferedInputFile(
+                                file=await photo.document.read(),
+                                filename=photo.document.filename,
+                            )
                         )
                     )
-                )
             else:
                 deleted_files_count += 1
+
+            msgs += await callback.message.answer_media_group(
+                media=media,
+            )
+
         await try_delete_message(callback.message)
+        await state.update_data(msgs=msgs)
 
         if len(media) > 0:
             msgs = await callback.message.answer_media_group(
                 media=media,
             )
-            await state.update_data(msgs=msgs)
             await msgs[0].reply(
                 text=hbold("Выберите действие:")
                 + (
@@ -328,12 +348,28 @@ class WorkerBidCoordinationFactory:
     ):
         await state.update_data(id=callback_data.id, status=callback_data.state)
         message = await try_edit_or_answer(
-            callback.message, text=hbold("Введите комментарий:"), return_message=True
+            callback.message,
+            text=hbold(
+                "Введите комментарий:"
+                if self.comment_state is WorkerBidCoordination.comment_str
+                else "Введите табельный номер:",
+            ),
+            return_message=True,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="К заявке",
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{self.name}",
+                    ).pack(),
+                )
+            ),
         )
         await state.update_data(
             msg=message, get_menu=self.get_menu, state_column_name=self.name
         )
-        await state.set_state(WorkerBidCoordination.comment)
+        await state.set_state(self.comment_state)
 
     async def download_all_docs(
         self,
@@ -375,11 +411,36 @@ class WorkerBidCoordinationFactory:
             ),
         )
 
+    async def seek_docs_accounting_service(
+        self,
+        callback: CallbackQuery,
+        callback_data: WorkerBidCallbackData,
+        state: FSMContext,
+    ):
+        msg = await try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Перечислите документы"),
+            return_message=True,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"get_pending_bid_{self.name}",
+                    ).pack(),
+                )
+            ),
+        )
+        await state.update_data(id=callback_data.id, msg=msg)
+
+        await state.set_state(WorkerBidCoordination.seek_documents)
+
 
 @router.message(
-    WorkerBidCoordination.comment,
+    WorkerBidCoordination.comment_str,
 )
-async def set_comment(message: Message, state: FSMContext):
+async def set_comment_str(message: Message, state: FSMContext):
     # Save approval status
     data = await state.get_data()
     if "id" not in data:
@@ -393,15 +454,16 @@ async def set_comment(message: Message, state: FSMContext):
     await state.set_state(Base.none)
 
     id: int = data["id"]
-    state: int = data["status"]
+    status: int = data["status"]
     await try_delete_message(message)
     state_column_name: str = data["state_column_name"]
     get_menu: Callable = data["get_menu"]
+    await state.clear()
 
     if not await update_worker_bid_bot(
         bid_id=id,
         state_column_name=state_column_name,
-        state=ApprovalStatus.approved if state == 1 else ApprovalStatus.denied,
+        state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
         comment=message.text,
     ):
         msg = await try_edit_or_answer(
@@ -417,21 +479,67 @@ async def set_comment(message: Message, state: FSMContext):
     await get_menu(message)
 
 
-@router.callback_query(
-    WorkerBidCallbackData.filter(F.mode == BidViewMode.full_with_approve),
-    WorkerBidCallbackData.filter(F.endpoint_name == "seek_docs_accounting_service"),
+@router.message(
+    WorkerBidCoordination.comment_int,
 )
-async def seek_docs_accounting_service(
-    callback: CallbackQuery, callback_data: WorkerBidCallbackData, state: FSMContext
-):
-    msg = await try_edit_or_answer(
-        message=callback.message,
-        text=hbold("Перечислите документы"),
-        return_message=True,
-    )
-    await state.update_data(id=callback_data.id, msg=msg)
+async def set_comment_int(message: Message, state: FSMContext):
+    data = await state.get_data()
+    if "id" not in data:
+        raise KeyError("Worker bid id not exist")
+    if "status" not in data:
+        raise KeyError("Status not exist")
+    if "state_column_name" not in data:
+        raise KeyError("State column name not exist")
+    if "get_menu" not in data:
+        raise KeyError("Generator not exist")
 
-    await state.set_state(WorkerBidCoordination.seek_documents)
+    await try_delete_message(message)
+    await try_delete_message(data["msg"])
+
+    id: int = data["id"]
+    status: int = data["status"]
+    state_column_name: str = data["state_column_name"]
+    get_menu: Callable = data["get_menu"]
+    await state.clear()
+
+    try:
+        iiko_id = int(message.text)
+
+        if not await update_worker_bid_bot(
+            bid_id=id,
+            state_column_name=state_column_name,
+            state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
+            comment=iiko_id,
+        ):
+            msg = await try_edit_or_answer(
+                message=message, text=text.err, return_message=True
+            )
+        else:
+            msg = await try_edit_or_answer(
+                message=message, text=hbold("Успешно!"), return_message=True
+            )
+
+        await state.set_state(Base.none)
+        await sleep(3)
+        await try_delete_message(msg)
+        await get_menu(message)
+
+    except ValueError:
+        await state.set_state(WorkerBidCoordination.comment_int)
+        await try_edit_or_answer(
+            message=message,
+            text=text.format_err,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="К заявке",
+                    callback_data=WorkerBidCallbackData(
+                        id=id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{state_column_name}",
+                    ).pack(),
+                )
+            ),
+        )
 
 
 @router.message(WorkerBidCoordination.seek_documents)
@@ -482,5 +590,6 @@ def build_coordinations():
         coordinator_menu_button=get_coordinate_worker_bids_iiko_btn,
         state_column=WorkerBid.iiko_service_state,
         name="iiko_service",
+        comment_state=WorkerBidCoordination.comment_int,
         with_decline=False,
     )

@@ -171,12 +171,20 @@ def find_posts(record: str) -> list[PostSchema]:
     return orm.find_posts_by_name(record)
 
 
+def get_post_by_id(id: int) -> PostSchema | None:
+    return orm.find_post_by_column(Post.id, id)
+
+
 def find_department_by_name(record: str) -> list[DepartmentSchema]:
     """Finds departments by given `record`.
 
     Search is carried out by name.
     """
     return orm.find_departments_by_name(record)
+
+
+def get_department_by_id(id: int) -> DepartmentSchema | None:
+    return orm.find_department_by_column(Department.id, id)
 
 
 def get_groups_names() -> list[str]:

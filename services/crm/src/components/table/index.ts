@@ -1,0 +1,769 @@
+import { computed, ref, Ref, watch } from "vue";
+import * as config from "@/config";
+import axios from "axios";
+import {
+	BaseSchema,
+	DateSchema,
+	OrderBySchema,
+	SearchSchema,
+	FilterSchema,
+	QuerySchema,
+} from "@types";
+import { useNetworkStore } from "@/store/network";
+
+class TableElementObserver<T> {
+	constructor(
+		private _element: T,
+		private _elementID: number,
+		private _callback: (elementID: number, newValue: T) => void,
+	) {}
+
+	get value() {
+		return this._element;
+	}
+
+	set value(newValue: T) {
+		this._element = newValue;
+		this._callback(this._elementID, newValue);
+	}
+}
+
+export class Cell {
+	public cellLines: Array<CellLine> = [];
+
+	constructor(...cellLines: Array<CellLine>) {
+		if (cellLines.length === 0) {
+			cellLines.push(new CellLine());
+		}
+		this.cellLines = cellLines;
+	}
+
+	public toString(): string {
+		return this.cellLines.map((cellLine) => cellLine.value).join();
+	}
+}
+
+export class CellLine {
+	public readonly isImage: boolean = false;
+	public readonly imageExtensions: Array<string> = [
+		"png",
+		"jpeg",
+		"jpg",
+		"svg",
+		"ico",
+	];
+
+	constructor(
+		public value: string = "Не указано",
+		public href: string = "",
+		public color: string = "",
+		public forceHref: boolean = false,
+	) {
+		if (
+			href.length !== 0 &&
+			this.imageExtensions.indexOf(value.split(".").pop()!) !== -1
+		) {
+			this.isImage = true;
+		}
+	}
+}
+
+type TableData = Array<{ id: number; columns: Array<Cell> }>;
+
+export class Table<T extends BaseSchema> {
+	private _highlighted: Ref<Array<boolean>> = ref([]);
+	private _checked: Ref<Array<boolean>> = ref([]);
+	protected _loadedRows: Ref<Array<T>> = ref([]);
+	protected _network = useNetworkStore();
+	private _refreshKey: Ref<number> = ref(0);
+	protected _newIds: Ref<Array<number>> = ref([]);
+	private _refreshingCount = 0;
+
+	/**
+	 * @param endpoint Endpoint name for api.
+	 */
+	constructor(
+		endpoint: string,
+		options?: {
+			getEndpoint?: string;
+			infoEndpoint?: string;
+			createEndpoint?: string;
+			updateEndpoint?: string;
+			deleteEndpoint?: string;
+			approveEndpoint?: string;
+			rejectEndpoint?: string;
+			exportEndpoint?: string;
+		},
+	) {
+		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+
+		//#region endpoints
+		this._getEndpoint =
+			options && options.getEndpoint ? options.getEndpoint : "";
+		this._infoEndpoint =
+			options && options.infoEndpoint ? options.infoEndpoint : "";
+		this._createEndpoint =
+			options && options.createEndpoint ? options.createEndpoint : "";
+		this._updateEndpoint =
+			options && options.updateEndpoint ? options.updateEndpoint : "";
+		this._deleteEndpoint =
+			options && options.deleteEndpoint ? options.deleteEndpoint : "";
+		this._approveEndpoint =
+			options && options.approveEndpoint ? options.approveEndpoint : "";
+		this._rejectEndpoint =
+			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		this._exportEndpoint =
+			options && options.exportEndpoint ? options.exportEndpoint : "";
+		//#endregion
+	}
+
+	//#region Rows
+	//#region Refreshing
+	public startUpdatingLoop() {
+		let skipLoop = false;
+
+		watch(
+			[this._completedQuery, this._rowsQuery, this._refreshKey],
+			async () => {
+				this.emulateLoading(true);
+				this._refreshingCount++;
+				skipLoop = true;
+				await this.refreshInfo();
+				await this.refreshRows();
+				this._refreshingCount--;
+				if (this._refreshingCount === 0) {
+					this.emulateLoading(false);
+				}
+			},
+		);
+
+		if (this.blockLoop.value) return;
+		this.forceRefresh();
+
+		const loop = async () => {
+			if (!skipLoop) {
+				await this.refreshInfo(true);
+			}
+			skipLoop = false;
+
+			setTimeout(async () => await loop(), this.updateTimeout * 1000);
+		};
+
+		setTimeout(async () => await loop(), this.updateTimeout * 1000);
+	}
+	/** Updates info about table:
+	 * 1) Page count
+	 * 2) Row count
+	 *
+	 * - If **fromLoop** is **true** and row count changed then force refreshes rows.
+	 */
+	private async refreshInfo(fromLoop: boolean = false) {
+		if (this.blockLoop.value) return;
+		// Info about filtered table.
+		const resp = await this._network.withAuthChecking(
+			axios.post(this._infoQuery.value, this._completedQuery.value),
+		);
+
+		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
+			if (this._loadedRows.value.length !== this.rowsPerPage.value) {
+				this.isLoading.value = true;
+			}
+
+			await this.refreshRows(
+				this.rowCount.value !== resp.data.all_record_count &&
+					this.rowCount.value !== 0,
+			);
+			this.isLoading.value = false;
+		}
+
+		this.pageCount.value = resp.data.page_count;
+		this.rowCountWithFilters.value = resp.data.record_count;
+		this.rowCount.value = resp.data.all_record_count;
+	}
+	/** Updates rows. */
+	private async refreshRows(findNew: boolean = false) {
+		if (this.blockLoop.value) return;
+		const resp = await this._network.withAuthChecking(
+			axios.post(this._rowsQuery.value, this._completedQuery.value),
+		);
+
+		const rows: Array<T> = resp.data;
+
+		const rowsLength = rows.length;
+
+		if (rowsLength === 0) {
+			this.currentPage.value = 1;
+		}
+		this._highlighted.value = Array<boolean>(rowsLength).fill(
+			false,
+			0,
+			rowsLength,
+		);
+		this._checked.value = Array<boolean>(rowsLength).fill(false, 0, rowsLength);
+
+		if (findNew) {
+			for (let index = 0; index < rows.length; index++) {
+				const model = rows[index];
+
+				if (
+					this._loadedRows.value.find((el) => el.id === model.id) === undefined
+				) {
+					if (this._newIds.value.findIndex((el) => el === model.id) === -1) {
+						this._newIds.value.push(model.id);
+					}
+				}
+			}
+		}
+
+		for (let index = 0; index < rows.length; index++) {
+			const model = rows[index];
+
+			if (this._newIds.value.findIndex((el) => el === model.id) !== -1) {
+				this._highlighted.value[index] = true;
+			}
+		}
+
+		this._loadedRows.value = rows;
+	}
+	/** Forces updating rows. */
+	public forceRefresh() {
+		const limit = 3;
+		this._refreshKey.value = (this._refreshKey.value + 1) % limit;
+	}
+	//#endregion
+
+	//#region Generating query
+	private _query = computed(() => {
+		return `records_per_page=${this.rowsPerPage.value}`;
+	});
+	private _searchedQuery = computed((): Array<SearchSchema> => {
+		return this.searchQuery.value;
+	});
+	private _datedQuery = computed(() => {
+		return this.byDate.value;
+	});
+	private _filteredQuery = computed(() => {
+		return this.filterQuery.value;
+	});
+	private _orderedQuery = computed((): OrderBySchema => {
+		return {
+			column: this.orderBy.value,
+			desc: this.desc.value,
+		};
+	});
+	private _completedQuery = computed((): QuerySchema => {
+		return {
+			search_query: this._searchedQuery.value,
+			order_by_query: this._orderedQuery.value,
+			date_query: this._datedQuery.value,
+			filter_query: this._filteredQuery.value,
+		};
+	});
+	private _infoQuery = computed(() => {
+		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
+	});
+	private _rowsQuery = computed(() => {
+		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
+	});
+	//#endregion
+
+	private getHeaders(): string[] {
+		const result: Array<string> = [];
+		if (this._nonIgnoredRows.value.length === 0) return result;
+
+		for (const fieldName in this._nonIgnoredRows.value[0]) {
+			const alias = this.getAlias(fieldName);
+
+			result.push(alias);
+		}
+
+		return this.sort(result, Object.keys(this._nonIgnoredRows.value[0]));
+	}
+
+	//#region Generating rows
+	private _nonIgnoredRows = computed(() => {
+		const result: Array<T> = [];
+
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const model: T = this._loadedRows.value[index];
+
+			let newModel: any = {};
+
+			for (const fieldName in model) {
+				if (this._ignored.find((rule) => rule === fieldName) === undefined) {
+					newModel[fieldName] = model[fieldName];
+				}
+			}
+
+			result.push(newModel as T);
+		}
+		return result;
+	});
+	public formattedOrderedRows = computed(() => {
+		const result: TableData = [];
+
+		for (let index = 0; index < this._nonIgnoredRows.value.length; index++) {
+			const model = this._nonIgnoredRows.value[index];
+			const columns: Array<Cell> = [];
+
+			for (const fieldName in model) {
+				const field = model[fieldName];
+				const formatter = this.getFormatter(fieldName);
+
+				const formattedField: Cell = formatter(field);
+
+				columns.push(formattedField);
+			}
+
+			result.push({
+				id: model.id,
+				columns: this.sort(columns, Object.keys(model)),
+			});
+		}
+
+		return result;
+	});
+	public visibleRows = computed(() => {
+		if (this.isHidden.value) {
+			return [];
+		}
+
+		const result: TableData = [];
+
+		for (const row of this.formattedOrderedRows.value) {
+			const columns: Array<Cell> = [];
+
+			for (let index = 0; index < row.columns.length; index++) {
+				const column = row.columns[index];
+				const header = this.orderedHeaders.value[index];
+
+				if (!this.columnHidden.value.includes(header)) {
+					columns.push(column);
+				}
+			}
+
+			result.push({
+				id: row.id,
+				columns: columns,
+			});
+		}
+
+		return result;
+	});
+
+	public orderedHeaders = computed(() => {
+		return this.getHeaders();
+	});
+	public visibleHeaders = computed(() => {
+		const result: string[] = [];
+
+		// Removes ignoring columns
+		for (const header of this.orderedHeaders.value) {
+			if (!this.columnHidden.value.includes(header)) {
+				result.push(header);
+			}
+		}
+
+		return result;
+	});
+	//#endregion
+
+	public allChecked = computed({
+		get: () => {
+			if (this._checked.value.length === 0) {
+				return false;
+			}
+			for (let index = 0; index < this._checked.value.length; index++) {
+				if (!this._checked.value[index]) {
+					return false;
+				}
+			}
+			return true;
+		},
+		set: (newValue: boolean) => {
+			for (let index = 0; index < this._checked.value.length; index++) {
+				this._checked.value[index] = newValue;
+			}
+		},
+	});
+	public anyChecked = computed(() => {
+		for (let index = 0; index < this._checked.value.length; index++) {
+			if (this._checked.value[index]) {
+				return true;
+			}
+		}
+		return false;
+	});
+	private _elementChecked(index: number, newValue: boolean) {
+		this._checked.value[index] = newValue;
+	}
+	public checked = computed(() => {
+		const result: Array<TableElementObserver<boolean>> = [];
+
+		for (let index = 0; index < this.visibleRows.value.length; index++) {
+			result.push(
+				new TableElementObserver(
+					this._checked.value[index],
+					index,
+					this._elementChecked.bind(this),
+				),
+			);
+		}
+
+		return result;
+	});
+	private _elementHighlighted(index: number, newValue: boolean) {
+		this._highlighted.value[index] = newValue;
+
+		if (!newValue) {
+			const idForDelete = this._loadedRows.value[index].id;
+
+			const deleteIndex = this._newIds.value.findIndex(
+				(id: number) => id === idForDelete,
+			);
+
+			if (deleteIndex !== -1) {
+				this._newIds.value.splice(deleteIndex);
+			}
+		}
+	}
+	public highlighted = computed(() => {
+		const result: Array<TableElementObserver<boolean>> = [];
+
+		for (let index = 0; index < this._highlighted.value.length; index++) {
+			result.push(
+				new TableElementObserver(
+					this._highlighted.value[index],
+					index,
+					this._elementHighlighted.bind(this),
+				),
+			);
+		}
+
+		return result;
+	});
+	public colors = computed(() => {
+		const result: Array<string> = [];
+
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			const model = this._loadedRows.value[index];
+
+			const color = this._highlighted.value[index]
+				? "#fdf7fd"
+				: this.color(model);
+			result.push(color);
+		}
+		return result;
+	});
+	public notifies = computed(() => {
+		let result = 0;
+
+		result += this._newIds.value.length;
+
+		return result;
+	});
+	//#endregion
+
+	//#region Auxiliary
+	/** Sorts elements by **this._columsOrder**. Returns sorted elements. */
+	private sort(elements: Array<any>, fieldNames: Array<any>): Array<any> {
+		const length = this._columsOrder.size;
+
+		const result: Array<any> = new Array<any>(length);
+
+		for (let index = 0; index < fieldNames.length; index++) {
+			const fieldName = fieldNames[index];
+			const element = elements[index];
+
+			const order = this._columsOrder.get(fieldName);
+			if (order !== undefined) {
+				result[order] = element;
+			} else {
+				result.push(element);
+			}
+		}
+		return result;
+	}
+	/** If **true** then block updating. */
+	public blockLoop: Ref<boolean> = ref(false);
+	/** Table update timeout in second. */
+	public updateTimeout: number = 20;
+	/** Indicates current page. */
+	public currentPage: Ref<number> = ref(1);
+	/** Indicates page count. */
+	public pageCount: Ref<number> = ref(0);
+	/** Indicates row count with query filters. */
+	public rowCountWithFilters: Ref<number> = ref(0);
+	/** Indicates row count for all rows in table. */
+	public rowCount: Ref<number> = ref(0);
+	/** Rows per page. */
+	public rowsPerPage: Ref<number> = ref(15);
+	/** True when table is execute large loading operations. */
+	public isLoading: Ref<boolean> = ref(false);
+	/** Hides all row if true. */
+	public isHidden: Ref<boolean> = ref(false);
+	/** Emulates loading by hidding table rows and setting **this.isLoading** to **true** if **value** = **true**. */
+	public emulateLoading(value: boolean) {
+		this.isLoading.value = value;
+		this.isHidden.value = value;
+	}
+	/** Return **true** if rows sorted by this column with **header**. */
+	public ordered(header: string): boolean {
+		return this.getAlias(this.orderBy.value) === header;
+	}
+	/** Return **true** if sorted by this column with **header** is disabled. */
+	public orderDisabled(header: string): boolean {
+		return !Boolean(header);
+	}
+	/** Sorts columns by specify **header**. */
+	public order(header: string) {
+		if (header === this.getAlias(this.orderBy.value)) {
+			this.desc.value = !this.desc.value;
+			return;
+		}
+
+		if (this._loadedRows.value.length === 0) {
+			return;
+		}
+
+		const column = this.aliasToColumnName(header);
+
+		if (column !== undefined) {
+			this.orderBy.value = column;
+			this.desc.value = false;
+		}
+	}
+	/** Specifies row column name for ordering */
+	public orderBy: Ref<string> = ref("id");
+	/** If equal **true** sorted corresponding column in **DESC** mode. */
+	public desc: Ref<boolean> = ref(true);
+	/** Search query. */
+	public searchQuery: Ref<Array<SearchSchema>> = ref([]);
+	/** Filter query. */
+	public filterQuery: Ref<Array<FilterSchema>> = ref([]);
+	/** Date query. */
+	public byDate: Ref<DateSchema | undefined> = ref();
+	/** Order of column in table. */
+	protected _columsOrder: Map<string, number> = new Map<string, number>();
+	/** Aliases for column names. */
+	protected _aliases: Map<string, string> = new Map<string, string>();
+	/** Specify ingored column. */
+	protected _ignored: Array<string> = [];
+	/** Specufies hidden columns. */
+	public columnHidden: Ref<Array<string>> = ref([]);
+	/** Default forrmatter for column value. */
+	protected _defaultFormatter: (value: any) => Cell = (value: any): Cell => {
+		if (value === null || value === undefined) {
+			return new Cell();
+		} else {
+			return new Cell(new CellLine(`${value}`));
+		}
+	};
+	/** Formatters for column values. */
+	protected _formatters: Map<string, (value: any) => Cell> = new Map<
+		string,
+		(value: any) => Cell
+	>();
+	/** Returns actual formatter for specified **fieldName**. */
+	private getFormatter(fieldName: string): (value: any) => Cell {
+		const formatter = this._formatters.get(fieldName);
+
+		if (formatter) {
+			return formatter;
+		} else {
+			return this._defaultFormatter;
+		}
+	}
+	/** Returns hex color of row by instance of `T`. */
+	protected color(_: T): string {
+		return "#ffffff";
+	}
+	/** Returns hex color of header by alias. */
+	// @ts-ignore
+	public getHeaderColor(alias: string): string | undefined {
+		return;
+	}
+	/** Returns actual alias for specified **fieldName**. */
+	protected getAlias(fieldName: string): string {
+		let alias = this._aliases.get(fieldName);
+		if (alias === undefined) {
+			alias = fieldName;
+		}
+		return alias;
+	}
+	/** Returns original column name by **alias** */
+	protected aliasToColumnName(alias: string): string | undefined {
+		const column = Object.keys(this._loadedRows.value[0]).find(
+			(fieldName) => this.getAlias(fieldName) === alias,
+		);
+
+		return column;
+	}
+	/** Returns count of highlighted rows. */
+	public highlightedCount = computed(() => {
+		let result = 0;
+		for (const elemHighlighted of this._highlighted.value) {
+			if (elemHighlighted) {
+				result++;
+			}
+		}
+		return result;
+	});
+	/** If equal **true** rows will be erase after approving or rejecting happens. */
+	protected _deleteAfterStatusChanged: boolean = false;
+	/** Updates **source** model by **target** model if have difference.
+	 * - Returns **true** if **source** model updated, **false** otherwise.
+	 */
+	private updateModel(source: any, target: any): boolean {
+		let modelChanged = false;
+		for (const fieldName in target) {
+			const formatter = this.getFormatter(fieldName);
+
+			if (target[fieldName] === undefined) {
+				continue;
+			}
+
+			const targetString: string = formatter(target[fieldName]).toString();
+			const sourceString: string = formatter(source[fieldName]).toString();
+			source[fieldName] = target[fieldName];
+
+			if (targetString !== sourceString) {
+				modelChanged = true;
+			}
+		}
+
+		return modelChanged;
+	}
+	/** Return model by index. */
+	public getModel(index: number): any {
+		return this._loadedRows.value[index];
+	}
+	/** Executes **action** for checked rows. */
+	private async manageChecked(action: (index: number) => Promise<void>) {
+		this.emulateLoading(true);
+		for (let index = 0; index < this._loadedRows.value.length; index++) {
+			if (this._checked.value[index]) {
+				await action(index);
+			}
+		}
+		this.forceRefresh();
+		this.emulateLoading(false);
+	}
+	/** Exports table with current query. */
+	public async export() {
+		const url = `${this._endpoint}${this._exportEndpoint}/export`;
+		const resp = await this._network.withAuthChecking(
+			axios.post(url, this._completedQuery.value, {
+				responseType: "blob",
+				withCredentials: true,
+			}),
+		);
+
+		const filename = (resp.headers["content-disposition"] as string).split(
+			"=",
+		)[1];
+
+		this._network.saveFile(filename, resp.data);
+	}
+	// Endpoints.
+	protected _endpoint: string = "";
+	protected _getEndpoint: string = "";
+	protected _infoEndpoint: string = "";
+	protected _createEndpoint: string = "";
+	protected _updateEndpoint: string = "";
+	protected _deleteEndpoint: string = "";
+	protected _approveEndpoint: string = "";
+	protected _rejectEndpoint: string = "";
+	protected _exportEndpoint: string = "";
+	//#endregion
+
+	//#region CRUD
+	public async create(model: T): Promise<void> {
+		await this._network
+			.withAuthChecking(
+				axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
+			)
+			.catch((_) => {});
+
+		this.forceRefresh();
+	}
+	public async update(model: T, index: number): Promise<void> {
+		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
+
+		if (elementChanged) {
+			await this._network
+				.withAuthChecking(
+					axios.patch(
+						`${this._endpoint}${this._updateEndpoint}/`,
+						this._loadedRows.value[index],
+					),
+				)
+				.catch((_) => {});
+		}
+	}
+	public async delete(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
+		await this._network
+			.withAuthChecking(
+				axios.delete(
+					`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
+
+		if (needRefresh) {
+			this.forceRefresh();
+		}
+	}
+	public async deleteChecked(): Promise<void> {
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.delete(index),
+		);
+	}
+	public async approve(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
+				),
+			)
+			.catch((_) => {});
+
+		if (needRefresh) {
+			this.forceRefresh();
+		}
+	}
+	public async approveChecked(): Promise<void> {
+		await this.manageChecked(
+			async (index: number, _?: string) => await this.approve(index),
+		);
+	}
+	public async reject(
+		index: number,
+		needRefresh: boolean = false,
+		reason: string,
+	): Promise<void> {
+		await this._network
+			.withAuthChecking(
+				axios.patch(
+					`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
+				),
+			)
+			.catch((_) => {});
+
+		if (needRefresh) {
+			this.forceRefresh();
+		}
+	}
+	public async rejectChecked(reason: string): Promise<void> {
+		await this.manageChecked(
+			async (index: number) => await this.reject(index, false, reason),
+		);
+	}
+	//#endregion
+}

@@ -32,7 +32,7 @@ scope_decode_dict = {
     FujiScope.crm_my_file: "CRM скачивание файлов",
     FujiScope.crm_bid_readonly: "CRM платёжные заявки просмотр",
     FujiScope.crm_worktime: "CRM Явки",
-    FujiScope.crm_accountant_card_bid: "CRM платёжные заявки ",
+    FujiScope.crm_accountant_card_bid: "CRM платёжные заявки бухгалтерия безнал",
     # BOT
     FujiScope.bot_bid_create: "Бот создание платёжной заявки",
     FujiScope.bot_bid_kru: "Бот КРУ платёжные заявки",
@@ -59,6 +59,7 @@ scope_decode_dict = {
     FujiScope.bot_worker_bid_accounting_coordinate: "Бот согласование кандидатов бухгалтерия",
     FujiScope.bot_worker_bid_iiko: "Бот согласование кандидатов добавление в IIKO",
     FujiScope.bot_technical_request_department_director: "Бот технические заявки ТД",
+    FujiScope.bot_change_restaurant_menu: "Бот обновление меню",
 }
 
 
