@@ -181,7 +181,7 @@ def upgrade() -> None:
             "чистка холодильников",
         ]
     ):
-        op.bulk_insert(cleaning_problems_table, [{"id": id + 1, "name": name}])
+        op.bulk_insert(cleaning_problems_table, [{"id": id + 1, "problem_name": name}])
 
 
 def downgrade() -> None:
