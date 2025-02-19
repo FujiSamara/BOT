@@ -19,4 +19,5 @@ router.include_routers(
     handlers.personal_cabinet_router,
     handlers.monitoring_router,
     handlers.worker_bid_router,
+    handlers.extra_router,
 )

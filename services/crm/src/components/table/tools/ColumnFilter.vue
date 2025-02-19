@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { PropType, Ref, ref, watch } from "vue";
+import DropDownMenu from "@/components/DropDownMenu.vue";
+
+import { onMounted, PropType, Ref, ref, watch } from "vue";
 import { Table } from "@/components/table";
 import { BaseSchema } from "@/types";
-import DropDownMenu from "@/components/DropDownMenu.vue";
+import { useRoute, useRouter } from "vue-router";
+import { base64UrlDecode, base64UrlEncode } from "@/parser";
 
 const props = defineProps({
 	table: {
@@ -20,7 +23,55 @@ const props = defineProps({
 const headersHidden: Ref<Array<boolean>> = ref([]);
 const oneColumnVisible = ref(false);
 
-const checkboxClicked = (index: number) => {
+const route = useRoute();
+const router = useRouter();
+
+const loadFromQuery = () => {
+	const query = { ...route.query };
+
+	if ("hiddenHeaders" in query) {
+		const payload = query["hiddenHeaders"] as string;
+		let indices = [];
+		let length = -1;
+		try {
+			indices = base64UrlDecode(payload)
+				.split(";")
+				.filter((val) => val)
+				.map((val) => parseInt(val));
+		} catch (e) {
+			console.log(e);
+			delete query["hiddenHeaders"];
+			return;
+		}
+		length = indices[0];
+		indices.splice(0, 1);
+
+		const res = new Array(length).fill(false);
+
+		indices.forEach((val) => (res[val] = true));
+		headersHidden.value = res;
+	}
+};
+const saveToQuery = async () => {
+	const length = props.table.orderedHeaders.value.length;
+
+	let payload = `${length};`;
+	headersHidden.value.forEach((val, i) => {
+		if (val) payload += `${i};`;
+	});
+
+	const query = { ...route.query };
+
+	if (payload.split(";").length === 2 && "hiddenHeaders" in query) {
+		delete query["hiddenHeaders"];
+	} else {
+		const encoded = base64UrlEncode(payload);
+		query["hiddenHeaders"] = encoded;
+	}
+	await router.replace({ query: query });
+};
+
+const checkboxClicked = async (index: number) => {
 	if (oneColumnVisible.value && !headersHidden.value[index]) {
 		return;
 	}
@@ -30,10 +81,16 @@ const checkboxClicked = (index: number) => {
 	result[index] = !result[index];
 
 	headersHidden.value = result;
+
+	await saveToQuery();
 };
 
 watch(props.table.orderedHeaders, () => {
-	headersHidden.value = props.table.orderedHeaders.value.map(() => false);
+	if (headersHidden.value.length === 0) {
+		headersHidden.value = props.table.orderedHeaders.value.map(() => false);
+	} else {
+		headersHidden.value = [...headersHidden.value];
+	}
 });
 
 watch(headersHidden, () => {
@@ -46,6 +103,10 @@ watch(headersHidden, () => {
 	oneColumnVisible.value =
 		props.table.columnHidden.value.length ===
 		props.table.orderedHeaders.value.length - 1;
+});
+
+onMounted(() => {
+	loadFromQuery();
 });
 </script>
 

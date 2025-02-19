@@ -115,8 +115,6 @@ export function useRowEditor<T extends BaseSchema>(
 	};
 
 	const save = async () => {
-		active.value = false;
-
 		const result: any = {};
 
 		for (const field of fields) {
@@ -130,6 +128,7 @@ export function useRowEditor<T extends BaseSchema>(
 		} else {
 			if (modelIndex.value) await table.update(result, modelIndex.value);
 		}
+		active.value = false;
 	};
 
 	return {

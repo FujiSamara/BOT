@@ -124,6 +124,8 @@ export const useNetworkStore = defineStore("network", {
 					} else {
 						msg = error.message;
 					}
+
+					alert("Произошла ошибка:\n" + msg);
 				}
 
 				this.errors.push(msg);

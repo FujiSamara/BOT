@@ -9,6 +9,7 @@ from app.adapters.bot.handlers.department_request.main import (
     router as department_request_router,  # Technical and Cleaning requests
 )
 from app.adapters.bot.handlers.worker_bids.main import router as worker_bid_router
+from app.adapters.bot.handlers.extra.main import router as extra_router
 
 __all__ = [
     "bid_router",
@@ -18,4 +19,5 @@ __all__ = [
     "rate_router",
     "department_request_router",
     "worker_bid_router",
+    "extra_router",
 ]

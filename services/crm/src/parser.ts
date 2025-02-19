@@ -230,3 +230,16 @@ export async function fileToDocumentSchema(val: File): Promise<DocumentSchema> {
 		file: document,
 	};
 }
+
+export function base64UrlEncode(str: string) {
+	let base64 = btoa(str);
+	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+export function base64UrlDecode(str: string) {
+	let base64 = str.replace(/-/g, "+").replace(/_/g, "/");
+	while (base64.length % 4) {
+		base64 += "=";
+	}
+	return atob(base64);
+}

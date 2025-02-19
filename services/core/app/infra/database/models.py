@@ -79,8 +79,9 @@ class FujiScope(enum.Enum):
     bot_worker_bid_accounting_coordinate = 36
     bot_worker_bid_iiko = 37
     bot_technical_request_department_director = 38
-    bot_cleaning_request_cleaner = 39
-    bot_cleaning_request_territorial_manager = 40
+    bot_change_restaurant_menu = 39
+    bot_cleaning_request_cleaner = 40
+    bot_cleaning_request_territorial_manager = 41
 
 
 class DepartmentType(enum.Enum):
