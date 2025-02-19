@@ -132,8 +132,9 @@ def get_worker_pending_bids_btns(
             InlineKeyboardButton(
                 text="Следующая страница",
                 callback_data=WorkerBidPagesCallbackData(
-                    page=page_callback_data.page + 1
-                ),
+                    page=page_callback_data.page + 1,
+                    state_name=page_callback_data.state_name,
+                ).pack(),
             )
         )
     if page_callback_data.page > 0:
@@ -141,7 +142,8 @@ def get_worker_pending_bids_btns(
             InlineKeyboardButton(
                 text="Предыдущая страница",
                 callback_data=WorkerBidPagesCallbackData(
-                    page=page_callback_data.page - 1
-                ),
+                    page=page_callback_data.page - 1,
+                    state_name=page_callback_data.state_name,
+                ).pack(),
             )
         )
