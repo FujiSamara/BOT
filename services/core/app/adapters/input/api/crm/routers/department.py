@@ -2,6 +2,7 @@ from fastapi import Security
 from fastapi.routing import APIRouter
 
 from app import services
+from app.services import extra
 from app.schemas import DepartmentSchema
 
 from app.adapters.input.api.auth import User, get_user
@@ -19,3 +20,11 @@ async def find_workers(
     Search is carried out by name.
     """
     return services.find_department_by_name(name)
+
+
+@router.get("/{id}")
+async def get_department_by_id(
+    id: int, _: User = Security(get_user, scopes=["authenticated"])
+) -> DepartmentSchema | None:
+    """Returns department by given `id`."""
+    return extra.get_department_by_id(id)

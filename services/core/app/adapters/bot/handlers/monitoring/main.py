@@ -16,7 +16,7 @@ from app.adapters.bot.handlers.monitoring.schemas import (
 )
 
 
-router = Router(name="personal_cabinet")
+router = Router(name="incident_monitoring")
 
 
 @router.callback_query(F.data == kb.get_monitoring_menu_btn.callback_data)

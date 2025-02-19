@@ -57,7 +57,8 @@ class WorkerBidUpdate(StatesGroup):
 
 
 class WorkerBidCoordination(StatesGroup):
-    comment = State()
+    comment_str = State()
+    comment_int = State()
     seek_documents = State()
 
 
@@ -139,4 +140,7 @@ class TerritorialDirectorRequestForm(StatesGroup):
 # Persconal Cabinet form
 class PersonalCabinet(StatesGroup):
     department = State()
+
+
+class Extra(StatesGroup):
     menu = State()

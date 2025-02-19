@@ -828,7 +828,7 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.comment = bid.comment
         cur_bid.security_service_comment = bid.security_service_comment
         cur_bid.accounting_service_comment = bid.accounting_service_comment
-        cur_bid.iiko_service_comment = bid.iiko_service_comment
+        cur_bid.iiko_worker_id = bid.iiko_worker_id
         cur_bid.close_date = bid.close_date
 
 
@@ -903,10 +903,10 @@ def update_expenditure(expenditure: ExpenditureSchema) -> bool:
     return True
 
 
-def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema:
+def find_expenditure_by_column(column: any, value: any) -> ExpenditureSchema | None:
     """
-    Returns updated expenditure in database by `column` with `value`.
-    If updated expenditure not exist return `None`.
+    Returns expenditure in database by `column` with `value`.
+    If expenditure not exist return `None`.
     """
     with session.begin() as s:
         raw_expenditure = s.query(Expenditure).filter(column == value).first()
@@ -2706,6 +2706,7 @@ def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
             children=record.children,
             military_ticket=record.military_ticket,
             official_work=record.official_work,
+            iiko_id=record.iiko_id,
         )
         s.add(worker)
 
