@@ -55,9 +55,10 @@ const save = () => {
 				:entity="field.entity"
 				:select-type="field.type"
 				class="select-wrapper"
+				v-if="!editor.showCustom.value"
 			></EntitySelect>
 			<DefaultButton
-				v-if="editor.mode.value !== EditorMode.View"
+				v-if="editor.mode.value !== EditorMode.View && !editor.showCustom.value"
 				@click="save"
 				title="Сохранить"
 			></DefaultButton>
@@ -70,6 +71,10 @@ const save = () => {
 
 <style scoped lang="scss">
 .e-selects {
+	display: flex;
+	flex-direction: column;
+	min-width: fit-content;
+
 	:not(:nth-child(1)).select-wrapper {
 		margin-top: 24px;
 	}

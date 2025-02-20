@@ -33,6 +33,7 @@ const error = computed(() => {
 			:error-left-align="true"
 			:required="entity.required"
 			:readonly="entity.readonly"
+			:delay="0"
 		></MaybeDelayInput>
 	</div>
 </template>
