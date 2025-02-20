@@ -4,13 +4,19 @@ const props = defineProps({
 		type: String,
 		required: true,
 	},
+	disabled: {
+		type: Boolean,
+	},
 });
 
 const emits = defineEmits(["click"]);
 </script>
 
 <template>
-	<button @click="emits('click')">
+	<button
+		@click.stop="if (!props.disabled) emits('click');"
+		:class="{ disabled: props.disabled }"
+	>
 		<slot></slot>
 		<span v-if="props.title">
 			{{ props.title }}
@@ -45,6 +51,13 @@ button {
 		color: $main-white;
 	}
 
-	transition: opacity 0.25s;
+	&.disabled {
+		cursor: default;
+		background-color: $sec-not-active-bg !important;
+	}
+
+	transition:
+		opacity 0.25s,
+		background-color 0.25s;
 }
 </style>

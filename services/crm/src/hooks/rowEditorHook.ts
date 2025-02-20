@@ -28,6 +28,7 @@ export interface RowEditor<T extends BaseSchema> {
 	mode: Ref<EditorMode>;
 	modelIndex: Ref<number | undefined>;
 	table: Table<T>;
+	showCustom: Ref<boolean>;
 }
 
 export function useRowEditor<T extends BaseSchema>(
@@ -41,6 +42,7 @@ export function useRowEditor<T extends BaseSchema>(
 	const modelIndex: Ref<number | undefined> = ref(undefined);
 	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
 	const mode = ref(EditorMode.View);
+	const showCustom = ref(false);
 
 	fields.forEach((f) => (f.active = true));
 
@@ -63,6 +65,7 @@ export function useRowEditor<T extends BaseSchema>(
 				break;
 		}
 		fields.forEach((f) => (f.entity.withTitle = false));
+		showCustom.value = false;
 	};
 
 	const load = (index: number) => {
@@ -143,5 +146,6 @@ export function useRowEditor<T extends BaseSchema>(
 		mode,
 		modelIndex,
 		table,
+		showCustom,
 	};
 }
