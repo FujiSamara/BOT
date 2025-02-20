@@ -270,6 +270,13 @@ const starClicked = () => {
 		input::placeholder {
 			color: $sec-arrantion-red;
 		}
+		.tool-icon-wrapper {
+			.tool-icon {
+				&.edit {
+					color: $main-white !important;
+				}
+			}
+		}
 	}
 }
 </style>
