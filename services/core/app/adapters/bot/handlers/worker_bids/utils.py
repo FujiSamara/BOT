@@ -42,12 +42,15 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Отчество")}: {bid.sender.o_name}
 {hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
-    if bid.security_service_comment is not None and bid.security_service_comment != "":
-        bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
+
     if bid.accounting_service_comment is not None:
         bid_info += (
             f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.accounting_service_comment}"
         )
+
+    if bid.security_service_comment is not None and bid.security_service_comment != "":
+        bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
+
     if bid.iiko_worker_id is not None:
         bid_info += f"\n\n{hbold('Табельный номер')}: {bid.iiko_worker_id}"
     documents_requests = get_worker_bid_documents_requests(bid.id)
