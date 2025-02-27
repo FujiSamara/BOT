@@ -86,6 +86,8 @@ export class BoolEntity extends BaseEntity<boolean> {
 			this._selectedEntities.value = [val];
 		},
 	});
+
+	public clear(): void {}
 }
 
 export class DocumentEntity extends BaseEntity<DocumentSchema> {
