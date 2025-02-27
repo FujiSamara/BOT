@@ -481,6 +481,10 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 			this._values.find((val) => val.id === id)!,
 		];
 	}
+
+	public clear(): void {
+		this._selectedEntities.value = [];
+	}
 }
 
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
