@@ -485,6 +485,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 	public clear(): void {
 		this._selectedEntities.value = [];
 		this._inputValue.value = "";
+		this._searchEntities.value = this._values;
 	}
 }
 
