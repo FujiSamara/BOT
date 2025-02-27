@@ -129,7 +129,8 @@ export function useRowEditor<T extends BaseSchema>(
 			await table.create(result);
 			fields.forEach((f) => f.entity.clear());
 		} else {
-			if (modelIndex.value) await table.update(result, modelIndex.value);
+			if (modelIndex.value !== undefined)
+				await table.update(result, modelIndex.value);
 		}
 		active.value = false;
 	};
