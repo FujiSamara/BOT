@@ -71,7 +71,7 @@ def create_access_token(data: dict, expires_delta: timedelta) -> str:
     expire = datetime.now() + expires_delta
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, settings.secret_key, algorithm=settings.token_algorithm
+        to_encode, settings.private_key, algorithm=settings.token_algorithm
     )
     return encoded_jwt
 
@@ -132,7 +132,7 @@ async def get_user(
     try:
         payload = jwt.decode(
             token,
-            settings.secret_key,
+            settings.public_key,
             algorithms=[settings.token_algorithm],
         )
 
