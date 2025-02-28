@@ -86,6 +86,8 @@ export class BoolEntity extends BaseEntity<boolean> {
 			this._selectedEntities.value = [val];
 		},
 	});
+
+	public clear(): void {}
 }
 
 export class DocumentEntity extends BaseEntity<DocumentSchema> {
@@ -478,6 +480,12 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 			...this._selectedEntities.value,
 			this._values.find((val) => val.id === id)!,
 		];
+	}
+
+	public clear(): void {
+		this._selectedEntities.value = [];
+		this._inputValue.value = "";
+		this._searchEntities.value = this._values;
 	}
 }
 

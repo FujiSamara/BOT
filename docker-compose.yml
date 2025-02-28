@@ -9,7 +9,6 @@ services:
         VITE_DOMAIN:
         VITE_PROTOCOL:
 
-
     volumes:
       - nginx-html:/app/dist
 
@@ -28,6 +27,7 @@ services:
       - cert-dir:/var/www/certs:ro
       - files-dir:/tmp
       - ./services/core:/app
+      - key-dir:/etc/keys
 
     network_mode: "host"
 
@@ -52,4 +52,6 @@ volumes:
   cert-dir:
     external: true
   files-dir:
+    external: true
+  key-dir:
     external: true
