@@ -68,7 +68,7 @@ onUnmounted(() => {
 		padding-right: 16px;
 		padding-bottom: 16px;
 		border-radius: 16px;
-		width: 640px;
+		min-width: 640px;
 		min-height: 100px;
 		max-height: 90%;
 

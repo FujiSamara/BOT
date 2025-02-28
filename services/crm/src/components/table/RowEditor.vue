@@ -43,33 +43,42 @@ const save = () => {
 </script>
 
 <template>
-	<BlurModal
-		:title="editor.title.value"
-		v-if="editor.active.value"
-		@close="editor.close"
-		class="modal"
-	>
-		<div class="e-selects">
-			<EntitySelect
-				v-for="field in editor.fields.filter((val) => val.active)"
-				:entity="field.entity"
-				:select-type="field.type"
-				class="select-wrapper"
-			></EntitySelect>
-			<DefaultButton
-				v-if="editor.mode.value !== EditorMode.View"
-				@click="save"
-				title="Сохранить"
-			></DefaultButton>
-			<slot name="view"></slot>
-			<slot name="create"></slot>
-			<slot name="edit"></slot>
-		</div>
-	</BlurModal>
+	<Transition name="fade">
+		<BlurModal
+			:title="editor.title.value"
+			v-if="editor.active.value"
+			@close="editor.close"
+			class="modal"
+		>
+			<div class="e-selects">
+				<EntitySelect
+					v-for="field in editor.fields.filter((val) => val.active)"
+					:entity="field.entity"
+					:select-type="field.type"
+					class="select-wrapper"
+					v-if="!editor.showCustom.value"
+				></EntitySelect>
+				<DefaultButton
+					v-if="
+						editor.mode.value !== EditorMode.View && !editor.showCustom.value
+					"
+					@click="save"
+					title="Сохранить"
+				></DefaultButton>
+				<slot name="view"></slot>
+				<slot name="create"></slot>
+				<slot name="edit"></slot>
+			</div>
+		</BlurModal>
+	</Transition>
 </template>
 
 <style scoped lang="scss">
 .e-selects {
+	display: flex;
+	flex-direction: column;
+	min-width: fit-content;
+
 	:not(:nth-child(1)).select-wrapper {
 		margin-top: 24px;
 	}
