@@ -33,6 +33,10 @@ const props = defineProps({
 	readonly: {
 		type: Boolean,
 	},
+	delay: {
+		type: Number,
+		default: 500,
+	},
 });
 const emits = defineEmits<{
 	(e: "submit", value: string): void;
@@ -49,7 +53,7 @@ const value = computed(() => {
 });
 
 let delaySetter: number = setTimeout(() => {}, 0);
-const delay = 500;
+const delay = props.delay;
 
 const onInput = (event: Event) => {
 	const val = (event.target as HTMLInputElement).value;
@@ -269,6 +273,13 @@ const starClicked = () => {
 		input,
 		input::placeholder {
 			color: $sec-arrantion-red;
+		}
+		.tool-icon-wrapper {
+			.tool-icon {
+				&.edit {
+					color: $main-white !important;
+				}
+			}
 		}
 	}
 }
