@@ -1,0 +1,6 @@
+pydantic==2.9.2
+pydantic-settings==2.6.0
+asyncpg==0.30.0
+sqlalchemy[asyncio]
+dependency_injector==4.45.0
+fastapi==0.115.3
