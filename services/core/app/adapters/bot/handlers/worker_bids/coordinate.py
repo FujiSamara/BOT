@@ -38,7 +38,7 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 )
 from app.infra.database.models import ApprovalStatus, WorkerBid, ViewStatus
 
-from app.services import (
+from app.services.worker_bid import (
     get_worker_bid_by_id,
     update_worker_bid_bot,
     add_worker_bids_documents_requests,
