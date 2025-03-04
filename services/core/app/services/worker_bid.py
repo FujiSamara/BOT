@@ -255,11 +255,14 @@ async def update_worker_bid_bot(
         case "iiko_service":
             stage = "iiko"
             worker_bid.iiko_service_state = state
-            worker_bid.iiko_worker_id = comment
 
-            worker_bid.close_date = datetime.now()
-            worker_bid.state = state
-            worker_bid.comment = worker_bid.accounting_service_comment
+            if state == ApprovalStatus.approved:
+                worker_bid.iiko_worker_id = comment
+                worker_bid.close_date = datetime.now()
+                worker_bid.state = state
+                worker_bid.comment = worker_bid.accounting_service_comment
+            else:
+                worker_bid.comment = comment
 
         case _:
             logger.error("State for worker bid not found")
@@ -434,10 +437,10 @@ async def create_worker_bid(
 
 
 def get_pending_approval_bids(
-    state_column, limit: int = 20
+    state_column, limit: int = 20, offset: int = 0
 ) -> list[WorkerBidSchema] | None:
     return orm.find_worker_bids_by_column(
-        state_column, ApprovalStatus.pending_approval, limit=limit
+        state_column, ApprovalStatus.pending_approval, limit=limit, offset=offset
     )
 
 
