@@ -8,12 +8,13 @@ from aiogram.types import (
 )
 from aiogram.utils.markdown import hbold
 from aiogram.fsm.context import FSMContext
-from app.services import (
+from app.services.worker_bid import (
     get_subordinates,
-    get_worker_by_id,
     update_worker_state,
     search_subordinate,
 )
+from app.services.extra import get_worker_by_id
+
 from app.infra.database.converters import worker_status_dict
 from app.adapters.bot.handlers.utils import (
     try_edit_or_answer,

@@ -606,7 +606,7 @@ class WorkerBidView(ModelView, model=WorkerBid):
         WorkerBid.close_date,
         WorkerBid.security_service_comment,
         WorkerBid.accounting_service_comment,
-        WorkerBid.iiko_service_state,
+        WorkerBid.iiko_worker_id,
     ]
 
     column_searchable_list = [WorkerBid.f_name, WorkerBid.l_name, WorkerBid.o_name]
