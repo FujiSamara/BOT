@@ -33,11 +33,12 @@ from app.adapters.bot.handlers.worker_bids.utils import (
 from app.adapters.bot import text
 from app.adapters.bot.handlers.worker_bids.schemas import (
     WorkerBidCallbackData,
+    WorkerBidPagesCallbackData,
     BidViewMode,
 )
 from app.infra.database.models import ApprovalStatus, WorkerBid, ViewStatus
 
-from app.services import (
+from app.services.worker_bid import (
     get_worker_bid_by_id,
     update_worker_bid_bot,
     add_worker_bids_documents_requests,
@@ -57,8 +58,6 @@ class WorkerBidCoordinationFactory:
         state_column: Any,
         approve_button_text: str = "Согласовать",
         pending_text: str = "Ожидающие заявки",
-        with_decline: bool = True,
-        comment_state: WorkerBidCoordination = WorkerBidCoordination.comment_str,
     ):
         self.router = router
         self.name = name
@@ -66,11 +65,11 @@ class WorkerBidCoordinationFactory:
         self.state_column = state_column
         self.approve_button_text = approve_button_text
         self.pending_text = pending_text
-        self.with_decline = with_decline
-        self.comment_state = comment_state
         self.get_pending_worker_bids_btn = InlineKeyboardButton(
             text="Ожидающие заявки",
-            callback_data=f"get_pending_coordinate_worker_bids_{self.name}",
+            callback_data=WorkerBidPagesCallbackData(
+                page=0, state_name=self.name
+            ).pack(),
         )
         self.coordinate_worker_bid_menu = create_inline_keyboard(
             self.get_pending_worker_bids_btn,
@@ -82,7 +81,7 @@ class WorkerBidCoordinationFactory:
         )
         router.callback_query.register(
             self.get_pending_worker_bids,
-            F.data == self.get_pending_worker_bids_btn.callback_data,
+            WorkerBidPagesCallbackData.filter(F.state_name == self.name),
         )
         router.callback_query.register(
             self.get_pending_bid,
@@ -124,12 +123,25 @@ class WorkerBidCoordinationFactory:
             reply_markup=self.coordinate_worker_bid_menu,
         )
 
-    async def get_pending_worker_bids(self, message: CallbackQuery | Message):
+    async def get_pending_worker_bids(
+        self,
+        message: CallbackQuery | Message,
+        state: FSMContext,
+        callback_data: WorkerBidPagesCallbackData | None = None,
+    ):
         if isinstance(message, CallbackQuery):
             message = message.message
+            await state.update_data(page=callback_data.page)
+        else:
+            callback_data = WorkerBidPagesCallbackData(
+                (await state.get_data()).get("page") or 0, state_name=self.name
+            )
         buttons = []
         get_worker_pending_bids_btns(
-            state_column=self.state_column, buttons=buttons, name=self.name
+            state_column=self.state_column,
+            buttons=buttons,
+            name=self.name,
+            page_callback_data=callback_data,
         )
         buttons.append(
             InlineKeyboardButton(
@@ -220,20 +232,19 @@ class WorkerBidCoordinationFactory:
                         endpoint_name=f"get_comment_{self.name}",
                         state=1,
                     ).pack(),
+                )
+            )
+            buttons.append(
+                InlineKeyboardButton(
+                    text="Отказать",
+                    callback_data=WorkerBidCallbackData(
+                        id=callback_data.id,
+                        mode=callback_data.mode,
+                        endpoint_name=f"get_comment_{self.name}",
+                        state=0,
+                    ).pack(),
                 ),
             )
-            if self.with_decline:
-                buttons.append(
-                    InlineKeyboardButton(
-                        text="Отказать",
-                        callback_data=WorkerBidCallbackData(
-                            id=callback_data.id,
-                            mode=callback_data.mode,
-                            endpoint_name=f"get_comment_{self.name}",
-                            state=0,
-                        ).pack(),
-                    ),
-                )
 
         if self.state_column == WorkerBid.accounting_service_state:
             buttons.append(
@@ -348,13 +359,19 @@ class WorkerBidCoordinationFactory:
         state: FSMContext,
     ):
         await state.update_data(id=callback_data.id, status=callback_data.state)
+        if (
+            callback_data.state == 0
+            or self.state_column != WorkerBid.iiko_service_state
+        ):
+            comment_state = WorkerBidCoordination.comment_str
+            t = "Введите комментарий:"
+        else:
+            comment_state = WorkerBidCoordination.comment_int
+            t = "Введите табельный номер:"
+
         message = await try_edit_or_answer(
             callback.message,
-            text=hbold(
-                "Введите комментарий:"
-                if self.comment_state is WorkerBidCoordination.comment_str
-                else "Введите табельный номер:",
-            ),
+            text=hbold(t),
             return_message=True,
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
@@ -370,7 +387,7 @@ class WorkerBidCoordinationFactory:
         await state.update_data(
             msg=message, get_menu=self.get_menu, state_column_name=self.name
         )
-        await state.set_state(self.comment_state)
+        await state.set_state(comment_state)
 
     async def download_all_docs(
         self,
@@ -591,6 +608,4 @@ def build_coordinations():
         coordinator_menu_button=get_coordinate_worker_bids_iiko_btn,
         state_column=WorkerBid.iiko_service_state,
         name="iiko_service",
-        comment_state=WorkerBidCoordination.comment_int,
-        with_decline=False,
     )

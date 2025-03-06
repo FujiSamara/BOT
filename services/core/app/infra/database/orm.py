@@ -2622,7 +2622,10 @@ def update_technical_requests_worktime(
 
 
 def find_worker_bids_by_column(
-    column: any, value: any, limit: int = 20
+    column: any,
+    value: any,
+    limit: int = 20,
+    offset: int = 0,
 ) -> list[WorkerBidSchema] | None:
     """
     Returns worker bid in database by `column` with `value`.
@@ -2634,6 +2637,7 @@ def find_worker_bids_by_column(
                 select(WorkerBid)
                 .filter(column == value)
                 .order_by(WorkerBid.id)
+                .offset(limit * offset)
                 .limit(limit=limit)
             )
             .scalars()
