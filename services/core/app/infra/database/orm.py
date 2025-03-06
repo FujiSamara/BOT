@@ -4,7 +4,20 @@ from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
-from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect, update
+from sqlalchemy import (
+    Select,
+    case,
+    null,
+    or_,
+    and_,
+    desc,
+    select,
+    inspect,
+    update,
+    literal_column,
+)
+from sqlalchemy.types import TEXT
+from sqlalchemy.sql.expression import cast
 
 from app.infra.database.query import QueryBuilder
 from app.adapters.output.file.export import XlSXWriterExporter
@@ -1227,7 +1240,7 @@ def update_tech_request_executor(request_id: int, repairman_id: int):
             s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
         )
         repairman = s.query(Worker).filter(Worker.id == repairman_id)
-        cur_request.executor = repairman
+        cur_request.repairman = repairman
         cur_request.repairman_id = repairman_id
     return True
 
@@ -2675,10 +2688,10 @@ def add_worker(record: WorkerSchema, documents: list[DocumentSchema]) -> bool:
     """
     with session.begin() as s:
         post = (
-            s.execute(select(Post).where(Post.id == record.post.id)).scalars().first()
+            s.execute(select(Post).filter(Post.id == record.post.id)).scalars().first()
         )
         department = (
-            s.execute(select(Department).where(Department.id == record.department.id))
+            s.execute(select(Department).filter(Department.id == record.department.id))
             .scalars()
             .first()
         )
@@ -2949,3 +2962,119 @@ def get_all_history_technical_requests_territorial_director(
             TechnicalRequestSchema.model_validate(raw_request)
             for raw_request in raw_requests
         ]
+
+
+def get_old_technical_requests_id(
+    dt: datetime,
+) -> list[int]:
+    with session.begin() as s:
+        id_list = (
+            s.execute(
+                select(TechnicalRequest.id).filter(TechnicalRequest.close_date <= dt)
+            )
+            .scalars()
+            .all()
+        )
+
+        return id_list
+
+
+def get_old_worker_bids_id(
+    dt: datetime,
+) -> list[int]:
+    with session.begin() as s:
+        id_list = (
+            s.execute(
+                select(WorkerBid.id)
+                .join(Worker, onclause=Worker.l_name == WorkerBid.l_name)
+                .filter(
+                    or_(Worker.employment_date <= dt, Worker.employment_date == null()),
+                    or_(
+                        WorkerBid.state == ApprovalStatus.denied,
+                        WorkerBid.state == ApprovalStatus.approved,
+                    ),
+                )
+            )
+            .scalars()
+            .all()
+        )
+        return id_list
+
+
+def get_old_bids_id(dt: datetime) -> list[int]:
+    with session.begin() as s:
+        return s.execute(select(Bid.id).filter(Bid.close_date <= dt)).scalars().all()
+
+
+def get_old_bids_it_id(dt: datetime):
+    with session.begin() as s:
+        return (
+            s.execute(select(BidIT.id).filter(BidIT.close_date <= dt)).scalars().all()
+        )
+
+
+def get_old_docs_path(
+    id_list: list[int],
+    stubname: str,
+    model: Any,
+    id_column: str,
+) -> list[str]:
+    with session.begin() as s:
+        paths = (
+            s.execute(
+                select(
+                    getattr(model, "document"),
+                ).filter(
+                    or_(*[getattr(model, id_column) == id for id in id_list]),
+                    cast(getattr(model, "document"), TEXT) != stubname,
+                )
+            )
+            .scalars()
+            .all()
+        ) or []
+
+        return paths
+
+
+def update_old_documents(
+    id_list: list[int],
+    id_column: str,
+    stubname: str,
+    model: Any,
+) -> bool:
+    with session.begin() as s:
+        s.execute(
+            update(model)
+            .filter(
+                or_(*[getattr(model, id_column) == id for id in id_list]),
+            )
+            .values(document=literal_column(f"'{stubname}'"))
+        )
+
+    return True
+
+
+def delete_old_worktimes_photos(dt: datetime) -> bool:
+    with session.begin() as s:
+        s.execute(
+            update(WorkTime)
+            .filter(
+                WorkTime.day <= dt.date(),
+            )
+            .values(photo_b64=None)
+        )
+
+    return True
+
+
+def get_filepaths_model(model: Any, id: int, id_column: str) -> list[str]:
+    with session.begin() as s:
+        return (
+            s.execute(
+                select(getattr(model, "document")).filter(
+                    getattr(model, id_column) == id
+                )
+            )
+            .scalars()
+            .all()
+        )

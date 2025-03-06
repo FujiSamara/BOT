@@ -21,6 +21,7 @@ class Settings(PostgreSQLSettings, BotSettings, SecuritySettings):
     crm_addr: str = Field(validation_alias="CRM_ADDR")
 
     storage_path: str = Field(validation_alias="STORAGE_PATH", default="/tmp")
+    stubname: str = Field(validation_alias="STUBNAME", default="stub.jpg")
 
     @computed_field
     @property

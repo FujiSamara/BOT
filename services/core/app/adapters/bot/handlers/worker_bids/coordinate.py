@@ -44,6 +44,7 @@ from app.services.worker_bid import (
     add_worker_bids_documents_requests,
     update_view_state_worker_bid,
 )
+from app.infra.config.settings import settings
 
 router = Router(name="coordinate_worker_bid")
 
@@ -280,6 +281,7 @@ class WorkerBidCoordinationFactory:
         bid = get_worker_bid_by_id(callback_data.id)
         msgs: list[Message] = []
         docs_len = len(getattr(bid, callback_data.doc_type))
+        deleted_files_count = 0
 
         for iteration in range(docs_len // 10 + (1 if docs_len % 10 != 0 else 0)):
             media: list[InputMediaDocument] = []
@@ -287,34 +289,68 @@ class WorkerBidCoordinationFactory:
             for photo in getattr(bid, callback_data.doc_type)[
                 iteration * 10 : iteration * 10 + 9
             ]:
-                media.append(
-                    InputMediaDocument(
-                        media=BufferedInputFile(
-                            file=await photo.document.read(),
-                            filename=photo.document.filename,
+                if photo.document.filename != settings.stubname:
+                    media.append(
+                        InputMediaDocument(
+                            media=BufferedInputFile(
+                                file=await photo.document.read(),
+                                filename=photo.document.filename,
+                            )
                         )
                     )
-                )
+            else:
+                deleted_files_count += 1
 
-            msgs += await callback.message.answer_media_group(
-                media=media,
-            )
+            if len(media) > 0:
+                msgs += await callback.message.answer_media_group(
+                    media=media,
+                )
 
         await try_delete_message(callback.message)
         await state.update_data(msgs=msgs)
-        await msgs[0].reply(
-            text=hbold("Выберите действие:"),
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text=text.back,
-                    callback_data=WorkerBidCallbackData(
-                        id=callback_data.id,
-                        mode=callback_data.mode,
-                        endpoint_name=f"get_pending_bid_{self.name}",
-                    ).pack(),
+
+        if len(media) > 0:
+            msgs = await callback.message.answer_media_group(
+                media=media,
+            )
+            await msgs[0].reply(
+                text=hbold("Выберите действие:")
+                + (
+                    f"\nУдаленно файлов: {deleted_files_count}"
+                    if deleted_files_count > 0
+                    else ""
                 ),
-            ),
-        )
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.back,
+                        callback_data=WorkerBidCallbackData(
+                            id=callback_data.id,
+                            mode=callback_data.mode,
+                            endpoint_name=f"get_pending_bid_{self.name}",
+                        ).pack(),
+                    ),
+                ),
+            )
+        else:
+            await try_edit_or_answer(
+                message=callback.message,
+                text=hbold("Выберите действие:")
+                + (
+                    f"\nУдаленно файлов: {deleted_files_count}"
+                    if deleted_files_count > 0
+                    else ""
+                ),
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=text.back,
+                        callback_data=WorkerBidCallbackData(
+                            id=callback_data.id,
+                            mode=callback_data.mode,
+                            endpoint_name=f"get_pending_bid_{self.name}",
+                        ).pack(),
+                    ),
+                ),
+            )
 
     async def get_comment(
         self,

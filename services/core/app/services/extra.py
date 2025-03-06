@@ -1,7 +1,8 @@
 from typing import Optional
-
+from datetime import datetime, timedelta
 from app.infra.logging import logger
 from app.infra.config import settings
+from typing import Any
 
 import app.infra.database.orm as orm
 from app.infra.database.models import (
@@ -264,3 +265,179 @@ def set_tellers_cash_department() -> list[WorkerSchema]:
 
 def get_last_worker_passport_id(worker_id: int) -> int:
     return orm.get_last_worker_passport_id(worker_id)
+
+
+def get_old_technical_requests_docs_path(dt_now: datetime, stubname: str) -> list[str]:
+    from app.infra.database.models import (
+        TechnicalRequestProblemPhoto,
+        TechnicalRequestRepairPhoto,
+    )
+
+    id_list = orm.get_old_technical_requests_id(
+        dt=dt_now
+        + timedelta(
+            weeks=4,
+            days=0,
+            seconds=0,
+            microseconds=0,
+        ),
+    )
+    paths = []
+    for model in [TechnicalRequestProblemPhoto, TechnicalRequestRepairPhoto]:
+        paths += orm.get_old_docs_path(
+            id_list=id_list,
+            stubname=stubname,
+            model=model,
+            id_column="technical_request_id",
+        )
+    return [paths, id_list]
+
+
+def update_old_technical_requests_documents(id_list: list[str], stubname: str) -> bool:
+    from app.infra.database.models import (
+        TechnicalRequestProblemPhoto,
+        TechnicalRequestRepairPhoto,
+    )
+
+    for model in [TechnicalRequestProblemPhoto, TechnicalRequestRepairPhoto]:
+        if not orm.update_old_documents(
+            id_list=id_list,
+            id_column="technical_request_id",
+            stubname=stubname,
+            model=model,
+        ):
+            logger.error(f"Old files of model: {model} wasn't update")
+    return True
+
+
+def get_old_worker_bids_docs_path(dt_now: datetime, stubname: str) -> list[str]:
+    from app.infra.database.models import (
+        WorkerBidPassport,
+        WorkerBidWorkPermission,
+        WorkerBidWorksheet,
+    )
+
+    id_list = orm.get_old_worker_bids_id(
+        dt=dt_now
+        + timedelta(
+            weeks=4,
+            days=0,
+            seconds=0,
+            microseconds=0,
+        ),
+    )
+    paths = []
+    for model in [WorkerBidPassport, WorkerBidWorkPermission, WorkerBidWorksheet]:
+        paths += orm.get_old_docs_path(
+            id_list=id_list,
+            stubname=stubname,
+            model=model,
+            id_column="worker_bid_id",
+        )
+    return [paths, id_list]
+
+
+def update_old_worker_bids_documents(id_list: list[str], stubname: str) -> bool:
+    from app.infra.database.models import (
+        WorkerBidPassport,
+        WorkerBidWorkPermission,
+        WorkerBidWorksheet,
+    )
+
+    for model in [WorkerBidPassport, WorkerBidWorkPermission, WorkerBidWorksheet]:
+        if not orm.update_old_documents(
+            id_list=id_list,
+            id_column="worker_bid_id",
+            stubname=stubname,
+            model=model,
+        ):
+            logger.error(f"Old files of model: {model} wasn't update")
+    return True
+
+
+def get_old_bids_docs_path(dt_now: datetime, stubname: str) -> list[str]:
+    from app.infra.database.models import BidDocument
+
+    id_list = orm.get_old_bids_id(
+        dt=dt_now
+        + timedelta(
+            weeks=4,
+            days=0,
+            seconds=0,
+            microseconds=0,
+        ),
+    )
+    paths = []
+    paths += orm.get_old_docs_path(
+        id_list=id_list,
+        stubname=stubname,
+        model=BidDocument,
+        id_column="bid_id",
+    )
+    return [paths, id_list]
+
+
+def update_old_bids_documents(id_list: list[str], stubname: str) -> bool:
+    from app.infra.database.models import BidDocument
+
+    if not orm.update_old_documents(
+        id_list=id_list,
+        id_column="bid_id",
+        stubname=stubname,
+        model=BidDocument,
+    ):
+        logger.error(f"Old files of model: {BidDocument} wasn't update")
+    return True
+
+
+def get_old_bids_it_docs_path(dt_now: datetime, stubname: str) -> list[str]:
+    from app.infra.database.models import BidITRepairmanDocument, BidITWorkerDocument
+
+    id_list = orm.get_old_bids_it_id(
+        dt=dt_now
+        + timedelta(
+            weeks=4,
+            days=0,
+            seconds=0,
+            microseconds=0,
+        ),
+    )
+    paths = []
+    for model in [BidITRepairmanDocument, BidITWorkerDocument]:
+        paths += orm.get_old_docs_path(
+            id_list=id_list,
+            stubname=stubname,
+            model=model,
+            id_column="bid_it_id",
+        )
+    return [paths, id_list]
+
+
+def update_old_bids_it_documents(id_list: list[str], stubname: str) -> bool:
+    from app.infra.database.models import BidITRepairmanDocument, BidITWorkerDocument
+
+    for model in [BidITRepairmanDocument, BidITWorkerDocument]:
+        if not orm.update_old_documents(
+            id_list=id_list,
+            id_column="bid_it_id",
+            stubname=stubname,
+            model=model,
+        ):
+            logger.error(f"Old files of model: {model} wasn't update")
+    return True
+
+
+def delete_old_worktimes_photos(dt_now: datetime) -> bool:
+    return orm.delete_old_worktimes_photos(
+        dt=dt_now
+        + timedelta(
+            weeks=4,
+            days=0,
+            seconds=0,
+            microseconds=0,
+        ),
+    )
+
+
+def get_filepaths_model(model: Any, id: int, id_column: str):
+    return orm.get_filepaths_model(model=model, id=id, id_column=id_column)

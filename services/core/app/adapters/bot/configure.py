@@ -16,6 +16,7 @@ from app.adapters.bot.tasks import (
     notify_with_unclosed_shift,
     notify_and_dropped_departments_teller_cash,
     update_repairman_worktimes,
+    delete_old_files,
 )
 
 
@@ -63,8 +64,17 @@ async def lifespan(_: FastAPI) -> AsyncGenerator:
         time=datetime(**YMD, hour=3, minute=0, second=0),
         name="update_repairman_worktimes",
     )
+    tasks.register_task(
+        task=delete_old_files,
+        time=datetime(
+            **YMD,
+            hour=4,
+            minute=0,
+            second=0,
+        ),
+        name="delete_old_files",
+    )
     await tasks.run_tasks()
-
     yield
     await get_bot().delete_webhook(drop_pending_updates=True)
     await tasks.stop_tasks()

@@ -422,6 +422,17 @@ class WorkerView(ModelView, model=Worker):
 
         return stmt
 
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from sqladmin._queries import Query
+
+        if delete_files_for_model_by_id(
+            model=WorkerDocument, row_id=int(pk), id_column="worker_id"
+        ):
+            await Query(self).delete(pk, request)
+
     column_formatters = {
         Worker.gender: gender_format,
         Worker.state: worker_status_format,
@@ -490,6 +501,17 @@ class WorkerDocumentView(ModelView, model=WorkerDocument):
             )
             filename += f"{Path(document.filename).suffix}"
             data["document"].filename = filename
+
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from sqladmin._queries import Query
+
+        if delete_files_for_model_by_id(
+            model=WorkerDocument, row_id=int(pk), id_column="id"
+        ):
+            await Query(self).delete(pk, request)
 
     column_searchable_list = [
         "Фамилия",
@@ -683,6 +705,31 @@ class WorkerBidView(ModelView, model=WorkerBid):
 
         workers = select(WorkerBid).filter(or_stmt)
         return workers
+
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from app.infra.database.models import (
+            WorkerBidWorkPermission,
+            WorkerBidWorksheet,
+            WorkerBidPassport,
+        )
+        from sqladmin._queries import Query
+
+        all_delete = True
+        for model in [
+            WorkerBidWorkPermission,
+            WorkerBidWorksheet,
+            WorkerBidPassport,
+        ]:
+            if not delete_files_for_model_by_id(
+                model=model, row_id=int(pk), id_column="worker_bid_id"
+            ):
+                all_delete = False
+
+        if all_delete:
+            await Query(self).delete(pk, request)
 
     can_create = False
     can_export = False
@@ -888,6 +935,26 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
                 stmt = stmt.order_by(asc(getattr(model, sort_field)))
 
         return stmt
+
+    async def delete_model(self, request: Request, pk) -> None:
+        from app.adapters.output.file.delete_files import (
+            delete_files_for_model_by_id,
+        )
+        from app.infra.database.models import (
+            TechnicalRequestProblemPhoto,
+            TechnicalRequestRepairPhoto,
+        )
+        from sqladmin._queries import Query
+
+        all_delete = True
+        for model in [TechnicalRequestProblemPhoto, TechnicalRequestRepairPhoto]:
+            if not delete_files_for_model_by_id(
+                model=model, row_id=int(pk), id_column="technical_request_id"
+            ):
+                all_delete = False
+
+        if all_delete:
+            await Query(self).delete(pk, request)
 
 
 class WorkTimeAdminView(ModelView, model=WorkTime):

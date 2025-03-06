@@ -26,6 +26,7 @@ from app.adapters.bot.handlers.worker_bids.utils import (
 )
 import app.adapters.bot.text as text
 
+from app.infra.config.settings import settings
 
 router = Router(name="create_worker_bid")
 
@@ -522,47 +523,89 @@ async def get_documents(
 ):
     bid = services.get_worker_bid_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
+    deleted_files_count = 0
     for doc in bid.worksheet:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
+
     for doc in bid.passport:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
+
     for doc in bid.work_permission:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
 
     await utils.try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=kb.create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data=WorkerBidCallbackData(
-                    id=bid.id,
-                    mode=callback_data.mode,
-                    endpoint_name="bid",
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(
+            media=media,
+            protect_content=True,
+        )
+        await state.update_data(msgs=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=kb.create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="bid",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await utils.try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=kb.create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="bid",
+                    ).pack(),
+                )
+            ),
+        )
 
 
 @router.callback_query(
@@ -736,47 +779,89 @@ async def get_documents_pending(
 ):
     bid = services.get_worker_bid_by_id(callback_data.id)
     media: list[InputMediaDocument] = []
+    deleted_files_count = 0
     for doc in bid.worksheet:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
+
     for doc in bid.passport:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
+
     for doc in bid.work_permission:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await doc.document.read(), filename=doc.document.filename
+        if doc.document.filename != settings.stubname:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await doc.document.read(), filename=doc.document.filename
+                    )
                 )
             )
-        )
+        else:
+            deleted_files_count += 1
 
     await utils.try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=kb.create_inline_keyboard(
-            InlineKeyboardButton(
-                text="Назад",
-                callback_data=WorkerBidCallbackData(
-                    id=bid.id,
-                    mode=callback_data.mode,
-                    endpoint_name="bid",
-                ).pack(),
-            )
-        ),
-    )
+
+    if len(media) > 0:
+        msgs = await callback.message.answer_media_group(
+            media=media,
+            protect_content=True,
+        )
+        await state.update_data(msgs=msgs)
+        await msgs[0].reply(
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=kb.create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="bid",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
+        await utils.try_edit_or_answer(
+            message=callback.message,
+            text=hbold("Выберите действие:")
+            + (
+                f"\nУдаленно файлов: {deleted_files_count}"
+                if deleted_files_count > 0
+                else ""
+            ),
+            reply_markup=kb.create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="Назад",
+                    callback_data=WorkerBidCallbackData(
+                        id=bid.id,
+                        mode=callback_data.mode,
+                        endpoint_name="bid",
+                    ).pack(),
+                )
+            ),
+        )
 
 
 @router.callback_query(
