@@ -162,21 +162,26 @@ class CoordinationFactory:
         worker = utils.get_worker_my_message(callback)
         if worker is not None:
             if self.state_column == Bid.fac_state:
-                match ApprovalStatus.pending_approval:
-                    case bid.fac_state:
-                        await update_bid_state(
-                            bid,
-                            Bid.fac_state.name,
-                            ApprovalStatus.approved,
-                            worker.id,
-                        )
-                    case bid.cc_state:
-                        await update_bid_state(
-                            bid,
-                            Bid.cc_state.name,
-                            ApprovalStatus.approved,
-                            worker.id,
-                        )
+                if (
+                    bid.fac_state == ApprovalStatus.pending_approval
+                    and bid.expenditure.fac.id == worker.id
+                ):
+                    await update_bid_state(
+                        bid,
+                        Bid.fac_state.name,
+                        ApprovalStatus.approved,
+                        worker.id,
+                    )
+                elif (
+                    bid.cc_state == ApprovalStatus.pending_approval
+                    and bid.expenditure.cc.id == worker.id
+                ):
+                    await update_bid_state(
+                        bid,
+                        Bid.cc_state.name,
+                        ApprovalStatus.approved,
+                        worker.id,
+                    )
             else:
                 await update_bid_state(
                     bid, self.state_column.name, ApprovalStatus.approved, worker.id
@@ -425,10 +430,37 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
     bid: BidSchema = data["bid"]
     column_name = data["column_name"]
     bid.denying_reason = message.text
-    update_bid(bid)
     worker = utils.get_worker_my_message(callback)
+
     if worker is not None:
-        await update_bid_state(bid, column_name, ApprovalStatus.denied, worker.id)
+        if column_name == Bid.fac_state.name:
+            if (
+                bid.fac_state == ApprovalStatus.pending_approval
+                and bid.expenditure.fac.id == worker.id
+            ):
+                await update_bid_state(
+                    bid,
+                    Bid.fac_state.name,
+                    ApprovalStatus.approved,
+                    worker.id,
+                )
+                update_bid(bid)
+
+            elif (
+                bid.cc_state == ApprovalStatus.pending_approval
+                and bid.expenditure.cc.id == worker.id
+            ):
+                await update_bid_state(
+                    bid,
+                    Bid.cc_state.name,
+                    ApprovalStatus.approved,
+                    worker.id,
+                )
+                update_bid(bid)
+
+        else:
+            await update_bid_state(bid, column_name, ApprovalStatus.approved, worker.id)
+            update_bid(bid)
 
     await try_delete_message(message)
     await generator(callback)
