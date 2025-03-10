@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import HTTPException, Security, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 
@@ -50,6 +51,13 @@ class Authorization:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Not enough rights",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        if payload.expire < datetime.now():
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
