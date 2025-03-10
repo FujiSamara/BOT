@@ -26,3 +26,9 @@ class FileCreateSchema(BaseSchemaPK):
 
 class FileSchema(FileCreateSchema):
     pass
+
+
+class FileUpdateSchema(BaseSchema):
+    name: str | None = None
+    ext: str | None = None
+    confirmed: str | None = None

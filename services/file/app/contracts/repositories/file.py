@@ -24,3 +24,7 @@ class FileRepository(BaseRepository):
     @abstractmethod
     async def get_by_id(self, id: int) -> FileSchema | None:
         pass
+
+    @abstractmethod
+    async def get_by_key_with_bucket(self, key: str, bucket: str) -> FileSchema | None:
+        pass

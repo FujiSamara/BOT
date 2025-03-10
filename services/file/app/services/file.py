@@ -2,7 +2,7 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema
 
 
 class FileServiceImpl(FileService):
@@ -62,4 +62,17 @@ class FileServiceImpl(FileService):
         return await self._file_client.create_get_link(file.bucket, file.key)
 
     async def confirm_putting(self, file_confirm):
-        raise NotImplementedError
+        async with self._file_uow as uow:
+            file = await uow.file.get_by_key_with_bucket(
+                file_confirm.key, file_confirm.bucket
+            )
+            if file is None:
+                raise KeyError(f"File {file_confirm.key} not exists.")
+            if file.size != file_confirm.size:
+                raise ValueError(
+                    f"Confirmed file size [{file_confirm.size}]"
+                    f"doesn't equal exists [{file.size}]."
+                )
+
+            update = FileUpdateSchema(confirmed=True)
+            await uow.file.update(file.id, update)

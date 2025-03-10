@@ -1,4 +1,4 @@
-from sqlalchemy import select, ColumnElement
+from sqlalchemy import select, ColumnElement, and_
 
 from common.sql.repository import SQLBaseRepository
 from app.contracts.repositories import FileRepository
@@ -52,6 +52,15 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
     async def get_by_id(self, id):
         files = await self._get_by_criteria(File.id == id)
         if len(files) == 0:
-            raise ValueError("File not exist")
+            return
+
+        return converters.file_to_file_schema(files[0])
+
+    async def get_by_key_with_bucket(self, key, bucket):
+        files = await self._get_by_criteria(
+            and_(File.key == key, File.bucket == bucket)
+        )
+        if len(files) == 0:
+            return
 
         return converters.file_to_file_schema(files[0])
