@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/put_objetct",
+    "/",
     description="Creates presigned url for putting file with specified meta.",
     response_description="Created url",
 )
@@ -29,18 +29,18 @@ async def create_put_link(
     return await file_service.create_put_link(file)
 
 
-@router.post(
-    "/get_object",
+@router.get(
+    "/{id}",
     description="Creates presigned url for getting file with specified meta.",
     response_description="Created url",
 )
 @inject
 async def create_get_link(
-    key: str,
+    id: int,
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
         scopes=[Scopes.FileRead.value],
     ),
 ) -> str:
-    return await file_service.create_get_link(key)
+    return await file_service.create_get_link(id)

@@ -16,10 +16,10 @@ class FileService(BaseService):
         """
 
     @abstractmethod
-    async def create_get_link(self, key: str) -> str:
+    async def create_get_link(self, id: int) -> str:
         """Create presigned url for getting file.
         Raises:
-            KeyError: if file with specified `key` not exists.
+            KeyError: if file with specified `id` not exists.
         Returns:
             Created link.
         """

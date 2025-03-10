@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from common.contracts.repository import BaseRepository
-from app.schemas.file import FileCreateSchema, FileSchema
+from app.schemas.file import FileCreateSchema, FileSchema, FileUpdateSchema
 
 
 class FileRepository(BaseRepository):
@@ -10,7 +10,7 @@ class FileRepository(BaseRepository):
         pass
 
     @abstractmethod
-    async def update(self, id: int, file_update) -> FileSchema:
+    async def update(self, id: int, file_update: FileUpdateSchema) -> FileSchema:
         pass
 
     @abstractmethod
@@ -22,8 +22,5 @@ class FileRepository(BaseRepository):
         pass
 
     @abstractmethod
-    async def get_by_key_with_bucket(self, key: str, bucket: str) -> FileSchema | None:
-        """Finds file by `FileSchema.key` and `FileSchema.bucket`.
-        Returns:
-            File if it exists, `None` otherwise.
-        """
+    async def get_by_id(self, id: int) -> FileSchema | None:
+        pass
