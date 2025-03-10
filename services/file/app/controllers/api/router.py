@@ -15,7 +15,6 @@ router = APIRouter()
 
 @router.post(
     "/",
-    description="Creates presigned url for putting file with specified meta.",
     response_description="Created url",
 )
 @inject
