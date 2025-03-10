@@ -42,4 +42,6 @@ class PyJWTSecurityClient(SecurityClient):
         if expire is None:
             return
         scopes: str = payload.get("scopes", "")
-        return TokenPayload(id=client_id, scopes=scopes.split(), expire=expire)
+        if isinstance(scopes, str):
+            scopes = scopes.split()
+        return TokenPayload(id=client_id, scopes=scopes, expire=expire)
