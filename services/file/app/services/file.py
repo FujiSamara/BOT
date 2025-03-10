@@ -12,10 +12,10 @@ class FileServiceImpl(FileService):
         self._buckets = buckets
 
     async def create_put_link(self, file):
-        await self._file_client.create_put_link(self._buckets[0], file.key)
+        return await self._file_client.create_put_link(self._buckets[0], file.key)
 
     async def create_get_link(self, key):
-        raise NotImplementedError
+        return await self._file_client.create_get_link(self._buckets[0], key)
 
     async def confirm_putting(self, file_confirm):
         raise NotImplementedError
