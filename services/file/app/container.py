@@ -5,6 +5,9 @@ from common.containers.auth import LocalAuthContainer
 from common.containers.postgres import PostgresContainer
 from common.auth import LocalAuthService
 
+from app.infra.database.uow import SQLFileUnitOfWork
+from app.services.file import FileServiceImpl
+
 
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
@@ -16,3 +19,9 @@ class Container(containers.DeclarativeContainer):
     auth_service = providers.Resource(
         LocalAuthService, auth_container.container.security_client
     )
+
+    file_uow = providers.Factory(
+        SQLFileUnitOfWork, postgres_container.container.async_sessionmaker
+    )
+
+    file_service = providers.Factory(FileServiceImpl, file_uow)
