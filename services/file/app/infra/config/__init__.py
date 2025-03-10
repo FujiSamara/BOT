@@ -4,12 +4,10 @@ from common.config import (
     LocalAuthSettings,
     AdminSettings,
 )
+from app.infra.config.s3 import S3Settings
 
 
 class Settings(
-    PostgreSQLSettings,
-    NetworkSettings,
-    LocalAuthSettings,
-    AdminSettings,
+    PostgreSQLSettings, NetworkSettings, LocalAuthSettings, AdminSettings, S3Settings
 ):
     pass
