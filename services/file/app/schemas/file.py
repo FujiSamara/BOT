@@ -8,6 +8,11 @@ class FileInSchema(BaseSchema):
     size: int
 
 
+class LinkSchema(BaseSchema):
+    id: int
+    url: str
+
+
 class FileConfirmSchema(BaseSchema):
     key: str
     bucket: str

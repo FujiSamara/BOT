@@ -5,7 +5,7 @@ import json
 from common.schemas.client_credential import ClientCredentials
 from app.container import Container
 from app.contracts.services import FileService
-from app.schemas.file import FileInSchema, FileConfirmSchema
+from app.schemas.file import FileInSchema, FileConfirmSchema, LinkSchema
 
 from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.post(
     "/",
-    response_description="Created url",
+    response_description="Created url with file id",
 )
 @inject
 async def create_put_link(
@@ -25,7 +25,7 @@ async def create_put_link(
         Authorization,
         scopes=[Scopes.FileRead.value],
     ),
-) -> str:
+) -> LinkSchema:
     """Creates presigned url for putting file with specified meta."""
     try:
         link = await file_service.create_put_link(file)
@@ -36,7 +36,7 @@ async def create_put_link(
 
 @router.get(
     "/{id}",
-    response_description="Created url",
+    response_description="Created url with file id",
 )
 @inject
 async def create_get_link(
@@ -46,7 +46,7 @@ async def create_get_link(
         Authorization,
         scopes=[Scopes.FileRead.value],
     ),
-) -> str:
+) -> LinkSchema:
     """Creates presigned url for getting file with specified meta."""
     try:
         link = await file_service.create_get_link(id)

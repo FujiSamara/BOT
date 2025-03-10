@@ -2,7 +2,7 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema, LinkSchema
 
 
 class FileServiceImpl(FileService):
@@ -49,9 +49,10 @@ class FileServiceImpl(FileService):
                 created=datetime.now(),
                 confirmed=False,
             )
-            await uow.file.create(file_create)
+            file = await uow.file.create(file_create)
+            url = await self._file_client.create_put_link(bucket, file.key)
 
-            return await self._file_client.create_put_link(bucket, file.key)
+            return LinkSchema(id=file.id, url=url)
 
     async def create_get_link(self, id: int):
         async with self._file_uow as uow:
@@ -59,7 +60,8 @@ class FileServiceImpl(FileService):
             if file is None:
                 raise KeyError(f"File {id} not exists.")
 
-        return await self._file_client.create_get_link(file.bucket, file.key)
+        url = await self._file_client.create_get_link(file.bucket, file.key)
+        return LinkSchema(id=file.id, url=url)
 
     async def confirm_putting(self, file_confirm):
         async with self._file_uow as uow:
