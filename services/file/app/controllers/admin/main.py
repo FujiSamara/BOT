@@ -5,6 +5,7 @@ from dependency_injector.wiring import Provide, inject
 
 from app.container import Container
 from common.auth import AdminAuthenticationBackend
+import app.controllers.admin.views as views
 
 
 @inject
@@ -18,9 +19,10 @@ def register_admin(
     authentication_backend = AdminAuthenticationBackend(
         username=username, password=password
     )
-    Admin(
+    admin = Admin(
         app,
         engine,
         title="File panel",
         authentication_backend=authentication_backend,
     )
+    admin.add_view(views.FileView)
