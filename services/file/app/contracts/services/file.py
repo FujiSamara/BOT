@@ -26,4 +26,8 @@ class FileService(BaseService):
 
     @abstractmethod
     async def confirm_putting(self, file_confirm: FileConfirmSchema):
-        """Confirms putting file into s3 storage."""
+        """Confirms putting file into s3 storage.
+        Raises:
+            KeyError: if file with specified `key` and `bucket` not exists.
+            ValueError: if file validated with error.
+        """

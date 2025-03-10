@@ -31,4 +31,4 @@ class FileSchema(FileCreateSchema):
 class FileUpdateSchema(BaseSchema):
     name: str | None = None
     ext: str | None = None
-    confirmed: str | None = None
+    confirmed: bool | None = None

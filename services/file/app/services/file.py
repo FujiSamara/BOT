@@ -70,8 +70,8 @@ class FileServiceImpl(FileService):
                 raise KeyError(f"File {file_confirm.key} not exists.")
             if file.size != file_confirm.size:
                 raise ValueError(
-                    f"Confirmed file size [{file_confirm.size}]"
-                    f"doesn't equal exists [{file.size}]."
+                    f"Confirmed file size {file_confirm.size} "
+                    f"doesn't equal exists {file.size}."
                 )
 
             update = FileUpdateSchema(confirmed=True)
