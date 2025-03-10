@@ -11,12 +11,15 @@ class LocalAuthService(AuthService):
 
     async def process_update(self, credentials: ClientCredentials):
         """Processes scopes updates."""
-        self._cached_credentials[credentials.external_client_id] = credentials
+        self._cached_credentials[credentials.id] = credentials
 
     async def introspect(self, token):
         payload = self.security_client.parse_access_token(token)
 
-        if payload.external_client_id in self._cached_credentials:
-            payload.scopes = self._cached_credentials[payload.external_client_id].scopes
+        if payload is None:
+            return None
+
+        if payload.id in self._cached_credentials:
+            payload.scopes = self._cached_credentials[payload.id].scopes
 
         return payload
