@@ -48,7 +48,8 @@ class AuthHTTPClient(BaseClient):
                     raise ValueError("Token requested with error.")
                 body: dict = await resp.json()
                 self._token = body.get("access_token")
-                self._token_type = body.get("token_type")
+                self._token_type: str = body.get("token_type")
+                self._token_type = self._token_type.capitalize()
                 self._payload = await self._auth_service.introspect(self._token)
                 if self._payload is None:
                     raise ValueError("Token created with error.")
