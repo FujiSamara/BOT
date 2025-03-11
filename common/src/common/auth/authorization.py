@@ -5,6 +5,19 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityS
 
 from common.contracts.services import AuthService
 from common.schemas.client_credential import ClientCredentials
+from common.schemas.token import TokenPayload
+
+
+def expired(token: TokenPayload) -> bool:
+    """Check token for expiration.
+    Returns:
+        `True` if token expired, `False` otherwise.
+    """
+    utc = pytz.UTC
+    now = datetime.now().replace(tzinfo=utc)
+    expire = token.expire.replace(tzinfo=utc)
+
+    return expire < now
 
 
 class Authorization:
@@ -14,13 +27,6 @@ class Authorization:
     def _verify_scopes(self, scopes: list[str], *, needed_scopes: list[str]) -> bool:
         """Verifies that `scopes` enough for access with `needed_scopes`."""
         return "admin" in scopes or all(scope in scopes for scope in needed_scopes)
-
-    def _compare_time(self, first: datetime, second: datetime) -> bool:
-        utc = pytz.UTC
-        first = first.replace(tzinfo=utc)
-        second = second.replace(tzinfo=utc)
-
-        return first < second
 
     async def __call__(
         self,
@@ -62,7 +68,7 @@ class Authorization:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        if self._compare_time(payload.expire, datetime.now()):
+        if expired(payload):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token expired",
