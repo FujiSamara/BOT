@@ -42,7 +42,7 @@ class Container(containers.DeclarativeContainer):
     postgres_container = providers.Container(PostgresContainer, config=config)
     auth_container = providers.Container(LocalAuthContainer, config=config)
 
-    auth_service = providers.Resource(
+    auth_service = providers.Factory(
         LocalAuthService, auth_container.container.security_client
     )
 
