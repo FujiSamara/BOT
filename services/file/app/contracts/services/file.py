@@ -6,7 +6,9 @@ from app.schemas.file import FileInSchema, FileConfirmSchema, LinkSchema
 
 class FileService(BaseService):
     @abstractmethod
-    async def create_put_link(self, file: FileInSchema) -> LinkSchema:
+    async def create_put_link(
+        self, file: FileInSchema, expiration: int = 3600
+    ) -> LinkSchema:
         """Create presigned url for putting file.
         Create metadata for file with `confirmed=False`.
         Raises:
@@ -16,7 +18,7 @@ class FileService(BaseService):
         """
 
     @abstractmethod
-    async def create_get_link(self, id: int) -> LinkSchema:
+    async def create_get_link(self, id: int, expiration: int = 3600) -> LinkSchema:
         """Create presigned url for getting file.
         Raises:
             KeyError: if file with specified `id` not exists.

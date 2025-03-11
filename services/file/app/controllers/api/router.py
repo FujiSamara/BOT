@@ -21,6 +21,7 @@ router = APIRouter()
 @inject
 async def create_put_link(
     file: FileInSchema,
+    expiration: int = 3600,
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
@@ -29,7 +30,7 @@ async def create_put_link(
 ) -> LinkSchema:
     """Creates presigned url for putting file with specified meta."""
     try:
-        link = await file_service.create_put_link(file)
+        link = await file_service.create_put_link(file, expiration)
     except KeyError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return link
@@ -42,6 +43,7 @@ async def create_put_link(
 @inject
 async def create_get_link(
     id: int,
+    expiration: int = 3600,
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
@@ -50,7 +52,7 @@ async def create_get_link(
 ) -> LinkSchema:
     """Creates presigned url for getting file with specified meta."""
     try:
-        link = await file_service.create_get_link(id)
+        link = await file_service.create_get_link(id, expiration)
     except KeyError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return link
