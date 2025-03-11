@@ -22,11 +22,6 @@ class FileInSchema(BaseSchema):
     )
 
 
-class LinkSchema(BaseSchema):
-    id: int
-    url: str
-
-
 class FileConfirmSchema(BaseSchema):
     key: str
     bucket: str

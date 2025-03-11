@@ -1,14 +1,15 @@
 from abc import abstractmethod
 
 from common.contracts.services import BaseService
-from app.schemas.file import FileInSchema, FileConfirmSchema, LinkSchema
+from app.schemas.file import FileInSchema, FileConfirmSchema
+from common.schemas.file import FileLinkSchema
 
 
 class FileService(BaseService):
     @abstractmethod
     async def create_put_link(
         self, file: FileInSchema, expiration: int = 3600
-    ) -> LinkSchema:
+    ) -> FileLinkSchema:
         """Create presigned url for putting file.
         Create metadata for file with `confirmed=False`.
         Raises:
@@ -18,7 +19,7 @@ class FileService(BaseService):
         """
 
     @abstractmethod
-    async def create_get_link(self, id: int, expiration: int = 3600) -> LinkSchema:
+    async def create_get_link(self, id: int, expiration: int = 3600) -> FileLinkSchema:
         """Create presigned url for getting file.
         Raises:
             KeyError: if file with specified `id` not exists.
