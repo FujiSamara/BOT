@@ -1,3 +1,4 @@
+from logging import Logger
 from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
 from dependency_injector.wiring import Provide, inject
 import json
@@ -60,6 +61,7 @@ async def create_get_link(
 async def s3_webhook(
     request: Request,
     file_service: FileService = Depends(Provide[Container.file_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
 ):
     """Webhook specified for vkcloud s3 events."""
     body = await request.body()
@@ -81,4 +83,5 @@ async def s3_webhook(
         try:
             await file_service.confirm_putting(file_confirm)
         except (ValueError, KeyError) as e:
+            logger.error(f"Error while confirmation file: {e}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
