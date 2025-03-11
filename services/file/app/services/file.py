@@ -1,6 +1,6 @@
 from datetime import datetime
 from app.contracts.services import FileService
-from common.contracts.clients import FileClient
+from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
 from app.schemas.file import FileCreateSchema, FileUpdateSchema, LinkSchema
 

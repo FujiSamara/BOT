@@ -1,7 +1,7 @@
 from mypy_boto3_s3 import ServiceResource
 
 from typing import AsyncContextManager, Callable
-from common.contracts.clients import FileClient
+from app.contracts.clients import FileClient
 
 
 class S3FileClient(FileClient):
