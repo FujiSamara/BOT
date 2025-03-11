@@ -3,10 +3,15 @@ from common.config import (
     NetworkSettings,
     LocalAuthSettings,
     RemoteAuthSettings,
+    FileSettings,
 )
 
 
 class Settings(
-    PostgreSQLSettings, NetworkSettings, LocalAuthSettings, RemoteAuthSettings
+    PostgreSQLSettings,
+    NetworkSettings,
+    LocalAuthSettings,
+    RemoteAuthSettings,
+    FileSettings,
 ):
     pass
