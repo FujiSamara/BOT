@@ -8,6 +8,6 @@ fastapi==0.115.3
 sqladmin==0.20.1
 itsdangerous==2.2.0
 alembic==1.15.1
-boto3==1.35.99
+boto3==1.37.1
 boto3-stubs[s3]
-aioboto3
+aioboto3==14.1.0
