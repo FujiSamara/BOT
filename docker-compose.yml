@@ -34,6 +34,22 @@ services:
     env_file:
       - .env
 
+  file:
+    container_name: fuji-file
+    build:
+      context: .
+      dockerfile: docker/file.Dockerfile
+      network: host
+
+    volumes:
+      - cert-dir:/var/www/certs:ro
+      - key-dir:/etc/keys
+
+    network_mode: "host"
+
+    env_file:
+      - ./services/file/.env
+
   server:
     container_name: bot-server
     build:

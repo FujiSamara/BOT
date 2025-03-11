@@ -18,6 +18,11 @@ jobs:
         run: npm run build
   build-core:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        services: ["services/core", "services/file", "common"] # Services
+
     steps:
       - uses: actions/checkout@v4
       - name: Install Python
@@ -25,13 +30,13 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        working-directory: services/core
+        working-directory: ${{ matrix.services }}
         run: |
           python -m pip install --upgrade pip
           pip install --no-cache-dir -r requirements.txt
           pip install --no-cache-dir ruff
       - name: Run Ruff
-        working-directory: services/core
+        working-directory: ${{ matrix.services }}
         run: |
           ruff check .
           ruff format --check .
