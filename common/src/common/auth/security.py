@@ -31,7 +31,10 @@ class PyJWTSecurityClient(SecurityClient):
     def parse_access_token(self, token):
         try:
             payload: dict = jwt.decode(
-                token, self._public_key, algorithms=self.algorithm
+                token,
+                self._public_key,
+                algorithms=self.algorithm,
+                options={"verify_exp": False},
             )
         except Exception:
             return
