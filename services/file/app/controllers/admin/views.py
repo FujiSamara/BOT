@@ -5,8 +5,8 @@ import app.infra.database.models as models
 
 class FileView(ModelView, model=models.File):
     can_export = False
-    can_edit = False
-    can_delete = False
+    can_edit = True
+    can_delete = True
     can_create = False
     name_plural = "Files"
 
@@ -20,5 +20,7 @@ class FileView(ModelView, model=models.File):
         models.File.created,
         models.File.confirmed,
     ]
+
+    form_columns = [models.File.confirmed]
 
     column_details_list = column_list
