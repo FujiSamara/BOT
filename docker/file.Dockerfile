@@ -11,10 +11,10 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel build
 
 
 # Building editable packages to wheel
-COPY ./common/python/requirements.txt ./common/requirements.txt
+COPY ./common/requirements.txt ./common/requirements.txt
 RUN pip wheel --no-cache-dir -r ./common/requirements.txt -w /build/wheels
 
-COPY ./common/python ./common
+COPY ./common ./common
 RUN cd common && python -m build && cd ..
 
 # Building service requirements to wheel

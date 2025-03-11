@@ -43,6 +43,7 @@ services:
 
     volumes:
       - cert-dir:/var/www/certs:ro
+      - key-dir:/etc/keys
 
     network_mode: "host"
 
