@@ -371,7 +371,7 @@ class WorkerBidCoordinationFactory:
             InputMediaDocument(
                 media=BufferedInputFile(
                     file=zip_manager.create_zip(),
-                    filename=f"Документы_{bid.f_name}_{bid.l_name[0]}_{bid.o_name[0] or 'о'}.zip",
+                    filename=f"Документы_{bid.l_name}_{bid.f_name[0]}_{bid.o_name[0] or 'о'}.zip",
                 )
             )
         ]
