@@ -91,8 +91,8 @@ async def got_records(
     records: list = data["Records"]
 
     for record in records:
-        event_name = record["eventName"]
-        if event_name != "s3:ObjectCreated:Put":
+        event_name: str = record["eventName"]
+        if "s3:ObjectCreated" not in event_name:
             continue
 
         s3 = record["s3"]
