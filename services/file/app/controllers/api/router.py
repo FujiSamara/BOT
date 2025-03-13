@@ -1,7 +1,16 @@
 from logging import Logger
-from fastapi import APIRouter, Depends, HTTPException, Request, Security, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Security,
+    status,
+)
 from dependency_injector.wiring import Provide, inject
 import json
+import hmac
+import hashlib
 
 from common.schemas.client_credential import ClientCredentials
 from app.container import Container
@@ -60,15 +69,25 @@ async def create_get_link(
 
 
 @router.post("/s3_webhook")
-@inject
 async def s3_webhook(
     request: Request,
-    file_service: FileService = Depends(Provide[Container.file_service]),
-    logger: Logger = Depends(Provide[Container.logger]),
 ):
     """Webhook specified for vkcloud s3 events."""
     body = await request.body()
     data = json.loads(body)
+
+    if "Type" in data:
+        return await confirm_subscription(request)
+    else:
+        return await got_records(data)
+
+
+@inject
+async def got_records(
+    data: dict,
+    file_service: FileService = Provide[Container.file_service],
+    logger: Logger = Provide[Container.logger],
+):
     records: list = data["Records"]
 
     for record in records:
@@ -88,3 +107,33 @@ async def s3_webhook(
         except (ValueError, KeyError) as e:
             logger.error(f"Error while confirmation file: {e}")
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@inject
+async def confirm_subscription(
+    request: Request,
+    config=Provide[Container.config],
+):
+    method = hashlib.sha256
+
+    def hmacsha256(message: bytes, secret: bytes) -> bytes:
+        return hmac.new(secret, message, method).digest()
+
+    def hmacsha256hex(message: bytes, secret: bytes) -> str:
+        return hmac.new(secret, message, method).hexdigest()
+
+    body = await request.body()
+    data = json.loads(body)
+    url = config["url"] + request.url.path
+    return {
+        "signature": hmacsha256hex(
+            url.encode(),
+            hmacsha256(
+                data["TopicArn"].encode(),
+                hmacsha256(
+                    data["Timestamp"].encode(),
+                    data["Token"].encode(),
+                ),
+            ),
+        )
+    }

@@ -9,3 +9,5 @@ class NetworkSettings(BaseSettings):
     ssl_certfile: str | None = Field(validation_alias="SSL_CERTFILE", default=None)
 
     root_path: str | None = Field(validation_alias="ROOT_PATH", default="")
+
+    url: str = Field(validation_alias="URL")
