@@ -1,13 +1,13 @@
-from uuid import UUID
-
-from app.infra.database.database import Base
 from sqlalchemy import ForeignKey, CheckConstraint, BigInteger, Enum, String
 from fastapi_storages.integrations.sqlalchemy import FileType
 from sqlalchemy.orm import mapped_column, Mapped, relationship
 from typing import Annotated, List, Optional
+from uuid import UUID
 import datetime
-from app.infra.config import settings
 import enum
+
+from app.infra.database.database import Base, strpk
+from app.infra.config import settings
 
 
 class ApprovalStatus(enum.Enum):
@@ -1189,3 +1189,10 @@ class FingerprintAttempt(Base):
     worker_finger_or_card: Mapped[str] = mapped_column(nullable=False)
     department: Mapped[str] = mapped_column(nullable=False)
     event_dttm: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+
+class AuthClient(Base):
+    __tablename__ = "auth_clients"
+
+    id: strpk
+    secret: Mapped[str] = mapped_column(nullable=False)

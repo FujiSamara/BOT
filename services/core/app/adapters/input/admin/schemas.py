@@ -24,6 +24,7 @@ from app.infra.database.models import (
     FingerprintAttempt,
     WorkerDocument,
     WorkerChildren,
+    AuthClient,
 )
 from app.adapters.input.admin.converters import (
     TechnicalRequestConverter,
@@ -1216,3 +1217,13 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
     column_searchable_list = [
         FingerprintAttempt.department,
     ]
+
+
+class AuthView(ModelView, model=AuthClient):
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+    column_list = [AuthClient.id, AuthClient.secret]
+    column_details_list = column_list
+    form_columns = column_list
