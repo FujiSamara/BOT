@@ -431,6 +431,13 @@ class TimeSheetSchema(BaseSchemaPK):
         return data
 
 
+class AuthClientSchema(BaseSchema):
+    id: str
+    secret: str
+
+    scopes: list[str]
+
+
 # endregion
 
 
