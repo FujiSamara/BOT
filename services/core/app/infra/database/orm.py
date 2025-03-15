@@ -2949,10 +2949,12 @@ def get_all_history_technical_requests_territorial_director(
         ]
 
 
-def get_auth_client_by_id(id: int) -> AuthClientSchema | None:
+def get_auth_client_by_id(id: str) -> AuthClientSchema | None:
     with session.begin() as s:
         raw_client = (
-            s.execute(select(AuthClient).filter(AuthClient.id == id)).scalars().first()
+            s.execute(select(AuthClient).filter(AuthClient.client_id == id))
+            .scalars()
+            .first()
         )
         if raw_client is None:
             return None

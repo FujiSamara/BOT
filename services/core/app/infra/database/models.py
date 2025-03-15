@@ -1201,6 +1201,9 @@ class AuthClient(Base):
         "AuthClientScope", back_populates="client"
     )
 
+    def __str__(self) -> str:
+        return self.client_id
+
 
 class AuthClientScope(Base):
     __tablename__ = "auth_client_scopes"

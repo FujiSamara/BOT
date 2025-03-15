@@ -1220,7 +1220,7 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
     ]
 
 
-class AuthView(ModelView, model=AuthClient):
+class AuthClientView(ModelView, model=AuthClient):
     can_create = True
     can_edit = True
     can_delete = True
@@ -1229,8 +1229,12 @@ class AuthView(ModelView, model=AuthClient):
     column_details_list = column_list
     form_columns = column_list
 
+    async def on_model_change(self, data: dict, model: AuthClient, is_created, request):
+        if "secret" in data and data["secret"] != model.secret:
+            data["secret"] = encrypt_password(data["secret"])
 
-class AuthScopeView(ModelView, model=AuthClientScope):
+
+class AuthClientScopeView(ModelView, model=AuthClientScope):
     can_create = True
     can_edit = True
     can_delete = True
@@ -1238,3 +1242,10 @@ class AuthScopeView(ModelView, model=AuthClientScope):
     column_list = [AuthClientScope.client, AuthClientScope.name]
     column_details_list = column_list
     form_columns = column_list
+
+    form_ajax_refs = {
+        "client": {
+            "fields": ("client_id",),
+            "order_by": "client_id",
+        },
+    }
