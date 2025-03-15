@@ -1,7 +1,6 @@
 from pathlib import Path
 from datetime import datetime
 from fastapi import UploadFile
-from typing import Any
 
 from app.infra.logging import logger
 
@@ -31,9 +30,10 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
     BidViewMode,
 )
 
+# Right order
 states = {
-    "security_service_state",
     "accounting_service_state",
+    "security_service_state",
     "iiko_service_state",
 }
 
@@ -207,7 +207,7 @@ async def update_worker_bid_bot(
     bid_id,
     state_column_name: str,
     state: ApprovalStatus,
-    comment: Any,
+    comment: str | int,
 ) -> bool:
     """
     Updates worker bid state and comment to specified `state` by `bid_id` if bid exist.
@@ -233,20 +233,20 @@ async def update_worker_bid_bot(
         worker_bid.close_date = datetime.now()
 
     match state_column_name:
-        case "security_service":
-            stage = "службой безопасности"
-            worker_bid.security_service_state = state
-            worker_bid.security_service_comment = comment
-            if state == ApprovalStatus.approved:
-                worker_bid.accounting_service_state = ApprovalStatus.pending_approval
-            else:
-                worker_bid.accounting_service_state = ApprovalStatus.skipped
-                worker_bid.iiko_service_state = ApprovalStatus.skipped
-
         case "accounting_service":
             stage = "бухгалтерией"
             worker_bid.accounting_service_state = state
             worker_bid.accounting_service_comment = comment
+            if state == ApprovalStatus.approved:
+                worker_bid.security_service_state = ApprovalStatus.pending_approval
+            else:
+                worker_bid.security_service_state = ApprovalStatus.skipped
+                worker_bid.iiko_service_state = ApprovalStatus.skipped
+
+        case "security_service":
+            stage = "службой безопасности"
+            worker_bid.security_service_state = state
+            worker_bid.security_service_comment = comment
             if state == ApprovalStatus.approved:
                 worker_bid.iiko_service_state = ApprovalStatus.pending_approval
             else:
@@ -255,11 +255,15 @@ async def update_worker_bid_bot(
         case "iiko_service":
             stage = "iiko"
             worker_bid.iiko_service_state = state
-            worker_bid.iiko_worker_id = comment
 
-            worker_bid.close_date = datetime.now()
-            worker_bid.state = state
-            worker_bid.comment = worker_bid.accounting_service_comment
+            if state == ApprovalStatus.approved:
+                worker_bid.iiko_worker_id = comment
+                worker_bid.close_date = datetime.now()
+                worker_bid.state = state
+                worker_bid.comment = worker_bid.accounting_service_comment
+            else:
+                worker_bid.comment = comment
+
         case _:
             logger.error("State for worker bid not found")
 
@@ -414,8 +418,8 @@ async def create_worker_bid(
         create_date=datetime.now(),
         state=ApprovalStatus.pending_approval,
         view_state=ViewStatus.pending_approval,
-        security_service_state=ApprovalStatus.pending_approval,
-        accounting_service_state=ApprovalStatus.pending,
+        accounting_service_state=ApprovalStatus.pending_approval,
+        security_service_state=ApprovalStatus.pending,
         iiko_service_state=ApprovalStatus.pending,
         security_service_comment=None,
         accounting_service_comment=None,
@@ -433,10 +437,10 @@ async def create_worker_bid(
 
 
 def get_pending_approval_bids(
-    state_column, limit: int = 20
+    state_column, limit: int = 20, offset: int = 0
 ) -> list[WorkerBidSchema] | None:
     return orm.find_worker_bids_by_column(
-        state_column, ApprovalStatus.pending_approval, limit=limit
+        state_column, ApprovalStatus.pending_approval, limit=limit, offset=offset
     )
 
 
