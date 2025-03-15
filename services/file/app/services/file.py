@@ -2,7 +2,8 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema, LinkSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema
+from common.schemas.file import FileLinkSchema
 
 
 class FileServiceImpl(FileService):
@@ -27,7 +28,7 @@ class FileServiceImpl(FileService):
 
         return None
 
-    async def create_put_link(self, file):
+    async def create_put_link(self, file, expiration=3600):
         bucket = await self._find_free_bucket(file.key)
         if bucket is None:
             raise KeyError(f"File {file.key} exists in each bucket.")
@@ -50,18 +51,18 @@ class FileServiceImpl(FileService):
                 confirmed=False,
             )
             file = await uow.file.create(file_create)
-            url = await self._file_client.create_put_link(bucket, file.key)
+            url = await self._file_client.create_put_link(bucket, file.key, expiration)
 
-            return LinkSchema(id=file.id, url=url)
+            return FileLinkSchema(id=file.id, url=url)
 
-    async def create_get_link(self, id: int):
+    async def create_get_link(self, id: int, expiration=3600):
         async with self._file_uow as uow:
             file = await uow.file.get_by_id(id)
             if file is None:
                 raise KeyError(f"File {id} not exists.")
 
-        url = await self._file_client.create_get_link(file.bucket, file.key)
-        return LinkSchema(id=file.id, url=url)
+        url = await self._file_client.create_get_link(file.bucket, file.key, expiration)
+        return FileLinkSchema(id=file.id, url=url)
 
     async def confirm_putting(self, file_confirm):
         async with self._file_uow as uow:
