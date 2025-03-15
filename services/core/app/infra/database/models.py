@@ -6,7 +6,7 @@ from uuid import UUID
 import datetime
 import enum
 
-from app.infra.database.database import Base, strpk
+from app.infra.database.database import Base
 from app.infra.config import settings
 
 
@@ -1194,5 +1194,20 @@ class FingerprintAttempt(Base):
 class AuthClient(Base):
     __tablename__ = "auth_clients"
 
-    id: strpk
+    client_id: Mapped[str] = mapped_column(nullable=False, index=True)
     secret: Mapped[str] = mapped_column(nullable=False)
+
+    scopes: Mapped[list["AuthClientScope"]] = relationship(
+        "AuthClientScope", back_populates="client"
+    )
+
+
+class AuthClientScope(Base):
+    __tablename__ = "auth_client_scopes"
+
+    client_id: Mapped[int] = mapped_column(ForeignKey("auth_clients.id"))
+    client: Mapped["AuthClient"] = relationship(
+        "AuthClient", back_populates="scopes", foreign_keys=[client_id]
+    )
+
+    name: Mapped[str] = mapped_column(nullable=False)

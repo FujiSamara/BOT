@@ -46,6 +46,7 @@ from app.infra.database.models import (
     WorkerDocument,
     WorkerBidDocumentRequest,
     ViewStatus,
+    AuthClient,
 )
 from app.schemas import (
     BidSchema,
@@ -72,6 +73,7 @@ from app.schemas import (
     MaterialValuesSchema,
     CompanySchema,
     WorkerBidDocumentRequestSchema,
+    AuthClientSchema,
 )
 
 
@@ -2945,3 +2947,20 @@ def get_all_history_technical_requests_territorial_director(
             TechnicalRequestSchema.model_validate(raw_request)
             for raw_request in raw_requests
         ]
+
+
+def get_auth_client_by_id(id: int) -> AuthClientSchema | None:
+    with session.begin() as s:
+        raw_client = (
+            s.execute(select(AuthClient).filter(AuthClient.id == id)).scalars().first()
+        )
+        if raw_client is None:
+            return None
+
+        client = {
+            "id": raw_client.client_id,
+            "secret": raw_client.secret,
+            "scopes": [scope.name for scope in raw_client.scopes],
+        }
+
+        return AuthClientSchema.model_validate(client)
