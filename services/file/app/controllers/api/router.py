@@ -35,7 +35,7 @@ async def create_put_link(
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
-        scopes=[Scopes.FileRead.value],
+        scopes=[Scopes.FileWrite.value],
     ),
 ) -> FileLinkSchema:
     """Creates presigned url for putting file with specified meta."""
