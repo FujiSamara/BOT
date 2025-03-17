@@ -22,8 +22,8 @@ const loadPanels = () => {
 
 	if (grantedLinks.length === 0) {
 		grantedLinks.push({
-			label: "Гость",
-			routeName: "table-default",
+			label: "Нет панелей",
+			routeName: "default",
 			iconURL: "/img/logout.svg",
 			active: false,
 		});

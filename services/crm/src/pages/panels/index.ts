@@ -114,8 +114,9 @@ const tables: Array<TableData> = [
 		accesses: [Access.ArchiveBid],
 	},
 ];
+const knowledge: Array<PanelData> = [];
 
-const panels: Array<PanelData> = [...tables];
+const panels: Array<PanelData> = [...knowledge];
 
 function getByAccesses<T extends PanelData>(
 	accesses: Array<Access>,

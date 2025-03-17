@@ -14,15 +14,8 @@ const routes = [
 			{
 				name: "tables",
 				path: "tables",
-				component: async () =>
-					await import("@/pages/panels/TablePanelsPage.vue"),
+				component: async () => await import("@/pages/panels/TablePanels.vue"),
 				children: [
-					{
-						name: "table-default",
-						path: "default",
-						component: async () =>
-							await import("@/pages/panels/DefaultPanel.vue"),
-					},
 					{
 						name: "table-expenditures",
 						path: "expenditures",
@@ -96,6 +89,11 @@ const routes = [
 							await import("@/pages/panels/bid/subpanels/ArchiveBidPanel.vue"),
 					},
 				],
+			},
+			{
+				name: "default",
+				path: "default",
+				component: async () => await import("@/pages/panels/DefaultPanel.vue"),
 			},
 		],
 	},
