@@ -9,6 +9,7 @@ import {
 	FACAndCCBidTable,
 	MyBidTable,
 	ParalegalBidTable,
+	ArchiveBidTable,
 } from "@/pages/panels/bid";
 
 const panels: Array<PanelData> = [
@@ -109,7 +110,7 @@ const panels: Array<PanelData> = [
 		iconURL: "/img/coins.svg",
 		active: false,
 		name: "archivebid",
-		create: BidTable,
+		create: ArchiveBidTable,
 		accesses: [Access.ArchiveBid],
 	},
 ];
