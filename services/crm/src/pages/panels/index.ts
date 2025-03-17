@@ -1,4 +1,4 @@
-import { Access, PanelData } from "@types";
+import { Access, PanelData, TableData } from "@types";
 import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
@@ -12,7 +12,7 @@ import {
 	ArchiveBidTable,
 } from "@/pages/panels/bid";
 
-const panels: Array<PanelData> = [
+const tables: Array<TableData> = [
 	{
 		label: "Статьи",
 		routeName: "table-expenditures",
@@ -115,8 +115,13 @@ const panels: Array<PanelData> = [
 	},
 ];
 
-export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
-	const result: Array<PanelData> = [];
+const panels: Array<PanelData> = [...tables];
+
+function getByAccesses<T extends PanelData>(
+	accesses: Array<Access>,
+	panels: Array<T>,
+): Array<T> {
+	const result: Array<T> = [];
 
 	for (let j = 0; j < panels.length; j++) {
 		const panel = panels[j];
@@ -148,4 +153,12 @@ export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 	}
 
 	return result;
+}
+
+export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
+	return getByAccesses(accesses, panels);
+}
+
+export function getTablesByAccesses(accesses: Array<Access>): Array<TableData> {
+	return getByAccesses(accesses, tables);
 }

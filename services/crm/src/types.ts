@@ -14,16 +14,19 @@ export interface LinkData {
 	query?: LocationQueryRaw;
 }
 
+export interface PanelData extends LinkData {
+	name: string;
+	accesses: Access[];
+}
+
+export interface TableData extends PanelData {
+	create: { new (): Table<BaseSchema> };
+	withUpdatingLoop?: boolean;
+}
+
 export interface RouteData {
 	router: Router;
 	route: RouteLocationNormalizedLoaded<any>;
-}
-
-export interface PanelData extends LinkData {
-	accesses: Access[];
-	name: string;
-	create: { new (): Table<BaseSchema> };
-	withUpdatingLoop?: boolean;
 }
 
 export interface Token {

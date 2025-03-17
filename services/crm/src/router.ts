@@ -9,6 +9,7 @@ import { useNetworkStore } from "@/store/network";
 const routes = [
 	{
 		path: "/crm",
+		component: async () => await import("@/pages/MainPage.vue"),
 		children: [
 			{
 				name: "tables",
@@ -95,38 +96,35 @@ const routes = [
 					},
 				],
 			},
-			{
-				path: "guest",
-				redirect: (to: RouteLocation): RouteLocationRaw => {
-					if (
-						to.query.token === undefined ||
-						to.query.token_type === undefined
-					) {
-						return { name: "login" };
-					}
-
-					const network = useNetworkStore();
-					network.setCredentials(
-						to.query.token as string,
-						to.query.token_type as string,
-					);
-
-					to.query = {};
-
-					return { name: "home" };
-				},
-			},
-			{
-				name: "login",
-				path: "login",
-				component: async () => await import("@/pages/AuthPage.vue"),
-			},
-			{
-				name: "logout",
-				path: "/logout",
-				component: () => {},
-			},
 		],
+	},
+	{
+		path: "/guest",
+		redirect: (to: RouteLocation): RouteLocationRaw => {
+			if (to.query.token === undefined || to.query.token_type === undefined) {
+				return { name: "login" };
+			}
+
+			const network = useNetworkStore();
+			network.setCredentials(
+				to.query.token as string,
+				to.query.token_type as string,
+			);
+
+			to.query = {};
+
+			return { name: "home" };
+		},
+	},
+	{
+		name: "login",
+		path: "/login",
+		component: async () => await import("@/pages/AuthPage.vue"),
+	},
+	{
+		name: "logout",
+		path: "/logout",
+		component: () => {},
 	},
 ];
 

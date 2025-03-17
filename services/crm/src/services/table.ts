@@ -46,7 +46,6 @@ export class TableService {
 
 	private async setRowsCount() {
 		const tableHeight = await this.measureTableHeight();
-
 		if (!tableHeight) {
 			return;
 		}
