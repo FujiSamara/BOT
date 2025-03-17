@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives import serialization
 
 class RemoteAuthSettings(BaseSettings):
     auth_url: str = Field(validation_alias="AUTH_URL")
-    external_client_id: str = Field(validation_alias="EXTERNAL_CLIENT_ID")
+    client_id: str = Field(validation_alias="CLIENT_ID")
     client_secret: str = Field(validation_alias="CLIENT_SECRET")
     with_auth_ssl: bool = Field(validation_alias="WITH_AUTH_SSL", default=True)
 

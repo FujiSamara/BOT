@@ -8,9 +8,10 @@ from calendar import timegm
 from pydantic import ValidationError
 
 from app.infra.database.models import FujiScope
-from app.schemas import WorkerSchema
+from app.schemas import WorkerSchema, AuthClientSchema
 from app.infra.config import settings
 from app import services
+from app.services import auth_client
 
 from app.adapters.input.api.auth.schemas import TokenData, User, UserWithScopes
 from app.adapters.input.api.auth.permissions import _oauth2_schema, _to_auth_scope
@@ -21,18 +22,22 @@ def encrypt_password(password: str) -> str:
     return sha256(password.encode()).hexdigest()
 
 
-def refresh_token(user: str | WorkerSchema) -> str | None:
+def refresh_token(client: str | WorkerSchema | AuthClientSchema) -> str | None:
     """Grants token for exist user.
 
     :return: created token."""
-    if isinstance(user, str):
-        user = services.get_worker_by_phone_number(user)
+    if isinstance(client, str):
+        client = services.get_worker_by_phone_number(client)
 
-    if not user:
+    if not client:
         return None
 
-    username = user.phone_number
-    scopes = [_to_auth_scope(fuji_scope) for fuji_scope in user.post.scopes]
+    username = client.phone_number if isinstance(client, WorkerSchema) else client.id
+    scopes = []
+    if isinstance(client, WorkerSchema):
+        scopes = [_to_auth_scope(fuji_scope) for fuji_scope in client.post.scopes]
+    else:
+        scopes = client.scopes
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     return create_access_token(
         data={
@@ -47,8 +52,28 @@ def refresh_token(user: str | WorkerSchema) -> str | None:
     )
 
 
-def authorize_user(username: str, password: str) -> str | None:
-    """Authenticates user by his `username` and `password`.
+def authorize(username: str, password: str) -> str | None:
+    """Authorize user or client by his `username` and `password`.
+    Returns:
+        Access token if `username` and `password` is correct,
+        `None` otherwise.
+    """
+    client = auth_client.get_client_by_id(username)
+    if client is not None:
+        return _authorize_client(client, password)
+
+    return _authorize_user(username, password)
+
+
+def _authorize_client(client: AuthClientSchema, secret: str) -> str | None:
+    if encrypt_password(secret) != client.secret:
+        return
+
+    return refresh_token(client)
+
+
+def _authorize_user(username: str, password: str) -> str | None:
+    """Authenticates user/client by his `username` and `password`.
 
     :return: access token for user if `username` and `password` correct,
     `None` otherwise."""

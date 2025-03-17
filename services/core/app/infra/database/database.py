@@ -9,6 +9,7 @@ engine = create_engine(settings.psql_dsn)
 session = sessionmaker(engine)
 
 intpk = Annotated[int, mapped_column(primary_key=True)]
+strpk = Annotated[str, mapped_column(primary_key=True)]
 
 
 class Base(DeclarativeBase):

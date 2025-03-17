@@ -24,6 +24,8 @@ from app.infra.database.models import (
     FingerprintAttempt,
     WorkerDocument,
     WorkerChildren,
+    AuthClient,
+    AuthClientScope,
 )
 from app.adapters.input.admin.converters import (
     TechnicalRequestConverter,
@@ -1216,3 +1218,34 @@ class FingerprintAttemptView(ModelView, model=FingerprintAttempt):
     column_searchable_list = [
         FingerprintAttempt.department,
     ]
+
+
+class AuthClientView(ModelView, model=AuthClient):
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+    column_list = [AuthClient.client_id, AuthClient.secret]
+    column_details_list = column_list
+    form_columns = column_list
+
+    async def on_model_change(self, data: dict, model: AuthClient, is_created, request):
+        if "secret" in data and data["secret"] != model.secret:
+            data["secret"] = encrypt_password(data["secret"])
+
+
+class AuthClientScopeView(ModelView, model=AuthClientScope):
+    can_create = True
+    can_edit = True
+    can_delete = True
+
+    column_list = [AuthClientScope.client, AuthClientScope.name]
+    column_details_list = column_list
+    form_columns = column_list
+
+    form_ajax_refs = {
+        "client": {
+            "fields": ("client_id",),
+            "order_by": "client_id",
+        },
+    }
