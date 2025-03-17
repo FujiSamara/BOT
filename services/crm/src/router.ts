@@ -14,7 +14,8 @@ const routes = [
 			{
 				name: "tables",
 				path: "tables",
-				component: async () => await import("@/pages/TablePanelsPage.vue"),
+				component: async () =>
+					await import("@/pages/panels/TablePanelsPage.vue"),
 				children: [
 					{
 						name: "table-default",
