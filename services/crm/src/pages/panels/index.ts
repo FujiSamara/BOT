@@ -123,6 +123,14 @@ const knowledge: Array<PanelData> = [
 		name: "product",
 		accesses: [Access.Authed],
 	},
+	{
+		label: "Закупки",
+		routeName: "knowledge-purchases",
+		iconURL: "/img/bag.svg",
+		active: false,
+		name: "purchases",
+		accesses: [Access.Authed],
+	},
 ];
 
 const panels: Array<PanelData> = [...knowledge];

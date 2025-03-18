@@ -9,6 +9,7 @@ import { useNetworkStore } from "@/store/network";
 const routes = [
 	{
 		path: "/crm",
+		name: "main",
 		component: async () => await import("@/pages/MainPage.vue"),
 		children: [
 			{
@@ -99,13 +100,19 @@ const routes = [
 				name: "knowledge",
 				path: "knowledge",
 				component: async () =>
-					await import("@/pages/panels/KnowledgePanels.vue"),
+					await import("@/pages/panels/KnowledgePanel.vue"),
 				children: [
 					{
 						name: "knowledge-product",
-						path: "product",
+						path: "product/:pathMatch(.*)*",
 						component: async () =>
-							await import("@/pages/panels/knowledge/ProductPanel.vue"),
+							await import("@/pages/panels/KnowledgePanel.vue"),
+					},
+					{
+						name: "knowledge-purchases",
+						path: "purchases/:pathMatch(.*)*",
+						component: async () =>
+							await import("@/pages/panels/KnowledgePanel.vue"),
 					},
 				],
 			},
@@ -139,6 +146,10 @@ const routes = [
 		path: "/logout",
 		component: () => {},
 	},
+	{
+		path: "/:pathMatch(.*)*",
+		redirect: "/crm",
+	},
 ];
 
 const router = createRouter({
@@ -151,16 +162,11 @@ router.beforeEach(async (to, _, next) => {
 	const authed = networkStore.authorized || (await networkStore.auth());
 
 	if (authed) {
-		if (to.name === "login") {
-			next({ name: "tables" });
-		} else {
-			if (to.name === "logout") {
-				networkStore.logout();
-				next({ name: "login" });
-			} else {
-				next();
-			}
+		if (to.name === "logout") {
+			networkStore.logout();
+			next({ name: "login" });
 		}
+		next();
 	} else {
 		if (to.name === "login") {
 			next();
