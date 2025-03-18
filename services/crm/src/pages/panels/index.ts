@@ -114,7 +114,16 @@ const tables: Array<TableData> = [
 		accesses: [Access.ArchiveBid],
 	},
 ];
-const knowledge: Array<PanelData> = [];
+const knowledge: Array<PanelData> = [
+	{
+		label: "Продукт",
+		routeName: "knowledge-product",
+		iconURL: "/img/product.svg",
+		active: false,
+		name: "product",
+		accesses: [Access.Authed],
+	},
+];
 
 const panels: Array<PanelData> = [...knowledge];
 

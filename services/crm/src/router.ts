@@ -95,6 +95,20 @@ const routes = [
 				path: "default",
 				component: async () => await import("@/pages/panels/DefaultPanel.vue"),
 			},
+			{
+				name: "knowledge",
+				path: "knowledge",
+				component: async () =>
+					await import("@/pages/panels/KnowledgePanels.vue"),
+				children: [
+					{
+						name: "knowledge-product",
+						path: "product",
+						component: async () =>
+							await import("@/pages/panels/knowledge/ProductPanel.vue"),
+					},
+				],
+			},
 		],
 	},
 	{
