@@ -17,6 +17,97 @@ export interface KnowledgeChapter extends KnowledgeDivision {
 	childrenCount: number;
 }
 
+const mockDivision: KnowledgeChapter = {
+	id: 1,
+	type: "chapter",
+	title: "Продукт",
+	filesCount: 30,
+	path: "product",
+	childrenCount: 4,
+	children: [
+		{
+			id: 2,
+			type: "chapter",
+			title: "Стандарты",
+			path: "standarts",
+			filesCount: 20,
+			childrenCount: 2,
+			children: [
+				{
+					id: 3,
+					type: "chapter",
+					title: "Фото стандарта блюд",
+					path: "photos",
+					filesCount: 20,
+					childrenCount: 2,
+					children: [
+						{
+							id: 7,
+							type: "card",
+							title: "Mac&Cheese",
+							path: "maccheese",
+							filesCount: 20,
+						},
+						{
+							id: 8,
+							type: "card",
+							title: "Роллы",
+							path: "rolls",
+							filesCount: 20,
+						},
+						{
+							id: 9,
+							type: "card",
+							title: "Салаты",
+							path: "salads",
+							filesCount: 20,
+						},
+					],
+				},
+				{
+					id: 4,
+					type: "card",
+					title: "Стандарты приготовления",
+					path: "cooking-standarts",
+					filesCount: 20,
+				},
+				{
+					id: 5,
+					type: "chapter",
+					title: "Пособие для кухни",
+					path: "kitchen",
+					filesCount: 20,
+					childrenCount: 3,
+					children: [
+						{
+							id: 6,
+							type: "chapter",
+							title: "Test",
+							path: "test",
+							filesCount: 20,
+							childrenCount: 0,
+							children: [],
+						},
+					],
+				},
+			],
+		},
+	],
+};
+
+const getMockDivision = (
+	path: string[],
+	divisions: KnowledgeDivision[],
+): KnowledgeDivision | undefined => {
+	const div = divisions.find((val) => val.path === path[0]);
+	if (div === undefined) return;
+
+	if (path.length === 1) return div;
+	if (div.type === "card") return;
+
+	return getMockDivision(path.slice(1), (div as KnowledgeChapter).children);
+};
+
 export class KnowledgeController {
 	private _division: Ref<KnowledgeDivision | undefined> = ref(undefined);
 
@@ -25,139 +116,7 @@ export class KnowledgeController {
 	constructor() {}
 
 	public async loadDivision(path: string[]) {
-		const children = [
-			{
-				id: 1,
-				type: "chapter",
-				title: "Фото стандарты блюд",
-				children: [
-					{
-						id: 1,
-						type: "chapter",
-						title: "Фото стандарты блюд",
-						children: [],
-						path: "",
-						filesCount: 20,
-						childrenCount: 3,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Test_2",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-					{
-						id: 1,
-						type: "card",
-						title: "Тест",
-						filesCount: 20,
-					},
-				],
-				path: "",
-				filesCount: 20,
-				childrenCount: 3,
-			},
-		];
-
-		this._division.value = {
-			id: 1,
-			type: "chapter",
-			title: "Стандарты",
-			filesCount: 20,
-			path: "Продукт / Стандарты",
-			children: [...children, ...children, ...children],
-			childrenCount: 2,
-		} as KnowledgeChapter;
+		this._division.value = getMockDivision(path, [mockDivision]);
 	}
 
 	public division = computed(() => this._division.value);

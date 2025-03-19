@@ -11,13 +11,19 @@ const props = defineProps({
 		required: true,
 	},
 });
+
+const emits = defineEmits<{
+	(e: "click", index: number): void;
+}>();
 </script>
 <template>
 	<div class="kn-chapter">
 		<span class="path">{{ props.chapter.path }}</span>
 		<SubDivision
-			v-for="subDivision in props.chapter.children"
+			v-for="(subDivision, index) in props.chapter.children"
+			:key="subDivision.id"
 			:sub-division="subDivision"
+			@click.stop="emits('click', index)"
 		></SubDivision>
 	</div>
 </template>

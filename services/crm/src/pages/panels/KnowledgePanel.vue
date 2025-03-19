@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, useId } from "vue";
+import { computed, onMounted, ref, useId, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
@@ -19,7 +19,7 @@ const onSearch = async (val: string) => {
 	searchValue.value = val;
 };
 
-onMounted(async () => {
+const loadDivision = async () => {
 	await router.isReady();
 
 	const path = route.path
@@ -27,6 +27,18 @@ onMounted(async () => {
 		.split("/")
 		.filter((v) => v);
 	await controller.loadDivision(path);
+};
+
+const subDivisionClicked = async (index: number) => {
+	const newPath = chapter.value.children[index].path;
+
+	const path = route.path + "/" + newPath;
+	await router.push(path);
+};
+
+watch(route, loadDivision);
+onMounted(async () => {
+	await loadDivision();
 });
 </script>
 <template>
@@ -44,6 +56,7 @@ onMounted(async () => {
 				<Chapter
 					v-if="controller.division.value.type === 'chapter'"
 					:chapter="chapter"
+					@click="subDivisionClicked"
 				></Chapter>
 				<Card v-else></Card>
 			</Transition>

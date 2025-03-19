@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PropType } from "vue";
+import { computed, PropType } from "vue";
 import { KnowledgeDivision, KnowledgeChapter } from "@/components/knowledge";
 
 const props = defineProps({
@@ -11,14 +11,16 @@ const props = defineProps({
 
 const asChapter = props.subDivision as KnowledgeChapter;
 const isChapter = props.subDivision.type === "chapter";
+
+const cards = computed(() =>
+	asChapter.children.filter((val) => val.type === "card"),
+);
 </script>
 <template>
 	<div class="sub-division">
 		<h2 class="title">{{ props.subDivision.title }}</h2>
-		<ul class="cards" v-if="isChapter && asChapter.children.length">
-			<li
-				v-for="card in asChapter.children.filter((val) => val.type === 'card')"
-			>
+		<ul class="cards" v-if="isChapter && cards.length">
+			<li v-for="card in cards">
 				{{ card.title }}
 			</li>
 		</ul>
