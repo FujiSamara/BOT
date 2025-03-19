@@ -43,6 +43,13 @@ const isChapter = props.subDivision.type === "chapter";
 	border-radius: 16px;
 	background-color: $bg-light-blue;
 
+	transition: background-color 0.25s;
+	cursor: default;
+
+	&:hover {
+		background-color: $bg-temp;
+	}
+
 	.title {
 		font-family: Wix Madefor Display;
 		font-weight: 600;
