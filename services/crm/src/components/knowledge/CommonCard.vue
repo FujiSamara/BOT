@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { PropType } from "vue";
-
-import DishCard from "@/components/knowledge/DishCard.vue";
-import CommonCard from "@/components/knowledge/CommonCard.vue";
-
 import { KnowledgeCard } from "@/components/knowledge";
 
 const props = defineProps({
@@ -14,7 +10,6 @@ const props = defineProps({
 });
 </script>
 <template>
-	<DishCard v-if="props.card.cardType === 'dish'" :card="props.card"></DishCard>
-	<CommonCard v-else :card="props.card"></CommonCard>
+	<div class="common-card">{{ props.card.title }}</div>
 </template>
 <style scoped lang="scss"></style>

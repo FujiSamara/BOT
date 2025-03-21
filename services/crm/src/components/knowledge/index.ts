@@ -10,7 +10,9 @@ export interface KnowledgeDivision extends BaseSchema {
 	path: string;
 }
 
-export interface KnowledgeCard extends KnowledgeDivision {}
+export interface KnowledgeCard extends KnowledgeDivision {
+	cardType: "dish" | "common";
+}
 
 export interface KnowledgeChapter extends KnowledgeDivision {
 	children: Array<KnowledgeChapter | KnowledgeCard>;
@@ -47,6 +49,7 @@ const mockDivision: KnowledgeChapter = {
 							title: "Mac&Cheese",
 							path: "maccheese",
 							filesCount: 20,
+							cardType: "dish",
 						},
 						{
 							id: 8,
@@ -54,6 +57,7 @@ const mockDivision: KnowledgeChapter = {
 							title: "Роллы",
 							path: "rolls",
 							filesCount: 20,
+							cardType: "dish",
 						},
 						{
 							id: 9,
@@ -61,6 +65,7 @@ const mockDivision: KnowledgeChapter = {
 							title: "Салаты",
 							path: "salads",
 							filesCount: 20,
+							cardType: "dish",
 						},
 					],
 				},
@@ -70,6 +75,7 @@ const mockDivision: KnowledgeChapter = {
 					title: "Стандарты приготовления",
 					path: "cooking-standarts",
 					filesCount: 20,
+					cardType: "common",
 				},
 				{
 					id: 5,
