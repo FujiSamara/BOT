@@ -6,6 +6,7 @@ from common.config import generate
 
 from app.container import Container
 from app.infra.config import Settings
+from app.controllers import api
 
 
 def create_lifespan(container: Container):
@@ -29,10 +30,12 @@ def create_app() -> FastAPI:
     container = Container(logger=logger)
     container.config.from_pydantic(settings)
 
-    container.wire(modules=[])
+    container.wire(modules=["app.controllers.api.router"])
 
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))
     app.container = container
+
+    app.mount("/api", api.create_api())
 
     return app
 
