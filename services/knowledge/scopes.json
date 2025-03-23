@@ -1,0 +1,8 @@
+{
+  "DivisionWrite": "knowledge:write",
+  "DivisionRead": "knowledge:read",
+  "CardWrite": "knowledge:write",
+  "CardRead": "knowledge:read",
+  "DishWrite": "knowledge:write",
+  "DishRead": "knowledge:read"
+}
