@@ -30,7 +30,7 @@ def create_app() -> FastAPI:
     container = Container(logger=logger)
     container.config.from_pydantic(settings)
 
-    container.wire(modules=["app.controllers.api.router"])
+    container.wire(modules=["app.controllers.api.routes.division"])
 
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))
     app.container = container
