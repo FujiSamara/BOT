@@ -1,5 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, UniqueConstraint
 
 from common.sql.orm import Base
 
@@ -33,6 +33,8 @@ class BusinessCard(Base):
     materials: Mapped[list["BusinessCardMaterial"]] = relationship(
         "BusinessCardMaterial"
     )
+
+    __table_args__ = (UniqueConstraint("name", "division_id"),)
 
 
 class BusinessCardMaterial(Base):
