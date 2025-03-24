@@ -25,7 +25,7 @@ async def get_division_by_path(
         Authorization,
         scopes=[Scopes.DivisionRead.value],
     ),
-) -> DivisionOutSchema:
+) -> DivisionOutSchema | None:
     try:
         return await service.get_division_by_path(path)
     except ValueError as e:

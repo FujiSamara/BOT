@@ -12,3 +12,9 @@ class CardRepository(BaseRepository):
     @abstractmethod
     async def get_by_division_id(self, id: int) -> list[BusinessCardSchema]:
         pass
+
+    @abstractmethod
+    async def get_by_division_id_with_name(
+        self, id: int, name: str
+    ) -> BusinessCardSchema | None:
+        pass

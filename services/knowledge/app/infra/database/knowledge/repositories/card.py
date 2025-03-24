@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
 
 from common.sql.repository import SQLBaseRepository
@@ -14,10 +14,23 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
     async def get_by_division_id(self, id):
         s = (
             select(BusinessCard)
-            .filter(BusinessCard.division_id == id)
+            .where(BusinessCard.division_id == id)
             .options(selectinload(BusinessCard.materials))
         )
 
         cards = (await self._session.execute(s)).scalars().all()
 
         return [converters.card_to_card_schema(c) for c in cards]
+
+    async def get_by_division_id_with_name(self, id, name):
+        s = (
+            select(BusinessCard)
+            .where(and_(BusinessCard.division_id == id, BusinessCard.name == name))
+            .options(selectinload(BusinessCard.materials))
+        )
+
+        card = (await self._session.execute(s)).scalars().first()
+        if card is None:
+            return None
+
+        return converters.card_to_card_schema(card)
