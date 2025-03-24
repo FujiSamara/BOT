@@ -27,3 +27,4 @@ def register_admin(
     )
     admin.add_view(views.DivisionView)
     admin.add_view(views.BusinessCardView)
+    admin.add_view(views.DishDisionView)

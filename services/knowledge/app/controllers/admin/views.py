@@ -53,13 +53,11 @@ class BusinessCardView(ModelView, model=models.BusinessCard):
     }
 
 
-class DishVisionView(ModelView, model=models.DishDivision):
+class DishDisionView(ModelView, model=models.DishDivision):
     can_export = False
     can_edit = True
     can_delete = True
     can_create = True
-    name_plural = "Бизнес карты"
-    name = "Карта"
 
     column_list = [
         models.DishDivision.id,
@@ -69,7 +67,7 @@ class DishVisionView(ModelView, model=models.DishDivision):
 
     form_columns = [
         models.DishDivision.dish_id,
-        models.DishDivision.division_id,
+        models.DishDivision.division,
     ]
 
     column_details_list = column_list
