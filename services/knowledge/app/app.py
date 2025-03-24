@@ -26,9 +26,18 @@ def create_lifespan(container: Container):
 
 
 def create_app() -> FastAPI:
-    settings = generate(Settings, logger)
+    settings: Settings = generate(Settings, logger)
     container = Container(logger=logger)
     container.config.from_pydantic(settings)
+    container.postgres_dish_container.container.config.override(
+        {"psql_dsn": settings.dish_psql_dsn, "psql_schema": settings.dish_psql_schema}
+    )
+    container.postgres_knowledge_container.container.config.override(
+        {
+            "psql_dsn": settings.knowledge_ppsql_dsn,
+            "psql_schema": settings.knowledge_psql_schema,
+        }
+    )
 
     container.wire(modules=["app.controllers.api.routes.division"])
 
