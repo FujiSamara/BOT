@@ -57,13 +57,13 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
         if len(coordinators) > 0:
             bid_info += f"\n{coordinators[0].l_name} {coordinators[0].f_name}: {bid.accounting_service_comment}"
         else:
-            bid_info += f"\nБухгалтерия: {bid.accounting_service_comment}"
+            bid_info += f"\Кадровый учёт: {bid.accounting_service_comment}"
 
     if bid.security_service_comment is not None and bid.security_service_comment != "":
         if len(coordinators) > 1:
             bid_info += f"\n{coordinators[1].l_name} {coordinators[1].f_name}: {bid.security_service_comment}"
         else:
-            bid_info += f"\nСБ: {bid.security_service_comment}"
+            bid_info += f"\nСлужба безопасности: {bid.security_service_comment}"
 
     if (
         bid.financial_director_comment is not None

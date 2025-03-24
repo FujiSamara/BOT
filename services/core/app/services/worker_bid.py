@@ -288,7 +288,7 @@ async def update_worker_bid_bot(
 
     match state_column_name:
         case "accounting_service":
-            stage = "бухгалтерией"
+            stage = "кадровым учётом"
             worker_bid.accounting_service_comment = comment
 
         case "security_service":
@@ -296,7 +296,7 @@ async def update_worker_bid_bot(
             worker_bid.security_service_comment = comment
 
         case "financial_director":
-            stage = "Финансовым директором"
+            stage = "финансовым директором"
             worker_bid.financial_director_comment = comment
 
         case "iiko_service":
@@ -641,7 +641,7 @@ async def add_worker_bids_documents_requests(
 
     await notify_worker_by_telegram_id(
         worker_bid.sender.telegram_id,
-        message=f"Бухгалтерия запрашивает документы для согласования кандидата.\nНомер заявки {bid_id}",
+        message=f"Кадровый учёт запрашивает документы для согласования кандидата.\nНомер заявки {bid_id}",
         reply_markup=create_inline_keyboard(
             InlineKeyboardButton(
                 text=view,
