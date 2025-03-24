@@ -5,6 +5,7 @@ from app.adapters.bot.kb import (
     get_coordinate_worker_bids_SS_btn,
     get_coordinate_worker_bids_AS_btn,
     get_coordinate_worker_bids_iiko_btn,
+    get_coordinate_worker_bids_FD_btn,
     main_menu_button,
     create_inline_keyboard,
 )
@@ -443,10 +444,11 @@ async def set_comment_str(message: Message, state: FSMContext):
     await state.clear()
 
     if not await update_worker_bid_bot(
-        bid_id=id,
+        worker_bid_id=id,
         state_column_name=state_column_name,
         state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
         comment=message.text,
+        tg_id=message.chat.id,
     ):
         msg = await try_edit_or_answer(
             message=message, text=text.err, return_message=True
@@ -488,10 +490,11 @@ async def set_comment_int(message: Message, state: FSMContext):
         iiko_id = int(message.text)
 
         if not await update_worker_bid_bot(
-            bid_id=id,
+            worker_bid_id=id,
             state_column_name=state_column_name,
             state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
             comment=iiko_id,
+            tg_id=message.chat.id,
         ):
             msg = await try_edit_or_answer(
                 message=message, text=text.err, return_message=True
@@ -572,4 +575,10 @@ def build_coordinations():
         coordinator_menu_button=get_coordinate_worker_bids_iiko_btn,
         state_column=WorkerBid.iiko_service_state,
         name="iiko_service",
+    )
+    WorkerBidCoordinationFactory(
+        router=router,
+        coordinator_menu_button=get_coordinate_worker_bids_FD_btn,
+        state_column=WorkerBid.financial_director_state,
+        name="financial_director",
     )

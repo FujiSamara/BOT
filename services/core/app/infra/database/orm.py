@@ -47,6 +47,7 @@ from app.infra.database.models import (
     WorkerBidDocumentRequest,
     ViewStatus,
     AuthClient,
+    WorkerBidCoordinator,
 )
 from app.schemas import (
     BidSchema,
@@ -767,12 +768,14 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
             view_state=bid.view_state,
             security_service_state=bid.security_service_state,
             accounting_service_state=bid.accounting_service_state,
+            financial_director_state=bid.financial_director_state,
             iiko_service_state=bid.iiko_service_state,
             create_date=bid.create_date,
             sender=sender,
             birth_date=bid.birth_date,
             phone_number=bid.phone_number,
             official_work=bid.official_work,
+            employed=bid.employed,
         )
 
         s.add(worker_bid)
@@ -2970,3 +2973,26 @@ def get_auth_client_by_id(id: str) -> AuthClientSchema | None:
         }
 
         return AuthClientSchema.model_validate(client)
+
+
+def add_worker_bid_coordinator(worker_bid_coordinator: WorkerBidCoordinator):
+    with session.begin() as s:
+        s.add(worker_bid_coordinator)
+
+
+def get_worker_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    with session.begin() as s:
+        raw_bid_coordinators = (
+            s.execute(
+                select(WorkerBidCoordinator)
+                .filter(WorkerBidCoordinator.worker_bid_id == bid_id)
+                .order_by(WorkerBidCoordinator.id)
+                .limit(4)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            WorkerSchema.model_validate(raw_bid_coordinator.coordinator)
+            for raw_bid_coordinator in raw_bid_coordinators
+        ]

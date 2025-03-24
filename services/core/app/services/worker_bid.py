@@ -12,6 +12,7 @@ from app.infra.database.models import (
     Post,
     Worker,
     WorkerBid,
+    WorkerBidCoordinator,
     WorkerStatus,
     FujiScope,
     ViewStatus,
@@ -31,11 +32,12 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 )
 
 # Right order
-states = {
+states = [
     "accounting_service_state",
     "security_service_state",
+    "financial_director_state",
     "iiko_service_state",
-}
+]
 
 
 def get_workers_bids_history_sender(id: str, limit: int = 15) -> list[WorkerBid]:
@@ -186,6 +188,21 @@ async def notify_next_coordinator(bid: WorkerBidSchema):
                     )
                 ),
             )
+        case "financial_director_state":
+            await notify_workers_by_scope(
+                scope=FujiScope.bot_worker_bid_financial_director,
+                message=f"Поступила новая заявка на согласование кандидата!\nНомер заявки: {bid.id}.",
+                reply_markup=create_inline_keyboard(
+                    InlineKeyboardButton(
+                        text=view,
+                        callback_data=WorkerBidCallbackData(
+                            id=bid.id,
+                            mode=BidViewMode.full_with_approve,
+                            endpoint_name="get_pending_bid_financial_director",
+                        ).pack(),
+                    )
+                ),
+            )
         case "iiko_service_state":
             await notify_workers_by_scope(
                 scope=FujiScope.bot_worker_bid_iiko,
@@ -203,11 +220,46 @@ async def notify_next_coordinator(bid: WorkerBidSchema):
             )
 
 
+def increment_bid_state(worker_bid: WorkerBidSchema, state: ApprovalStatus) -> bool:
+    pending_approval_found = False
+
+    for state_name in states:
+        if getattr(worker_bid, state_name) == ApprovalStatus.pending_approval:
+            setattr(worker_bid, state_name, state)
+            pending_approval_found = True
+            break
+
+    if not pending_approval_found:
+        return False
+
+    if state == ApprovalStatus.denied:
+        for state_name in states:
+            if getattr(worker_bid, state_name) == ApprovalStatus.pending:
+                setattr(worker_bid, state_name, ApprovalStatus.skipped)
+        return False
+    else:
+        for state_name in states:
+            if getattr(worker_bid, state_name) == ApprovalStatus.pending:
+                setattr(worker_bid, state_name, ApprovalStatus.pending_approval)
+                return True
+
+
+def add_coordinator(
+    tg_id: int,
+    worker_bid_id: int,
+):
+    acceptor = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
+    orm.add_worker_bid_coordinator(
+        WorkerBidCoordinator(worker_bid_id=worker_bid_id, coordinator_id=acceptor.id)
+    )
+
+
 async def update_worker_bid_bot(
-    bid_id,
+    worker_bid_id: int,
     state_column_name: str,
     state: ApprovalStatus,
     comment: str | int,
+    tg_id: int,
 ) -> bool:
     """
     Updates worker bid state and comment to specified `state` by `bid_id` if bid exist.
@@ -218,16 +270,18 @@ async def update_worker_bid_bot(
         CandidatesCoordinationCallbackData,
     )
 
-    worker_bid = orm.get_worker_bid_by_column(WorkerBid.id, bid_id)
+    worker_bid = orm.get_worker_bid_by_column(WorkerBid.id, worker_bid_id)
 
     if not worker_bid:
-        logger.error(f"Worker bid with id: {bid_id} not found.")
+        logger.error(f"Worker bid with id: {worker_bid_id} not found.")
         return False
     if (
         getattr(worker_bid, state_column_name + "_state")
         != ApprovalStatus.pending_approval
     ):
         return
+    add_coordinator(tg_id, worker_bid_id)
+
     if state == ApprovalStatus.denied:
         worker_bid.state = state
         worker_bid.close_date = datetime.now()
@@ -235,44 +289,38 @@ async def update_worker_bid_bot(
     match state_column_name:
         case "accounting_service":
             stage = "бухгалтерией"
-            worker_bid.accounting_service_state = state
             worker_bid.accounting_service_comment = comment
-            if state == ApprovalStatus.approved:
-                worker_bid.security_service_state = ApprovalStatus.pending_approval
-            else:
-                worker_bid.security_service_state = ApprovalStatus.skipped
-                worker_bid.iiko_service_state = ApprovalStatus.skipped
 
         case "security_service":
             stage = "службой безопасности"
-            worker_bid.security_service_state = state
             worker_bid.security_service_comment = comment
-            if state == ApprovalStatus.approved:
-                worker_bid.iiko_service_state = ApprovalStatus.pending_approval
-            else:
-                worker_bid.iiko_service_state = ApprovalStatus.skipped
+
+        case "financial_director":
+            stage = "Финансовым директором"
+            worker_bid.financial_director_comment = comment
 
         case "iiko_service":
             stage = "iiko"
-            worker_bid.iiko_service_state = state
-
             if state == ApprovalStatus.approved:
                 worker_bid.iiko_worker_id = comment
-                worker_bid.close_date = datetime.now()
-                worker_bid.state = state
-                worker_bid.comment = worker_bid.accounting_service_comment
             else:
                 worker_bid.comment = comment
 
         case _:
             logger.error("State for worker bid not found")
 
+    if not increment_bid_state(worker_bid, state):
+        worker_bid.close_date = datetime.now()
+
     orm.update_worker_bid(worker_bid)
 
     if worker_bid.state == ApprovalStatus.approved:
-        worker_id = create_and_add_worker(worker_bid)
-        if worker_id is None:
-            logger.error(f"Worker from worker bid id: {worker_bid.id} wasn't create")
+        if worker_bid.employed is None or worker_bid.employed is True:
+            worker_id = create_and_add_worker(worker_bid)
+            if worker_id is None:
+                logger.error(
+                    f"Worker from worker bid id: {worker_bid.id} wasn't create"
+                )
 
         territorial_manager = orm.get_territorial_manager_by_department_id(
             department_id=worker_bid.department.id
@@ -310,7 +358,7 @@ async def update_worker_bid_bot(
                 InlineKeyboardButton(
                     text=view,
                     callback_data=WorkerBidCallbackData(
-                        id=bid_id,
+                        id=worker_bid_id,
                         mode=BidViewMode.full,
                         endpoint_name="bid",
                     ).pack(),
@@ -326,7 +374,7 @@ async def update_worker_bid_bot(
                 InlineKeyboardButton(
                     text=view,
                     callback_data=WorkerBidCallbackData(
-                        id=bid_id,
+                        id=worker_bid_id,
                         mode=BidViewMode.full,
                         endpoint_name="bid",
                     ).pack(),
@@ -357,6 +405,7 @@ async def create_worker_bid(
     birth_date: datetime,
     phone_number: str,
     official_work: bool,
+    employed: bool,
 ):
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
@@ -420,16 +469,21 @@ async def create_worker_bid(
         view_state=ViewStatus.pending_approval,
         accounting_service_state=ApprovalStatus.pending_approval,
         security_service_state=ApprovalStatus.pending,
+        financial_director_state=ApprovalStatus.skipped,
         iiko_service_state=ApprovalStatus.pending,
         security_service_comment=None,
         accounting_service_comment=None,
+        financial_director_comment=None,
         iiko_worker_id=None,
         sender=sender,
         comment=None,
         birth_date=birth_date,
         phone_number=phone_number,
         official_work=official_work,
+        employed=employed,
     )
+    if worker_bid.post.name == "Курьер консоль":
+        worker_bid.financial_director_state = ApprovalStatus.pending
 
     if not orm.add_worker_bid(worker_bid):
         logger.error(f"Worker bid with data: {worker_bid} wasn't create")
@@ -605,3 +659,7 @@ async def add_worker_bids_documents_requests(
 
 def update_view_state_worker_bid(worker_bid_id: int, state: ViewStatus):
     orm.update_view_state_worker_bid(worker_bid_id, state)
+
+
+def get_worker_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    return orm.get_worker_bid_coordinators(bid_id)

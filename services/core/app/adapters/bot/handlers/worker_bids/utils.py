@@ -2,7 +2,11 @@ from app.schemas import WorkerBidSchema
 from app.infra.database.models import ApprovalStatus, ViewStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
-from app.services import get_worker_by_id, get_worker_bid_documents_requests
+from app.services import (
+    get_worker_by_id,
+    get_worker_bid_documents_requests,
+    get_worker_bid_coordinators,
+)
 from app.infra.database.models import FujiScope
 from app.adapters.bot.handlers.utils import notify_workers_by_scope
 from typing import Any
@@ -15,6 +19,13 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 
 
 def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
+    comments = [
+        "accounting_service_comment",
+        "security_service_comment",
+        "financial_director_comment",
+        "iiko_worker_id",
+    ]
+
     stage = ""
 
     if bid.state == ApprovalStatus.pending_approval:
@@ -42,17 +53,16 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Отчество")}: {bid.sender.o_name}
 {hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
+    coordinators = get_worker_bid_coordinators(bid.id)
+    coordinators += (len(comments) - len(coordinators)) * [None]
 
-    if bid.accounting_service_comment is not None:
-        bid_info += (
-            f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.accounting_service_comment}"
-        )
+    bid_info += "\nСогласовали:"
+    for n in range(len(coordinators)):
+        if coordinators[n] is not None:
+            bid_info += f"\n{coordinators[n].l_name} {coordinators[n].f_name}: {getattr(bid, comments[n])}"
+        else:
+            break
 
-    if bid.security_service_comment is not None and bid.security_service_comment != "":
-        bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
-
-    if bid.iiko_worker_id is not None:
-        bid_info += f"\n\n{hbold('Табельный номер')}: {bid.iiko_worker_id}"
     documents_requests = get_worker_bid_documents_requests(bid.id)
     if documents_requests != []:
         bid_info += f"\n\n{hbold('История запросов на дополнение документов')}"
