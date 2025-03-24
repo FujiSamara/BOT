@@ -20,6 +20,13 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
 
         return converters.division_to_division_schema(division)
 
+    async def get_by_path(self, path):
+        division = await self._get_by(Division.path, path)
+        if division is None:
+            return None
+
+        return converters.division_to_division_schema(division)
+
     async def get_subdivisions_by_path(self, path):
         count = path.count("/")
 

@@ -10,6 +10,10 @@ class DivisionRepository(BaseRepository):
         pass
 
     @abstractmethod
+    async def get_by_path(self, path: str) -> DivisionSchema | None:
+        pass
+
+    @abstractmethod
     async def get_subdivisions_by_path(self, path: str) -> list[DivisionSchema]:
         """
         Returns:

@@ -15,19 +15,19 @@ from app.infra.config.scopes import Scopes
 router = APIRouter()
 
 
-@router.get("/{id}")
+@router.get("/")
 @inject
-async def get_division_by_id(
-    id: int,
+async def get_division_by_path(
+    path: str,
     service: DivisionService = Depends(Provide[Container.division_service]),
     logger: Logger = Depends(Provide[Container.logger]),
     _: ClientCredentials = Security(
         Authorization,
         scopes=[Scopes.DivisionRead.value],
     ),
-) -> DivisionOutSchema | None:
+) -> DivisionOutSchema:
     try:
-        return await service.get_division_by_id(id)
+        return await service.get_division_by_path(path)
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
