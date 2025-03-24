@@ -19,6 +19,7 @@ class DishDivision(Base):
 
     dish_id: Mapped[int] = mapped_column(nullable=False)
     division_id: Mapped[int] = mapped_column(ForeignKey("divisions.id"), nullable=False)
+    division: Mapped[Division] = relationship(Division, foreign_keys=[division_id])
 
 
 class BusinessCard(Base):
