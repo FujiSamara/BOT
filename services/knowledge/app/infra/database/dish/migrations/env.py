@@ -9,6 +9,7 @@ from common.config import generate
 from common.logging import logger
 from app.infra.config import Settings
 from app.infra.database.dish import models
+from app.infra.database.knowledge import models as extra_models
 
 from alembic import context
 
@@ -20,6 +21,10 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = models.Base.metadata
+target_metadata.remove(extra_models.BusinessCard.__table__)
+target_metadata.remove(extra_models.DishDivision.__table__)
+target_metadata.remove(extra_models.Division.__table__)
+target_metadata.remove(extra_models.BusinessCardMaterial.__table__)
 
 
 def run_migrations_offline() -> None:
