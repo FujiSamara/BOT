@@ -76,10 +76,9 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 
     if bid.iiko_service_state == ApprovalStatus.approved:
         bid_info += f"\n{coordinators[-1].l_name} {coordinators[-1].f_name}: Табельный номер {bid.iiko_worker_id}"
-    elif bid.iiko_service_state == ApprovalStatus.denied:
-        bid_info += (
-            f"\n{coordinators[-1].l_name} {coordinators[-1].f_name}: {bid.comment}"
-        )
+
+    if bid.state == ApprovalStatus.denied:
+        bid_info += f"Отказано \n{coordinators[-1].l_name} {coordinators[-1].f_name} по причине {bid.comment}"
 
     documents_requests = get_worker_bid_documents_requests(bid.id)
     if documents_requests != []:
