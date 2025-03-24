@@ -3,15 +3,15 @@ from common.schemas.base import BaseSchema
 
 
 class SubdivisionType(Enum):
-    division = 1
+    division = "division"
     # Card types
-    dish = 2
-    business = 3
+    dish = "dish"
+    business = "business"
 
 
 class SubdivisionSchema(BaseSchema):
     id: int
-    name: int
+    name: str
     type: SubdivisionType
 
 

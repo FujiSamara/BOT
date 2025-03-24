@@ -7,6 +7,7 @@ from common.config import generate
 from app.container import Container
 from app.infra.config import Settings
 from app.controllers import api
+from app.controllers import admin
 
 
 def create_lifespan(container: Container):
@@ -39,11 +40,18 @@ def create_app() -> FastAPI:
         }
     )
 
-    container.wire(modules=["app.controllers.api.routes.division"])
+    container.wire(
+        modules=["app.controllers.api.routes.division", "app.controllers.admin.main"]
+    )
 
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))
     app.container = container
 
+    admin.register_admin(
+        app,
+        username=settings.admin_username,
+        password=settings.admin_password,
+    )
     app.mount("/api", api.create_api())
 
     return app

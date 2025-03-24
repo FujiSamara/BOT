@@ -3,11 +3,17 @@ from common.config import (
     LocalAuthSettings,
     RemoteAuthSettings,
     FileSettings,
+    AdminSettings,
 )
 from app.infra.config.database import DBSettings
 
 
 class Settings(
-    NetworkSettings, LocalAuthSettings, RemoteAuthSettings, FileSettings, DBSettings
+    NetworkSettings,
+    LocalAuthSettings,
+    RemoteAuthSettings,
+    FileSettings,
+    DBSettings,
+    AdminSettings,
 ):
     pass

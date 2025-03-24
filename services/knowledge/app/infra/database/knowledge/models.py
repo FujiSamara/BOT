@@ -8,7 +8,10 @@ class Division(Base):
     __tablename__ = "divisions"
 
     name: Mapped[str] = mapped_column(nullable=False)
-    path: Mapped[str] = mapped_column(nullable=False)
+    path: Mapped[str] = mapped_column(nullable=False, unique=True)
+
+    def __str__(self):
+        return self.name
 
 
 class DishDivision(Base):
@@ -26,6 +29,7 @@ class BusinessCard(Base):
 
     division_id: Mapped[int] = mapped_column(ForeignKey("divisions.id"), nullable=False)
 
+    division: Mapped[Division] = relationship(Division, foreign_keys=[division_id])
     materials: Mapped[list["BusinessCardMaterial"]] = relationship(
         "BusinessCardMaterial"
     )

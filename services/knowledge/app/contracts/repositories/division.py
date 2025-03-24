@@ -1,7 +1,17 @@
 from abc import abstractmethod
 
 from common.contracts.repository import BaseRepository
+from app.schemas.division import DivisionSchema
 
 
 class DivisionRepository(BaseRepository):
-    pass
+    @abstractmethod
+    async def get_by_id(self, id: int) -> DivisionSchema | None:
+        pass
+
+    @abstractmethod
+    async def get_subdivisions_by_path(self, path: str) -> list[DivisionSchema]:
+        """
+        Returns:
+            Subdivisions for `path`.
+        """

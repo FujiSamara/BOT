@@ -1,4 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy import ForeignKey
 from uuid import UUID
 
 from common.sql.orm import Base
@@ -22,7 +23,7 @@ class TTKDishModifier(Base):
     __tablename__ = "modifiers"
 
     iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    dish_id: Mapped[int] = mapped_column(nullable=False)
+    dish_id: Mapped[int] = mapped_column(ForeignKey("dishes.id"), nullable=False)
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
@@ -35,9 +36,7 @@ class TTKDishModifier(Base):
     minimumAmount: Mapped[float] = mapped_column(nullable=False)
     maximumAmount: Mapped[float] = mapped_column(nullable=False)
 
-    dish: Mapped["TTKDish"] = relationship(
-        "TTKDish", back_populates="modifiers", foreign_keys=[dish_id]
-    )
+    dish: Mapped["TTKDish"] = relationship("TTKDish", foreign_keys=[dish_id])
 
 
 class TTKProduct(Base):
@@ -55,14 +54,14 @@ class AssemblyChart(Base):
     __tablename__ = "assembly_charts"
 
     iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    modifier_id: Mapped[int] = mapped_column(nullable=False)
-    product_id: Mapped[int] = mapped_column(nullable=False)
+    modifier_id: Mapped[int] = mapped_column(ForeignKey("modifiers.id"), nullable=False)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), nullable=False)
     weight: Mapped[float] = mapped_column(nullable=False)
     amount: Mapped[float] = mapped_column(nullable=False)
 
     modifier: Mapped["TTKDishModifier"] = relationship(
-        "TTKDishModifier", back_populates="assembly_charts", foreign_keys=[modifier_id]
+        "TTKDishModifier", foreign_keys=[modifier_id]
     )
     product: Mapped["TTKProduct"] = relationship(
-        "TTKProduct", back_populates="assembly_charts", foreign_keys=[product_id]
+        "TTKProduct", foreign_keys=[product_id]
     )
