@@ -211,7 +211,7 @@ class WorkerBidSchema(BaseSchemaPK):
     security_service_comment: str | None = None
     accounting_service_comment: str | None = None
     iiko_worker_id: int | None = None
-    financial_director_comment: int | None = None
+    financial_director_comment: str | None = None
 
     official_work: bool | None = None
     employed: bool | None = None

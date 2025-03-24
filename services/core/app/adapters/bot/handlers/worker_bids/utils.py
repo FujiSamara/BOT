@@ -19,13 +19,6 @@ from app.adapters.bot.handlers.worker_bids.schemas import (
 
 
 def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
-    comments = [
-        "accounting_service_comment",
-        "security_service_comment",
-        "financial_director_comment",
-        "iiko_worker_id",
-    ]
-
     stage = ""
 
     if bid.state == ApprovalStatus.pending_approval:
@@ -46,6 +39,7 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Должность")}: {bid.post.name}
 {hbold("Статус")}: {stage}
 {hbold("Официальное трудоустройство")}: {"Да" if bid.official_work else "Нет"}
+{hbold("Уже трудоустроен")}: {"Да" if bid.employed else "Нет"}
 
 {hbold("Данные заявителя")}
 {hbold("Фамилия")}: {bid.sender.l_name}
@@ -54,14 +48,38 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
     coordinators = get_worker_bid_coordinators(bid.id)
-    coordinators += (len(comments) - len(coordinators)) * [None]
 
     bid_info += "\nСогласовали:"
-    for n in range(len(coordinators)):
-        if coordinators[n] is not None:
-            bid_info += f"\n{coordinators[n].l_name} {coordinators[n].f_name}: {getattr(bid, comments[n])}"
+    if (
+        bid.accounting_service_comment is not None
+        and bid.accounting_service_comment != ""
+    ):
+        if len(coordinators) > 0:
+            bid_info += f"\n{coordinators[0].l_name} {coordinators[0].f_name}: {bid.accounting_service_comment}"
         else:
-            break
+            bid_info += f"\nБухгалтерия: {bid.accounting_service_comment}"
+
+    if bid.security_service_comment is not None and bid.security_service_comment != "":
+        if len(coordinators) > 1:
+            bid_info += f"\n{coordinators[1].l_name} {coordinators[1].f_name}: {bid.security_service_comment}"
+        else:
+            bid_info += f"\nСБ: {bid.security_service_comment}"
+
+    if (
+        bid.financial_director_comment is not None
+        and bid.financial_director_comment != ""
+    ):
+        if len(coordinators) > 2:
+            bid_info += f"\n{coordinators[2].l_name} {coordinators[2].f_name}: {bid.financial_director_comment}"
+        else:
+            bid_info += f"\nФинансовый директор: {bid.financial_director_comment}"
+
+    if bid.iiko_service_state == ApprovalStatus.approved:
+        bid_info += f"\n{coordinators[-1].l_name} {coordinators[-1].f_name}: Табельный номер {bid.iiko_worker_id}"
+    elif bid.iiko_service_state == ApprovalStatus.denied:
+        bid_info += (
+            f"\n{coordinators[-1].l_name} {coordinators[-1].f_name}: {bid.comment}"
+        )
 
     documents_requests = get_worker_bid_documents_requests(bid.id)
     if documents_requests != []:

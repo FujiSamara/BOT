@@ -830,10 +830,12 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.security_service_state = bid.security_service_state
         cur_bid.accounting_service_state = bid.accounting_service_state
         cur_bid.iiko_service_state = bid.iiko_service_state
+        cur_bid.financial_director_state = bid.financial_director_state
         cur_bid.comment = bid.comment
         cur_bid.security_service_comment = bid.security_service_comment
         cur_bid.accounting_service_comment = bid.accounting_service_comment
         cur_bid.iiko_worker_id = bid.iiko_worker_id
+        cur_bid.financial_director_comment = bid.financial_director_comment
         cur_bid.close_date = bid.close_date
 
 

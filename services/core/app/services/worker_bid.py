@@ -305,22 +305,22 @@ async def update_worker_bid_bot(
                 worker_bid.iiko_worker_id = comment
             else:
                 worker_bid.comment = comment
+            worker_bid.close_date = datetime.now()
+            worker_bid.state = state
 
         case _:
             logger.error("State for worker bid not found")
 
-    if not increment_bid_state(worker_bid, state):
-        worker_bid.close_date = datetime.now()
+    increment_bid_state(worker_bid, state)
 
     orm.update_worker_bid(worker_bid)
 
-    if worker_bid.state == ApprovalStatus.approved:
-        if worker_bid.employed is None or worker_bid.employed is True:
-            worker_id = create_and_add_worker(worker_bid)
-            if worker_id is None:
-                logger.error(
-                    f"Worker from worker bid id: {worker_bid.id} wasn't create"
-                )
+    if worker_bid.state == ApprovalStatus.approved and (
+        worker_bid.employed is None or worker_bid.employed is False
+    ):
+        worker_id = create_and_add_worker(worker_bid)
+        if worker_id is None:
+            logger.error(f"Worker from worker bid id: {worker_bid.id} wasn't create")
 
         territorial_manager = orm.get_territorial_manager_by_department_id(
             department_id=worker_bid.department.id
