@@ -85,7 +85,6 @@ def upgrade() -> None:
         sa.Column("financial_director_comment", sa.String(), nullable=True),
     )
     op.add_column("worker_bids", sa.Column("employed", sa.Boolean(), nullable=True))
-    # ### end Alembic commands ###
 
 
 def downgrade() -> None:
