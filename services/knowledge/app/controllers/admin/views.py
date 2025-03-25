@@ -17,9 +17,14 @@ class DivisionView(ModelView, model=models.Division):
         models.Division.path,
     ]
 
-    form_columns = [models.Division.name, models.Division.path]
+    form_columns = [models.Division.path]
 
     column_details_list = column_list
+
+    def on_model_change(self, data, model, is_created, request):
+        path_end = data["path"].split("/")[-1]
+        data["name"] = path_end
+        return super().on_model_change(data, model, is_created, request)
 
 
 class BusinessCardView(ModelView, model=models.BusinessCard):
