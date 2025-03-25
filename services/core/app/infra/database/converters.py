@@ -60,6 +60,7 @@ scope_decode_dict = {
     FujiScope.bot_worker_bid_iiko: "Бот согласование кандидатов добавление в IIKO",
     FujiScope.bot_technical_request_department_director: "Бот технические заявки ТД",
     FujiScope.bot_change_restaurant_menu: "Бот обновление меню",
+    FujiScope.bot_worker_bid_financial_director: "Бот согласование кандидатов финансовый директор",
 }
 
 

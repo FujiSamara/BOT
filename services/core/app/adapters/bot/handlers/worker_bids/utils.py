@@ -2,7 +2,11 @@ from app.schemas import WorkerBidSchema
 from app.infra.database.models import ApprovalStatus, ViewStatus
 from app.infra.config import settings
 from aiogram.utils.markdown import hbold
-from app.services import get_worker_by_id, get_worker_bid_documents_requests
+from app.services import (
+    get_worker_by_id,
+    get_worker_bid_documents_requests,
+    get_worker_bid_coordinators,
+)
 from app.infra.database.models import FujiScope
 from app.adapters.bot.handlers.utils import notify_workers_by_scope
 from typing import Any
@@ -35,6 +39,7 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Должность")}: {bid.post.name}
 {hbold("Статус")}: {stage}
 {hbold("Официальное трудоустройство")}: {"Да" if bid.official_work else "Нет"}
+{hbold("Уже трудоустроен")}: {"Да" if bid.employed else "Нет"}
 
 {hbold("Данные заявителя")}
 {hbold("Фамилия")}: {bid.sender.l_name}
@@ -42,17 +47,39 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Отчество")}: {bid.sender.o_name}
 {hbold("Номер телефона")}: {bid.sender.phone_number if bid.sender.phone_number is not None else "Отсутствует"}
 """
+    coordinators = get_worker_bid_coordinators(bid.id)
 
-    if bid.accounting_service_comment is not None:
-        bid_info += (
-            f"\n\n{hbold('Комментарий бухгалтерии')}: {bid.accounting_service_comment}"
-        )
+    bid_info += "\nСогласовали:"
+    if (
+        bid.accounting_service_comment is not None
+        and bid.accounting_service_comment != ""
+    ):
+        if len(coordinators) > 0:
+            bid_info += f"\n{coordinators[0].l_name} {coordinators[0].f_name}: {bid.accounting_service_comment}"
+        else:
+            bid_info += f"\Кадровый учёт: {bid.accounting_service_comment}"
 
     if bid.security_service_comment is not None and bid.security_service_comment != "":
-        bid_info += f"\n\n{hbold('Комментарий СБ')}: {bid.security_service_comment}"
+        if len(coordinators) > 1:
+            bid_info += f"\n{coordinators[1].l_name} {coordinators[1].f_name}: {bid.security_service_comment}"
+        else:
+            bid_info += f"\nСлужба безопасности: {bid.security_service_comment}"
 
-    if bid.iiko_worker_id is not None:
-        bid_info += f"\n\n{hbold('Табельный номер')}: {bid.iiko_worker_id}"
+    if (
+        bid.financial_director_comment is not None
+        and bid.financial_director_comment != ""
+    ):
+        if len(coordinators) > 2:
+            bid_info += f"\n{coordinators[2].l_name} {coordinators[2].f_name}: {bid.financial_director_comment}"
+        else:
+            bid_info += f"\nФинансовый директор: {bid.financial_director_comment}"
+
+    if bid.iiko_service_state == ApprovalStatus.approved:
+        bid_info += f"\n{coordinators[-1].l_name} {coordinators[-1].f_name}: Табельный номер {bid.iiko_worker_id}"
+
+    if bid.state == ApprovalStatus.denied:
+        bid_info += f"Отказано \n{coordinators[-1].l_name} {coordinators[-1].f_name} по причине {bid.comment}"
+
     documents_requests = get_worker_bid_documents_requests(bid.id)
     if documents_requests != []:
         bid_info += f"\n\n{hbold('История запросов на дополнение документов')}"
