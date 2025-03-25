@@ -80,6 +80,7 @@ class FujiScope(enum.Enum):
     bot_worker_bid_iiko = 37
     bot_technical_request_department_director = 38
     bot_change_restaurant_menu = 39
+    bot_worker_bid_financial_director = 40
 
 
 class DepartmentType(enum.Enum):
@@ -634,6 +635,7 @@ class WorkerBid(Base):
     security_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
     accounting_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
     iiko_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
+    financial_director_state: Mapped[approvalstatus] = mapped_column(nullable=True)
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
@@ -641,12 +643,29 @@ class WorkerBid(Base):
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
     accounting_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
+    financial_director_comment: Mapped[str] = mapped_column(nullable=True)
     iiko_worker_id: Mapped[int] = mapped_column(nullable=True)
 
     official_work: Mapped[bool] = mapped_column(nullable=True)
+    employed: Mapped[bool] = mapped_column(nullable=True)
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
         relationship("WorkerBidDocumentRequest", back_populates="worker_bid")
     )
+    coordinators: Mapped[list["WorkerBidCoordinator"]] = relationship(
+        "WorkerBidCoordinator", cascade="all,delete"
+    )
+
+
+class WorkerBidCoordinator(Base):
+    """Таблица, показывающая - кто согласовывал заявки."""
+
+    __tablename__ = "worker_bid_coordinators"
+
+    worker_bid_id: Mapped[int] = mapped_column(ForeignKey("worker_bids.id"))
+    worker_bid: Mapped[Bid] = relationship("WorkerBid", back_populates="coordinators")
+
+    coordinator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    coordinator: Mapped["Worker"] = relationship("Worker")
 
 
 class WorkerBidDocument(Base):

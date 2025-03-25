@@ -146,6 +146,7 @@ from app.services.worker_bid import (
     add_worker_bids_documents_requests,
     update_worker_bid_documents,
     update_view_state_worker_bid,
+    get_worker_bid_coordinators,
 )
 from app.services.worktime import (
     create_worktime,
@@ -312,4 +313,5 @@ __all__ = [
     "get_all_pending_technical_requests_for_territorial_director",
     "get_all_history_technical_requests_territorial_director",
     "update_technical_request_by_territorial_director",
+    "get_worker_bid_coordinators",
 ]
