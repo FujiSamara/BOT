@@ -9,7 +9,17 @@ from app.infra.database.knowledge.models import BusinessCard
 
 class SQLCardRepository(CardRepository, SQLBaseRepository):
     async def get_by_id(self, id):
-        raise NotImplementedError
+        s = (
+            select(BusinessCard)
+            .where(BusinessCard.id == id)
+            .options(selectinload(BusinessCard.materials))
+        )
+
+        card = (await self._session.execute(s)).scalars().first()
+        if card is None:
+            return None
+
+        return converters.card_to_card_schema(card)
 
     async def get_by_division_id(self, id):
         s = (
