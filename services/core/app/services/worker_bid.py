@@ -345,14 +345,14 @@ async def update_worker_bid_bot(
                 ),
             )
 
-    worker = get_worker_by_id(worker_bid.sender.id)
-    if not worker:
+    bid_sender = get_worker_by_id(worker_bid.sender.id)
+    if not bid_sender:
         logger.error(f"Worker with id: {worker_bid.sender.id} not found.")
         return False
 
     if state == ApprovalStatus.approved:
         await notify_worker_by_telegram_id(
-            id=worker.telegram_id,
+            id=bid_sender.telegram_id,
             message=f"Кандидат согласован {stage}!\nНомер заявки: {worker_bid.id}.",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
@@ -368,7 +368,7 @@ async def update_worker_bid_bot(
         await notify_next_coordinator(bid=worker_bid)
     elif state == ApprovalStatus.denied:
         await notify_worker_by_telegram_id(
-            id=worker.telegram_id,
+            id=bid_sender.telegram_id,
             message=f"Кандидат не согласован {stage}!\n{comment}\nНомер заявки: {worker_bid.id}.",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(

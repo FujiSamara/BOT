@@ -1305,17 +1305,19 @@ def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema 
         return WorkerSchema.model_validate(restaurant_manager)
 
 
-def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
+def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema | None:
     """
     Return WorkerSchema of territorial manager by department id
     """
     with session.begin() as s:
-        territorial_manager: Worker = (
+        department: Department = (
             s.execute(select(Department).filter(Department.id == department_id))
             .scalars()
             .first()
-        ).territorial_manager
-        return WorkerSchema.model_validate(territorial_manager)
+        )
+        if department.territorial_manager is None:
+            return None
+        return WorkerSchema.model_validate(department.territorial_manager)
 
 
 def get_technical_requests_by_columns(

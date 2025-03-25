@@ -488,7 +488,23 @@ async def set_comment_int(message: Message, state: FSMContext):
 
     try:
         iiko_id = int(message.text)
-
+    except ValueError:
+        await state.set_state(WorkerBidCoordination.comment_int)
+        await try_edit_or_answer(
+            message=message,
+            text=text.format_err,
+            reply_markup=create_inline_keyboard(
+                InlineKeyboardButton(
+                    text="К заявке",
+                    callback_data=WorkerBidCallbackData(
+                        id=id,
+                        mode=BidViewMode.full_with_approve,
+                        endpoint_name=f"get_pending_bid_{state_column_name}",
+                    ).pack(),
+                )
+            ),
+        )
+    else:
         if not await update_worker_bid_bot(
             worker_bid_id=id,
             state_column_name=state_column_name,
@@ -508,23 +524,6 @@ async def set_comment_int(message: Message, state: FSMContext):
         await sleep(3)
         await try_delete_message(msg)
         await get_menu(message)
-
-    except ValueError:
-        await state.set_state(WorkerBidCoordination.comment_int)
-        await try_edit_or_answer(
-            message=message,
-            text=text.format_err,
-            reply_markup=create_inline_keyboard(
-                InlineKeyboardButton(
-                    text="К заявке",
-                    callback_data=WorkerBidCallbackData(
-                        id=id,
-                        mode=BidViewMode.full_with_approve,
-                        endpoint_name=f"get_pending_bid_{state_column_name}",
-                    ).pack(),
-                )
-            ),
-        )
 
 
 @router.message(WorkerBidCoordination.seek_documents)
