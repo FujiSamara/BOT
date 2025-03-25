@@ -4,13 +4,12 @@ from dependency_injector.wiring import Provide, inject
 import traceback
 
 from common.schemas.client_credential import ClientCredentials
-
-from app.schemas.division import DivisionOutSchema
-from app.contracts.services import DivisionService
-
 from app.container import Container
 from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
+
+from app.schemas.division import DivisionOutSchema
+from app.contracts.services import DivisionService
 
 router = APIRouter()
 
@@ -28,8 +27,6 @@ async def get_division_by_path(
 ) -> DivisionOutSchema | None:
     try:
         return await service.get_division_by_path(path)
-    except ValueError as e:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
