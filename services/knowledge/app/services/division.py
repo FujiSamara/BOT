@@ -1,11 +1,11 @@
 from app.contracts.services import DivisionService
-from app.contracts.uow import FullDivisionUnitOfWork
+from app.contracts.uow import DivisionUnitOfWork
 
 from app.schemas.division import DivisionSchema, DivisionType, DivisionOutSchema
 
 
 class DivisionServiceImpl(DivisionService):
-    def __init__(self, full_division_uow: FullDivisionUnitOfWork):
+    def __init__(self, full_division_uow: DivisionUnitOfWork):
         self._uow = full_division_uow
 
     async def _try_find_division(self, path: str) -> DivisionSchema | None:

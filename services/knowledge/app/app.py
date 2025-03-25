@@ -41,7 +41,11 @@ def create_app() -> FastAPI:
     )
 
     container.wire(
-        modules=["app.controllers.api.routes.division", "app.controllers.admin.main"]
+        modules=[
+            "app.controllers.api.routes.division",
+            "app.controllers.api.routes.card",
+            "app.controllers.admin.main",
+        ]
     )
 
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))

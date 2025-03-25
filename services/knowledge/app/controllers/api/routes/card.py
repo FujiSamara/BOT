@@ -19,7 +19,7 @@ router = APIRouter()
 @inject
 async def get_card_by_id(
     id: int,
-    service: CardService = Depends(Provide[Container]),
+    service: CardService = Depends(Provide[Container.card_service]),
     logger: Logger = Depends(Provide[Container.logger]),
     _: ClientCredentials = Security(
         Authorization,

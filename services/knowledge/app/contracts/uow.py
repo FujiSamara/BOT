@@ -7,7 +7,10 @@ from app.contracts.repositories import (
 )
 
 
-class FullDivisionUnitOfWork(BaseUnitOfWork):
+class CardUnitOfWork(BaseUnitOfWork):
     card: CardRepository
+
+
+class DivisionUnitOfWork(CardUnitOfWork):
     division: DivisionRepository
     dish: DishRepository

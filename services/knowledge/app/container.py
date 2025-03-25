@@ -8,9 +8,10 @@ from common.auth import LocalAuthService
 from common.http.auth import AuthHTTPClient
 from common.http.file import HTTPFileClient
 
-from app.infra.database.uow import SQLFullDivisionUnitOfWork
+from app.infra.database.uow import SQLDivisionUnitOfWork
 from app.infra.database.binds import get_tables_binds
 from app.services.division import DivisionServiceImpl
+from app.services.card import CardServiceImpl
 
 
 def init_sessionmaker(
@@ -35,7 +36,7 @@ class Container(containers.DeclarativeContainer):
         postgres_knowledge_container.container.async_engine,
     )
 
-    uow = providers.Factory(SQLFullDivisionUnitOfWork, sessionmaker)
+    uow = providers.Factory(SQLDivisionUnitOfWork, sessionmaker)
 
     auth_service = providers.Factory(
         LocalAuthService, auth_container.container.security_client
@@ -57,3 +58,4 @@ class Container(containers.DeclarativeContainer):
     )
 
     division_service = providers.Factory(DivisionServiceImpl, uow)
+    card_service = providers.Factory(CardServiceImpl, uow)
