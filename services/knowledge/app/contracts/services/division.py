@@ -9,5 +9,5 @@ class DivisionService(BaseService):
     @abstractmethod
     async def get_division_by_path(self, path: str) -> DivisionOutSchema | None:
         """Finds division by path.
-        - Note: Also finds cards.
+        - Note: Also finds cards and dishes as `DivisionSchema`.
         """
