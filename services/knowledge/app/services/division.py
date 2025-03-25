@@ -30,7 +30,13 @@ class DivisionServiceImpl(DivisionService):
                     type=DivisionType.business,
                 )
 
-            dish = []  # TODO: Searching for dish
+            dish = await uow.dish.get_by_division_id_with_name(
+                parent_division.id, path.split("/")[-1]
+            )
+            if dish is not None:
+                return DivisionSchema(
+                    id=dish.id, name=dish.name, path=path, type=DivisionType.dish
+                )
 
             return
 
@@ -61,6 +67,17 @@ class DivisionServiceImpl(DivisionService):
                 for c in await uow.card.get_by_division_id(division.id)
             ]
             subdivisions.extend(business_cards)
+
+            dishes = [
+                DivisionSchema(
+                    id=d.id,
+                    name=d.name,
+                    path=division.path + "/" + d.name,
+                    type=DivisionType.dish,
+                )
+                for d in await uow.dish.get_by_division_id(division.id)
+            ]
+            subdivisions.extend(dishes)
 
             result = DivisionOutSchema(
                 id=division.id,
