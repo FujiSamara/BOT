@@ -4,7 +4,12 @@ from sqlalchemy import select, and_
 from common.sql.repository import SQLBaseRepository
 from app.contracts.repositories import DishRepository
 from app.infra.database.dish import converters
-from app.infra.database.dish.models import TTKDish
+from app.infra.database.dish.models import (
+    TTKDish,
+    TTKDishModifier,
+    TTKProduct,
+    AssemblyChart,
+)
 from app.infra.database.knowledge.models import DishDivision
 
 
@@ -31,3 +36,21 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
 
         dish = (await self._session.execute(s)).scalars().first()
         return converters.dish_to_dish_schema(dish)
+
+    async def get_modifiers(self, id):
+        modifiers_s = (
+            select(TTKDishModifier.id).where(TTKDishModifier.dish_id == id).subquery()
+        )
+        s = (
+            select(
+                modifiers_s.c.id,
+                AssemblyChart.product_id,
+                TTKProduct.name,
+                AssemblyChart.amount,
+            )
+            .join(AssemblyChart, modifiers_s.c.id == AssemblyChart.modifier_id)
+            .join(TTKProduct, TTKProduct.id == AssemblyChart.product_id)
+        )
+
+        rows = (await self._session.execute(s)).all()
+        print(rows)

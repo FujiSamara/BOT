@@ -1,17 +1,20 @@
 from common.schemas.base import BaseSchema
 
 
-class ReceptSchema(BaseSchema):
-    pass
-
-
 class DishSchema(BaseSchema):
     id: int
     name: str
 
 
-class DishOutSchema(DishSchema):
-    pass
+class ProductSchema(BaseSchema):
+    name: str
+    weight: float
+    amount: float
 
 
-# TODO: schemas for dish
+class DishModifierSchema(BaseSchema):
+    products: list[ProductSchema]
+
+
+class DishWithModifierSchema(DishSchema):
+    modifiers: list[DishModifierSchema]
