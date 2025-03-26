@@ -78,3 +78,9 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
             return None
 
         return converters.dish_to_dish_schema(dish)
+
+    async def find_by_name(self, term):
+        s = select(TTKDish).where(TTKDish.name.ilike(f"%{term}%"))
+        dishes = (await self._session.execute(s)).scalars().all()
+
+        return [converters.dish_to_dish_schema(d) for d in dishes]

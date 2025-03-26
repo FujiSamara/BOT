@@ -44,3 +44,13 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
             return None
 
         return converters.card_to_card_schema(card)
+
+    async def find_by_name(self, term):
+        s = (
+            select(BusinessCard)
+            .where(BusinessCard.name.ilike(f"%{term}%"))
+            .options(selectinload(BusinessCard.materials))
+        )
+        cards = (await self._session.execute(s)).scalars().all()
+
+        return [converters.card_to_card_schema(c) for c in cards]

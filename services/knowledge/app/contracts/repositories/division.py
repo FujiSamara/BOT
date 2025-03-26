@@ -23,3 +23,11 @@ class DivisionRepository(BaseRepository):
     @abstractmethod
     async def find_by_name(self, term: str) -> list[DivisionSchema]:
         pass
+
+    @abstractmethod
+    async def get_division_paths_by_card(self, card_ids: list[int]) -> list[str]:
+        pass
+
+    @abstractmethod
+    async def get_division_paths_by_dish(self, dish_ids: list[int]) -> list[str]:
+        pass

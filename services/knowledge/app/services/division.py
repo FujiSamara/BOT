@@ -10,20 +10,24 @@ class DivisionServiceImpl(DivisionService):
     def __init__(self, full_division_uow: DivisionUnitOfWork):
         self._uow = full_division_uow
 
-    def _business_card_to_division(self, card: BusinessCardSchema) -> DivisionSchema:
+    def _business_card_to_division(
+        self, card: BusinessCardSchema, *, division_path: str
+    ) -> DivisionSchema:
         return DivisionSchema(
             id=card.id,
             name=card.name,
             type=DivisionType.business,
-            path=card.division.path + "/" + card.name,
+            path=division_path + "/" + card.name,
         )
 
-    def _dish_to_division(self, dish: DishSchema) -> DivisionSchema:
+    def _dish_to_division(
+        self, dish: DishSchema, *, division_path: str
+    ) -> DivisionSchema:
         return DivisionSchema(
             id=dish.id,
             name=dish.name,
             type=DivisionType.dish,
-            path=dish.division.path + "/" + dish.name,
+            path=division_path + "/" + dish.name,
         )
 
     async def _try_find_division(self, path: str) -> DivisionSchema | None:
@@ -76,13 +80,13 @@ class DivisionServiceImpl(DivisionService):
             subdivisions = await uow.division.get_subdivisions_by_path(division.path)
 
             business_cards = [
-                self._business_card_to_division(c)
+                self._business_card_to_division(c, division_path=division.path)
                 for c in await uow.card.get_by_division_id(division.id)
             ]
             subdivisions.extend(business_cards)
 
             dishes = [
-                self._dish_to_division(d)
+                self._dish_to_division(d, division_path=division.path)
                 for d in await uow.dish.get_by_division_id(division.id)
             ]
             subdivisions.extend(dishes)
@@ -101,9 +105,27 @@ class DivisionServiceImpl(DivisionService):
         async with self._uow as uow:
             divisions = await uow.division.find_by_name(term)
             cards = await uow.card.find_by_name(term)
+            card_divsion_paths = await uow.division.get_division_paths_by_card(
+                [c.id for c in cards]
+            )
             dishes = await uow.dish.find_by_name(term)
+            dish_division_paths = await uow.division.get_division_paths_by_dish(
+                [d.id for d in dishes]
+            )
 
-            divisions.extend([self._business_card_to_division(c) for c in cards])
-            divisions.extend([self._dish_to_division(d) for d in dishes])
+            divisions.extend(
+                [
+                    self._business_card_to_division(
+                        c, division_path=card_divsion_paths[i]
+                    )
+                    for i, c in enumerate(cards)
+                ]
+            )
+            divisions.extend(
+                [
+                    self._dish_to_division(d, division_path=dish_division_paths[i])
+                    for i, d in enumerate(dishes)
+                ]
+            )
 
         return divisions
