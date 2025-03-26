@@ -1,11 +1,9 @@
 from common.schemas.base import BaseSchema
-from app.schemas.division import DivisionSchema
 
 
 class DishSchema(BaseSchema):
     id: int
     name: str
-    division: DivisionSchema
 
 
 class ProductSchema(BaseSchema):
