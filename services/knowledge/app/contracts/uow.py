@@ -15,5 +15,5 @@ class DishUnitOfWork(BaseUnitOfWork):
     dish: DishRepository
 
 
-class DivisionUnitOfWork(DishUnitOfWork):
+class DivisionUnitOfWork(DishUnitOfWork, CardUnitOfWork):
     division: DivisionRepository

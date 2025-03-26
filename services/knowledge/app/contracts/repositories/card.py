@@ -18,3 +18,7 @@ class CardRepository(BaseRepository):
         self, id: int, name: str
     ) -> BusinessCardSchema | None:
         pass
+
+    @abstractmethod
+    async def find_by_name(self, term: str) -> list[BusinessCardSchema]:
+        pass

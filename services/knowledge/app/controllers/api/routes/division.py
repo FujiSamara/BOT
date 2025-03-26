@@ -8,7 +8,7 @@ from app.container import Container
 from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
 
-from app.schemas.division import DivisionOutSchema
+from app.schemas.division import DivisionOutSchema, DivisionSchema
 from app.contracts.services import DivisionService
 
 router = APIRouter()
@@ -27,6 +27,24 @@ async def get_division_by_path(
 ) -> DivisionOutSchema | None:
     try:
         return await service.get_division_by_path(path)
+    except Exception as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.get("/find/by/name")
+@inject
+async def find_divisions_by_name(
+    term: str,
+    service: DivisionService = Depends(Provide[Container.division_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
+    _: ClientCredentials = Security(
+        Authorization,
+        scopes=[Scopes.DivisionRead.value],
+    ),
+) -> list[DivisionSchema]:
+    try:
+        return await service.find_by_name(term)
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

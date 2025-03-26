@@ -19,3 +19,7 @@ class DivisionRepository(BaseRepository):
         Returns:
             Subdivisions for `path`.
         """
+
+    @abstractmethod
+    async def find_by_name(self, term: str) -> list[DivisionSchema]:
+        pass

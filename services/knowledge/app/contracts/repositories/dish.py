@@ -22,3 +22,7 @@ class DishRepository(BaseRepository):
     @abstractmethod
     async def get_modifiers(self, id: int) -> list[DishModifierSchema]:
         pass
+
+    @abstractmethod
+    async def find_by_name(self, term: str) -> list[DishSchema]:
+        pass

@@ -1,5 +1,6 @@
 from common.schemas.base import BaseSchema
 from common.schemas.file import FileLinkSchema
+from app.schemas.division import DivisionSchema
 
 
 class BusinessCardSchema(BaseSchema):
@@ -7,6 +8,8 @@ class BusinessCardSchema(BaseSchema):
 
     name: str
     description: str | None
+
+    division: DivisionSchema
 
     materials: list[int]
 

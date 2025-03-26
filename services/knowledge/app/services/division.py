@@ -2,11 +2,29 @@ from app.contracts.services import DivisionService
 from app.contracts.uow import DivisionUnitOfWork
 
 from app.schemas.division import DivisionSchema, DivisionType, DivisionOutSchema
+from app.schemas.card import BusinessCardSchema
+from app.schemas.dish import DishSchema
 
 
 class DivisionServiceImpl(DivisionService):
     def __init__(self, full_division_uow: DivisionUnitOfWork):
         self._uow = full_division_uow
+
+    def _business_card_to_division(self, card: BusinessCardSchema) -> DivisionSchema:
+        return DivisionSchema(
+            id=card.id,
+            name=card.name,
+            type=DivisionType.business,
+            path=card.division.path + "/" + card.name,
+        )
+
+    def _dish_to_division(self, dish: DishSchema) -> DivisionSchema:
+        return DivisionSchema(
+            id=dish.id,
+            name=dish.name,
+            type=DivisionType.dish,
+            path=dish.division.path + "/" + dish.name,
+        )
 
     async def _try_find_division(self, path: str) -> DivisionSchema | None:
         async with self._uow as uow:
@@ -58,23 +76,13 @@ class DivisionServiceImpl(DivisionService):
             subdivisions = await uow.division.get_subdivisions_by_path(division.path)
 
             business_cards = [
-                DivisionSchema(
-                    id=c.id,
-                    path=division.path + "/" + c.name,
-                    name=c.name,
-                    type=DivisionType.business,
-                )
+                self._business_card_to_division(c)
                 for c in await uow.card.get_by_division_id(division.id)
             ]
             subdivisions.extend(business_cards)
 
             dishes = [
-                DivisionSchema(
-                    id=d.id,
-                    name=d.name,
-                    path=division.path + "/" + d.name,
-                    type=DivisionType.dish,
-                )
+                self._dish_to_division(d)
                 for d in await uow.dish.get_by_division_id(division.id)
             ]
             subdivisions.extend(dishes)
@@ -88,3 +96,14 @@ class DivisionServiceImpl(DivisionService):
             )
 
         return result
+
+    async def find_by_name(self, term):
+        async with self._uow as uow:
+            divisions = await uow.division.find_by_name(term)
+            cards = await uow.card.find_by_name(term)
+            dishes = await uow.dish.find_by_name(term)
+
+            divisions.extend([self._business_card_to_division(c) for c in cards])
+            divisions.extend([self._dish_to_division(d) for d in dishes])
+
+        return divisions
