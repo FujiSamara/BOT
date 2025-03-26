@@ -53,4 +53,28 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         )
 
         rows = (await self._session.execute(s)).all()
-        print(rows)
+
+        modifiers_dict: dict[int, list] = {}
+        for row in rows:
+            modifier_id, product_id, name, amount = row
+
+            modifiers_dict.setdefault(modifier_id, []).append(
+                {
+                    "id": product_id,
+                    "name": name,
+                    "amount": amount,
+                }
+            )
+        return [
+            converters.modifier_to_modifier_schema({"id": k, "products": v})
+            for k, v in modifiers_dict.items()
+        ]
+
+    async def get_by_id(self, id):
+        s = select(TTKDish).where(TTKDish.id == id)
+
+        dish = (await self._session.execute(s)).scalars().first()
+        if dish is None:
+            return None
+
+        return converters.dish_to_dish_schema(dish)

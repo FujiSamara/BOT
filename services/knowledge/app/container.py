@@ -12,6 +12,7 @@ from app.infra.database.uow import SQLDivisionUnitOfWork
 from app.infra.database.binds import get_tables_binds
 from app.services.division import DivisionServiceImpl
 from app.services.card import CardServiceImpl
+from app.services.dish import DishServiceImpl
 
 
 def init_sessionmaker(
@@ -59,3 +60,4 @@ class Container(containers.DeclarativeContainer):
 
     division_service = providers.Factory(DivisionServiceImpl, uow)
     card_service = providers.Factory(CardServiceImpl, uow, file_client)
+    dish_service = providers.Factory(DishServiceImpl, uow)

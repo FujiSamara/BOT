@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
         modules=[
             "app.controllers.api.routes.division",
             "app.controllers.api.routes.card",
+            "app.controllers.api.routes.dish",
             "app.controllers.admin.main",
         ]
     )

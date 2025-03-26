@@ -16,5 +16,9 @@ class DishRepository(BaseRepository):
         pass
 
     @abstractmethod
+    async def get_by_id(self, id: int) -> DishSchema | None:
+        pass
+
+    @abstractmethod
     async def get_modifiers(self, id: int) -> list[DishModifierSchema]:
         pass

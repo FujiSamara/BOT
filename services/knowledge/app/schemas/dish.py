@@ -7,12 +7,13 @@ class DishSchema(BaseSchema):
 
 
 class ProductSchema(BaseSchema):
+    id: int
     name: str
-    weight: float
     amount: float
 
 
 class DishModifierSchema(BaseSchema):
+    id: int
     products: list[ProductSchema]
 
 
