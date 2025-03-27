@@ -4,6 +4,7 @@ from common.config import (
     RemoteAuthSettings,
     FileSettings,
     AdminSettings,
+    CORSSettings,
 )
 from app.infra.config.database import DBSettings
 
@@ -15,5 +16,6 @@ class Settings(
     FileSettings,
     DBSettings,
     AdminSettings,
+    CORSSettings,
 ):
     pass

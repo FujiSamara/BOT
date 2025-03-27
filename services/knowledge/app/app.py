@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 from common.logging import logger
 from common.config import generate
+from common import with_cors
 
 from app.container import Container
 from app.infra.config import Settings
@@ -52,6 +53,7 @@ def create_app() -> FastAPI:
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))
     app.container = container
 
+    with_cors(app, cors_settings=settings)
     admin.register_admin(
         app,
         username=settings.admin_username,
