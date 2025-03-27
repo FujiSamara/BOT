@@ -33,7 +33,7 @@ export const useNetworkStore = defineStore("network", {
 	},
 	actions: {
 		async auth(): Promise<boolean> {
-			const url = `${config.fullBackendURL}/${config.authEndpoint}/`;
+			const url = `${config.coreURL}/${config.authEndpoint}/`;
 			this.authing = true;
 
 			return await axios
@@ -51,7 +51,7 @@ export const useNetworkStore = defineStore("network", {
 				});
 		},
 		async login(username: string, password: string): Promise<boolean> {
-			const url = `${config.fullBackendURL}/${config.authEndpoint}/token`;
+			const url = `${config.coreURL}/${config.authEndpoint}/token`;
 
 			return await axios
 				.post(
@@ -134,7 +134,7 @@ export const useNetworkStore = defineStore("network", {
 		},
 		async getFile(filename: string): Promise<Uint8Array> {
 			return this.getFileByURL(
-				`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
+				`${config.coreURL}/${config.filesEndpoint}?name=${filename}`,
 			);
 		},
 		async getFileByURL(href: string): Promise<Uint8Array> {

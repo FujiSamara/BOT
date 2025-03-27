@@ -3,10 +3,11 @@ import { Access } from "@types";
 export const crmEndpoint = "api/crm";
 export const authEndpoint = "api/auth";
 export const filesEndpoint = "api/download";
-export const protocol = import.meta.env.VITE_PROTOCOL;
-export const backendDomain = import.meta.env.VITE_DOMAIN;
-export const backendPort = import.meta.env.VITE_PORT;
-export const fullBackendURL = `${protocol}://${backendDomain}:${backendPort}`;
+export const knowledgeEndpoint = "api";
+
+export const coreURL = import.meta.env.VITE_CORE_URL;
+export const knowledgeURL = import.meta.env.VITE_KNOWLEDGE_URL;
+
 export const cookiesExpires = "7d";
 
 export const accessesDict: any = {
