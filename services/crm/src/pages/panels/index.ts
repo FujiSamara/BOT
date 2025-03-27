@@ -116,6 +116,14 @@ const tables: Array<TableData> = [
 ];
 const knowledge: Array<PanelData> = [
 	{
+		label: "Поиск",
+		routeName: "knowledge-search",
+		iconURL: "/img/product.svg",
+		active: false,
+		name: "stub",
+		accesses: [Access.Authed],
+	},
+	{
 		label: "Продукт",
 		routeName: "knowledge-product",
 		iconURL: "/img/product.svg",

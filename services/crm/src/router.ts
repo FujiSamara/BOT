@@ -103,6 +103,12 @@ const routes = [
 					await import("@/pages/panels/KnowledgePanel.vue"),
 				children: [
 					{
+						name: "knowledge-search",
+						path: "search",
+						component: async () =>
+							await import("@/pages/panels/KnowledgePanel.vue"),
+					},
+					{
 						name: "knowledge-product",
 						path: "product/:pathMatch(.*)*",
 						component: async () =>
