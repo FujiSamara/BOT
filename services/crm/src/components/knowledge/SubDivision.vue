@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import { KnowledgeSubdivision } from "@/components/knowledge";
+import { DivisionType, KnowledgeSubdivision } from "@/components/knowledge";
 
 const props = defineProps({
 	subDivision: {
@@ -9,25 +9,37 @@ const props = defineProps({
 	},
 });
 
-const asChapter = props.subDivision as KnowledgeChapter;
-const isChapter = props.subDivision.type === "chapter";
+const cards = computed(() => [] as KnowledgeSubdivision[]);
 
-const cards = computed(() =>
-	asChapter.children.filter((val) => val.type === "card"),
-);
+const pluralizeExpenditure = (count: number) => {
+	if (count === 1) return "Статья";
+	if (count > 1 && count < 5) return "Статьи";
+	return "Статей";
+};
+const pluralizeFiles = (count: number) => {
+	if (count === 1) return "Файл";
+	if (count > 1 && count < 5) return "Файла";
+	return "Файлов";
+};
 </script>
 <template>
 	<div class="sub-division">
 		<h2 class="title">{{ props.subDivision.name }}</h2>
-		<ul class="cards" v-if="isChapter && cards.length">
+		<ul class="cards" v-if="cards.length">
 			<li v-for="card in cards">
 				{{ card.name }}
 			</li>
 		</ul>
 		<div class="meta">
-			<span v-if="isChapter">{{ asChapter.childrenCount }} статьи</span>
-			<span>•</span>
-			<span>{{ props.subDivision.filesCount }} файлов</span>
+			<span v-if="props.subDivision.type == DivisionType.division"
+				>{{ props.subDivision.subdivisionsCount }}
+				{{ pluralizeExpenditure(props.subDivision.subdivisionsCount) }}</span
+			>
+			<span v-if="props.subDivision.type == DivisionType.division">•</span>
+			<span
+				>{{ props.subDivision.filesCount }}
+				{{ pluralizeFiles(props.subDivision.filesCount) }}</span
+			>
 		</div>
 	</div>
 </template>
