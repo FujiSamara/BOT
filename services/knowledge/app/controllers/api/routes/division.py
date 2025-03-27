@@ -8,7 +8,7 @@ from app.container import Container
 from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
 
-from app.schemas.division import DivisionOutSchema, DivisionSchema
+from app.schemas.division import DivisionOutSchema, SubdivisionSchema
 from app.contracts.services import DivisionService
 
 router = APIRouter()
@@ -42,7 +42,7 @@ async def find_divisions_by_name(
         Authorization,
         scopes=[Scopes.DivisionRead.value],
     ),
-) -> list[DivisionSchema]:
+) -> list[SubdivisionSchema]:
     try:
         return await service.find_by_name(term)
     except Exception as e:

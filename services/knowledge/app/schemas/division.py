@@ -16,5 +16,10 @@ class DivisionSchema(BaseSchema):
     type: DivisionType = DivisionType.division
 
 
+class SubdivisionSchema(DivisionSchema):
+    subdivisions_count: int = 0
+    files_count: int = 0
+
+
 class DivisionOutSchema(DivisionSchema):
-    subdivisions: list[DivisionSchema]
+    subdivisions: list[SubdivisionSchema]

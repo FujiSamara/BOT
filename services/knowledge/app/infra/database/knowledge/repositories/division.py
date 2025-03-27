@@ -35,23 +35,73 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
             - func.length(func.replace(Division.path, "/", ""))
             == count + 1,
         )
-
-        s = select(Division).where(
-            and_(
-                Division.path.startswith(path + "/"),
-                level_filter,
-            )
+        (sub_level_filter,) = (
+            func.length(Division.path)
+            - func.length(func.replace(Division.path, "/", ""))
+            == count + 2,
         )
 
-        subdivisions = (await self._session.execute(s)).scalars().all()
+        replace_func = func.regexp_replace(Division.path, "/[^/]+$", "")
+        sub_s = (
+            select(
+                replace_func.label("path"),
+                func.count(replace_func).label("childs_count"),
+            )
+            .where(
+                and_(
+                    Division.path.startswith(path + "/"),
+                    sub_level_filter,
+                )
+            )
+            .group_by(replace_func)
+        ).subquery()
 
-        return [converters.division_to_division_schema(d) for d in subdivisions]
+        s = (
+            select(Division, sub_s.c.childs_count)
+            .where(
+                and_(
+                    Division.path.startswith(path + "/"),
+                    level_filter,
+                )
+            )
+            .join(sub_s, sub_s.c.path == Division.path)
+        )
+
+        rows = (await self._session.execute(s)).all()
+
+        return [
+            converters.division_to_subdivision_schema(
+                row[0], subdivisions_count=row[1], files_count=0
+            )
+            for row in rows
+        ]
 
     async def find_by_name(self, term):
         s = select(Division).where(Division.name.ilike(f"%{term}%"))
         divisions = (await self._session.execute(s)).scalars().all()
 
-        return [converters.division_to_division_schema(d) for d in divisions]
+        for division in divisions:
+            count = division.path.count("/")
+            (level_filter,) = (
+                func.length(Division.path)
+                - func.length(func.replace(Division.path, "/", ""))
+                == count + 1,
+            )
+            childs_count_s = select(func.count(Division.id)).where(
+                and_(
+                    Division.path.startswith(division.path + "/"),
+                    level_filter,
+                )
+            )
+            count = (await self._session.execute(childs_count_s)).scalar()
+            division.count = count
+
+        return [
+            converters.division_to_subdivision_schema(
+                d, subdivisions_count=d.count, files_count=0
+            )
+            for d in divisions
+        ]
 
     async def get_division_paths_by_card(self, card_ids):
         s = (

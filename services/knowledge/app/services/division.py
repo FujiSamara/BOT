@@ -1,7 +1,12 @@
 from app.contracts.services import DivisionService
 from app.contracts.uow import DivisionUnitOfWork
 
-from app.schemas.division import DivisionSchema, DivisionType, DivisionOutSchema
+from app.schemas.division import (
+    DivisionSchema,
+    DivisionType,
+    DivisionOutSchema,
+    SubdivisionSchema,
+)
 from app.schemas.card import BusinessCardSchema
 from app.schemas.dish import DishSchema
 
@@ -115,15 +120,19 @@ class DivisionServiceImpl(DivisionService):
 
             divisions.extend(
                 [
-                    self._business_card_to_division(
-                        c, division_path=card_divsion_paths[i]
+                    SubdivisionSchema.model_validate(
+                        self._business_card_to_division(
+                            c, division_path=card_divsion_paths[i]
+                        )
                     )
                     for i, c in enumerate(cards)
                 ]
             )
             divisions.extend(
                 [
-                    self._dish_to_division(d, division_path=dish_division_paths[i])
+                    SubdivisionSchema.model_validate(
+                        self._dish_to_division(d, division_path=dish_division_paths[i])
+                    )
                     for i, d in enumerate(dishes)
                 ]
             )
