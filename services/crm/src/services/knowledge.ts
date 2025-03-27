@@ -6,9 +6,13 @@ export class KnowledgeService {
 
 	constructor(private _endpoint: string) {}
 
-	public async getDivision(path: string): Promise<KnowledgeDivision> {
+	public async getDivision(
+		path: string,
+	): Promise<KnowledgeDivision | undefined> {
 		const url = `${this._endpoint}/division/?path=${path}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+
+		if (!resp.data) return;
 
 		const division = resp.data as KnowledgeDivision;
 

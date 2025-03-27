@@ -43,7 +43,7 @@ const subDivisionClicked = async (index: number) => {
 
 	const newPath = division.value.subdivisions[index].path.split("/");
 	const path = route.path + "/" + newPath[newPath.length - 1];
-	await router.push(path);
+	await router.push(path.replace("//", "/"));
 };
 
 watch(route, loadDivision);
