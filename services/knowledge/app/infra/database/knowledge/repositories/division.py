@@ -27,6 +27,31 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
 
         return converters.division_to_division_schema(division)
 
+    async def _get_dish_card_count_by_ids(self, division_ids: list[int]) -> list[int]:
+        """Count dishes and cards count from first level of division for each id."""
+        # Dishes count for every division
+        dishes_count_s = (
+            select(DishDivision.division_id, func.count(DishDivision.dish_id))
+            .where(DishDivision.division_id.in_(division_ids))
+            .group_by(DishDivision.division_id)
+        )
+        rows = (await self._session.execute(dishes_count_s)).all()
+        dishes_count_dict = {row[0]: row[1] for row in rows}
+
+        # Cards count for every division
+        cards_count_s = (
+            select(BusinessCard.division_id, func.count(BusinessCard.id))
+            .where(BusinessCard.division_id.in_(division_ids))
+            .group_by(BusinessCard.division_id)
+        )
+        rows = (await self._session.execute(cards_count_s)).all()
+        cards_count_dict = {row[0]: row[1] for row in rows}
+
+        return [
+            dishes_count_dict.get(id, 0) + cards_count_dict.get(id, 0)
+            for id in division_ids
+        ]
+
     async def get_subdivisions_by_path(self, path):
         count = path.count("/")
 
@@ -57,30 +82,36 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
         ).subquery()
 
         s = (
-            select(Division, sub_s.c.childs_count)
+            select(Division, func.coalesce(sub_s.c.childs_count, 0))
             .where(
                 and_(
                     Division.path.startswith(path + "/"),
                     level_filter,
                 )
             )
-            .join(sub_s, sub_s.c.path == Division.path)
+            .outerjoin(sub_s, sub_s.c.path == Division.path)
         )
 
         rows = (await self._session.execute(s)).all()
+        ids = [row[0].id for row in rows]
+        counts = await self._get_dish_card_count_by_ids(ids)
 
         return [
             converters.division_to_subdivision_schema(
-                row[0], subdivisions_count=row[1], files_count=0
+                row[0], subdivisions_count=row[1] + counts[i], files_count=0
             )
-            for row in rows
+            for i, row in enumerate(rows)
         ]
 
     async def find_by_name(self, term):
         s = select(Division).where(Division.name.ilike(f"%{term}%"))
         divisions = (await self._session.execute(s)).scalars().all()
+        d_ids = [d.id for d in divisions]
 
-        for division in divisions:
+        # Dishes count for every division
+        counts = await self._get_dish_card_count_by_ids(d_ids)
+
+        for i, division in enumerate(divisions):
             count = division.path.count("/")
             (level_filter,) = (
                 func.length(Division.path)
@@ -93,8 +124,8 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
                     level_filter,
                 )
             )
-            count = (await self._session.execute(childs_count_s)).scalar()
-            division.count = count
+            subdivisions_count = (await self._session.execute(childs_count_s)).scalar()
+            division.count = subdivisions_count + counts[i]
 
         return [
             converters.division_to_subdivision_schema(
