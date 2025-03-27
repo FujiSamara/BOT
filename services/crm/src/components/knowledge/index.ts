@@ -53,8 +53,19 @@ export class KnowledgeController {
 		this._service = new KnowledgeService(endpoint);
 	}
 
+	private routerToActualPath(path: string): string {
+		let result = path;
+		result = result.replace("product", "Продукт");
+		return result;
+	}
+
 	public async loadDivision(path: string) {
-		await this._service.getDivision(path);
+		const division = await this._service.getDivision(
+			this.routerToActualPath(path),
+		);
+		if (division.type == DivisionType.division) {
+			this._division.value = division;
+		}
 	}
 
 	public division = computed(() => this._division.value);

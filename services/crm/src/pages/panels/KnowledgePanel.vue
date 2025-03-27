@@ -35,15 +35,14 @@ const loadDivision = async () => {
 		.split("knowledge")[1]
 		.split("/")
 		.filter((v) => v);
-	await controller.loadDivision(path.join("/"));
+	await controller.loadDivision("/" + path.join("/"));
 };
 
 const subDivisionClicked = async (index: number) => {
 	if (division.value === undefined) return;
 
-	const newPath = division.value.subdivisions[index].path;
-
-	const path = route.path + "/" + newPath;
+	const newPath = division.value.subdivisions[index].path.split("/");
+	const path = route.path + "/" + newPath[newPath.length - 1];
 	await router.push(path);
 };
 

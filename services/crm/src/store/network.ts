@@ -80,6 +80,8 @@ export const useNetworkStore = defineStore("network", {
 				});
 		},
 		setCredentials(token: string, token_type: string): void {
+			token_type =
+				token_type[0].toUpperCase() + token_type.substring(1).toLowerCase();
 			axios.defaults.headers.common["Authorization"] = `${token_type} ${token}`;
 			this.$cookies.set("access_token", token);
 			this.$cookies.set("token_type", token_type);
