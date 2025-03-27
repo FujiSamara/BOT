@@ -26,6 +26,10 @@ const card = computed(() => {
 const searchValue = ref("");
 const onSearch = async (val: string) => {
 	searchValue.value = val;
+	const query = { ...route.query };
+	if (val.length === 0) delete query["term"];
+	else query["term"] = val;
+	await router.push({ name: "knowledge-search", query: query });
 };
 
 const loadDivision = async () => {
@@ -36,7 +40,7 @@ const loadDivision = async () => {
 
 		if (term === undefined) await router.push("main");
 
-		await controller.searchDivisions(term);
+		if (term.length > 2) await controller.searchDivisions(term);
 		return;
 	}
 
