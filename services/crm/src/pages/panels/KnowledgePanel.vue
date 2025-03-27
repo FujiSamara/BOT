@@ -4,15 +4,24 @@ import { useRoute, useRouter } from "vue-router";
 
 import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 
-import { KnowledgeChapter, KnowledgeController } from "@/components/knowledge";
-import Chapter from "@/components/knowledge/Chapter.vue";
+import { DivisionType, KnowledgeController } from "@/components/knowledge";
+import Division from "@/components/knowledge/Division.vue";
 import Card from "@/components/knowledge/Card.vue";
 
 const router = useRouter();
 const route = useRoute();
 const controller = new KnowledgeController();
 
-const chapter = computed(() => controller.division.value as KnowledgeChapter);
+const division = computed(() => {
+	if (controller.division === undefined) return undefined;
+
+	return controller.division.value;
+});
+const card = computed(() => {
+	if (controller.card === undefined) return undefined;
+
+	return controller.card.value;
+});
 
 const searchValue = ref("");
 const onSearch = async (val: string) => {
@@ -26,11 +35,13 @@ const loadDivision = async () => {
 		.split("knowledge")[1]
 		.split("/")
 		.filter((v) => v);
-	await controller.loadDivision(path);
+	await controller.loadDivision(path.join("/"));
 };
 
 const subDivisionClicked = async (index: number) => {
-	const newPath = chapter.value.children[index].path;
+	if (division.value === undefined) return;
+
+	const newPath = division.value.subdivisions[index].path;
 
 	const path = route.path + "/" + newPath;
 	await router.push(path);
@@ -53,12 +64,12 @@ onMounted(async () => {
 
 		<div class="division" v-if="controller.division.value !== undefined">
 			<Transition name="fade" mode="out-in">
-				<Chapter
-					v-if="controller.division.value.type === 'chapter'"
-					:chapter="chapter"
+				<Division
+					v-if="division && division.type === DivisionType.division"
+					:division="division"
 					@click="subDivisionClicked"
-				></Chapter>
-				<Card v-else></Card>
+				></Division>
+				<Card v-else-if="card" :card="card"></Card>
 			</Transition>
 		</div>
 	</div>

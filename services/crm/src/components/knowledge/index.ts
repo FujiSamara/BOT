@@ -1,129 +1,62 @@
 import { computed, ref, Ref } from "vue";
 
 import { KnowledgeService } from "@/services/knowledge";
+import * as config from "@/config";
 import { BaseSchema } from "@/types";
 
-export interface KnowledgeDivision extends BaseSchema {
-	title: string;
+export enum CardType {
+	dish = "dish",
+	business = "business",
+}
+
+export enum DivisionType {
+	division = "division",
+	dish = "dish",
+	business = "business",
+}
+
+export interface KnowledgeSubdivision extends BaseSchema {
+	name: string;
 	filesCount: number;
-	type: "card" | "chapter";
+	type: DivisionType;
+	childrenCount: number;
 	path: string;
 }
 
-export interface KnowledgeCard extends KnowledgeDivision {
-	cardType: "dish" | "common";
+export interface KnowledgeDivision extends KnowledgeSubdivision {
+	subdivisions: KnowledgeSubdivision[];
 }
 
-export interface KnowledgeChapter extends KnowledgeDivision {
-	children: Array<KnowledgeChapter | KnowledgeCard>;
-	childrenCount: number;
+export interface Card extends BaseSchema {
+	name: string;
+	type: CardType;
 }
 
-const mockDivision: KnowledgeChapter = {
-	id: 1,
-	type: "chapter",
-	title: "Продукт",
-	filesCount: 30,
-	path: "product",
-	childrenCount: 4,
-	children: [
-		{
-			id: 2,
-			type: "chapter",
-			title: "Стандарты",
-			path: "standarts",
-			filesCount: 20,
-			childrenCount: 2,
-			children: [
-				{
-					id: 3,
-					type: "chapter",
-					title: "Фото стандарта блюд",
-					path: "photos",
-					filesCount: 20,
-					childrenCount: 2,
-					children: [
-						{
-							id: 7,
-							type: "card",
-							title: "Mac&Cheese",
-							path: "maccheese",
-							filesCount: 20,
-							cardType: "dish",
-						},
-						{
-							id: 8,
-							type: "card",
-							title: "Роллы",
-							path: "rolls",
-							filesCount: 20,
-							cardType: "dish",
-						},
-						{
-							id: 9,
-							type: "card",
-							title: "Салаты",
-							path: "salads",
-							filesCount: 20,
-							cardType: "dish",
-						},
-					],
-				},
-				{
-					id: 4,
-					type: "card",
-					title: "Стандарты приготовления",
-					path: "cooking-standarts",
-					filesCount: 20,
-					cardType: "common",
-				},
-				{
-					id: 5,
-					type: "chapter",
-					title: "Пособие для кухни",
-					path: "kitchen",
-					filesCount: 20,
-					childrenCount: 3,
-					children: [
-						{
-							id: 6,
-							type: "chapter",
-							title: "Test",
-							path: "test",
-							filesCount: 20,
-							childrenCount: 0,
-							children: [],
-						},
-					],
-				},
-			],
-		},
-	],
-};
+export interface BusinessCard extends Card {
+	name: string;
+	description: string | undefined;
+	materials: [];
+}
 
-const getMockDivision = (
-	path: string[],
-	divisions: KnowledgeDivision[],
-): KnowledgeDivision | undefined => {
-	const div = divisions.find((val) => val.path === path[0]);
-	if (div === undefined) return;
-
-	if (path.length === 1) return div;
-	if (div.type === "card") return;
-
-	return getMockDivision(path.slice(1), (div as KnowledgeChapter).children);
-};
+export interface DishCard extends Card {
+	name: string;
+}
 
 export class KnowledgeController {
 	private _division: Ref<KnowledgeDivision | undefined> = ref(undefined);
+	private _card: Ref<Card | undefined> = ref(undefined);
 
-	private _service = new KnowledgeService();
+	private _service: KnowledgeService;
 
-	constructor() {}
+	constructor() {
+		const endpoint = `${config.knowledgeURL}/${config.knowledgeEndpoint}`;
+		this._service = new KnowledgeService(endpoint);
+	}
 
-	public async loadDivision(path: string[]) {
-		this._division.value = getMockDivision(path, [mockDivision]);
+	public async loadDivision(path: string) {
+		await this._service.getDivision(path);
 	}
 
 	public division = computed(() => this._division.value);
+	public card = computed(() => this._card.value);
 }

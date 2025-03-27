@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import { KnowledgeDivision, KnowledgeChapter } from "@/components/knowledge";
+import { KnowledgeSubdivision } from "@/components/knowledge";
 
 const props = defineProps({
 	subDivision: {
-		type: Object as PropType<KnowledgeDivision>,
+		type: Object as PropType<KnowledgeSubdivision>,
 		required: true,
 	},
 });
@@ -18,10 +18,10 @@ const cards = computed(() =>
 </script>
 <template>
 	<div class="sub-division">
-		<h2 class="title">{{ props.subDivision.title }}</h2>
+		<h2 class="title">{{ props.subDivision.name }}</h2>
 		<ul class="cards" v-if="isChapter && cards.length">
 			<li v-for="card in cards">
-				{{ card.title }}
+				{{ card.name }}
 			</li>
 		</ul>
 		<div class="meta">

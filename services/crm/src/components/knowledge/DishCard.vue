@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { PropType } from "vue";
-import { KnowledgeCard } from "@/components/knowledge";
+import { DishCard } from "@/components/knowledge";
 
 const props = defineProps({
 	card: {
-		type: Object as PropType<KnowledgeCard>,
+		type: Object as PropType<DishCard>,
 		required: true,
 	},
 });

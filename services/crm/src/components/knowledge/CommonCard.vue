@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { PropType } from "vue";
-import { KnowledgeCard } from "@/components/knowledge";
+import { BusinessCard } from "@/components/knowledge";
 
 const props = defineProps({
 	card: {
-		type: Object as PropType<KnowledgeCard>,
+		type: Object as PropType<BusinessCard>,
 		required: true,
 	},
 });
 </script>
 <template>
-	<div class="common-card">{{ props.card.title }}</div>
+	<div class="common-card">{{ props.card.name }}</div>
 </template>
 <style scoped lang="scss"></style>

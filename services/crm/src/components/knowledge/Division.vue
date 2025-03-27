@@ -3,11 +3,11 @@ import { PropType } from "vue";
 
 import SubDivision from "@/components/knowledge/SubDivision.vue";
 
-import { KnowledgeChapter } from "@/components/knowledge";
+import { KnowledgeDivision } from "@/components/knowledge";
 
 const props = defineProps({
-	chapter: {
-		type: Object as PropType<KnowledgeChapter>,
+	division: {
+		type: Object as PropType<KnowledgeDivision>,
 		required: true,
 	},
 });
@@ -18,9 +18,9 @@ const emits = defineEmits<{
 </script>
 <template>
 	<div class="kn-chapter">
-		<span class="path">{{ props.chapter.path }}</span>
+		<span class="path">{{ props.division.path }}</span>
 		<SubDivision
-			v-for="(subDivision, index) in props.chapter.children"
+			v-for="(subDivision, index) in props.division.subdivisions"
 			:key="subDivision.id"
 			:sub-division="subDivision"
 			@click.stop="emits('click', index)"

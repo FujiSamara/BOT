@@ -1,20 +1,26 @@
 <script setup lang="ts">
 import { PropType } from "vue";
 
-import DishCard from "@/components/knowledge/DishCard.vue";
+import DishCardView from "@/components/knowledge/DishCard.vue";
 import CommonCard from "@/components/knowledge/CommonCard.vue";
 
-import { KnowledgeCard } from "@/components/knowledge";
+import { Card, CardType, DishCard, BusinessCard } from "@/components/knowledge";
 
 const props = defineProps({
 	card: {
-		type: Object as PropType<KnowledgeCard>,
+		type: Object as PropType<Card>,
 		required: true,
 	},
 });
+
+const dish = props.card as DishCard;
+const business = props.card as BusinessCard;
 </script>
 <template>
-	<DishCard v-if="props.card.cardType === 'dish'" :card="props.card"></DishCard>
-	<CommonCard v-else :card="props.card"></CommonCard>
+	<DishCardView
+		v-if="props.card.type === CardType.dish"
+		:card="dish"
+	></DishCardView>
+	<CommonCard v-else :card="business"></CommonCard>
 </template>
 <style scoped lang="scss"></style>
