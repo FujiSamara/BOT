@@ -19,7 +19,7 @@ export interface KnowledgeSubdivision extends BaseSchema {
 	name: string;
 	filesCount: number;
 	type: DivisionType;
-	childrenCount: number;
+	subdivisionsCount: number;
 	path: string;
 }
 
@@ -71,6 +71,20 @@ export class KnowledgeController {
 			// this._card.value = division;
 			this._division.value = undefined;
 		}
+	}
+
+	public async searchDivisions(term: string) {
+		const divisions = await this._service.findDivisions(term);
+
+		this._division.value = {
+			id: -1,
+			name: "Поиск",
+			filesCount: 0,
+			type: DivisionType.division,
+			subdivisionsCount: 0,
+			path: "/search",
+			subdivisions: divisions,
+		};
 	}
 
 	public division = computed(() => this._division.value);

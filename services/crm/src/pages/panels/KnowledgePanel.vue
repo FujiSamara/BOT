@@ -31,6 +31,15 @@ const onSearch = async (val: string) => {
 const loadDivision = async () => {
 	await router.isReady();
 
+	if (route.name === "knowledge-search") {
+		const term = route.query["term"] as string;
+
+		if (term === undefined) await router.push("main");
+
+		await controller.searchDivisions(term);
+		return;
+	}
+
 	const path = route.path
 		.split("knowledge")[1]
 		.split("/")

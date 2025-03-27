@@ -116,14 +116,6 @@ const tables: Array<TableData> = [
 ];
 const knowledge: Array<PanelData> = [
 	{
-		label: "Поиск",
-		routeName: "knowledge-search",
-		iconURL: "/img/product.svg",
-		active: false,
-		name: "stub",
-		accesses: [Access.Authed],
-	},
-	{
 		label: "Продукт",
 		routeName: "knowledge-product",
 		iconURL: "/img/product.svg",
@@ -137,6 +129,14 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/bag.svg",
 		active: false,
 		name: "purchases",
+		accesses: [Access.Authed],
+	},
+	{
+		label: "Поиск",
+		routeName: "knowledge-search",
+		iconURL: "/img/product.svg",
+		active: false,
+		name: "stub",
 		accesses: [Access.Authed],
 	},
 ];
