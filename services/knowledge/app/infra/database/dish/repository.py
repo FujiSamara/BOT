@@ -35,6 +35,9 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         )
 
         dish = (await self._session.execute(s)).scalars().first()
+        if dish is None:
+            return None
+
         return converters.dish_to_dish_schema(dish)
 
     async def get_modifiers(self, id):
