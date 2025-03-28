@@ -1233,3 +1233,101 @@ class AuthClientScope(Base):
     )
 
     name: Mapped[str] = mapped_column(nullable=False)
+
+
+class TTKGroup(Base):
+    __tablename__ = "ttk_groups"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=False)
+    order: Mapped[int] = mapped_column(nullable=False)
+
+
+class TTKCategory(Base):
+    __tablename__ = "ttk_categories"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    title: Mapped[str] = mapped_column(nullable=False)
+
+
+class TTKProduct(Base):
+    __tablename__ = "ttk_products"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    group_id: Mapped[int] = mapped_column(nullable=False)
+    group_uuid: Mapped[UUID] = mapped_column(nullable=False)
+    category_id: Mapped[int] = mapped_column(nullable=False)
+    category_uuid: Mapped[UUID] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=False)
+    order: Mapped[int] = mapped_column(nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    fat: Mapped[float] = mapped_column(nullable=False)
+    proteins: Mapped[float] = mapped_column(nullable=False)
+    carbohydrates: Mapped[float] = mapped_column(nullable=False)
+    energy: Mapped[float] = mapped_column(nullable=False)
+    full_fat: Mapped[float] = mapped_column(nullable=False)
+    full_proteins: Mapped[float] = mapped_column(nullable=False)
+    full_carbohydrates: Mapped[float] = mapped_column(nullable=False)
+    full_energy: Mapped[float] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+
+    group: Mapped["TTKGroup"] = relationship("TTKGroup", foreign_keys=[group_id])
+    category: Mapped["TTKCategory"] = relationship("TTKCategory", foreign_keys=[category_id])
+
+
+class TTKDishModifier(Base):
+    __tablename__ = "ttk_modifiers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    product_id: Mapped[int] = mapped_column()
+    product_uuid: Mapped[int] = mapped_column()
+    title: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column()
+    code: Mapped[str] = mapped_column()
+    num: Mapped[str] = mapped_column()
+    deleted: Mapped[bool] = mapped_column()
+    weight: Mapped[float] = mapped_column()
+    capacity: Mapped[float] = mapped_column()
+    price: Mapped[float] = mapped_column()
+    default_amount: Mapped[float] = mapped_column()
+    minimum_amount: Mapped[float] = mapped_column()
+    maximum_amount: Mapped[float] = mapped_column()
+
+    product: Mapped["TTKProduct"] = relationship("TTKProduct", foreign_keys=[product_id])
+
+
+class TTKIngredient(Base):
+    __tablename__ = "ttk_ingredients"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    code: Mapped[str] = mapped_column()
+    num: Mapped[str] = mapped_column()
+    title: Mapped[str] = mapped_column()
+    description: Mapped[str] = mapped_column()
+
+
+class TTKAssemblyChart(Base):
+    __tablename__ = "ttk_assembly_charts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    modifier_id: Mapped[int] = mapped_column(nullable=True)
+    product_id: Mapped[int] = mapped_column()
+    ingredient_id: Mapped[int] = mapped_column()
+    weight: Mapped[float] = mapped_column()
+    amount: Mapped[float] = mapped_column()
+
+    modifier: Mapped["TTKDishModifier"] = relationship("TTKDishModifier", foreign_keys=[modifier_id])
+    product: Mapped["TTKProduct"] = relationship("TTKProduct",  foreign_keys=[product_id])
+    ingredient: Mapped["TTKIngredient"] = relationship("TTKIngredient", foreign_keys=[ingredient_id])
