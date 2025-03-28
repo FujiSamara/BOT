@@ -10,6 +10,7 @@ export class KnowledgeService {
 	private _routerToActual = {
 		product: "Продукт",
 		marketing: "Маркетинг",
+		purchases: "Закупки",
 	};
 
 	constructor(private _endpoint: string) {}

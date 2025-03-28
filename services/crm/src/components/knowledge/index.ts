@@ -63,7 +63,11 @@ export class KnowledgeController {
 		const division = await this._service.getDivision(
 			this.routerToActualPath(path),
 		);
-		if (division === undefined) return;
+		if (division === undefined) {
+			this._division.value = undefined;
+			this._card.value = undefined;
+			return;
+		}
 		if (division.type == DivisionType.division) {
 			this._card.value = undefined;
 			this._division.value = division;
