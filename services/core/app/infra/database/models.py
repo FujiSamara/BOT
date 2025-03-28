@@ -1260,9 +1260,9 @@ class TTKProduct(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    group_id: Mapped[int] = mapped_column(nullable=False)
+    group_id: Mapped[int] = mapped_column(ForeignKey("ttk_groups.id"), nullable=False)
     group_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    category_id: Mapped[int] = mapped_column(nullable=False)
+    category_id: Mapped[int] = mapped_column(ForeignKey("ttk_categories.id"), nullable=False)
     category_uuid: Mapped[UUID] = mapped_column(nullable=False)
     image: Mapped[str] = mapped_column(nullable=False)
     order: Mapped[int] = mapped_column(nullable=False)
@@ -1291,7 +1291,7 @@ class TTKDishModifier(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    product_id: Mapped[int] = mapped_column(nullable=False)
+    product_id: Mapped[int] = mapped_column(ForeignKey("ttk_products.id"), nullable=False)
     product_uuid: Mapped[int] = mapped_column(nullable=False)
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
@@ -1326,9 +1326,9 @@ class TTKAssemblyChart(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    modifier_id: Mapped[int] = mapped_column(nullable=True)
-    product_id: Mapped[int] = mapped_column(nullable=False)
-    ingredient_id: Mapped[int] = mapped_column(nullable=False)
+    modifier_id: Mapped[int] = mapped_column(ForeignKey("ttk_modifiers.id"), nullable=True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("ttk_products.id"), nullable=False)
+    ingredient_id: Mapped[int] = mapped_column(ForeignKey("ttk_ingredients.id"), nullable=False)
     weight: Mapped[float] = mapped_column(nullable=False)
     amount: Mapped[float] = mapped_column(nullable=False)
 
