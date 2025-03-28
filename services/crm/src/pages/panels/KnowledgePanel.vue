@@ -54,9 +54,11 @@ const loadDivision = async () => {
 const subDivisionClicked = async (index: number) => {
 	if (division.value === undefined) return;
 
-	const newPath = division.value.subdivisions[index].path.split("/");
-	const path = route.path + "/" + newPath[newPath.length - 1];
-	await router.push(path.replace("//", "/"));
+	const path =
+		route.path.split("knowledge")[0] +
+		"knowledge" +
+		division.value.subdivisions[index].path;
+	await router.push({ path: path });
 };
 
 watch(route, loadDivision);
@@ -77,6 +79,7 @@ onMounted(async () => {
 		<div class="division" v-if="controller.division.value !== undefined">
 			<Transition name="fade" mode="out-in">
 				<Division
+					:key="division.id"
 					v-if="division && division.type === DivisionType.division"
 					:division="division"
 					@click="subDivisionClicked"

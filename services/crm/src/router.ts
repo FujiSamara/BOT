@@ -120,6 +120,12 @@ const routes = [
 						component: async () =>
 							await import("@/pages/panels/KnowledgePanel.vue"),
 					},
+					{
+						name: "knowledge-marketing",
+						path: "marketing/:pathMatch(.*)*",
+						component: async () =>
+							await import("@/pages/panels/KnowledgePanel.vue"),
+					},
 				],
 			},
 		],

@@ -7,11 +7,33 @@ import {
 export class KnowledgeService {
 	private _networkStore = useNetworkStore();
 
+	private _routerToActual = {
+		product: "Продукт",
+		marketing: "Маркетинг",
+	};
+
 	constructor(private _endpoint: string) {}
+
+	private routerToActualPath(path: string): string {
+		let result = path;
+		for (const key of Object.keys(this._routerToActual)) {
+			result = result.replace(key, (this._routerToActual as any)[key]);
+		}
+		return result;
+	}
+
+	private actualToRouterPath(path: string): string {
+		let result = path;
+		for (const key of Object.keys(this._routerToActual)) {
+			result = result.replace((this._routerToActual as any)[key], key);
+		}
+		return result;
+	}
 
 	public async getDivision(
 		path: string,
 	): Promise<KnowledgeDivision | undefined> {
+		path = this.routerToActualPath(path);
 		const url = `${this._endpoint}/division/?path=${path}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 
@@ -22,7 +44,7 @@ export class KnowledgeService {
 			id: row.id,
 			name: row.name,
 			type: row.type,
-			path: row.path,
+			path: this.actualToRouterPath(row.path),
 			subdivisionsCount: row.subdivisions.length,
 			filesCount: 0,
 			subdivisions: [],
@@ -32,7 +54,7 @@ export class KnowledgeService {
 			division.subdivisions.push({
 				id: sub.id,
 				name: sub.name,
-				path: sub.path,
+				path: this.actualToRouterPath(sub.path),
 				type: sub.type,
 				filesCount: 0,
 				subdivisionsCount: sub.subdivisions_count,
@@ -52,7 +74,7 @@ export class KnowledgeService {
 			divisions.push({
 				id: row.id,
 				name: row.name,
-				path: row.path,
+				path: this.actualToRouterPath(row.path),
 				type: row.type,
 				filesCount: row.files_count,
 				subdivisionsCount: row.subdivisions_count,

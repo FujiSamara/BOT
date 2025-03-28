@@ -132,6 +132,14 @@ const knowledge: Array<PanelData> = [
 		accesses: [Access.Authed],
 	},
 	{
+		label: "Маркетинг",
+		routeName: "knowledge-marketing",
+		iconURL: "/img/bag.svg",
+		active: false,
+		name: "marketing",
+		accesses: [Access.Authed],
+	},
+	{
 		label: "Поиск",
 		routeName: "knowledge-search",
 		iconURL: "/img/product.svg",
