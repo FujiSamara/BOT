@@ -1281,7 +1281,9 @@ class TTKProduct(Base):
     price: Mapped[float] = mapped_column(nullable=False)
 
     group: Mapped["TTKGroup"] = relationship("TTKGroup", foreign_keys=[group_id])
-    category: Mapped["TTKCategory"] = relationship("TTKCategory", foreign_keys=[category_id])
+    category: Mapped["TTKCategory"] = relationship(
+        "TTKCategory", foreign_keys=[category_id]
+    )
 
 
 class TTKDishModifier(Base):
@@ -1289,21 +1291,23 @@ class TTKDishModifier(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    product_id: Mapped[int] = mapped_column()
-    product_uuid: Mapped[int] = mapped_column()
-    title: Mapped[str] = mapped_column()
-    description: Mapped[str] = mapped_column()
-    code: Mapped[str] = mapped_column()
-    num: Mapped[str] = mapped_column()
-    deleted: Mapped[bool] = mapped_column()
-    weight: Mapped[float] = mapped_column()
-    capacity: Mapped[float] = mapped_column()
-    price: Mapped[float] = mapped_column()
-    default_amount: Mapped[float] = mapped_column()
-    minimum_amount: Mapped[float] = mapped_column()
-    maximum_amount: Mapped[float] = mapped_column()
+    product_id: Mapped[int] = mapped_column(nullable=False)
+    product_uuid: Mapped[int] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
+    num: Mapped[str] = mapped_column(nullable=False)
+    deleted: Mapped[bool] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(nullable=False)
+    capacity: Mapped[float] = mapped_column(nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+    default_amount: Mapped[float] = mapped_column(nullable=False)
+    minimum_amount: Mapped[float] = mapped_column(nullable=False)
+    maximum_amount: Mapped[float] = mapped_column(nullable=False)
 
-    product: Mapped["TTKProduct"] = relationship("TTKProduct", foreign_keys=[product_id])
+    product: Mapped["TTKProduct"] = relationship(
+        "TTKProduct", foreign_keys=[product_id]
+    )
 
 
 class TTKIngredient(Base):
@@ -1311,10 +1315,10 @@ class TTKIngredient(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    code: Mapped[str] = mapped_column()
-    num: Mapped[str] = mapped_column()
-    title: Mapped[str] = mapped_column()
-    description: Mapped[str] = mapped_column()
+    code: Mapped[str] = mapped_column(nullable=False)
+    num: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
 
 
 class TTKAssemblyChart(Base):
@@ -1323,11 +1327,17 @@ class TTKAssemblyChart(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     modifier_id: Mapped[int] = mapped_column(nullable=True)
-    product_id: Mapped[int] = mapped_column()
-    ingredient_id: Mapped[int] = mapped_column()
-    weight: Mapped[float] = mapped_column()
-    amount: Mapped[float] = mapped_column()
+    product_id: Mapped[int] = mapped_column(nullable=False)
+    ingredient_id: Mapped[int] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(nullable=False)
+    amount: Mapped[float] = mapped_column(nullable=False)
 
-    modifier: Mapped["TTKDishModifier"] = relationship("TTKDishModifier", foreign_keys=[modifier_id])
-    product: Mapped["TTKProduct"] = relationship("TTKProduct",  foreign_keys=[product_id])
-    ingredient: Mapped["TTKIngredient"] = relationship("TTKIngredient", foreign_keys=[ingredient_id])
+    modifier: Mapped["TTKDishModifier"] = relationship(
+        "TTKDishModifier", foreign_keys=[modifier_id]
+    )
+    product: Mapped["TTKProduct"] = relationship(
+        "TTKProduct", foreign_keys=[product_id]
+    )
+    ingredient: Mapped["TTKIngredient"] = relationship(
+        "TTKIngredient", foreign_keys=[ingredient_id]
+    )
