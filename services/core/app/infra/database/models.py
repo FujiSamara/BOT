@@ -1237,65 +1237,119 @@ class AuthClientScope(Base):
     name: Mapped[str] = mapped_column(nullable=False)
 
 
-class TTKDish(Base):
-    __tablename__ = "dishes"
+class TTKGroup(Base):
+    __tablename__ = "ttk_groups"
 
-    iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
-    num: Mapped[str] = mapped_column(nullable=False)
-    deleted: Mapped[bool] = mapped_column(nullable=False)
-    weight: Mapped[float] = mapped_column(nullable=False)
-    capacity: Mapped[float] = mapped_column(nullable=False)
-    price: Mapped[float] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=False)
+    order: Mapped[int] = mapped_column(nullable=False)
 
 
-class TTKDishModifier(Base):
-    __tablename__ = "modifiers"
+class TTKCategory(Base):
+    __tablename__ = "ttk_categories"
 
-    iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    dish_id: Mapped[int] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
-    description: Mapped[str] = mapped_column(nullable=False)
-    code: Mapped[str] = mapped_column(nullable=False)
-    num: Mapped[str] = mapped_column(nullable=False)
-    deleted: Mapped[bool] = mapped_column(nullable=False)
-    weight: Mapped[float] = mapped_column(nullable=False)
-    capacity: Mapped[float] = mapped_column(nullable=False)
-    price: Mapped[float] = mapped_column(nullable=False)
-    defaultAmount: Mapped[float] = mapped_column(nullable=False)
-    minimumAmount: Mapped[float] = mapped_column(nullable=False)
-    maximumAmount: Mapped[float] = mapped_column(nullable=False)
-
-    dish: Mapped["TTKDish"] = relationship(
-        "TTKDish", back_populates="modifiers", foreign_keys=[dish_id]
-    )
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    title: Mapped[str] = mapped_column(nullable=False)
 
 
 class TTKProduct(Base):
-    __tablename__ = "products"
+    __tablename__ = "ttk_products"
 
-    iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("ttk_groups.id"), nullable=False)
+    group_uuid: Mapped[UUID] = mapped_column(nullable=False)
+    category_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_categories.id"), nullable=False
+    )
+    category_uuid: Mapped[UUID] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=False)
+    order: Mapped[int] = mapped_column(nullable=False)
+    code: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+    fat: Mapped[float] = mapped_column(nullable=False)
+    proteins: Mapped[float] = mapped_column(nullable=False)
+    carbohydrates: Mapped[float] = mapped_column(nullable=False)
+    energy: Mapped[float] = mapped_column(nullable=False)
+    full_fat: Mapped[float] = mapped_column(nullable=False)
+    full_proteins: Mapped[float] = mapped_column(nullable=False)
+    full_carbohydrates: Mapped[float] = mapped_column(nullable=False)
+    full_energy: Mapped[float] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+
+    group: Mapped["TTKGroup"] = relationship("TTKGroup", foreign_keys=[group_id])
+    category: Mapped["TTKCategory"] = relationship(
+        "TTKCategory", foreign_keys=[category_id]
+    )
+
+
+class TTKDishModifier(Base):
+    __tablename__ = "ttk_modifiers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_products.id"), nullable=False
+    )
+    product_uuid: Mapped[int] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
     num: Mapped[str] = mapped_column(nullable=False)
     deleted: Mapped[bool] = mapped_column(nullable=False)
+    weight: Mapped[float] = mapped_column(nullable=False)
+    capacity: Mapped[float] = mapped_column(nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+    default_amount: Mapped[float] = mapped_column(nullable=False)
+    minimum_amount: Mapped[float] = mapped_column(nullable=False)
+    maximum_amount: Mapped[float] = mapped_column(nullable=False)
+
+    product: Mapped["TTKProduct"] = relationship(
+        "TTKProduct", foreign_keys=[product_id]
+    )
 
 
-class AssemblyChart(Base):
-    __tablename__ = "assembly_charts"
+class TTKIngredient(Base):
+    __tablename__ = "ttk_ingredients"
 
-    iiko_uuid: Mapped[UUID] = mapped_column(nullable=False)
-    modifier_id: Mapped[int] = mapped_column(nullable=False)
-    product_id: Mapped[int] = mapped_column(nullable=False)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    code: Mapped[str] = mapped_column(nullable=False)
+    num: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
+
+
+class TTKAssemblyChart(Base):
+    __tablename__ = "ttk_assembly_charts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
+    modifier_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_modifiers.id"), nullable=True
+    )
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_products.id"), nullable=False
+    )
+    ingredient_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_ingredients.id"), nullable=False
+    )
     weight: Mapped[float] = mapped_column(nullable=False)
     amount: Mapped[float] = mapped_column(nullable=False)
 
     modifier: Mapped["TTKDishModifier"] = relationship(
-        "TTKDishModifier", back_populates="assembly_charts", foreign_keys=[modifier_id]
+        "TTKDishModifier", foreign_keys=[modifier_id]
     )
     product: Mapped["TTKProduct"] = relationship(
-        "TTKProduct", back_populates="assembly_charts", foreign_keys=[product_id]
+        "TTKProduct", foreign_keys=[product_id]
+    )
+    ingredient: Mapped["TTKIngredient"] = relationship(
+        "TTKIngredient", foreign_keys=[ingredient_id]
     )
