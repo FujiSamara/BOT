@@ -30,9 +30,9 @@ class DivisionServiceImpl(DivisionService):
     ) -> DivisionSchema:
         return DivisionSchema(
             id=dish.id,
-            name=dish.name,
+            name=dish.title,
             type=DivisionType.dish,
-            path=division_path + "/" + dish.name,
+            path=division_path + "/" + dish.title,
         )
 
     async def _try_find_division(self, path: str) -> DivisionSchema | None:
@@ -62,7 +62,7 @@ class DivisionServiceImpl(DivisionService):
             )
             if dish is not None:
                 return DivisionSchema(
-                    id=dish.id, name=dish.name, path=path, type=DivisionType.dish
+                    id=dish.id, name=dish.title, path=path, type=DivisionType.dish
                 )
 
             return
@@ -113,7 +113,7 @@ class DivisionServiceImpl(DivisionService):
             card_divsion_paths = await uow.division.get_division_paths_by_card(
                 [c.id for c in cards]
             )
-            dishes = await uow.dish.find_by_name(term)
+            dishes = await uow.dish.find_by_title(term)
             dish_division_paths = await uow.division.get_division_paths_by_dish(
                 [d.id for d in dishes]
             )

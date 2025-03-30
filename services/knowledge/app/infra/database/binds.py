@@ -13,8 +13,9 @@ def get_tables_binds(
         knowledge.BusinessCardMaterial: knowledge_engine,
         knowledge.Division: knowledge_engine,
         knowledge.DishDivision: knowledge_engine,
-        dish.TTKDish: dish_engine,
+        dish.TTKProduct: dish_engine,
         dish.TTKDishModifier: dish_engine,
         dish.TTKProduct: dish_engine,
-        dish.AssemblyChart: dish_engine,
+        dish.TTKGroup: dish_engine,
+        dish.TTKIngredient: dish_engine,
     }

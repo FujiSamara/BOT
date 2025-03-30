@@ -3,18 +3,18 @@ from common.schemas.base import BaseSchema
 
 class DishSchema(BaseSchema):
     id: int
-    name: str
+    title: str
 
 
-class ProductSchema(BaseSchema):
+class IngredientSchema(BaseSchema):
     id: int
-    name: str
+    title: str
     amount: float
 
 
 class DishModifierSchema(BaseSchema):
     id: int
-    products: list[ProductSchema]
+    ingredients: list[IngredientSchema]
 
 
 class DishWithModifierSchema(DishSchema):

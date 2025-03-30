@@ -1,8 +1,8 @@
 from app.schemas.dish import DishSchema, DishModifierSchema
-from app.infra.database.dish.models import TTKDish
+from app.infra.database.dish.models import TTKProduct
 
 
-def dish_to_dish_schema(dish: TTKDish) -> DishSchema:
+def product_to_dish_schema(dish: TTKProduct) -> DishSchema:
     return DishSchema.model_validate(dish)
 
 

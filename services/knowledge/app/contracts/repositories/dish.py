@@ -11,7 +11,7 @@ class DishRepository(BaseRepository):
 
     @abstractmethod
     async def get_by_division_id_with_name(
-        self, id: int, name: str
+        self, id: int, title: str
     ) -> DishSchema | None:
         pass
 
@@ -20,9 +20,9 @@ class DishRepository(BaseRepository):
         pass
 
     @abstractmethod
-    async def get_modifiers(self, id: int) -> list[DishModifierSchema]:
+    async def get_modifiers(self, product_id: int) -> list[DishModifierSchema]:
         pass
 
     @abstractmethod
-    async def find_by_name(self, term: str) -> list[DishSchema]:
+    async def find_by_title(self, term: str) -> list[DishSchema]:
         pass
