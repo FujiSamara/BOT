@@ -1240,7 +1240,6 @@ class AuthClientScope(Base):
 class TTKGroup(Base):
     __tablename__ = "ttk_groups"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
@@ -1252,7 +1251,6 @@ class TTKGroup(Base):
 class TTKCategory(Base):
     __tablename__ = "ttk_categories"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     title: Mapped[str] = mapped_column(nullable=False)
 
@@ -1260,7 +1258,6 @@ class TTKCategory(Base):
 class TTKProduct(Base):
     __tablename__ = "ttk_products"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("ttk_groups.id"), nullable=False)
     group_uuid: Mapped[UUID] = mapped_column(nullable=False)
@@ -1293,7 +1290,6 @@ class TTKProduct(Base):
 class TTKDishModifier(Base):
     __tablename__ = "ttk_modifiers"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     product_id: Mapped[int] = mapped_column(
         ForeignKey("ttk_products.id"), nullable=False
@@ -1319,7 +1315,6 @@ class TTKDishModifier(Base):
 class TTKIngredient(Base):
     __tablename__ = "ttk_ingredients"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     code: Mapped[str] = mapped_column(nullable=False)
     num: Mapped[str] = mapped_column(nullable=False)
@@ -1330,7 +1325,6 @@ class TTKIngredient(Base):
 class TTKAssemblyChart(Base):
     __tablename__ = "ttk_assembly_charts"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     modifier_id: Mapped[int] = mapped_column(
         ForeignKey("ttk_modifiers.id"), nullable=True

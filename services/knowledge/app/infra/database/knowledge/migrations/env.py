@@ -21,10 +21,12 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = models.Base.metadata
-target_metadata.remove(extra_models.TTKDish.__table__)
+target_metadata.remove(extra_models.TTKIngredient.__table__)
 target_metadata.remove(extra_models.TTKDishModifier.__table__)
 target_metadata.remove(extra_models.TTKProduct.__table__)
-target_metadata.remove(extra_models.AssemblyChart.__table__)
+target_metadata.remove(extra_models.TTKAssemblyChart.__table__)
+target_metadata.remove(extra_models.TTKGroup.__table__)
+target_metadata.remove(extra_models.TTKCategory.__table__)
 
 
 def run_migrations_offline() -> None:
