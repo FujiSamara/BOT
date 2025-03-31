@@ -25,6 +25,7 @@ const emits = defineEmits<{
 			:sub-division="subDivision"
 			@click.stop="emits('click', index)"
 		></SubDivision>
+		<slot></slot>
 	</div>
 </template>
 <style scoped lang="scss">

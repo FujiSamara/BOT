@@ -7,9 +7,9 @@ import {
 	actualToRouterPath,
 	DivisionType,
 	Card,
+	DIVISION_CHUNK_SIZE,
 } from "@/components/knowledge";
 
-const DIVISION_CHUNK_SIZE = 50;
 export class KnowledgeService {
 	private _networkStore = useNetworkStore();
 

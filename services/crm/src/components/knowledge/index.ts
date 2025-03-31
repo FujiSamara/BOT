@@ -64,12 +64,18 @@ export function actualToRouterPath(path: string): string {
 	for (const key of Object.keys(routerToActual)) {
 		result = result.replace((routerToActual as any)[key], key);
 	}
+	result = result.replace("+", "%2B");
 	return result;
 }
+
+export const DIVISION_CHUNK_SIZE = 50;
 
 //
 export class KnowledgeController {
 	private _division: Ref<KnowledgeDivision | undefined> = ref(undefined);
+	public lastDivisionPage = ref(false);
+	private _subdivisionsPage = 0;
+
 	private _card: Ref<Card | undefined> = ref(undefined);
 
 	private _service: KnowledgeService;
@@ -79,17 +85,10 @@ export class KnowledgeController {
 		this._service = new KnowledgeService(endpoint);
 	}
 
-	private routerToActualPath(path: string): string {
-		let result = path;
-		result = result.replace("product", "Продукт");
-		return result;
-	}
-
+	// Load
 	public async loadDivision(path: string) {
-		const division = await this._service.getDivision(
-			this.routerToActualPath(path),
-			0,
-		);
+		this._subdivisionsPage = 1;
+		const division = await this._service.getDivision(path, 0);
 		if (division === undefined) {
 			this._division.value = undefined;
 			this._card.value = undefined;
@@ -98,6 +97,8 @@ export class KnowledgeController {
 		this._division.value = division;
 		if (division.type == DivisionType.division) {
 			this._card.value = undefined;
+			this.lastDivisionPage.value =
+				division.subdivisionsCount < DIVISION_CHUNK_SIZE;
 		} else {
 			const card = await this._service.getCard(division.id, division.type);
 			if (card === undefined) return;
@@ -107,9 +108,34 @@ export class KnowledgeController {
 			this._card.value = card;
 		}
 	}
+	public async nextSubdivisions() {
+		if (this._division.value === undefined) return;
+
+		const division = await this._service.getDivision(
+			this._division.value.path,
+			this._subdivisionsPage * DIVISION_CHUNK_SIZE,
+		);
+		if (division === undefined) return;
+
+		this.lastDivisionPage.value =
+			division.subdivisionsCount < DIVISION_CHUNK_SIZE;
+
+		this._division.value = {
+			...this._division.value,
+			subdivisions: [
+				...this._division.value.subdivisions,
+				...division.subdivisions,
+			],
+		};
+
+		this._subdivisionsPage += 1;
+	}
 
 	public async searchDivisions(term: string) {
+		this._subdivisionsPage = 1;
 		const divisions = await this._service.findDivisions(term, 0);
+
+		this.lastDivisionPage.value = divisions.length < DIVISION_CHUNK_SIZE;
 
 		this._division.value = {
 			id: -1,
