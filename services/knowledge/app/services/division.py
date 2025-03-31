@@ -67,7 +67,9 @@ class DivisionServiceImpl(DivisionService):
 
             return
 
-    async def get_division_by_path(self, path):
+    async def get_division_by_path(
+        self, path, *, subdivisions_limit, subdivisions_offset
+    ):
         division = await self._try_find_division(path)
         if division is None:
             return division
@@ -101,12 +103,14 @@ class DivisionServiceImpl(DivisionService):
                 name=division.name,
                 path=division.path,
                 type=division.type,
-                subdivisions=subdivisions,
+                subdivisions=subdivisions[
+                    subdivisions_offset : subdivisions_offset + subdivisions_limit
+                ],
             )
 
         return result
 
-    async def find_by_name(self, term):
+    async def find_by_name(self, term, *, limit: int, offset: int):
         async with self._uow as uow:
             divisions = await uow.division.find_by_name(term)
             cards = await uow.card.find_by_name(term)
@@ -137,4 +141,4 @@ class DivisionServiceImpl(DivisionService):
                 ]
             )
 
-        return divisions
+        return divisions[offset : offset + limit]

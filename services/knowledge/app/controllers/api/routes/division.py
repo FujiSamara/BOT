@@ -1,5 +1,6 @@
 from logging import Logger
-from fastapi import APIRouter, Security, Depends, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Security, Depends, HTTPException, status, Query
 from dependency_injector.wiring import Provide, inject
 import traceback
 
@@ -18,6 +19,8 @@ router = APIRouter()
 @inject
 async def get_division_by_path(
     path: str,
+    limit: Annotated[int, Query(description="Limit of subdivision.")],
+    offset: Annotated[int, Query(description="Offset of subdivision.")],
     service: DivisionService = Depends(Provide[Container.division_service]),
     logger: Logger = Depends(Provide[Container.logger]),
     _: ClientCredentials = Security(
@@ -26,7 +29,9 @@ async def get_division_by_path(
     ),
 ) -> DivisionOutSchema | None:
     try:
-        return await service.get_division_by_path(path)
+        return await service.get_division_by_path(
+            path, subdivisions_limit=limit, subdivisions_offset=offset
+        )
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -36,6 +41,8 @@ async def get_division_by_path(
 @inject
 async def find_divisions_by_name(
     term: str,
+    limit: int,
+    offset: int,
     service: DivisionService = Depends(Provide[Container.division_service]),
     logger: Logger = Depends(Provide[Container.logger]),
     _: ClientCredentials = Security(
@@ -44,7 +51,7 @@ async def find_divisions_by_name(
     ),
 ) -> list[SubdivisionSchema]:
     try:
-        return await service.find_by_name(term)
+        return await service.find_by_name(term, limit=limit, offset=offset)
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

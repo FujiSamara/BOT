@@ -52,7 +52,7 @@ class SQLDivisionRepository(DivisionRepository, SQLBaseRepository):
             for id in division_ids
         ]
 
-    async def get_subdivisions_by_path(self, path):
+    async def get_subdivisions_by_path(self, path, limit=0, offset=0):
         count = path.count("/")
 
         (level_filter,) = (
