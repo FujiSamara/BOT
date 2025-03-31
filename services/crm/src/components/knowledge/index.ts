@@ -131,6 +131,7 @@ export class KnowledgeController {
 		this._subdivisionsPage += 1;
 	}
 
+	// Search
 	public async searchDivisions(term: string) {
 		this._subdivisionsPage = 1;
 		const divisions = await this._service.findDivisions(term, 0);
@@ -146,6 +147,22 @@ export class KnowledgeController {
 			path: "/search",
 			subdivisions: divisions,
 		};
+	}
+	public async nextSearchingResults(term: string) {
+		if (this._division.value === undefined) return;
+
+		const divisions = await this._service.findDivisions(
+			term,
+			this._subdivisionsPage * DIVISION_CHUNK_SIZE,
+		);
+		this.lastDivisionPage.value = divisions.length < DIVISION_CHUNK_SIZE;
+
+		this._division.value = {
+			...this._division.value,
+			subdivisions: [...this._division.value.subdivisions, ...divisions],
+		};
+
+		this._subdivisionsPage += 1;
 	}
 
 	public division = computed(() => this._division.value);

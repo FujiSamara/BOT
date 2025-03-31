@@ -50,6 +50,11 @@ const extendClicked = async () => {
 		const term = route.query["term"] as string;
 
 		if (term === undefined) await router.push("main");
+
+		await controller.nextSearchingResults(term);
+
+		extending.value = false;
+		return;
 	}
 	await controller.nextSubdivisions();
 	extending.value = false;
@@ -101,7 +106,10 @@ onMounted(async () => {
 					@click="subDivisionClicked"
 					class="division"
 				>
-					<div class="extend-wrapper">
+					<div
+						class="extend-wrapper"
+						v-if="!controller.lastDivisionPage.value || extending"
+					>
 						<Transition name="fade" mode="out-in" :duration="250">
 							<div v-if="!extending" class="next-button-wrapper">
 								<button
