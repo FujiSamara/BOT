@@ -69,10 +69,13 @@ const loadDivision = async () => {
 
 		if (term === undefined) await router.push("main");
 
+		searchValue.value = term;
+
 		if (term.length > 2) await controller.searchDivisions(term);
 		loading.value = false;
 		return;
 	}
+	searchValue.value = "";
 
 	const path = route.path
 		.split("knowledge")[1]
