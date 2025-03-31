@@ -88,6 +88,7 @@ export class KnowledgeController {
 	public async loadDivision(path: string) {
 		const division = await this._service.getDivision(
 			this.routerToActualPath(path),
+			0,
 		);
 		if (division === undefined) {
 			this._division.value = undefined;
@@ -108,7 +109,7 @@ export class KnowledgeController {
 	}
 
 	public async searchDivisions(term: string) {
-		const divisions = await this._service.findDivisions(term);
+		const divisions = await this._service.findDivisions(term, 0);
 
 		this._division.value = {
 			id: -1,

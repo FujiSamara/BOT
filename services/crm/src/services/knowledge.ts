@@ -8,6 +8,8 @@ import {
 	DivisionType,
 	Card,
 } from "@/components/knowledge";
+
+const DIVISION_CHUNK_SIZE = 50;
 export class KnowledgeService {
 	private _networkStore = useNetworkStore();
 
@@ -15,9 +17,10 @@ export class KnowledgeService {
 
 	public async getDivision(
 		path: string,
+		subdivisionsOffset: number,
 	): Promise<KnowledgeDivision | undefined> {
 		path = routerToActualPath(path);
-		const url = `${this._endpoint}/division/?path=${path}`;
+		const url = `${this._endpoint}/division/?path=${path}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 
 		if (!resp.data) return;
@@ -47,8 +50,11 @@ export class KnowledgeService {
 		return division;
 	}
 
-	public async findDivisions(term: string): Promise<KnowledgeSubdivision[]> {
-		const url = `${this._endpoint}/division/find/by/name?term=${term}`;
+	public async findDivisions(
+		term: string,
+		subdivisionsOffset: number,
+	): Promise<KnowledgeSubdivision[]> {
+		const url = `${this._endpoint}/division/find/by/name?term=${term}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		const rows = resp.data;
 		const divisions: KnowledgeSubdivision[] = [];
