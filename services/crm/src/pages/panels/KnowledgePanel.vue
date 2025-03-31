@@ -76,15 +76,19 @@ onMounted(async () => {
 			:id="useId()"
 		></MaybeDelayInput>
 
-		<div class="wrapper" v-if="division !== undefined">
+		<div class="content">
 			<Transition name="fade" mode="out-in">
 				<Division
 					:key="division.id"
-					v-if="division.type == DivisionType.division"
+					v-if="division && division.type == DivisionType.division"
 					:division="division"
 					@click="subDivisionClicked"
 				></Division>
-				<Card v-else-if="card" :card="card" :path="division.path"></Card>
+				<Card
+					v-else-if="division && card"
+					:card="card"
+					:path="division.path"
+				></Card>
 			</Transition>
 		</div>
 	</div>
@@ -104,6 +108,17 @@ onMounted(async () => {
 		height: 48px;
 
 		border-color: $stroke-light-blue;
+	}
+
+	.content {
+		display: flex;
+
+		width: 100%;
+		height: fit-content;
+	}
+
+	.fade-leave-to {
+		position: absolute;
 	}
 }
 </style>
