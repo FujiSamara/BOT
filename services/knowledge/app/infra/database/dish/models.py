@@ -10,7 +10,7 @@ class TTKGroup(Base):
 
     title: Mapped[str] = mapped_column(nullable=False)
 
-    image: Mapped[str] = mapped_column(nullable=False)
+    image: Mapped[str] = mapped_column(nullable=True)
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
@@ -47,7 +47,7 @@ class TTKProduct(Base):
     energy: Mapped[float] = mapped_column(nullable=False)
     full_fat: Mapped[float] = mapped_column(nullable=False)
     full_proteins: Mapped[float] = mapped_column(nullable=False)
-    full_carbohydrates: Mapped[float] = mapped_column(nullable=False)
+    full_carbohydrates: Mapped[float] = mapped_column(nullable=True)
     full_energy: Mapped[float] = mapped_column(nullable=False)
     weight: Mapped[float] = mapped_column(nullable=False)
     price: Mapped[float] = mapped_column(nullable=False)
@@ -61,7 +61,7 @@ class TTKDishModifier(Base):
     )
 
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
-    product_uuid: Mapped[int] = mapped_column(nullable=False)
+    product_uuid: Mapped[int] = mapped_column(nullable=True)
     title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
