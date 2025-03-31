@@ -7,6 +7,10 @@ import CommonCard from "@/components/knowledge/CommonCard.vue";
 import { Card, CardType, DishCard, BusinessCard } from "@/components/knowledge";
 
 const props = defineProps({
+	path: {
+		type: String,
+		required: true,
+	},
 	card: {
 		type: Object as PropType<Card>,
 		required: true,
@@ -17,10 +21,22 @@ const dish = props.card as DishCard;
 const business = props.card as BusinessCard;
 </script>
 <template>
-	<DishCardView
-		v-if="props.card.type === CardType.dish"
-		:card="dish"
-	></DishCardView>
-	<CommonCard v-else :card="business"></CommonCard>
+	<div class="k-card">
+		<span class="path">{{ path }}</span>
+		<DishCardView
+			v-if="props.card.type == CardType.dish"
+			:card="dish"
+		></DishCardView>
+		<CommonCard v-else :card="business"></CommonCard>
+	</div>
 </template>
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.k-card {
+	display: flex;
+	flex-direction: column;
+
+	width: 100%;
+	height: fit-content;
+	gap: 32px;
+}
+</style>

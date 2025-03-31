@@ -40,8 +40,34 @@ export interface BusinessCard extends Card {
 
 export interface DishCard extends Card {
 	name: string;
+	image: string;
 }
 
+//
+
+const routerToActual = {
+	product: "Продукт",
+	marketing: "Маркетинг",
+	purchases: "Закупки",
+};
+
+export function routerToActualPath(path: string): string {
+	let result = path;
+	for (const key of Object.keys(routerToActual)) {
+		result = result.replace(key, (routerToActual as any)[key]);
+	}
+	return result;
+}
+
+export function actualToRouterPath(path: string): string {
+	let result = path;
+	for (const key of Object.keys(routerToActual)) {
+		result = result.replace((routerToActual as any)[key], key);
+	}
+	return result;
+}
+
+//
 export class KnowledgeController {
 	private _division: Ref<KnowledgeDivision | undefined> = ref(undefined);
 	private _card: Ref<Card | undefined> = ref(undefined);
@@ -68,12 +94,16 @@ export class KnowledgeController {
 			this._card.value = undefined;
 			return;
 		}
+		this._division.value = division;
 		if (division.type == DivisionType.division) {
 			this._card.value = undefined;
-			this._division.value = division;
 		} else {
-			// this._card.value = division;
-			this._division.value = undefined;
+			const card = await this._service.getCard(division.id, division.type);
+			if (card === undefined) return;
+			if (division.type === DivisionType.dish) card.type = CardType.dish;
+			else card.type = CardType.business;
+
+			this._card.value = card;
 		}
 	}
 

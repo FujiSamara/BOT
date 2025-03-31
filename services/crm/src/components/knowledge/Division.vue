@@ -3,7 +3,7 @@ import { PropType } from "vue";
 
 import SubDivision from "@/components/knowledge/SubDivision.vue";
 
-import { KnowledgeDivision } from "@/components/knowledge";
+import { KnowledgeDivision, routerToActualPath } from "@/components/knowledge";
 
 const props = defineProps({
 	division: {
@@ -18,7 +18,7 @@ const emits = defineEmits<{
 </script>
 <template>
 	<div class="kn-chapter">
-		<span class="path">{{ props.division.path }}</span>
+		<span class="path">{{ routerToActualPath(props.division.path) }}</span>
 		<SubDivision
 			v-for="(subDivision, index) in props.division.subdivisions"
 			:key="subDivision.id"

@@ -76,15 +76,15 @@ onMounted(async () => {
 			:id="useId()"
 		></MaybeDelayInput>
 
-		<div class="division" v-if="controller.division.value !== undefined">
+		<div class="wrapper" v-if="division !== undefined">
 			<Transition name="fade" mode="out-in">
 				<Division
 					:key="division.id"
-					v-if="division && division.type === DivisionType.division"
+					v-if="division.type == DivisionType.division"
 					:division="division"
 					@click="subDivisionClicked"
 				></Division>
-				<Card v-else-if="card" :card="card"></Card>
+				<Card v-else-if="card" :card="card" :path="division.path"></Card>
 			</Transition>
 		</div>
 	</div>

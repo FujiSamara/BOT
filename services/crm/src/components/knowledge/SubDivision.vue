@@ -61,7 +61,7 @@ const pluralizeFiles = (count: number) => {
 	cursor: default;
 
 	&:hover {
-		background-color: $bg-temp;
+		background-color: $sec-desktop-press;
 	}
 
 	.title {
