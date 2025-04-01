@@ -44,6 +44,7 @@ interface IngredientSchema extends BaseSchema {
 	amount: number;
 }
 export interface DishModifierSchema extends BaseSchema {
+	title: string;
 	ingredients: IngredientSchema[];
 }
 
@@ -210,7 +211,7 @@ export class KnowledgeController {
 			name: "Поиск",
 			filesCount: 0,
 			type: DivisionType.division,
-			subdivisionsCount: 0,
+			subdivisionsCount: divisions.length,
 			path: "Результаты поиска",
 			subdivisions: divisions,
 		};

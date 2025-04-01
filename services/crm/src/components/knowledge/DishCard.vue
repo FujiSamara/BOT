@@ -17,6 +17,7 @@ const modifiers = computed(() => {
 	const temp = props.card.modifiers.map((val) => {
 		return {
 			id: val.id,
+			title: val.title,
 			sauces: val.ingredients
 				.filter((ing) => ing.title.toLocaleLowerCase().includes("соус"))
 				.sort((a, b) => -a.title.length + b.title.length),
@@ -29,6 +30,7 @@ const modifiers = computed(() => {
 	return temp.map((mod) => {
 		return {
 			id: mod.id,
+			title: mod.title,
 			group1: {
 				sauces: mod.sauces.filter((_, i) => i % 2 === 0),
 				compounds: mod.compounds.filter((_, i) => i % 2 === 0),
@@ -75,10 +77,6 @@ const downloadClicked = (url: string) => {
 	window.open(url, "_blanc")!.focus();
 };
 
-const getFirstIngridientName = (modifierId: number): string => {
-	return props.card.modifiers![modifierId].ingredients[0].title.split(" ")[1];
-};
-
 const convertAmount = (amount: number): string => {
 	return amount >= 1 ? `${amount} шт` : `${Math.round(amount * 1000)} г`;
 };
@@ -109,67 +107,68 @@ const convertAmount = (amount: number): string => {
 							</div>
 							<div class="tools"></div>
 						</div>
-						<div class="filters" v-if="modifiers.length > 1">
-							<span class="title">Фильтры</span>
-							<ul>
-								<li v-for="num in modifiers.length">
-									<button
-										@click="modifierIndex = num - 1"
-										:class="{ active: num - 1 === modifierIndex }"
-									>
-										{{ num }}
-									</button>
-								</li>
-							</ul>
-						</div>
+
 						<Transition name="fade" mode="out-in">
-							<div
-								:key="modifier.id"
-								v-if="isCompound && modifier"
-								class="compound-wrapper"
-							>
-								<div class="part" v-if="saucesExist">
-									<span class="title">Соус</span>
-									<div class="group">
-										<ul>
-											<li v-for="sauce in modifier.group1.sauces">
-												<span class="li-title">{{ sauce.title }}</span>
-												<span class="li-amount">{{
-													convertAmount(sauce.amount)
-												}}</span>
-											</li>
-										</ul>
-										<ul>
-											<li v-for="sauce in modifier.group2.sauces">
-												<span class="li-title">{{ sauce.title }}</span>
-												<span class="li-amount">{{
-													convertAmount(sauce.amount)
-												}}</span>
-											</li>
-										</ul>
-									</div>
+							<div v-if="isCompound && modifier" class="compound-wrapper">
+								<div class="filters" v-if="modifiers.length > 1">
+									<span class="title">Фильтры</span>
+									<ul>
+										<li v-for="(modifier, i) in modifiers">
+											<button
+												@click="modifierIndex = i"
+												:class="{ active: i === modifierIndex }"
+											>
+												{{ modifier.title }}
+											</button>
+										</li>
+									</ul>
 								</div>
-								<div class="part" v-if="compoundsExist">
-									<span class="title">Состав</span>
-									<div class="group">
-										<ul>
-											<li v-for="compound in modifier.group1.compounds">
-												<span class="li-title">{{ compound.title }}</span>
-												<span class="li-amount">{{
-													convertAmount(compound.amount)
-												}}</span>
-											</li>
-										</ul>
-										<ul>
-											<li v-for="compound in modifier.group2.compounds">
-												<span class="li-title">{{ compound.title }}</span>
-												<span class="li-amount">{{
-													convertAmount(compound.amount)
-												}}</span>
-											</li>
-										</ul>
+								<Transition name="fade" mode="out-in">
+									<div :key="modifier.id" class="compound-inner">
+										<div class="part" v-if="saucesExist">
+											<span class="title">Соус</span>
+											<div class="group">
+												<ul>
+													<li v-for="sauce in modifier.group1.sauces">
+														<span class="li-title">{{ sauce.title }}</span>
+														<span class="li-amount">{{
+															convertAmount(sauce.amount)
+														}}</span>
+													</li>
+												</ul>
+												<ul>
+													<li v-for="sauce in modifier.group2.sauces">
+														<span class="li-title">{{ sauce.title }}</span>
+														<span class="li-amount">{{
+															convertAmount(sauce.amount)
+														}}</span>
+													</li>
+												</ul>
+											</div>
+										</div>
+										<div class="part" v-if="compoundsExist">
+											<span class="title">Состав</span>
+											<div class="group">
+												<ul>
+													<li v-for="compound in modifier.group1.compounds">
+														<span class="li-title">{{ compound.title }}</span>
+														<span class="li-amount">{{
+															convertAmount(compound.amount)
+														}}</span>
+													</li>
+												</ul>
+												<ul>
+													<li v-for="compound in modifier.group2.compounds">
+														<span class="li-title">{{ compound.title }}</span>
+														<span class="li-amount">{{
+															convertAmount(compound.amount)
+														}}</span>
+													</li>
+												</ul>
+											</div>
+										</div>
 									</div>
-								</div>
+								</Transition>
 							</div>
 							<div v-else class="recept-wrapper">
 								<span class="recept">{{ props.card.description }}</span>
@@ -377,52 +376,59 @@ const convertAmount = (amount: number): string => {
 					display: flex;
 					flex-direction: column;
 
-					height: 100%;
-					overflow-y: auto;
-
 					gap: 16px;
+					height: 100%;
 
-					.part {
+					.compound-inner {
 						display: flex;
 						flex-direction: column;
 
+						height: 100%;
+
 						gap: 16px;
 
-						ul {
+						.part {
 							display: flex;
 							flex-direction: column;
 
-							gap: 6px;
-						}
+							gap: 16px;
 
-						li {
-							display: flex;
-							flex-direction: row;
+							ul {
+								display: flex;
+								flex-direction: column;
 
-							align-items: center;
+								gap: 6px;
+							}
 
-							gap: 24px;
-							width: fit-content;
+							li {
+								display: flex;
+								flex-direction: row;
 
-							padding: 6px 12px;
-							border-radius: 8px;
+								align-items: center;
 
-							background-color: $main-white;
-						}
+								gap: 24px;
+								width: fit-content;
 
-						.group {
-							display: flex;
-							flex-direction: row;
+								padding: 6px 12px;
+								border-radius: 8px;
 
-							gap: 24px;
-						}
+								background-color: $main-white;
+							}
 
-						.li-title {
-							width: 256px;
-						}
-						.li-amount {
-							text-align: right;
-							width: 56px;
+							.group {
+								display: flex;
+								flex-direction: row;
+
+								gap: 24px;
+							}
+
+							.li-title {
+								width: 256px;
+							}
+							.li-amount {
+								text-align: right;
+								width: 56px;
+							}
 						}
 					}
 				}
