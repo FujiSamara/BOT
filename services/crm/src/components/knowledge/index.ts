@@ -50,6 +50,8 @@ export interface DishModifierSchema extends BaseSchema {
 export interface DishCard extends Card {
 	title: string;
 	image: string;
+	video?: string;
+	description: string;
 	modifiers?: DishModifierSchema[];
 }
 

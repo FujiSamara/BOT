@@ -9,12 +9,6 @@ const props = defineProps({
 		required: true,
 	},
 });
-(props.card as any).description = `
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque nunc magna, dapibus vitae mi sed, pharetra venenatis nisi. Cras sit amet rutrum est. Morbi pellentesque posuere lacus non pretium. Sed eget molestie nunc, sed porttitor felis. Nullam tempus erat id erat volutpat condimentum. Proin tristique fringilla accumsan. Praesent varius vulputate cursus.
-
-Pellentesque ante dolor, tempor id lacus at, volutpat sodales dui. Mauris ornare lobortis augue, nec elementum augue imperdiet et. Aliquam luctus sem ac quam posuere dignissim. Aliquam in mauris at sapien malesuada venenatis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin ultricies vulputate posuere. Fusce et tincidunt ante, et molestie mauris. Pellentesque vulputate mauris at sapien ornare, ac eleifend felis bibendum. Donec at semper augue. Vestibulum malesuada elit eu dolor pulvinar, condimentum porttitor leo molestie. Donec ultricies, purus quis efficitur tincidunt, justo ligula maximus purus, ornare porta ligula orci nec diam. Ut fermentum nunc eros, eget tristique nisl molestie et. Nunc in sem sapien. Phasellus eget dignissim nunc, ut porttitor diam.;
-`;
-
 const isCompound = ref(true);
 
 const modifiers = computed(() => {
@@ -22,6 +16,7 @@ const modifiers = computed(() => {
 
 	const temp = props.card.modifiers.map((val) => {
 		return {
+			id: val.id,
 			sauces: val.ingredients
 				.filter((ing) => ing.title.toLocaleLowerCase().includes("соус"))
 				.sort((a, b) => -a.title.length + b.title.length),
@@ -33,6 +28,7 @@ const modifiers = computed(() => {
 
 	return temp.map((mod) => {
 		return {
+			id: mod.id,
 			group1: {
 				sauces: mod.sauces.filter((_, i) => i % 2 === 0),
 				compounds: mod.compounds.filter((_, i) => i % 2 === 0),
@@ -49,6 +45,23 @@ const modifier = computed(() => {
 	if (!modifiers.value.length) return;
 	return modifiers.value[modifierIndex.value];
 });
+const saucesExist = computed(() => {
+	if (modifier.value === undefined) return false;
+	return (
+		modifier.value.group1.sauces.length + modifier.value.group2.sauces.length
+	);
+});
+const compoundsExist = computed(() => {
+	if (modifier.value === undefined) return false;
+	return (
+		modifier.value.group1.compounds.length +
+		modifier.value.group2.compounds.length
+	);
+});
+
+const convertAmount = (amount: number): string => {
+	return amount >= 1 ? `${amount} шт` : `${Math.round(amount * 1000)} г`;
+};
 </script>
 <template>
 	<div class="dish-card">
@@ -75,16 +88,33 @@ const modifier = computed(() => {
 							</div>
 							<div class="tools"></div>
 						</div>
+						<div class="filters">
+							<span class="title">Фильтры</span>
+							<ul>
+								<li v-for="num in modifiers.length">
+									<button
+										@click="modifierIndex = num - 1"
+										:class="{ active: num - 1 === modifierIndex }"
+									>
+										{{ num }}
+									</button>
+								</li>
+							</ul>
+						</div>
 						<Transition name="fade" mode="out-in">
-							<div v-if="isCompound" class="compound-wrapper">
-								<div class="part">
+							<div
+								:key="modifier.id"
+								v-if="isCompound"
+								class="compound-wrapper"
+							>
+								<div class="part" v-if="saucesExist">
 									<span class="title">Соус</span>
 									<div class="group">
 										<ul>
 											<li v-for="sauce in modifier.group1.sauces">
 												<span class="li-title">{{ sauce.title }}</span>
 												<span class="li-amount">{{
-													Math.round(sauce.amount)
+													convertAmount(sauce.amount)
 												}}</span>
 											</li>
 										</ul>
@@ -92,20 +122,20 @@ const modifier = computed(() => {
 											<li v-for="sauce in modifier.group2.sauces">
 												<span class="li-title">{{ sauce.title }}</span>
 												<span class="li-amount">{{
-													Math.round(sauce.amount)
+													convertAmount(sauce.amount)
 												}}</span>
 											</li>
 										</ul>
 									</div>
 								</div>
-								<div class="part">
+								<div class="part" v-if="compoundsExist">
 									<span class="title">Состав</span>
 									<div class="group">
 										<ul>
 											<li v-for="compound in modifier.group1.compounds">
 												<span class="li-title">{{ compound.title }}</span>
 												<span class="li-amount">{{
-													Math.round(compound.amount)
+													convertAmount(compound.amount)
 												}}</span>
 											</li>
 										</ul>
@@ -113,7 +143,7 @@ const modifier = computed(() => {
 											<li v-for="compound in modifier.group2.compounds">
 												<span class="li-title">{{ compound.title }}</span>
 												<span class="li-amount">{{
-													Math.round(compound.amount)
+													convertAmount(compound.amount)
 												}}</span>
 											</li>
 										</ul>
@@ -121,9 +151,7 @@ const modifier = computed(() => {
 								</div>
 							</div>
 							<div v-else class="recept-wrapper">
-								<span class="recept">{{
-									(props.card as any).description
-								}}</span>
+								<span class="recept">{{ props.card.description }}</span>
 							</div>
 						</Transition>
 					</div>
@@ -229,6 +257,51 @@ const modifier = computed(() => {
 					}
 				}
 
+				.title {
+					font-family: Wix Madefor Display;
+					font-weight: 700;
+					font-size: 16px;
+				}
+
+				.filters {
+					display: flex;
+					flex-direction: column;
+
+					gap: 16px;
+
+					ul {
+						display: flex;
+						flex-direction: row;
+						width: fit-content;
+
+						gap: 8px;
+
+						border-radius: 16px;
+						background-color: $main-white;
+						list-style: none;
+						margin: 0;
+						padding: 0;
+
+						button {
+							min-width: 84px;
+							height: 42px;
+							padding: 8px 14px;
+
+							background-color: $main-white;
+							border: none;
+							color: $main-accent-blue;
+							border-radius: 24px;
+							transition: background-color 0.25s;
+
+							&.active,
+							&:hover {
+								color: $main-white;
+								background-color: $sec-gray-blue;
+							}
+						}
+					}
+				}
+
 				.compound-wrapper {
 					display: flex;
 					flex-direction: column;
@@ -238,43 +311,37 @@ const modifier = computed(() => {
 
 					gap: 16px;
 
-					ul {
-						display: flex;
-						flex-direction: column;
-
-						gap: 6px;
-
-						list-style: none;
-						margin: 0;
-						padding: 0;
-					}
-
-					li {
-						display: flex;
-						flex-direction: row;
-
-						align-items: center;
-
-						gap: 24px;
-						width: fit-content;
-
-						padding: 6px 12px;
-						border-radius: 8px;
-
-						background-color: $main-white;
-					}
-
-					.title {
-						font-family: Wix Madefor Display;
-						font-weight: 700;
-						font-size: 16px;
-					}
-
 					.part {
 						display: flex;
 						flex-direction: column;
 
 						gap: 16px;
+
+						ul {
+							display: flex;
+							flex-direction: column;
+
+							gap: 6px;
+
+							list-style: none;
+							margin: 0;
+							padding: 0;
+						}
+
+						li {
+							display: flex;
+							flex-direction: row;
+
+							align-items: center;
+
+							gap: 24px;
+							width: fit-content;
+
+							padding: 6px 12px;
+							border-radius: 8px;
+
+							background-color: $main-white;
+						}
 
 						.group {
 							display: flex;
@@ -288,7 +355,7 @@ const modifier = computed(() => {
 						}
 						.li-amount {
 							text-align: right;
-							width: 48px;
+							width: 56px;
 						}
 					}
 				}
