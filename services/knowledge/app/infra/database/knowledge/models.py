@@ -34,7 +34,6 @@ class BusinessCard(Base):
 
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=True)
-    document: Mapped[int] = mapped_column(nullable=True)
 
     division_id: Mapped[int] = mapped_column(ForeignKey("divisions.id"), nullable=False)
 
