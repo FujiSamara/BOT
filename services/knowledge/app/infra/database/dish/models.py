@@ -60,10 +60,10 @@ class TTKDishModifier(Base):
     product_id: Mapped[int] = mapped_column(
         ForeignKey("ttk_products.id"), nullable=False
     )
+    title: Mapped[str] = mapped_column(nullable=False)
 
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     product_uuid: Mapped[int] = mapped_column(nullable=True)
-    title: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
     num: Mapped[str] = mapped_column(nullable=False)

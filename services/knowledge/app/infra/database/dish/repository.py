@@ -51,7 +51,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
 
         if modifiers_count != 0:
             modifiers_s_sub = (
-                select(TTKDishModifier.id)
+                select(TTKDishModifier.id, TTKDishModifier.title)
                 .where(TTKDishModifier.product_id == product_id)
                 .subquery()
             )
@@ -59,6 +59,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
             s = (
                 select(
                     modifiers_s_sub.c.id,
+                    modifiers_s_sub.c.title,
                     TTKAssemblyChart.ingredient_id,
                     TTKIngredient.title,
                     TTKAssemblyChart.amount,
@@ -73,21 +74,26 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
             s = (
                 select(
                     TTKAssemblyChart.product_id,
+                    TTKProduct.title,
                     TTKAssemblyChart.ingredient_id,
                     TTKIngredient.title,
                     TTKAssemblyChart.amount,
                 )
                 .join(TTKIngredient, TTKIngredient.id == TTKAssemblyChart.ingredient_id)
+                .join(TTKProduct, TTKProduct.id == TTKAssemblyChart.product_id)
                 .where(TTKAssemblyChart.product_id == product_id)
             )
 
         rows = (await self._session.execute(s)).all()
 
-        modifiers_dict: dict[int, list] = {}
+        modifiers_dict: dict[int, dict] = {}
         for row in rows:
-            modifier_id, ingredient_id, title, amount = row
+            modifier_id, modifier_title, ingredient_id, title, amount = row
 
-            modifiers_dict.setdefault(modifier_id, []).append(
+            modifiers_dict.setdefault(
+                modifier_id,
+                {"id": modifier_id, "title": modifier_title, "ingredients": []},
+            )["ingredients"].append(
                 {
                     "id": ingredient_id,
                     "title": title,
@@ -95,8 +101,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
                 }
             )
         return [
-            converters.modifier_to_modifier_schema({"id": k, "ingredients": v})
-            for k, v in modifiers_dict.items()
+            converters.modifier_to_modifier_schema(v) for v in modifiers_dict.values()
         ]
 
     async def get_by_id(self, id):

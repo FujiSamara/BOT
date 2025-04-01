@@ -17,6 +17,7 @@ class IngredientSchema(BaseSchema):
 
 class DishModifierSchema(BaseSchema):
     id: int
+    title: str
     ingredients: list[IngredientSchema]
 
 
