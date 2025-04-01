@@ -49,6 +49,9 @@ def run_migrations_offline() -> None:
     )
 
     with context.begin_transaction():
+        context.execute(
+            text('set search_path to "%s"' % settings.knowledge_psql_schema)
+        )
         context.run_migrations()
 
 
