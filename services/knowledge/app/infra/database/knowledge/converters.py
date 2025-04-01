@@ -25,5 +25,4 @@ def card_to_card_schema(card: BusinessCard) -> BusinessCardSchema:
         id=card.id,
         name=card.name,
         description=card.description,
-        materials=[m.external_id for m in card.materials],
     )

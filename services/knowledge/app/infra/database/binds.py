@@ -13,6 +13,7 @@ def get_tables_binds(
         knowledge.BusinessCardMaterial: knowledge_engine,
         knowledge.Division: knowledge_engine,
         knowledge.DishDivision: knowledge_engine,
+        knowledge.DishMaterial: knowledge_engine,
         dish.TTKProduct: dish_engine,
         dish.TTKDishModifier: dish_engine,
         dish.TTKProduct: dish_engine,

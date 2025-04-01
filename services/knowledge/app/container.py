@@ -60,4 +60,4 @@ class Container(containers.DeclarativeContainer):
 
     division_service = providers.Factory(DivisionServiceImpl, uow)
     card_service = providers.Factory(CardServiceImpl, uow, file_client)
-    dish_service = providers.Factory(DishServiceImpl, uow)
+    dish_service = providers.Factory(DishServiceImpl, uow, file_client)

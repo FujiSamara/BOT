@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from common.contracts.repository import BaseRepository
-from app.schemas.dish import DishSchema, DishModifierSchema
+from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsDTO
 
 
 class DishRepository(BaseRepository):
@@ -25,4 +25,8 @@ class DishRepository(BaseRepository):
 
     @abstractmethod
     async def find_by_title(self, term: str) -> list[DishSchema]:
+        pass
+
+    @abstractmethod
+    async def get_dish_materials(self, product_id: int) -> DishMaterialsDTO:
         pass

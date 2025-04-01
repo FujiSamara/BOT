@@ -22,3 +22,7 @@ class CardRepository(BaseRepository):
     @abstractmethod
     async def find_by_name(self, term: str) -> list[BusinessCardSchema]:
         pass
+
+    @abstractmethod
+    async def get_card_materials(self, card_id: int) -> list[int]:
+        pass

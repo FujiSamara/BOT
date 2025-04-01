@@ -10,7 +10,7 @@ from app.infra.database.dish.models import (
     TTKAssemblyChart,
     TTKIngredient,
 )
-from app.infra.database.knowledge.models import DishDivision
+from app.infra.database.knowledge.models import DishDivision, DishMaterial
 
 
 class SQLDishRepository(DishRepository, SQLBaseRepository):
@@ -113,3 +113,14 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         dishes = (await self._session.execute(s)).scalars().all()
 
         return [converters.product_to_dish_schema(d) for d in dishes]
+
+    async def get_dish_materials(self, product_id):
+        s_materials = select(DishMaterial.external_id).where(
+            DishMaterial.dish_id == product_id
+        )
+        s_video = select(TTKProduct.video).where(TTKProduct.id == product_id)
+
+        materials = list((await self._session.execute(s_materials)).scalars().all())
+        video = (await self._session.execute(s_video)).scalar_one()
+
+        return converters.materials_to_materials_dto(materials, video)

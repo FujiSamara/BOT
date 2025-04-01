@@ -1,9 +1,11 @@
 from common.schemas.base import BaseSchema
+from common.schemas.file import FileLinkSchema
 
 
 class DishSchema(BaseSchema):
     id: int
     title: str
+    description: str
     image: str
 
 
@@ -18,5 +20,11 @@ class DishModifierSchema(BaseSchema):
     ingredients: list[IngredientSchema]
 
 
-class DishWithModifierSchema(DishSchema):
-    modifiers: list[DishModifierSchema]
+class DishMaterialsDTO(BaseSchema):
+    video: int | None
+    materials: list[int]
+
+
+class DishMaterialsSchema(BaseSchema):
+    video: FileLinkSchema | None
+    materials: list[FileLinkSchema]

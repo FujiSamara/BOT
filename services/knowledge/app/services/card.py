@@ -2,7 +2,7 @@ from common.contracts.clients import RemoteFileClient
 from app.contracts.services import CardService
 from app.contracts.uow import CardUnitOfWork
 
-from app.schemas.card import BusinessCardOutSchema
+from app.schemas.card import BusinessCardSchema
 
 
 class CardServiceImpl(CardService):
@@ -16,13 +16,14 @@ class CardServiceImpl(CardService):
             if card is None:
                 return None
 
-            materials = [
-                await self._file_client.request_get_link(id) for id in card.materials
-            ]
-
-            return BusinessCardOutSchema(
+            return BusinessCardSchema(
                 id=card.id,
                 name=card.name,
                 description=card.description,
-                materials=materials,
             )
+
+    async def get_card_materials(self, card_id):
+        async with self._uow as uow:
+            materials = await uow.card.get_card_materials(card_id)
+
+            return [await self._file_client.request_get_link(id) for id in materials]
