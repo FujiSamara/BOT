@@ -71,7 +71,11 @@ export interface DishCard extends Card {
 const routerToActual = {
 	product: "Продукт",
 	marketing: "Маркетинг",
+	staff: "Персонал",
 	purchases: "Закупки",
+	cd: "ЦД",
+	control: "Контроль",
+	accounting: "Учет",
 };
 
 export function routerToActualPath(path: string): string {

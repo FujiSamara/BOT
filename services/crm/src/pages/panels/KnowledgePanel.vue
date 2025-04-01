@@ -12,6 +12,7 @@ import { DivisionType, KnowledgeController } from "@/components/knowledge";
 const router = useRouter();
 const route = useRoute();
 const controller = new KnowledgeController();
+const init = ref(false);
 
 const division = computed(() => {
 	if (controller.division === undefined) return undefined;
@@ -79,6 +80,7 @@ const loadDivision = async () => {
 watch(route, loadDivision);
 onMounted(async () => {
 	await loadDivision();
+	init.value = true;
 });
 </script>
 <template>
@@ -142,6 +144,16 @@ onMounted(async () => {
 				>
 					<PulseSpinner class="spinner"></PulseSpinner>
 				</div>
+				<h2
+					v-else-if="
+						division === undefined &&
+						card === undefined &&
+						!controller.divisionLoading.value &&
+						init
+					"
+				>
+					Не заполнено
+				</h2>
 			</Transition>
 		</div>
 	</div>
