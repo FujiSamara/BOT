@@ -22,18 +22,23 @@ class DishDivision(Base):
     division: Mapped[Division] = relationship(Division, foreign_keys=[division_id])
 
 
+class DishMaterial(Base):
+    __tablename__ = "dish_materials"
+
+    external_id: Mapped[int] = mapped_column(nullable=False)
+    dish_id: Mapped[int] = mapped_column(nullable=False)
+
+
 class BusinessCard(Base):
     __tablename__ = "business_cards"
 
     name: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=True)
+    document: Mapped[int] = mapped_column(nullable=True)
 
     division_id: Mapped[int] = mapped_column(ForeignKey("divisions.id"), nullable=False)
 
     division: Mapped[Division] = relationship(Division, foreign_keys=[division_id])
-    materials: Mapped[list["BusinessCardMaterial"]] = relationship(
-        "BusinessCardMaterial"
-    )
 
     __table_args__ = (UniqueConstraint("name", "division_id"),)
 

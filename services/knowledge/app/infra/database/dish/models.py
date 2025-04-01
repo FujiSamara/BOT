@@ -29,7 +29,9 @@ class TTKProduct(Base):
     __tablename__ = "ttk_products"
 
     title: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
     image: Mapped[str] = mapped_column(nullable=False)
+    video: Mapped[int] = mapped_column(nullable=True)
 
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("ttk_groups.id"), nullable=False)
@@ -40,7 +42,6 @@ class TTKProduct(Base):
     category_uuid: Mapped[UUID] = mapped_column(nullable=False)
     order: Mapped[int] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
-    description: Mapped[str] = mapped_column(nullable=False)
     fat: Mapped[float] = mapped_column(nullable=False)
     proteins: Mapped[float] = mapped_column(nullable=False)
     carbohydrates: Mapped[float] = mapped_column(nullable=False)
