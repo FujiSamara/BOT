@@ -53,6 +53,23 @@ class FujiScope(enum.Enum):
     crm_bid_readonly = 30
     crm_worktime = 31
     crm_accountant_card_bid = 33
+    # CRM knowledge base
+    crm_product_read = 41
+    crm_marketing_read = 42
+    crm_staff_read = 43
+    crm_purchases_read = 44
+    crm_cd_read = 45
+    crm_control_read = 46
+    crm_accounting_read = 47
+
+    crm_product_write = 48
+    crm_marketing_write = 49
+    crm_staff_write = 50
+    crm_purchases_write = 51
+    crm_cd_write = 52
+    crm_control_write = 53
+    crm_accounting_write = 54
+
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6
