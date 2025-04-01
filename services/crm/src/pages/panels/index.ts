@@ -121,7 +121,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/product.svg",
 		active: false,
 		name: "product",
-		accesses: [Access.Authed],
+		accesses: [Access.ProductRead],
 	},
 	{
 		label: "Маркетинг",
@@ -129,7 +129,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/bag.svg",
 		active: false,
 		name: "marketing",
-		accesses: [Access.Authed],
+		accesses: [Access.MarketingRead],
 	},
 	{
 		label: "Персонал",
@@ -137,7 +137,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/staff.svg",
 		active: false,
 		name: "staff",
-		accesses: [Access.Authed],
+		accesses: [Access.StaffRead],
 	},
 	{
 		label: "Закупки",
@@ -145,7 +145,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/bag.svg",
 		active: false,
 		name: "purchases",
-		accesses: [Access.Authed],
+		accesses: [Access.PurchasesRead],
 	},
 	{
 		label: "ЦД",
@@ -153,7 +153,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/car.svg",
 		active: false,
 		name: "cd",
-		accesses: [Access.Authed],
+		accesses: [Access.CdRead],
 	},
 	{
 		label: "Контроль",
@@ -161,7 +161,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/shield.svg",
 		active: false,
 		name: "control",
-		accesses: [Access.Authed],
+		accesses: [Access.ControlRead],
 	},
 	{
 		label: "Учет",
@@ -169,7 +169,7 @@ const knowledge: Array<PanelData> = [
 		iconURL: "/img/safe.svg",
 		active: false,
 		name: "accounting",
-		accesses: [Access.Authed],
+		accesses: [Access.AccountingRead],
 	},
 
 	{

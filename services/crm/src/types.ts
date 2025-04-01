@@ -54,6 +54,23 @@ export enum Access {
 	ArchiveBid,
 	MyFile,
 	AccountantCardBid,
+
+	// KnowledgeBase
+	ProductRead,
+	MarketingRead,
+	StaffRead,
+	PurchasesRead,
+	CdRead,
+	ControlRead,
+	AccountingRead,
+
+	ProductWrite,
+	MarketingWrite,
+	StaffWrite,
+	PurchasesWrite,
+	CdWrite,
+	ControlWrite,
+	AccountingWrite,
 }
 
 export const accessesDict: any = {
@@ -70,6 +87,22 @@ export const accessesDict: any = {
 	crm_bid_readonly: Access.BidReadOnly,
 	crm_worktime: Access.Worktime,
 	crm_accountant_card_bid: Access.AccountantCardBid,
+
+	crm_product_read: Access.ProductRead,
+	crm_marketing_read: Access.MarketingRead,
+	crm_staff_read: Access.StaffRead,
+	crm_purchases_read: Access.PurchasesRead,
+	crm_cd_read: Access.CdRead,
+	crm_control_read: Access.ControlRead,
+	crm_accounting_read: Access.AccountingRead,
+
+	crm_product_write: Access.ProductWrite,
+	crm_marketing_write: Access.MarketingWrite,
+	crm_staff_write: Access.StaffWrite,
+	crm_purchases_write: Access.PurchasesWrite,
+	crm_cd_write: Access.CdWrite,
+	crm_control_write: Access.ControlWrite,
+	crm_accounting_write: Access.AccountingWrite,
 };
 
 export enum DateType {
