@@ -25,6 +25,7 @@ target_metadata.remove(extra_models.BusinessCard.__table__)
 target_metadata.remove(extra_models.DishDivision.__table__)
 target_metadata.remove(extra_models.Division.__table__)
 target_metadata.remove(extra_models.BusinessCardMaterial.__table__)
+target_metadata.remove(extra_models.DishMaterial.__table__)
 
 
 def run_migrations_offline() -> None:
