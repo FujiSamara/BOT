@@ -28,19 +28,29 @@ export interface KnowledgeDivision extends KnowledgeSubdivision {
 }
 
 export interface Card extends BaseSchema {
-	name: string;
+	title: string;
 	type: CardType;
 }
 
 export interface BusinessCard extends Card {
-	name: string;
+	title: string;
 	description: string | undefined;
 	materials: [];
 }
 
+interface IngredientSchema extends BaseSchema {
+	id: number;
+	title: string;
+	amount: number;
+}
+export interface DishModifierSchema extends BaseSchema {
+	ingredients: IngredientSchema[];
+}
+
 export interface DishCard extends Card {
-	name: string;
+	title: string;
 	image: string;
+	modifiers?: DishModifierSchema[];
 }
 
 //
@@ -80,42 +90,60 @@ export class KnowledgeController {
 
 	private _service: KnowledgeService;
 
+	public divisionLoading = ref(false);
+	public divisionExtending = ref(false);
+
 	constructor() {
 		const endpoint = `${config.knowledgeURL}/${config.knowledgeEndpoint}`;
 		this._service = new KnowledgeService(endpoint);
 	}
 
+	private async loadCard() {
+		const division = this._division.value!;
+
+		const card = await this._service.getCard(division.id, division.type);
+		if (card === undefined) return;
+		if (division.type === DivisionType.dish) {
+			card.type = CardType.dish;
+			(card as any).modifiers = await this._service.getDishModifiers(card.id);
+		} else card.type = CardType.business;
+
+		this._card.value = card;
+	}
+
 	// Load
 	public async loadDivision(path: string) {
+		this.divisionLoading.value = true;
 		this._subdivisionsPage = 1;
 		const division = await this._service.getDivision(path, 0);
 		if (division === undefined) {
 			this._division.value = undefined;
 			this._card.value = undefined;
+			this.divisionLoading.value = false;
 			return;
 		}
 		this._division.value = division;
+		this.divisionLoading.value = false;
 		if (division.type == DivisionType.division) {
 			this._card.value = undefined;
 			this.lastDivisionPage.value =
 				division.subdivisionsCount < DIVISION_CHUNK_SIZE;
 		} else {
-			const card = await this._service.getCard(division.id, division.type);
-			if (card === undefined) return;
-			if (division.type === DivisionType.dish) card.type = CardType.dish;
-			else card.type = CardType.business;
-
-			this._card.value = card;
+			await this.loadCard();
 		}
 	}
 	public async nextSubdivisions() {
 		if (this._division.value === undefined) return;
 
+		this.divisionExtending.value = true;
 		const division = await this._service.getDivision(
 			this._division.value.path,
 			this._subdivisionsPage * DIVISION_CHUNK_SIZE,
 		);
-		if (division === undefined) return;
+		if (division === undefined) {
+			this.divisionExtending.value = false;
+			return;
+		}
 
 		this.lastDivisionPage.value =
 			division.subdivisionsCount < DIVISION_CHUNK_SIZE;
@@ -129,10 +157,12 @@ export class KnowledgeController {
 		};
 
 		this._subdivisionsPage += 1;
+		this.divisionExtending.value = false;
 	}
 
 	// Search
 	public async searchDivisions(term: string) {
+		this.divisionLoading.value = true;
 		this._subdivisionsPage = 1;
 		const divisions = await this._service.findDivisions(term, 0);
 
@@ -144,13 +174,15 @@ export class KnowledgeController {
 			filesCount: 0,
 			type: DivisionType.division,
 			subdivisionsCount: 0,
-			path: "/search",
+			path: "Результаты поиска",
 			subdivisions: divisions,
 		};
+		this.divisionLoading.value = false;
 	}
 	public async nextSearchingResults(term: string) {
 		if (this._division.value === undefined) return;
 
+		this.divisionLoading.value = true;
 		const divisions = await this._service.findDivisions(
 			term,
 			this._subdivisionsPage * DIVISION_CHUNK_SIZE,
@@ -163,6 +195,7 @@ export class KnowledgeController {
 		};
 
 		this._subdivisionsPage += 1;
+		this.divisionLoading.value = false;
 	}
 
 	public division = computed(() => this._division.value);

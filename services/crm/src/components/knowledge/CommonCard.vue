@@ -10,6 +10,6 @@ const props = defineProps({
 });
 </script>
 <template>
-	<div class="common-card">{{ props.card.name }}</div>
+	<div class="common-card">{{ props.card.title }}</div>
 </template>
 <style scoped lang="scss"></style>

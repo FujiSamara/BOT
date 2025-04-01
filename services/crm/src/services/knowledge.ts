@@ -8,6 +8,7 @@ import {
 	DivisionType,
 	Card,
 	DIVISION_CHUNK_SIZE,
+	DishModifierSchema,
 } from "@/components/knowledge";
 
 export class KnowledgeService {
@@ -15,6 +16,7 @@ export class KnowledgeService {
 
 	constructor(private _endpoint: string) {}
 
+	// Division
 	public async getDivision(
 		path: string,
 		subdivisionsOffset: number,
@@ -73,6 +75,7 @@ export class KnowledgeService {
 		return divisions;
 	}
 
+	// Card
 	public async getCard(
 		id: number,
 		type: DivisionType,
@@ -86,7 +89,16 @@ export class KnowledgeService {
 		if (!resp.data) return;
 
 		const row = resp.data;
-		row.name = row.title;
 		return row;
+	}
+
+	public async getDishModifiers(
+		dish_id: number,
+	): Promise<DishModifierSchema[] | undefined> {
+		const url = `${this._endpoint}/dish/${dish_id}/modifier`;
+		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+		if (!resp.data) return;
+
+		return resp.data;
 	}
 }

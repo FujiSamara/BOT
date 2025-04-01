@@ -12,8 +12,6 @@ import { DivisionType, KnowledgeController } from "@/components/knowledge";
 const router = useRouter();
 const route = useRoute();
 const controller = new KnowledgeController();
-const loading = ref(false);
-const extending = ref(false);
 
 const division = computed(() => {
 	if (controller.division === undefined) return undefined;
@@ -45,7 +43,6 @@ const subDivisionClicked = async (index: number) => {
 	await router.push({ path: path });
 };
 const extendClicked = async () => {
-	extending.value = true;
 	if (route.name === "knowledge-search") {
 		const term = route.query["term"] as string;
 
@@ -53,15 +50,12 @@ const extendClicked = async () => {
 
 		await controller.nextSearchingResults(term);
 
-		extending.value = false;
 		return;
 	}
 	await controller.nextSubdivisions();
-	extending.value = false;
 };
 
 const loadDivision = async () => {
-	loading.value = true;
 	await router.isReady();
 
 	if (route.name === "knowledge-search") {
@@ -72,7 +66,6 @@ const loadDivision = async () => {
 		searchValue.value = term;
 
 		if (term.length > 2) await controller.searchDivisions(term);
-		loading.value = false;
 		return;
 	}
 	searchValue.value = "";
@@ -82,7 +75,6 @@ const loadDivision = async () => {
 		.split("/")
 		.filter((v) => v);
 	await controller.loadDivision("/" + path.join("/"));
-	loading.value = false;
 };
 
 watch(route, loadDivision);
@@ -104,17 +96,27 @@ onMounted(async () => {
 			<Transition name="fade" mode="out-in">
 				<Division
 					:key="division.id"
-					v-if="!loading && division && division.type == DivisionType.division"
+					v-if="
+						!controller.divisionLoading.value &&
+						division &&
+						division.type == DivisionType.division
+					"
 					:division="division"
 					@click="subDivisionClicked"
 					class="division"
 				>
 					<div
 						class="extend-wrapper"
-						v-if="!controller.lastDivisionPage.value || extending"
+						v-if="
+							!controller.lastDivisionPage.value ||
+							controller.divisionExtending.value
+						"
 					>
 						<Transition name="fade" mode="out-in" :duration="250">
-							<div v-if="!extending" class="next-button-wrapper">
+							<div
+								v-if="!controller.divisionExtending.value"
+								class="next-button-wrapper"
+							>
 								<button
 									v-if="!controller.lastDivisionPage.value"
 									@click="extendClicked"
@@ -123,18 +125,21 @@ onMounted(async () => {
 									Далее
 								</button>
 							</div>
-							<div v-else class="pulse-wrapper">
+							<div v-else class="spinner-wrapper">
 								<PulseSpinner class="spinner"></PulseSpinner>
 							</div>
 						</Transition>
 					</div>
 				</Division>
 				<Card
-					v-else-if="!loading && division && card"
+					v-else-if="!controller.divisionLoading.value && division && card"
 					:card="card"
 					:path="division.path"
 				></Card>
-				<div v-else-if="loading" class="pulse-wrapper">
+				<div
+					v-else-if="controller.divisionLoading.value"
+					class="spinner-wrapper"
+				>
 					<PulseSpinner class="spinner"></PulseSpinner>
 				</div>
 			</Transition>
@@ -174,7 +179,7 @@ onMounted(async () => {
 				width: 100%;
 				height: 64px;
 
-				.pulse-wrapper {
+				.spinner-wrapper {
 					.spinner {
 						width: 64px;
 						height: 64px;
@@ -199,7 +204,7 @@ onMounted(async () => {
 			}
 		}
 
-		.pulse-wrapper {
+		.spinner-wrapper {
 			display: flex;
 			justify-content: center;
 			align-items: center;
@@ -208,8 +213,8 @@ onMounted(async () => {
 			height: fit-content;
 
 			.spinner {
-				width: 128px;
-				height: 128px;
+				width: 164px;
+				height: 164px;
 
 				color: $main-accent-blue;
 			}

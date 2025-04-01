@@ -19,6 +19,7 @@ const emits = defineEmits<{
 <template>
 	<div class="kn-chapter">
 		<span class="path">{{ routerToActualPath(props.division.path) }}</span>
+		<h2 v-if="props.division.subdivisionsCount === 0">Подразделов нет</h2>
 		<SubDivision
 			v-for="(subDivision, index) in props.division.subdivisions"
 			:key="subDivision.id"
