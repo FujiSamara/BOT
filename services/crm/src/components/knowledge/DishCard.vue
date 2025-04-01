@@ -63,6 +63,15 @@ const compoundsExist = computed(() => {
 	);
 });
 
+const video = computed(() => {
+	if (props.card.materials === undefined) return;
+	return props.card.materials.video;
+});
+const materials = computed(() => {
+	if (props.card.materials === undefined) return;
+	return props.card.materials.materials;
+});
+
 const getFirstIngridientName = (modifierId: number): string => {
 	return props.card.modifiers![modifierId].ingredients[0].title.split(" ")[1];
 };
@@ -77,7 +86,7 @@ const convertAmount = (amount: number): string => {
 		<main class="content">
 			<img :src="props.card.image" />
 			<div class="info-wrapper">
-				<Transition>
+				<Transition name="fade" mode="out-in">
 					<div v-if="modifiers !== undefined" class="info">
 						<div class="controls">
 							<div class="switch">
@@ -170,7 +179,17 @@ const convertAmount = (amount: number): string => {
 				</Transition>
 			</div>
 		</main>
-		<footer></footer>
+		<footer class="">
+			<div class="video"></div>
+			<div class="materials-wrapper">
+				<Transition name="fade" mode="out-in">
+					<div v-if="materials !== undefined"></div>
+					<div v-else class="spinner-wrapper">
+						<PulseSpinner class="spinner"></PulseSpinner>
+					</div>
+				</Transition>
+			</div>
+		</footer>
 	</div>
 </template>
 <style scoped lang="scss">
@@ -188,6 +207,22 @@ const convertAmount = (amount: number): string => {
 		font-size: 48px;
 	}
 
+	.spinner-wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		width: 100%;
+		height: 100%;
+
+		.spinner {
+			width: 84px;
+			height: 84px;
+
+			color: $main-accent-blue;
+		}
+	}
+
 	.content {
 		display: flex;
 		flex-direction: row;
@@ -203,6 +238,7 @@ const convertAmount = (amount: number): string => {
 		}
 
 		.info-wrapper {
+			position: relative;
 			display: flex;
 			flex-grow: 1;
 
@@ -387,29 +423,25 @@ const convertAmount = (amount: number): string => {
 					}
 				}
 			}
-
-			.spinner-wrapper {
-				display: flex;
-				justify-content: center;
-				align-items: center;
-
-				width: 100%;
-				height: 100%;
-
-				.spinner {
-					width: 84px;
-					height: 84px;
-
-					color: $main-accent-blue;
-				}
-			}
 		}
 	}
 
 	.video {
 	}
 
-	.materials {
+	.materials-wrapper {
+		display: flex;
+		flex-direction: column;
+
+		gap: 32px;
+
+		width: 100%;
+		height: fit-content;
+
+		border-radius: 16px;
+		padding: 32px;
+
+		background-color: $main-white;
 	}
 }
 </style>

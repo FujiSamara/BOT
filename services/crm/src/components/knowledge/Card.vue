@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PropType } from "vue";
+import { computed, PropType } from "vue";
 
 import DishCardView from "@/components/knowledge/DishCard.vue";
 import CommonCard from "@/components/knowledge/CommonCard.vue";
@@ -17,14 +17,15 @@ const props = defineProps({
 	},
 });
 
-const dish = props.card as DishCard;
-const business = props.card as BusinessCard;
+const dish = computed(() => props.card as DishCard);
+const business = computed(() => props.card as BusinessCard);
 </script>
 <template>
 	<div class="k-card">
 		<span class="path">{{ path }}</span>
 		<DishCardView
 			v-if="props.card.type == CardType.dish"
+			:key="props.card.id"
 			:card="dish"
 		></DishCardView>
 		<CommonCard v-else :card="business"></CommonCard>

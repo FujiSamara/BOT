@@ -47,12 +47,17 @@ export interface DishModifierSchema extends BaseSchema {
 	ingredients: IngredientSchema[];
 }
 
+export interface DishMaterials {
+	video?: string;
+	materials: string[];
+}
+
 export interface DishCard extends Card {
 	title: string;
 	image: string;
-	video?: string;
 	description: string;
 	modifiers?: DishModifierSchema[];
+	materials?: DishMaterials;
 }
 
 //
@@ -104,12 +109,21 @@ export class KnowledgeController {
 		const division = this._division.value!;
 
 		const card = await this._service.getCard(division.id, division.type);
+
 		if (card === undefined) return;
-		if (division.type === DivisionType.dish) {
-			card.type = CardType.dish;
-			(card as any).modifiers = await this._service.getDishModifiers(card.id);
-		} else card.type = CardType.business;
+		if (division.type === DivisionType.dish) card.type = CardType.dish;
+		else card.type = CardType.business;
+
 		this._card.value = card;
+		this.divisionLoading.value = false;
+
+		if (division.type === DivisionType.dish) {
+			const fullCard: DishCard = { ...(card as any) };
+
+			fullCard.modifiers = await this._service.getDishModifiers(card.id);
+			fullCard.materials = await this._service.getDishMaterials(card.id);
+			this._card.value = fullCard;
+		}
 	}
 
 	// Load
@@ -129,6 +143,7 @@ export class KnowledgeController {
 			this._card.value = undefined;
 			this.lastDivisionPage.value =
 				division.subdivisionsCount < DIVISION_CHUNK_SIZE;
+			this.divisionLoading.value = false;
 		} else {
 			await this.loadCard();
 		}

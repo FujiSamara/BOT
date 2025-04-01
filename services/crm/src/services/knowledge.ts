@@ -9,6 +9,7 @@ import {
 	Card,
 	DIVISION_CHUNK_SIZE,
 	DishModifierSchema,
+	DishMaterials,
 } from "@/components/knowledge";
 
 export class KnowledgeService {
@@ -98,6 +99,18 @@ export class KnowledgeService {
 		const url = `${this._endpoint}/dish/${dish_id}/modifier`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
+
+		return resp.data;
+	}
+
+	public async getDishMaterials(
+		dish_id: number,
+	): Promise<DishMaterials | undefined> {
+		const url = `${this._endpoint}/dish/${dish_id}/materials`;
+		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+		if (!resp.data) return;
+
+		if (resp.data.video === null) resp.data.video = undefined;
 
 		return resp.data;
 	}
