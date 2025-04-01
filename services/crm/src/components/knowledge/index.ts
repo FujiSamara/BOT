@@ -49,7 +49,13 @@ export interface DishModifierSchema extends BaseSchema {
 
 export interface DishMaterials {
 	video?: string;
-	materials: string[];
+	materials: {
+		id: number;
+		url: string;
+		name: string;
+		size: number;
+		created: Date;
+	}[];
 }
 
 export interface DishCard extends Card {
@@ -122,6 +128,17 @@ export class KnowledgeController {
 
 			fullCard.modifiers = await this._service.getDishModifiers(card.id);
 			fullCard.materials = await this._service.getDishMaterials(card.id);
+
+			// TEMP!!!
+			fullCard.materials?.materials.forEach(
+				(val, i) => (val.name = "Рис для роллов " + i),
+			);
+			fullCard.materials!.materials = [
+				...fullCard.materials!.materials,
+				...fullCard.materials!.materials,
+			];
+			//
+
 			this._card.value = fullCard;
 		}
 	}

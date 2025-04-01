@@ -71,6 +71,9 @@ const materials = computed(() => {
 	if (props.card.materials === undefined) return;
 	return props.card.materials.materials;
 });
+const downloadClicked = (url: string) => {
+	window.open(url, "_blanc")!.focus();
+};
 
 const getFirstIngridientName = (modifierId: number): string => {
 	return props.card.modifiers![modifierId].ingredients[0].title.split(" ")[1];
@@ -181,9 +184,31 @@ const convertAmount = (amount: number): string => {
 		</main>
 		<footer class="">
 			<div class="video"></div>
-			<div class="materials-wrapper">
+			<div
+				class="materials-wrapper"
+				v-if="materials === undefined || materials.length"
+			>
 				<Transition name="fade" mode="out-in">
-					<div v-if="materials !== undefined"></div>
+					<div v-if="materials !== undefined" class="materials">
+						<span>Материалы</span>
+						<ul>
+							<li v-for="material in materials">
+								<span class="title">
+									{{ material.name }}
+								</span>
+								<div class="meta">
+									<span>24.01.2025</span>
+									<span>2.5 MB</span>
+									<button
+										@click="downloadClicked(material.url)"
+										class="download"
+									>
+										Скачать
+									</button>
+								</div>
+							</li>
+						</ul>
+					</div>
 					<div v-else class="spinner-wrapper">
 						<PulseSpinner class="spinner"></PulseSpinner>
 					</div>
@@ -242,6 +267,7 @@ const convertAmount = (amount: number): string => {
 			display: flex;
 			flex-grow: 1;
 
+			overflow-x: auto;
 			max-height: 100%;
 			height: 480px;
 
@@ -326,9 +352,6 @@ const convertAmount = (amount: number): string => {
 
 						border-radius: 16px;
 						background-color: $main-white;
-						list-style: none;
-						margin: 0;
-						padding: 0;
 
 						button {
 							min-width: 84px;
@@ -370,10 +393,6 @@ const convertAmount = (amount: number): string => {
 							flex-direction: column;
 
 							gap: 6px;
-
-							list-style: none;
-							margin: 0;
-							padding: 0;
 						}
 
 						li {
@@ -442,6 +461,81 @@ const convertAmount = (amount: number): string => {
 		padding: 32px;
 
 		background-color: $main-white;
+
+		span {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			height: 42px;
+
+			font-family: Wix Madefor Display;
+			font-weight: 500;
+			font-size: 16px;
+			color: $sec-gray-blue;
+		}
+
+		.materials {
+			display: flex;
+			flex-direction: row;
+			width: 100%;
+
+			gap: 32px;
+
+			ul {
+				display: flex;
+				flex-direction: column;
+				width: 100%;
+
+				gap: 16px;
+
+				li {
+					display: flex;
+					flex-direction: row;
+					align-items: center;
+
+					justify-content: space-between;
+
+					.title {
+						font-family: Wix Madefor Display;
+						font-weight: 500;
+						font-size: 16px;
+						color: $main-dark-gray;
+					}
+
+					.meta {
+						display: flex;
+						flex-direction: row;
+						align-items: center;
+						gap: 24px;
+
+						.download {
+							background-color: $main-accent-blue;
+							border: none;
+							color: $main-white;
+							font-family: Wix Madefor Display;
+							font-weight: 400;
+							font-size: 12px;
+
+							padding: 12px 32px;
+							border-radius: 4px;
+
+							transition: transform 0.25s;
+							&:hover {
+								transform: scale(1.02);
+							}
+						}
+
+						span {
+							font-family: Wix Madefor Display;
+							font-weight: 500;
+							font-size: 14px;
+							color: $sec-gray-blue;
+						}
+					}
+				}
+			}
+		}
 	}
 }
 </style>
