@@ -20,7 +20,6 @@ const division = computed(() => {
 });
 const card = computed(() => {
 	if (controller.card === undefined) return undefined;
-
 	return controller.card.value;
 });
 
@@ -134,6 +133,7 @@ onMounted(async () => {
 				<Card
 					v-else-if="!controller.divisionLoading.value && division && card"
 					:card="card"
+					:key="card.id"
 					:path="division.path"
 				></Card>
 				<div

@@ -12,7 +12,7 @@ const props = defineProps({
 const isCompound = ref(true);
 
 const modifiers = computed(() => {
-	if (props.card.modifiers === undefined) return [];
+	if (props.card.modifiers === undefined) return undefined;
 
 	const temp = props.card.modifiers.map((val) => {
 		return {
@@ -42,7 +42,11 @@ const modifiers = computed(() => {
 });
 const modifierIndex = ref(0);
 const modifier = computed(() => {
-	if (!modifiers.value.length) return;
+	if (modifiers.value === undefined) return;
+	if (modifiers.value.length === 0) {
+		isCompound.value = false;
+		return;
+	}
 	return modifiers.value[modifierIndex.value];
 });
 const saucesExist = computed(() => {
@@ -59,6 +63,10 @@ const compoundsExist = computed(() => {
 	);
 });
 
+const getFirstIngridientName = (modifierId: number): string => {
+	return props.card.modifiers![modifierId].ingredients[0].title.split(" ")[1];
+};
+
 const convertAmount = (amount: number): string => {
 	return amount >= 1 ? `${amount} шт` : `${Math.round(amount * 1000)} г`;
 };
@@ -70,11 +78,12 @@ const convertAmount = (amount: number): string => {
 			<img :src="props.card.image" />
 			<div class="info-wrapper">
 				<Transition>
-					<div v-if="modifier !== undefined" class="info">
+					<div v-if="modifiers !== undefined" class="info">
 						<div class="controls">
 							<div class="switch">
 								<button
 									@click="isCompound = true"
+									v-if="modifier"
 									:class="{ active: isCompound }"
 								>
 									Состав
@@ -88,7 +97,7 @@ const convertAmount = (amount: number): string => {
 							</div>
 							<div class="tools"></div>
 						</div>
-						<div class="filters">
+						<div class="filters" v-if="modifiers.length > 1">
 							<span class="title">Фильтры</span>
 							<ul>
 								<li v-for="num in modifiers.length">
@@ -104,7 +113,7 @@ const convertAmount = (amount: number): string => {
 						<Transition name="fade" mode="out-in">
 							<div
 								:key="modifier.id"
-								v-if="isCompound"
+								v-if="isCompound && modifier"
 								class="compound-wrapper"
 							>
 								<div class="part" v-if="saucesExist">
@@ -267,12 +276,15 @@ const convertAmount = (amount: number): string => {
 					display: flex;
 					flex-direction: column;
 
+					max-width: 100%;
 					gap: 16px;
 
 					ul {
 						display: flex;
 						flex-direction: row;
 						width: fit-content;
+						max-width: 100%;
+						flex-wrap: wrap;
 
 						gap: 8px;
 
@@ -392,6 +404,12 @@ const convertAmount = (amount: number): string => {
 				}
 			}
 		}
+	}
+
+	.video {
+	}
+
+	.materials {
 	}
 }
 </style>

@@ -109,7 +109,6 @@ export class KnowledgeController {
 			card.type = CardType.dish;
 			(card as any).modifiers = await this._service.getDishModifiers(card.id);
 		} else card.type = CardType.business;
-
 		this._card.value = card;
 	}
 
@@ -117,10 +116,10 @@ export class KnowledgeController {
 	public async loadDivision(path: string) {
 		this.divisionLoading.value = true;
 		this._subdivisionsPage = 1;
+		this._division.value = undefined;
+		this._card.value = undefined;
 		const division = await this._service.getDivision(path, 0);
 		if (division === undefined) {
-			this._division.value = undefined;
-			this._card.value = undefined;
 			this.divisionLoading.value = false;
 			return;
 		}
