@@ -84,6 +84,7 @@ export function routerToActualPath(path: string): string {
 	for (const key of Object.keys(routerToActual)) {
 		result = result.replace(key, (routerToActual as any)[key]);
 	}
+	result = result.replace("+", "%2B").replace("&", "%26");
 	return result;
 }
 
@@ -92,7 +93,7 @@ export function actualToRouterPath(path: string): string {
 	for (const key of Object.keys(routerToActual)) {
 		result = result.replace((routerToActual as any)[key], key);
 	}
-	result = result.replace("+", "%2B");
+	result = result.replace("%2B", "+").replace("%26", "&");
 	return result;
 }
 
