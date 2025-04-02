@@ -312,6 +312,12 @@ get_coordinate_worker_bids_iiko_btn = InlineKeyboardButton(
     callback_data="get_coordinate_worker_bids_iiko",
 )
 
+get_coordinate_worker_bids_FD_btn = InlineKeyboardButton(
+    text="Согласование кандидатов финансовый директор",
+    callback_data="get_coordinate_worker_bids_FD",
+)
+
+
 get_candidates_coordinate_menu_btn = InlineKeyboardButton(
     text="Сотрудники",
     callback_data="get_candidates_menu",
@@ -333,6 +339,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     birth_date = data.get("birth_date")
     phone_number = data.get("phone_number")
     official_work = data.get("official_work")
+    employed = data.get("employed")
 
     if not l_name:
         l_name = ""
@@ -396,11 +403,18 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     if official_work is None:
         official_work = ""
         form_complete = False
+    elif official_work == 1:
+        official_work = "Да"
     else:
-        if official_work == 1:
-            official_work = "Да"
-        else:
-            official_work = "Нет"
+        official_work = "Нет"
+
+    if employed is None:
+        employed = ""
+        form_complete = False
+    elif employed == 1:
+        employed = "Да"
+    else:
+        employed = "Нет"
 
     buttons = [
         [
@@ -477,6 +491,16 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(
                 text=official_work,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Уже трудоустроен",
+                callback_data="get_worker_bid_employed",
+            ),
+            InlineKeyboardButton(
+                text=employed,
                 callback_data="dummy",
             ),
         ],

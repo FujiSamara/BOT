@@ -69,6 +69,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     birth_date = datetime.strptime(data["birth_date"], "%Y-%m-%d")
     phone_number = data["phone_number"]
     official_work = data["official_work"]
+    employed = data["employed"]
 
     if not work_permission:
         work_permission = []
@@ -97,6 +98,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
         birth_date,
         phone_number,
         True if official_work == 1 else False,
+        True if employed == 1 else False,
     )
     await state.clear()
     await state.set_state(Base.none)
@@ -464,6 +466,45 @@ async def set_worker_bid_official_work(message: Message, state: FSMContext):
             await sleep(3)
             await utils.try_delete_message(msg)
             await get_worker_bid_official_work(message=message, state=state)
+
+
+@router.callback_query(F.data == "get_worker_bid_employed")
+async def get_worker_bid_employed(message: Message | CallbackQuery, state: FSMContext):
+    if isinstance(message, CallbackQuery):
+        message = message.message
+    else:
+        await utils.try_delete_message((await state.get_data()).get("msg"))
+    await utils.try_delete_message(message)
+    await state.set_state(WorkerBidCreating.employed)
+    msg = await utils.try_edit_or_answer(
+        message=message,
+        text="Уже трудоустроен",
+        reply_markup=kb.create_reply_keyboard(text.back, "Да", "Нет"),
+        return_message=True,
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.employed)
+async def set_worker_bid_employed(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.set_state(Base.none)
+
+    await utils.try_delete_message(data.get("msg"))
+    await utils.try_delete_message(message)
+
+    if message.text == text.back:
+        await send_create_menu(message=message, state=state)
+    elif message.text in ["Да", "Нет"]:
+        await state.update_data(employed=1 if message.text == "Да" else 0)
+        await send_create_menu(message=message, state=state)
+    else:
+        msg = await utils.try_edit_or_answer(
+            message=message, text=text.format_err, return_message=True
+        )
+        await sleep(3)
+        await utils.try_delete_message(msg)
+        await get_worker_bid_official_work(message=message, state=state)
 
 
 # Documents

@@ -53,7 +53,13 @@ class FileServiceImpl(FileService):
             file = await uow.file.create(file_create)
             url = await self._file_client.create_put_link(bucket, file.key, expiration)
 
-            return FileLinkSchema(id=file.id, url=url)
+            return FileLinkSchema(
+                id=file.id,
+                url=url,
+                name=f"{name}.{ext}",
+                size=file.size,
+                created=file.created,
+            )
 
     async def create_get_link(self, id: int, expiration=3600):
         async with self._file_uow as uow:
@@ -62,7 +68,14 @@ class FileServiceImpl(FileService):
                 raise KeyError(f"File {id} not exists.")
 
         url = await self._file_client.create_get_link(file.bucket, file.key, expiration)
-        return FileLinkSchema(id=file.id, url=url)
+
+        return FileLinkSchema(
+            id=file.id,
+            url=url,
+            name=f"{file.name}.{file.ext}",
+            size=file.size,
+            created=file.created,
+        )
 
     async def confirm_putting(self, file_confirm):
         async with self._file_uow as uow:

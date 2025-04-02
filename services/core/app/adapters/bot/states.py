@@ -50,6 +50,7 @@ class WorkerBidCreating(StatesGroup):
     passport = State()
     work_permission = State()
     official_work = State()
+    employed = State()
 
 
 class WorkerBidUpdate(StatesGroup):

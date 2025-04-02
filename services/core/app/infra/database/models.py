@@ -53,6 +53,23 @@ class FujiScope(enum.Enum):
     crm_bid_readonly = 30
     crm_worktime = 31
     crm_accountant_card_bid = 33
+    # CRM knowledge base
+    crm_product_read = 41
+    crm_marketing_read = 42
+    crm_staff_read = 43
+    crm_purchases_read = 44
+    crm_cd_read = 45
+    crm_control_read = 46
+    crm_accounting_read = 47
+
+    crm_product_write = 48
+    crm_marketing_write = 49
+    crm_staff_write = 50
+    crm_purchases_write = 51
+    crm_cd_write = 52
+    crm_control_write = 53
+    crm_accounting_write = 54
+
     # BOT
     bot_bid_create = 5
     bot_bid_kru = 6
@@ -80,6 +97,7 @@ class FujiScope(enum.Enum):
     bot_worker_bid_iiko = 37
     bot_technical_request_department_director = 38
     bot_change_restaurant_menu = 39
+    bot_worker_bid_financial_director = 40
 
 
 class DepartmentType(enum.Enum):
@@ -634,6 +652,7 @@ class WorkerBid(Base):
     security_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
     accounting_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
     iiko_service_state: Mapped[approvalstatus] = mapped_column(nullable=True)
+    financial_director_state: Mapped[approvalstatus] = mapped_column(nullable=True)
 
     sender_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
     sender: Mapped["Worker"] = relationship("Worker", back_populates="worker_bids")
@@ -641,12 +660,29 @@ class WorkerBid(Base):
     comment: Mapped[str] = mapped_column(nullable=True, default="")
     security_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
     accounting_service_comment: Mapped[str] = mapped_column(nullable=True, default="")
+    financial_director_comment: Mapped[str] = mapped_column(nullable=True)
     iiko_worker_id: Mapped[int] = mapped_column(nullable=True)
 
     official_work: Mapped[bool] = mapped_column(nullable=True)
+    employed: Mapped[bool] = mapped_column(nullable=True)
     worker_bid_documents_request: Mapped[list["WorkerBidDocumentRequest"]] = (
         relationship("WorkerBidDocumentRequest", back_populates="worker_bid")
     )
+    coordinators: Mapped[list["WorkerBidCoordinator"]] = relationship(
+        "WorkerBidCoordinator", cascade="all,delete"
+    )
+
+
+class WorkerBidCoordinator(Base):
+    """Таблица, показывающая - кто согласовывал заявки."""
+
+    __tablename__ = "worker_bid_coordinators"
+
+    worker_bid_id: Mapped[int] = mapped_column(ForeignKey("worker_bids.id"))
+    worker_bid: Mapped[Bid] = relationship("WorkerBid", back_populates="coordinators")
+
+    coordinator_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
+    coordinator: Mapped["Worker"] = relationship("Worker")
 
 
 class WorkerBidDocument(Base):
