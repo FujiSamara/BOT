@@ -1,8 +1,10 @@
 from logging import Logger
-from fastapi import APIRouter, Depends, Security, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Depends, Security, HTTPException, status, Body
 from dependency_injector.wiring import Provide, inject
 import traceback
 
+from common.schemas.file import FileLinkSchema
 from common.schemas.client_credential import ClientCredentials
 from app.container import Container
 from app.controllers.api.dependencies import Authorization
@@ -63,6 +65,30 @@ async def get_dish_materials(
 ) -> DishMaterialsSchema:
     try:
         return await service.get_dish_materials(id)
+    except Exception as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{id}/video")
+@inject
+async def add_dish_video(
+    id: int,
+    filename: Annotated[str, Body()],
+    size: Annotated[int, Body()],
+    service: DishService = Depends(Provide[Container.dish_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
+    _: ClientCredentials = Security(
+        Authorization,
+        scopes=[Scopes.DishRead.value],
+    ),
+) -> FileLinkSchema:
+    """Create put link for dish video and registrated it in database."""
+    try:
+        return await service.add_dish_video(id, filename, size)
+    except ValueError as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

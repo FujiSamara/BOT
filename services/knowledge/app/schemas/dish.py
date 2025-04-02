@@ -29,3 +29,7 @@ class DishMaterialsDTO(BaseSchema):
 class DishMaterialsSchema(BaseSchema):
     video: FileLinkSchema | None
     materials: list[FileLinkSchema]
+
+
+class DishUpdateSchema(BaseSchema):
+    video: int | None

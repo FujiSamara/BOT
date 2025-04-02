@@ -129,3 +129,18 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         video = (await self._session.execute(s_video)).scalar_one()
 
         return converters.materials_to_materials_dto(materials, video)
+
+    async def update(self, id, dish_update):
+        s = select(TTKProduct).where(TTKProduct.id == id)
+        product = (await self._session.execute(s)).scalars().first()
+
+        if product is None:
+            raise ValueError(f"Dish {id} not found.")
+
+        for field, value in dish_update.model_dump(exclude_unset=True).items():
+            setattr(product, field, value)
+
+        await self._session.flush()
+        await self._session.refresh(product)
+
+        return converters.product_to_dish_schema(product)

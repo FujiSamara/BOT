@@ -24,12 +24,12 @@ class HTTPFileClient(RemoteFileClient):
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f"{self._url}/api/file/?expiration={expiration}",
-                json={filename: filename, key: key, size: size},
+                json={"filename": filename, "key": key, "size": size},
                 headers={"Authorization": authorization_header},
                 ssl=self._with_ssl,
             ) as resp:
                 if resp.status != 200:
-                    raise ValueError("Get link requested with error.")
+                    raise ValueError(f"Put link requested with error: {resp.reason}.")
                 body: dict = await resp.json()
 
                 return FileLinkSchema.model_validate(body)
@@ -44,7 +44,7 @@ class HTTPFileClient(RemoteFileClient):
                 ssl=self._with_ssl,
             ) as resp:
                 if resp.status != 200:
-                    raise ValueError(f"Get link requested with error: {resp.reason}")
+                    raise ValueError(f"Get link requested with error: {resp.reason}.")
                 body: dict = await resp.json()
 
                 return FileLinkSchema.model_validate(body)

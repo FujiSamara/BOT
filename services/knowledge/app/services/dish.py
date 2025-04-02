@@ -1,7 +1,7 @@
 from common.contracts.clients import RemoteFileClient
 from app.contracts.services import DishService
 from app.contracts.uow import DishUnitOfWork
-from app.schemas.dish import DishMaterialsSchema
+from app.schemas.dish import DishMaterialsSchema, DishUpdateSchema
 
 
 class DishServiceImpl(DishService):
@@ -23,10 +23,34 @@ class DishServiceImpl(DishService):
 
             video = None
             if materials_dto.video is not None:
-                video = await self._file_client.request_get_link(materials_dto.video)
-            materials = [
-                await self._file_client.request_get_link(id)
-                for id in materials_dto.materials
-            ]
+                try:
+                    video = await self._file_client.request_get_link(
+                        materials_dto.video
+                    )
+                except Exception:
+                    video = None
+
+            materials = []
+
+            for id in materials_dto.materials:
+                try:
+                    material = await self._file_client.request_get_link(id)
+                    materials.append(material)
+                except Exception:
+                    pass
 
             return DishMaterialsSchema(video=video, materials=materials)
+
+    async def add_dish_video(self, dish_id, filename, size):
+        async with self._uow as uow:
+            dish = await uow.dish.get_by_id(dish_id)
+            if dish is None:
+                raise ValueError(f"Dish {dish_id} not found.")
+
+            key = f"dish/video/{filename}"
+
+            meta = await self._file_client.request_put_link(filename, key, size)
+
+            await uow.dish.update(dish_id, DishUpdateSchema(video=meta.id))
+
+            return meta
