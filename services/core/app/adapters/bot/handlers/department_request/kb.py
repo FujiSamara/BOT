@@ -4,7 +4,11 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.services import get_technical_problem_by_id, get_technical_request_by_id
+from app.services import (
+    get_technical_problem_by_id,
+    get_technical_request_by_id,
+    get_cleaning_request_by_id,
+)
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
     RequestType,
@@ -517,7 +521,7 @@ AR_CR_button = InlineKeyboardButton(
 async def ar_rate_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
-    problem_type: RequestType,
+    request_type: RequestType,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
@@ -544,7 +548,7 @@ async def ar_rate_kb(
                 text="Оценка",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_rate_AR",
+                    end_point=f"{request_type.name}_rate_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -555,7 +559,7 @@ async def ar_rate_kb(
                 text="Комментарий",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_description_AR",
+                    end_point=f"{request_type.name}_description_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -566,20 +570,23 @@ async def ar_rate_kb(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point=f"{problem_type.name}_show_waiting_form_AR",
+                    end_point=f"{request_type.name}_show_waiting_form_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
         ],
     ]
-
+    reopen_complete_date = (
+        get_technical_request_by_id(
+            request_id=callback_data.request_id
+        ).reopen_repair_date
+        if request_type == RequestType.TR
+        else get_cleaning_request_by_id(
+            request_id=callback_data.request_id
+        ).reopen_cleaning_date
+    )
     if form_complete:
-        if mark > 1 or (
-            get_technical_request_by_id(
-                request_id=data.get("request_id")
-            ).reopen_repair_date
-            is not None
-        ):
+        if mark > 1 or (reopen_complete_date is not None):
             text = "Закрыть заявку"
         else:
             text = "Отправить на доработку"
@@ -588,7 +595,7 @@ async def ar_rate_kb(
                 InlineKeyboardButton(
                     text=text,
                     callback_data=ShowRequestCallbackData(
-                        end_point=f"{problem_type.name}_save_rate_AR",
+                        end_point=f"{request_type.name}_save_rate_AR",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )

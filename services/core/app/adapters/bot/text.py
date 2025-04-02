@@ -65,6 +65,6 @@ problem_groups_dict = {"Техническая": "TR", "Клининговая":
 notification_cleaner = "У Вас новая заявка на клининг!"
 notification_cleaner_reopen = "У Вас новая заявка на доработку по клинингу!"
 
-notification_territorial_manager_CR = "У Вас новая заявка для оценки клининга!"
+notification_appraiser_CR = "У Вас новая заявка для оценки клининга!"
 
 notification_worker_CR = "Статус заявки в клининг обновлён!"

@@ -244,7 +244,7 @@ async def update_cleaning_request_from_cleaner(
 ):
     """
     Update cleaning request
-    Notifies territorial manager, chief technician and request of the request #TODO поправить текст
+    Notifies territorial manager and request sender about update request
     """
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text as t
@@ -286,7 +286,7 @@ async def update_cleaning_request_from_cleaner(
     else:
         await notify_worker_by_telegram_id(
             id=request.appraiser.telegram_id,
-            message=t.notification_appraiser_TR
+            message=t.notification_appraiser_CR
             + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
             reply_markup=create_inline_keyboard(
                 InlineKeyboardButton(
@@ -430,7 +430,7 @@ async def update_cleaning_request_from_appraiser(
             request.reopen_date = cur_date
 
     if not orm.update_cleaning_request_from_appraiser(request):
-        logger.error(f"Technical problem with id {request.id} record wasn't updated")
+        logger.error(f"Cleaning problem with id {request.id} record wasn't updated")
         return False
     else:
         if mark == 1 and request.state == ApprovalStatus.pending:

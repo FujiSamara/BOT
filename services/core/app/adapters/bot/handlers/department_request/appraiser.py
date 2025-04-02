@@ -324,8 +324,8 @@ class CoordinationFactory:
         await try_edit_or_answer(
             message=message,
             text=hbold("Оценить заявку"),
-            reply_markup=await department_kb.tm_rate_kb(
-                state=state, callback_data=callback_data, problem_type=self.problem_type
+            reply_markup=await department_kb.ar_rate_kb(
+                state=state, callback_data=callback_data, request_type=self.problem_type
             ),
         )
 
@@ -353,7 +353,6 @@ class CoordinationFactory:
         self,
         callback: CallbackQuery,
         state: FSMContext,
-        callback_data: ShowRequestCallbackData,
     ):
         await state.set_state(AppraiserRequestForm.description)
         await try_delete_message(callback.message)
