@@ -1,8 +1,8 @@
 {
-  "DivisionWrite": "knowledge:write",
-  "DivisionRead": "knowledge:read",
-  "CardWrite": "knowledge:write",
-  "CardRead": "knowledge:read",
-  "DishWrite": "knowledge:write",
-  "DishRead": "knowledge:read"
+  "DivisionWrite": "authenticated",
+  "DivisionRead": "authenticated",
+  "CardWrite": "authenticated",
+  "CardRead": "authenticated",
+  "DishWrite": "authenticated",
+  "DishRead": "authenticated"
 }
