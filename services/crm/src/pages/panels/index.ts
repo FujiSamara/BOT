@@ -229,3 +229,9 @@ export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 export function getTablesByAccesses(accesses: Array<Access>): Array<TableData> {
 	return getByAccesses(accesses, tables);
 }
+
+export function getKnowledgeByAccesses(
+	accesses: Array<Access>,
+): Array<PanelData> {
+	return getByAccesses(accesses, knowledge);
+}

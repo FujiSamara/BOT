@@ -2,7 +2,9 @@ import { computed, ref, Ref } from "vue";
 
 import { KnowledgeService } from "@/services/knowledge";
 import * as config from "@/config";
-import { BaseSchema } from "@/types";
+import { BaseSchema, PanelData } from "@/types";
+import { useNetworkStore } from "@/store/network";
+import { getKnowledgeByAccesses } from "@/pages/panels";
 
 export enum CardType {
 	dish = "dish",
@@ -228,6 +230,28 @@ export class KnowledgeController {
 		this.divisionLoading.value = false;
 	}
 
-	public division = computed(() => this._division.value);
+	public division = computed(() => {
+		if (this._division.value === undefined) return;
+
+		const networkStore = useNetworkStore();
+		const knowledgePanels = getKnowledgeByAccesses(networkStore.accesses);
+
+		return {
+			...this._division.value,
+			subdivisions: this._division.value.subdivisions.filter((sub) =>
+				this.haveAccessToDivision(sub.path, knowledgePanels),
+			),
+		};
+	});
 	public card = computed(() => this._card.value);
+
+	private haveAccessToDivision(
+		path: string,
+		knowledgePanels: PanelData[],
+	): boolean {
+		const routerPath = actualToRouterPath(path);
+		const name = routerPath.split("/")[1];
+
+		return knowledgePanels.find((val) => val.name === name) !== undefined;
+	}
 }
