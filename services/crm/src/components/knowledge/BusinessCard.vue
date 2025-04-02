@@ -13,8 +13,11 @@ const props = defineProps({
 </script>
 <template>
 	<div class="card-wrapper">
-		<h2 class="title">{{ props.card.name }}</h2>
-		<h2>В Разработке!!!</h2>
+		<header>
+			<h2 class="title">{{ props.card.name }}</h2>
+			<span class="description">{{ props.card.description }}</span>
+		</header>
+
 		<Transition name="fade" mode="out-in">
 			<footer v-if="props.card.materials !== undefined" class="materials">
 				<div class="main-document"></div>
@@ -30,5 +33,14 @@ const props = defineProps({
 @import url("./style.scss");
 
 .card-wrapper {
+	header {
+		display: flex;
+		flex-direction: column;
+
+		width: 100%;
+		height: fit-content;
+
+		gap: 36px;
+	}
 }
 </style>
