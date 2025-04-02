@@ -5,6 +5,7 @@ from app.adapters.bot.kb import (
     get_coordinate_worker_bids_SS_btn,
     get_coordinate_worker_bids_AS_btn,
     get_coordinate_worker_bids_iiko_btn,
+    get_coordinate_worker_bids_FD_btn,
     main_menu_button,
     create_inline_keyboard,
 )
@@ -371,7 +372,7 @@ class WorkerBidCoordinationFactory:
             InputMediaDocument(
                 media=BufferedInputFile(
                     file=zip_manager.create_zip(),
-                    filename=f"Документы_{bid.f_name}_{bid.l_name[0]}_{bid.o_name[0] or 'о'}.zip",
+                    filename=f"Документы_{bid.l_name}_{bid.f_name[0]}_{bid.o_name[0] or 'о'}.zip",
                 )
             )
         ]
@@ -443,10 +444,11 @@ async def set_comment_str(message: Message, state: FSMContext):
     await state.clear()
 
     if not await update_worker_bid_bot(
-        bid_id=id,
+        worker_bid_id=id,
         state_column_name=state_column_name,
         state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
         comment=message.text,
+        tg_id=message.chat.id,
     ):
         msg = await try_edit_or_answer(
             message=message, text=text.err, return_message=True
@@ -486,26 +488,6 @@ async def set_comment_int(message: Message, state: FSMContext):
 
     try:
         iiko_id = int(message.text)
-
-        if not await update_worker_bid_bot(
-            bid_id=id,
-            state_column_name=state_column_name,
-            state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
-            comment=iiko_id,
-        ):
-            msg = await try_edit_or_answer(
-                message=message, text=text.err, return_message=True
-            )
-        else:
-            msg = await try_edit_or_answer(
-                message=message, text=hbold("Успешно!"), return_message=True
-            )
-
-        await state.set_state(Base.none)
-        await sleep(3)
-        await try_delete_message(msg)
-        await get_menu(message)
-
     except ValueError:
         await state.set_state(WorkerBidCoordination.comment_int)
         await try_edit_or_answer(
@@ -522,6 +504,26 @@ async def set_comment_int(message: Message, state: FSMContext):
                 )
             ),
         )
+    else:
+        if not await update_worker_bid_bot(
+            worker_bid_id=id,
+            state_column_name=state_column_name,
+            state=ApprovalStatus.approved if status == 1 else ApprovalStatus.denied,
+            comment=iiko_id,
+            tg_id=message.chat.id,
+        ):
+            msg = await try_edit_or_answer(
+                message=message, text=text.err, return_message=True
+            )
+        else:
+            msg = await try_edit_or_answer(
+                message=message, text=hbold("Успешно!"), return_message=True
+            )
+
+        await state.set_state(Base.none)
+        await sleep(3)
+        await try_delete_message(msg)
+        await get_menu(message)
 
 
 @router.message(WorkerBidCoordination.seek_documents)
@@ -572,4 +574,10 @@ def build_coordinations():
         coordinator_menu_button=get_coordinate_worker_bids_iiko_btn,
         state_column=WorkerBid.iiko_service_state,
         name="iiko_service",
+    )
+    WorkerBidCoordinationFactory(
+        router=router,
+        coordinator_menu_button=get_coordinate_worker_bids_FD_btn,
+        state_column=WorkerBid.financial_director_state,
+        name="financial_director",
     )

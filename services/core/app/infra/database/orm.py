@@ -46,6 +46,8 @@ from app.infra.database.models import (
     WorkerDocument,
     WorkerBidDocumentRequest,
     ViewStatus,
+    AuthClient,
+    WorkerBidCoordinator,
     CleaningProblem,
     CleaningRequest,
     CleaningRequestCleaningPhoto,
@@ -76,6 +78,7 @@ from app.schemas import (
     MaterialValuesSchema,
     CompanySchema,
     WorkerBidDocumentRequestSchema,
+    AuthClientSchema,
     CleaningProblemSchema,
     CleaningRequestSchema,
 )
@@ -767,10 +770,12 @@ def add_worker_bid(bid: WorkerBidSchema):
             view_state=bid.view_state,
             security_service_state=bid.security_service_state,
             accounting_service_state=bid.accounting_service_state,
+            financial_director_state=bid.financial_director_state,
             iiko_service_state=bid.iiko_service_state,
             create_date=bid.create_date,
             sender=sender,
             official_work=bid.official_work,
+            employed=bid.employed,
         )
 
         s.add(worker_bid)
@@ -824,10 +829,12 @@ def update_worker_bid(bid: WorkerBidSchema):
         cur_bid.security_service_state = bid.security_service_state
         cur_bid.accounting_service_state = bid.accounting_service_state
         cur_bid.iiko_service_state = bid.iiko_service_state
+        cur_bid.financial_director_state = bid.financial_director_state
         cur_bid.comment = bid.comment
         cur_bid.security_service_comment = bid.security_service_comment
         cur_bid.accounting_service_comment = bid.accounting_service_comment
         cur_bid.iiko_worker_id = bid.iiko_worker_id
+        cur_bid.financial_director_comment = bid.financial_director_comment
         cur_bid.close_date = bid.close_date
 
 
@@ -1297,17 +1304,19 @@ def get_restaurant_manager_by_department_id(department_id: int) -> WorkerSchema 
         return WorkerSchema.model_validate(restaurant_manager)
 
 
-def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema:
+def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema | None:
     """
     Return WorkerSchema of territorial manager by department id
     """
     with session.begin() as s:
-        territorial_manager: Worker = (
+        department: Department = (
             s.execute(select(Department).filter(Department.id == department_id))
             .scalars()
             .first()
-        ).territorial_manager
-        return WorkerSchema.model_validate(territorial_manager)
+        )
+        if department.territorial_manager is None:
+            return None
+        return WorkerSchema.model_validate(department.territorial_manager)
 
 
 def get_technical_requests_by_columns(
@@ -2957,6 +2966,48 @@ def get_all_history_technical_requests_territorial_director(
         return [
             TechnicalRequestSchema.model_validate(raw_request)
             for raw_request in raw_requests
+        ]
+
+
+def get_auth_client_by_id(id: str) -> AuthClientSchema | None:
+    with session.begin() as s:
+        raw_client = (
+            s.execute(select(AuthClient).filter(AuthClient.client_id == id))
+            .scalars()
+            .first()
+        )
+        if raw_client is None:
+            return None
+
+        client = {
+            "id": raw_client.client_id,
+            "secret": raw_client.secret,
+            "scopes": [scope.name for scope in raw_client.scopes],
+        }
+
+        return AuthClientSchema.model_validate(client)
+
+
+def add_worker_bid_coordinator(worker_bid_coordinator: WorkerBidCoordinator):
+    with session.begin() as s:
+        s.add(worker_bid_coordinator)
+
+
+def get_worker_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
+    with session.begin() as s:
+        raw_bid_coordinators = (
+            s.execute(
+                select(WorkerBidCoordinator)
+                .filter(WorkerBidCoordinator.worker_bid_id == bid_id)
+                .order_by(WorkerBidCoordinator.id)
+                .limit(4)
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            WorkerSchema.model_validate(raw_bid_coordinator.coordinator)
+            for raw_bid_coordinator in raw_bid_coordinators
         ]
 
 

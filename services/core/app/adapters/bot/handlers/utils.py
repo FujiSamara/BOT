@@ -41,6 +41,7 @@ from app.adapters.bot.kb import (
     get_candidates_coordinate_menu_btn,
     get_coordinate_worker_bids_iiko_btn,
     get_menu_changing_form_button,
+    get_coordinate_worker_bids_FD_btn,
 )
 from app.adapters.bot.handlers.department_request.kb import (
     wr_menu_button,  # worker
@@ -82,6 +83,7 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_subordinates_menu: get_candidates_coordinate_menu_btn,
         FujiScope.bot_worker_bid_security_coordinate: get_coordinate_worker_bids_SS_btn,
         FujiScope.bot_worker_bid_accounting_coordinate: get_coordinate_worker_bids_AS_btn,
+        FujiScope.bot_worker_bid_financial_director: get_coordinate_worker_bids_FD_btn,
         FujiScope.bot_worker_bid_iiko: get_coordinate_worker_bids_iiko_btn,
         FujiScope.bot_technical_request_department_director: td_button,
         FujiScope.bot_change_restaurant_menu: get_menu_changing_form_button,

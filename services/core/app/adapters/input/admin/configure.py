@@ -15,6 +15,8 @@ from app.adapters.input.admin.schemas import (
     FingerprintAttemptView,
     WorkerDocumentView,
     WorkerChildrenView,
+    AuthClientView,
+    AuthClientScopeView,
 )
 
 
@@ -40,3 +42,5 @@ def configure(admin: FujiAdmin):
     admin.add_view(SubordinationView)
     admin.add_view(WorkerFingerprintView)
     admin.add_view(FingerprintAttemptView)
+    admin.add_view(AuthClientView)
+    admin.add_view(AuthClientScopeView)

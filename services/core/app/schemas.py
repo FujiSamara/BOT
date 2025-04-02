@@ -203,6 +203,7 @@ class WorkerBidSchema(BaseSchemaPK):
     security_service_state: ApprovalStatus | None = None
     accounting_service_state: ApprovalStatus | None = None
     iiko_service_state: ApprovalStatus | None = None
+    financial_director_state: ApprovalStatus | None = None
 
     sender: WorkerSchema
 
@@ -210,8 +211,10 @@ class WorkerBidSchema(BaseSchemaPK):
     security_service_comment: str | None = None
     accounting_service_comment: str | None = None
     iiko_worker_id: int | None = None
+    financial_director_comment: str | None = None
 
     official_work: bool | None = None
+    employed: bool | None = None
     document_request: list["WorkerBidDocumentRequestSchema"] = []
 
 
@@ -429,6 +432,13 @@ class TimeSheetSchema(BaseSchemaPK):
             data[str(date.day)] = duration_per_day[date]
 
         return data
+
+
+class AuthClientSchema(BaseSchema):
+    id: str
+    secret: str
+
+    scopes: list[str]
 
 
 class CleaningProblemSchema(BaseSchemaPK):
