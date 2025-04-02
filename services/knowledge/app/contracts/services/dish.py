@@ -4,6 +4,7 @@ from common.schemas.file import FileLinkSchema
 from common.contracts.services import BaseService
 
 from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsSchema
+from app.schemas.file import FileInSchema
 
 
 class DishService(BaseService):
@@ -20,13 +21,24 @@ class DishService(BaseService):
         pass
 
     @abstractmethod
-    async def add_dish_video(
-        self, dish_id: int, filename: str, size: str
-    ) -> FileLinkSchema:
+    async def add_dish_video(self, dish_id: int, video: FileInSchema) -> FileLinkSchema:
         """Create put link for dish video and registrated it in database.
 
         Raises:
             ValueError: If dish with `dish_id` not found.
         Returns:
             File put link with meta.
+        """
+
+    @abstractmethod
+    async def add_dish_materials(
+        self, dish_id: int, materials: list[FileInSchema]
+    ) -> list[FileLinkSchema]:
+        """Create put link for every dish material
+        and registrated them in database.
+
+        Raises:
+            ValueError: If dish with `dish_id` not found or material already exist.
+        Returns:
+            File put links with meta.
         """

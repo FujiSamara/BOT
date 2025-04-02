@@ -39,3 +39,10 @@ class DishRepository(BaseRepository):
     @abstractmethod
     async def update(self, id: int, dish_update: DishUpdateSchema) -> DishSchema:
         pass
+
+    @abstractmethod
+    async def add_dish_materials(self, dish_id: int, materials: list[int]):
+        """Add dish materials by `dish_id`.
+        Returns:
+            Added material ids.
+        """

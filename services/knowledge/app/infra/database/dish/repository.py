@@ -126,7 +126,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         s_video = select(TTKProduct.video).where(TTKProduct.id == product_id)
 
         materials = list((await self._session.execute(s_materials)).scalars().all())
-        video = (await self._session.execute(s_video)).scalar_one()
+        video = (await self._session.execute(s_video)).scalar_one_or_none()
 
         return converters.materials_to_materials_dto(materials, video)
 
@@ -144,3 +144,10 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         await self._session.refresh(product)
 
         return converters.product_to_dish_schema(product)
+
+    async def add_dish_materials(self, dish_id, materials):
+        for material in materials:
+            dm = DishMaterial(dish_id=dish_id, external_id=material)
+            self._session.add(dm)
+
+        await self._session.flush()
