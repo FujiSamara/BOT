@@ -20,7 +20,7 @@ const loadPanels = () => {
 	const panels = getPanelsByAccesses(networkStore.accesses);
 	const grantedLinks: LinkData[] = [...panels];
 
-	if (grantedLinks.length === 0) {
+	if (grantedLinks.filter((val) => val.name !== "stub").length === 0) {
 		grantedLinks.push({
 			label: "Нет панелей",
 			routeName: "default",
