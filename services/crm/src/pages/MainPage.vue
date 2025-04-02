@@ -18,15 +18,18 @@ const activeLink: Ref<LinkData | undefined> = ref();
 
 const loadPanels = () => {
 	const panels = getPanelsByAccesses(networkStore.accesses);
-	const grantedLinks: LinkData[] = [...panels];
+	let grantedLinks: LinkData[] = [...panels];
 
 	if (grantedLinks.filter((val) => val.name !== "stub").length === 0) {
-		grantedLinks.push({
-			label: "Нет панелей",
-			routeName: "default",
-			iconURL: "/img/logout.svg",
-			active: false,
-		});
+		grantedLinks = [
+			{
+				label: "Нет панелей",
+				routeName: "default",
+				iconURL: "/img/logout.svg",
+				active: false,
+			},
+			...grantedLinks,
+		];
 	}
 
 	grantedLinks.push({
