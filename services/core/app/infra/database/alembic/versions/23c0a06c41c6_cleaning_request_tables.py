@@ -1,7 +1,7 @@
 """cleaning request tables
 
 Revision ID: 23c0a06c41c6
-Revises: aaf81d52603c
+Revises: 9fbf0b51d01c
 Create Date: 2025-01-07 12:50:20.411469
 
 """
@@ -12,7 +12,7 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import ENUM
 from app.infra.config import settings
-import fastapi_storages
+from fastapi_storages.integrations.sqlalchemy import FileType
 
 import app.infra.database.alembic.enum as c_enum
 
@@ -42,7 +42,6 @@ old_options = (
     "bot_technical_request_repairman",
     "bot_technical_request_chief_technician",
     "bot_technical_request_appraiser",
-    "bot_technical_request_department_director",
     "bot_technical_request_extensive_director",
     "bot_bid_it_worker",
     "bot_bid_it_repairman",
@@ -50,11 +49,27 @@ old_options = (
     "bot_personal_cabinet",
     "bot_incident_monitoring",
     "bot_bid_fac_cc",
-    "bot_coordinate_worker_bid",
+    "bot_subordinates_menu",
     "bot_worker_bid_security_coordinate",
     "bot_worker_bid_accounting_coordinate",
     "bot_worker_bid_iiko",
+    "bot_technical_request_department_director",
     "bot_change_restaurant_menu",
+    "bot_worker_bid_financial_director",
+    "crm_product_read",
+    "crm_marketing_read",
+    "crm_staff_read",
+    "crm_purchases_read",
+    "crm_cd_read",
+    "crm_control_read",
+    "crm_accounting_read",
+    "crm_product_write",
+    "crm_marketing_write",
+    "crm_staff_write",
+    "crm_purchases_write",
+    "crm_cd_write",
+    "crm_control_write",
+    "crm_accounting_write",
 )
 new_options = sorted(
     old_options
@@ -67,7 +82,7 @@ table_columns = {"post_scopes": ["scope"]}
 
 # revision identifiers, used by Alembic.
 revision: str = "23c0a06c41c6"
-down_revision: Union[str, None] = "aaf81d52603c"
+down_revision: Union[str, None] = "9fbf0b51d01c"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -75,7 +90,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     c_enum.update_enum(old_options, new_options, "fujiscope", table_columns)
 
-    cleaning_problems_table = op.create_table(
+    op.create_table(
         "cleaning_problems",
         sa.Column("problem_name", sa.String(), nullable=False),
         sa.Column("id", sa.Integer(), nullable=False),
@@ -141,7 +156,7 @@ def upgrade() -> None:
         "cleaning_requests_photos_work",
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
+            FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("cleaning_request_id", sa.Integer(), nullable=False),
@@ -156,7 +171,7 @@ def upgrade() -> None:
         "cleaning_requests_problem_photos",
         sa.Column(
             "document",
-            fastapi_storages.integrations.sqlalchemy.FileType(storage=settings.storage),
+            FileType(storage=settings.storage),
             nullable=False,
         ),
         sa.Column("cleaning_request_id", sa.Integer(), nullable=False),
@@ -171,17 +186,6 @@ def upgrade() -> None:
     op.create_foreign_key(
         "departments_cleaner_id_fkey", "departments", "workers", ["cleaner_id"], ["id"]
     )
-    for id, name in enumerate(
-        [
-            "чистка диванов и кресел",
-            "мойка фасадов",
-            "чистка тепловых завес",
-            "чистка кондиционеров",
-            "стирка штор",
-            "чистка холодильников",
-        ]
-    ):
-        op.bulk_insert(cleaning_problems_table, [{"id": id + 1, "problem_name": name}])
 
 
 def downgrade() -> None:
