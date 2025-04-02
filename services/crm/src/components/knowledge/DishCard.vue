@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, PropType, ref } from "vue";
-import { DishCard } from "@/components/knowledge";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
+import { DishCard } from "@/components/knowledge";
+import { formatDate } from "@/parser";
 
 const props = defineProps({
 	card: {
@@ -196,8 +197,8 @@ const convertAmount = (amount: number): string => {
 									{{ material.name }}
 								</span>
 								<div class="meta">
-									<span>24.01.2025</span>
-									<span>2.5 MB</span>
+									<span>{{ formatDate(material.created) }}</span>
+									<span>{{ material.size }} MB</span>
 									<button
 										@click="downloadClicked(material.url)"
 										class="download"

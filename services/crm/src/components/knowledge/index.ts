@@ -55,7 +55,7 @@ export interface DishMaterials {
 		url: string;
 		name: string;
 		size: number;
-		created: Date;
+		created: string;
 	}[];
 }
 
@@ -134,16 +134,6 @@ export class KnowledgeController {
 
 			fullCard.modifiers = await this._service.getDishModifiers(card.id);
 			fullCard.materials = await this._service.getDishMaterials(card.id);
-
-			// TEMP!!!
-			fullCard.materials?.materials.forEach(
-				(val, i) => (val.name = "Рис для роллов " + i),
-			);
-			fullCard.materials!.materials = [
-				...fullCard.materials!.materials,
-				...fullCard.materials!.materials,
-			];
-			//
 
 			this._card.value = fullCard;
 		}
