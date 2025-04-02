@@ -48,15 +48,16 @@ export interface DishModifierSchema extends BaseSchema {
 	ingredients: IngredientSchema[];
 }
 
+export interface FileLinkSchema extends BaseSchema {
+	url: string;
+	name: string;
+	size: number;
+	created: string;
+}
+
 export interface DishMaterials {
 	video?: string;
-	materials: {
-		id: number;
-		url: string;
-		name: string;
-		size: number;
-		created: string;
-	}[];
+	materials: FileLinkSchema[];
 }
 
 export interface DishCard extends Card {

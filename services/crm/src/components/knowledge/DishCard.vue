@@ -2,7 +2,7 @@
 import { computed, PropType, ref } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import { DishCard } from "@/components/knowledge";
-import { formatDate } from "@/parser";
+import CardMaterials from "./CardMaterials.vue";
 
 const props = defineProps({
 	card: {
@@ -70,13 +70,6 @@ const video = computed(() => {
 	if (props.card.materials === undefined) return;
 	return props.card.materials.video;
 });
-const materials = computed(() => {
-	if (props.card.materials === undefined) return;
-	return props.card.materials.materials;
-});
-const downloadClicked = (url: string) => {
-	window.open(url, "_blanc")!.focus();
-};
 
 const convertAmount = (amount: number): string => {
 	return amount >= 1 ? `${amount} шт` : `${Math.round(amount * 1000)} г`;
@@ -184,36 +177,9 @@ const convertAmount = (amount: number): string => {
 		</main>
 		<footer class="">
 			<div class="video"></div>
-			<div
-				class="materials-wrapper"
-				v-if="materials === undefined || materials.length"
-			>
-				<Transition name="fade" mode="out-in">
-					<div v-if="materials !== undefined" class="materials">
-						<span>Материалы</span>
-						<ul>
-							<li v-for="material in materials">
-								<span class="title">
-									{{ material.name }}
-								</span>
-								<div class="meta">
-									<span>{{ formatDate(material.created) }}</span>
-									<span>{{ material.size / 1e6 }} MB</span>
-									<button
-										@click="downloadClicked(material.url)"
-										class="download"
-									>
-										Скачать
-									</button>
-								</div>
-							</li>
-						</ul>
-					</div>
-					<div v-else class="spinner-wrapper">
-						<PulseSpinner class="spinner"></PulseSpinner>
-					</div>
-				</Transition>
-			</div>
+			<CardMaterials
+				:materials="props.card.materials?.materials"
+			></CardMaterials>
 		</footer>
 	</div>
 </template>
@@ -453,96 +419,6 @@ const convertAmount = (amount: number): string => {
 	}
 
 	.video {
-	}
-
-	.materials-wrapper {
-		display: flex;
-		flex-direction: column;
-
-		gap: 32px;
-
-		width: 100%;
-		height: fit-content;
-
-		border-radius: 16px;
-		padding: 32px;
-
-		background-color: $main-white;
-
-		span {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-
-			height: 42px;
-
-			font-family: Wix Madefor Display;
-			font-weight: 500;
-			font-size: 16px;
-			color: $sec-gray-blue;
-		}
-
-		.materials {
-			display: flex;
-			flex-direction: row;
-			width: 100%;
-
-			gap: 32px;
-
-			ul {
-				display: flex;
-				flex-direction: column;
-				width: 100%;
-
-				gap: 16px;
-
-				li {
-					display: flex;
-					flex-direction: row;
-					align-items: center;
-
-					justify-content: space-between;
-
-					.title {
-						font-family: Wix Madefor Display;
-						font-weight: 500;
-						font-size: 16px;
-						color: $main-dark-gray;
-					}
-
-					.meta {
-						display: flex;
-						flex-direction: row;
-						align-items: center;
-						gap: 24px;
-
-						.download {
-							background-color: $main-accent-blue;
-							border: none;
-							color: $main-white;
-							font-family: Wix Madefor Display;
-							font-weight: 400;
-							font-size: 12px;
-
-							padding: 12px 32px;
-							border-radius: 4px;
-
-							transition: transform 0.25s;
-							&:hover {
-								transform: scale(1.02);
-							}
-						}
-
-						span {
-							font-family: Wix Madefor Display;
-							font-weight: 500;
-							font-size: 14px;
-							color: $sec-gray-blue;
-						}
-					}
-				}
-			}
-		}
 	}
 }
 </style>
