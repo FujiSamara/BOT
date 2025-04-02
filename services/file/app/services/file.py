@@ -57,7 +57,7 @@ class FileServiceImpl(FileService):
                 id=file.id,
                 url=url,
                 name=f"{name}.{ext}",
-                size=file.size / 1e6,
+                size=file.size,
                 created=file.created,
             )
 
@@ -73,7 +73,7 @@ class FileServiceImpl(FileService):
             id=file.id,
             url=url,
             name=f"{file.name}.{file.ext}",
-            size=file.size / 1e6,
+            size=file.size,
             created=file.created,
         )
 
