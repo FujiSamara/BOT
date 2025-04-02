@@ -182,7 +182,8 @@ const convertAmount = (amount: number): string => {
 					{{ video.name }}
 				</video>
 				<CardMaterials
-					:materials="props.card.materials?.materials"
+					v-if="props.card.materials.materials.length"
+					:materials="props.card.materials.materials"
 				></CardMaterials>
 			</footer>
 			<div v-else class="spinner-wrapper">
