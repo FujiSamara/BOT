@@ -2,7 +2,7 @@
 import { computed, PropType } from "vue";
 
 import DishCardView from "@/components/knowledge/DishCard.vue";
-import CommonCard from "@/components/knowledge/CommonCard.vue";
+import CommonCard from "@/components/knowledge/BusinessCard.vue";
 
 import { Card, CardType, DishCard, BusinessCard } from "@/components/knowledge";
 
@@ -28,7 +28,11 @@ const business = computed(() => props.card as BusinessCard);
 			:key="props.card.id"
 			:card="dish"
 		></DishCardView>
-		<CommonCard v-else :card="business"></CommonCard>
+		<CommonCard
+			v-if="props.card.type == CardType.business"
+			:key="props.card.id"
+			:card="business"
+		></CommonCard>
 	</div>
 </template>
 <style scoped lang="scss">

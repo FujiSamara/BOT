@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, PropType, ref } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
-import { DishCard } from "@/components/knowledge";
 import CardMaterials from "./CardMaterials.vue";
+import { DishCard } from "@/components/knowledge";
 
 const props = defineProps({
 	card: {
@@ -76,8 +76,8 @@ const convertAmount = (amount: number): string => {
 };
 </script>
 <template>
-	<div class="dish-card">
-		<h2 class="title">{{ props.card.title }}</h2>
+	<div class="card-wrapper">
+		<h2 class="title">{{ props.card.name }}</h2>
 		<main class="content">
 			<img :src="props.card.image" />
 			<div class="info-wrapper">
@@ -176,7 +176,7 @@ const convertAmount = (amount: number): string => {
 			</div>
 		</main>
 		<Transition name="fade" mode="out-in">
-			<footer v-if="props.card.materials" class="dish-materials">
+			<footer v-if="props.card.materials" class="materials">
 				<video v-if="video" class="video" controls>
 					<source :src="video.url" type="video/mp4" />
 					{{ video.name }}
@@ -192,36 +192,9 @@ const convertAmount = (amount: number): string => {
 	</div>
 </template>
 <style scoped lang="scss">
-.dish-card {
-	display: flex;
-	flex-direction: column;
+@import url("./style.scss");
 
-	gap: 32px;
-	width: 100%;
-	height: fit-content;
-
-	.title {
-		font-family: Wix Madefor Display;
-		font-weight: 500;
-		font-size: 48px;
-	}
-
-	.spinner-wrapper {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-
-		width: 100%;
-		height: 100%;
-
-		.spinner {
-			width: 84px;
-			height: 84px;
-
-			color: $main-accent-blue;
-		}
-	}
-
+.card-wrapper {
 	.content {
 		display: flex;
 		flex-direction: row;
@@ -426,12 +399,7 @@ const convertAmount = (amount: number): string => {
 		}
 	}
 
-	.dish-materials {
-		display: flex;
-		flex-direction: column;
-
-		gap: 32px;
-
+	.materials {
 		.video {
 			width: 100%;
 			height: 480px;

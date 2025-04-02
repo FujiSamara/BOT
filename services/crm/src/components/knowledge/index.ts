@@ -30,12 +30,12 @@ export interface KnowledgeDivision extends KnowledgeSubdivision {
 }
 
 export interface Card extends BaseSchema {
-	title: string;
+	name: string;
 	type: CardType;
 }
 
 export interface BusinessCard extends Card {
-	title: string;
+	name: string;
 	description: string | undefined;
 	materials: [];
 }
@@ -63,7 +63,7 @@ export interface DishMaterials {
 }
 
 export interface DishCard extends Card {
-	title: string;
+	name: string;
 	image: string;
 	description: string;
 	modifiers?: DishModifierSchema[];

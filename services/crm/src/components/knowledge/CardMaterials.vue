@@ -16,8 +16,8 @@ const downloadClicked = (url: string) => {
 };
 </script>
 <template>
-	<div class="materials-wrapper">
-		<div class="materials">
+	<div class="c-materials-wrapper">
+		<div class="c-materials">
 			<span>Материалы</span>
 			<ul>
 				<li v-for="material in materials">
@@ -37,7 +37,7 @@ const downloadClicked = (url: string) => {
 	</div>
 </template>
 <style scoped lang="scss">
-.materials-wrapper {
+.c-materials-wrapper {
 	display: flex;
 	flex-direction: column;
 
@@ -64,7 +64,7 @@ const downloadClicked = (url: string) => {
 		color: $sec-gray-blue;
 	}
 
-	.materials {
+	.c-materials {
 		display: flex;
 		flex-direction: row;
 		width: 100%;
