@@ -77,7 +77,7 @@ const convertAmount = (amount: number): string => {
 </script>
 <template>
 	<div class="card-wrapper">
-		<h2 class="title">{{ props.card.name }}</h2>
+		<h2 class="title">{{ props.card.title }}</h2>
 		<main class="content">
 			<img :src="props.card.image" />
 			<div class="info-wrapper">

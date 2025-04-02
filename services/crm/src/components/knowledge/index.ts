@@ -63,7 +63,7 @@ export interface DishMaterials {
 }
 
 export interface DishCard extends Card {
-	name: string;
+	title: string;
 	image: string;
 	description: string;
 	modifiers?: DishModifierSchema[];
