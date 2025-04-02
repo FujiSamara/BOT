@@ -6,20 +6,18 @@ import { formatDate } from "@/parser";
 const props = defineProps({
 	materials: {
 		type: Array as PropType<FileLinkSchema[]>,
+		required: true,
 	},
 });
 
-const materials = computed(() => {
-	if (props.materials === undefined) return;
-	return props.materials;
-});
+const materials = computed(() => props.materials);
 const downloadClicked = (url: string) => {
 	window.open(url, "_blanc")!.focus();
 };
 </script>
 <template>
 	<div class="materials-wrapper">
-		<div v-if="materials !== undefined" class="materials">
+		<div class="materials">
 			<span>Материалы</span>
 			<ul>
 				<li v-for="material in materials">
