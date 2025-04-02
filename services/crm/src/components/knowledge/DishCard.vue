@@ -198,7 +198,7 @@ const convertAmount = (amount: number): string => {
 								</span>
 								<div class="meta">
 									<span>{{ formatDate(material.created) }}</span>
-									<span>{{ material.size }} MB</span>
+									<span>{{ material.size / 1e6 }} MB</span>
 									<button
 										@click="downloadClicked(material.url)"
 										class="download"
