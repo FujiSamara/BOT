@@ -175,12 +175,20 @@ const convertAmount = (amount: number): string => {
 				</Transition>
 			</div>
 		</main>
-		<footer class="">
-			<div class="video"></div>
-			<CardMaterials
-				:materials="props.card.materials?.materials"
-			></CardMaterials>
-		</footer>
+		<Transition name="fade" mode="out-in">
+			<footer v-if="props.card.materials" class="dish-materials">
+				<video v-if="video" class="video" controls>
+					<source :src="video.url" type="video/mp4" />
+					{{ video.name }}
+				</video>
+				<CardMaterials
+					:materials="props.card.materials?.materials"
+				></CardMaterials>
+			</footer>
+			<div v-else class="spinner-wrapper">
+				<PulseSpinner class="spinner"></PulseSpinner>
+			</div>
+		</Transition>
 	</div>
 </template>
 <style scoped lang="scss">
@@ -418,7 +426,16 @@ const convertAmount = (amount: number): string => {
 		}
 	}
 
-	.video {
+	.dish-materials {
+		display: flex;
+		flex-direction: column;
+
+		gap: 32px;
+
+		.video {
+			width: 100%;
+			height: 480px;
+		}
 	}
 }
 </style>

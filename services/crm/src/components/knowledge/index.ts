@@ -58,7 +58,7 @@ export interface FileLinkSchema extends BaseSchema {
 }
 
 export interface DishMaterials {
-	video?: string;
+	video?: FileLinkSchema;
 	materials: FileLinkSchema[];
 }
 
@@ -133,12 +133,22 @@ export class KnowledgeController {
 		this.divisionLoading.value = false;
 
 		if (division.type === DivisionType.dish) {
-			const fullCard: DishCard = { ...(card as any) };
+			this._service.getDishModifiers(card.id).then((val) => {
+				const fullCard: DishCard = {
+					...(this._card.value as any),
+					modifiers: val,
+				};
 
-			fullCard.modifiers = await this._service.getDishModifiers(card.id);
-			fullCard.materials = await this._service.getDishMaterials(card.id);
+				this._card.value = fullCard;
+			});
+			this._service.getDishMaterials(card.id).then((val) => {
+				const fullCard: DishCard = {
+					...(this._card.value as any),
+					materials: val,
+				};
 
-			this._card.value = fullCard;
+				this._card.value = fullCard;
+			});
 		}
 	}
 

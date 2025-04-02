@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import { FileLinkSchema } from "@/components/knowledge";
 import { formatDate } from "@/parser";
 
@@ -19,32 +18,24 @@ const downloadClicked = (url: string) => {
 };
 </script>
 <template>
-	<div
-		class="materials-wrapper"
-		v-if="materials === undefined || materials.length"
-	>
-		<Transition name="fade" mode="out-in">
-			<div v-if="materials !== undefined" class="materials">
-				<span>Материалы</span>
-				<ul>
-					<li v-for="material in materials">
-						<span class="title">
-							{{ material.name }}
-						</span>
-						<div class="meta">
-							<span>{{ formatDate(material.created) }}</span>
-							<span>{{ material.size / 1e6 }} MB</span>
-							<button @click="downloadClicked(material.url)" class="download">
-								Скачать
-							</button>
-						</div>
-					</li>
-				</ul>
-			</div>
-			<div v-else class="spinner-wrapper">
-				<PulseSpinner class="spinner"></PulseSpinner>
-			</div>
-		</Transition>
+	<div class="materials-wrapper">
+		<div v-if="materials !== undefined" class="materials">
+			<span>Материалы</span>
+			<ul>
+				<li v-for="material in materials">
+					<span class="title">
+						{{ material.name }}
+					</span>
+					<div class="meta">
+						<span>{{ formatDate(material.created) }}</span>
+						<span>{{ material.size / 1e6 }} MB</span>
+						<button @click="downloadClicked(material.url)" class="download">
+							Скачать
+						</button>
+					</div>
+				</li>
+			</ul>
+		</div>
 	</div>
 </template>
 <style scoped lang="scss">
