@@ -441,7 +441,7 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
                 await update_bid_state(
                     bid,
                     Bid.fac_state.name,
-                    ApprovalStatus.approved,
+                    ApprovalStatus.denied,
                     worker.id,
                 )
                 update_bid(bid)
@@ -453,13 +453,13 @@ async def set_comment_after_decline(message: Message, state: FSMContext):
                 await update_bid_state(
                     bid,
                     Bid.cc_state.name,
-                    ApprovalStatus.approved,
+                    ApprovalStatus.denied,
                     worker.id,
                 )
                 update_bid(bid)
 
         else:
-            await update_bid_state(bid, column_name, ApprovalStatus.approved, worker.id)
+            await update_bid_state(bid, column_name, ApprovalStatus.denied, worker.id)
             update_bid(bid)
 
     await try_delete_message(message)
