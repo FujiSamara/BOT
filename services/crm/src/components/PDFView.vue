@@ -19,7 +19,7 @@ import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
-import { FileLinkSchema } from "@/components/knowledge";
+import { FileLinkSchema } from "@/components/knowledge/types";
 
 const props = defineProps({
 	file: {
@@ -52,7 +52,10 @@ const renderDocument = async () => {
 
 		const actualWidth = page.view[2] - page.view[0] - 10;
 		const scale = wrapper.offsetWidth / actualWidth;
-		const viewport = page.getViewport({ scale, offsetX: -5 });
+		const viewport = page.getViewport({
+			scale,
+			offsetX: -5,
+		});
 
 		canvas.width = wrapper.offsetWidth;
 		if (pdfExpanded.value) {
@@ -90,10 +93,14 @@ const renderDocument = async () => {
 	normalizeParentHeight();
 };
 const normalizeParentHeight = async () => {
-	if (!canvaParent.value || pdfExpanded.value) return;
+	if (!canvaParent.value) return;
 
-	const height = Math.min(480, firstPageHeight.value);
-	canvaParent.value.style.height = `${height}px`;
+	if (pdfExpanded.value) {
+		canvaParent.value.style.height = `${fullHeight.value}px`;
+	} else {
+		const height = Math.min(480, firstPageHeight.value);
+		canvaParent.value.style.height = `${height}px`;
+	}
 };
 
 const loadFile = async () => {
@@ -107,15 +114,9 @@ const expand = async () => {
 	if (!canvaParent.value) return;
 
 	pdfExpanded.value = !pdfExpanded.value;
-	if (pdfExpanded.value) {
-		canvaParent.value.style.height = `${fullHeight.value}px`;
-	} else {
-		normalizeParentHeight();
-	}
-
-	await nextTick();
 
 	await renderDocument();
+	normalizeParentHeight();
 };
 
 let resizeTimeout: number = setTimeout(() => {}, 0);
@@ -125,7 +126,8 @@ const onResize = async () => {
 	clearTimeout(resizeTimeout);
 	resizeTimeout = setTimeout(async () => {
 		await renderDocument();
-	}, 1);
+		normalizeParentHeight();
+	}, 10);
 };
 
 let resizeObserver: ResizeObserver;
