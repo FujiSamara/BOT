@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { onMounted, PropType, Ref, ref, useTemplateRef, markRaw } from "vue";
+import {
+	onMounted,
+	PropType,
+	Ref,
+	ref,
+	useTemplateRef,
+	markRaw,
+	watch,
+} from "vue";
 import {
 	getDocument,
 	GlobalWorkerOptions,
@@ -9,6 +17,7 @@ import {
 import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
 GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
+import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import { FileLinkSchema } from "@/components/knowledge";
 
 const props = defineProps({
@@ -24,6 +33,7 @@ const canvaParent = useTemplateRef("parent");
 const doc: Ref<PDFDocumentProxy | undefined> = ref(undefined);
 const currentPage: Ref<PDFPageProxy | undefined> = ref(undefined);
 const height: Ref<number> = ref(0);
+const ready = ref(true);
 
 const renderPage = async () => {
 	if (!canvaRef.value) return;
@@ -61,19 +71,52 @@ const renderPage = async () => {
 
 defineExpose({ renderPage, actualHeight: height });
 
+watch(canvaRef, async () => {
+	if (!canvaRef.value) return;
+
+	await renderPage();
+});
+
 const loadFile = async () => {
+	ready.value = false;
 	doc.value = markRaw(await getDocument(props.file.url).promise);
 	currentPage.value = markRaw(await doc.value.getPage(1)); // TODO: Complete not only for first page.
+	ready.value = true;
 };
 
 onMounted(async () => {
 	await loadFile();
-	await renderPage();
 });
 </script>
 <template>
 	<div class="pdf-wrapper" ref="parent">
-		<canvas id="pdf-canvas" ref="canva"></canvas>
+		<Transition name="fade" mode="out-in">
+			<canvas v-if="ready" id="pdf-canvas" ref="canva"></canvas>
+			<div v-else class="spinner-wrapper">
+				<PulseSpinner class="spinner"></PulseSpinner>
+			</div>
+		</Transition>
 	</div>
 </template>
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.pdf-wrapper {
+	display: flex;
+	justify-content: center;
+
+	.spinner-wrapper {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+
+		width: 100%;
+		height: 100%;
+
+		.spinner {
+			width: 128px;
+			height: 128px;
+
+			color: $main-accent-blue;
+		}
+	}
+}
+</style>
