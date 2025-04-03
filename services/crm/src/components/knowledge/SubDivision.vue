@@ -31,12 +31,12 @@ const pluralizeFiles = (count: number) => {
 			</li>
 		</ul>
 		<div class="meta">
-			<span v-if="props.subDivision.type == DivisionType.division"
+			<span v-if="props.subDivision.type === DivisionType.division"
 				>{{ props.subDivision.subdivisionsCount }}
 				{{ pluralizeExpenditure(props.subDivision.subdivisionsCount) }}</span
 			>
-			<span v-if="props.subDivision.type == DivisionType.division">•</span>
-			<span
+			<!-- <span v-if="props.subDivision.type == DivisionType.division">•</span> -->
+			<span v-if="props.subDivision.type !== DivisionType.division"
 				>{{ props.subDivision.filesCount }}
 				{{ pluralizeFiles(props.subDivision.filesCount) }}</span
 			>
