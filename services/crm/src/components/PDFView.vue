@@ -8,7 +8,6 @@ import {
 	markRaw,
 	nextTick,
 	onUnmounted,
-	watch,
 } from "vue";
 import {
 	getDocument,
