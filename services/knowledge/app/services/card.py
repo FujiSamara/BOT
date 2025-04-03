@@ -59,3 +59,7 @@ class CardServiceImpl(CardService):
             await uow.card.add_card_materials(card_id, [meta.id for meta in meta_list])
 
             return meta_list
+
+    async def update_card(self, card_id, card_update):
+        async with self._uow as uow:
+            return await uow.card.update(card_id, card_update)

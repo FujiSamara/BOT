@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from common.contracts.repository import BaseRepository
-from app.schemas.card import BusinessCardSchema
+from app.schemas.card import BusinessCardSchema, BusinessCardUpdateSchema
 
 
 class CardRepository(BaseRepository):
@@ -30,3 +30,14 @@ class CardRepository(BaseRepository):
     @abstractmethod
     async def add_card_materials(self, card_id: int, materials: list[int]):
         pass
+
+    @abstractmethod
+    async def update(
+        self, id: int, card_update: BusinessCardUpdateSchema
+    ) -> BusinessCardSchema:
+        """Update card in db by `id`.
+        Raises:
+            ValueError: If card with `id` not exist.
+        Returns:
+            Updated card.
+        """

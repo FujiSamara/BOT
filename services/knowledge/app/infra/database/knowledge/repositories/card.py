@@ -53,3 +53,18 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
             self._session.add(dm)
 
         await self._session.flush()
+
+    async def update(self, id, card_update):
+        s = select(BusinessCard).where(BusinessCard.id == id)
+        card = (await self._session.execute(s)).scalars().first()
+
+        if card is None:
+            raise ValueError(f"Card {id} not found.")
+
+        for field, value in card_update.model_dump(exclude_unset=True).items():
+            setattr(card, field, value)
+
+        await self._session.flush()
+        await self._session.refresh(card)
+
+        return converters.card_to_card_schema(card)

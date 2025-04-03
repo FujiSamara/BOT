@@ -6,3 +6,8 @@ class BusinessCardSchema(BaseSchema):
 
     name: str
     description: str | None
+
+
+class BusinessCardUpdateSchema(BaseSchema):
+    name: str | None
+    description: str | None

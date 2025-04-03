@@ -3,7 +3,7 @@ from abc import abstractmethod
 from common.schemas.file import FileLinkSchema
 from common.contracts.services import BaseService
 
-from app.schemas.card import BusinessCardSchema
+from app.schemas.card import BusinessCardSchema, BusinessCardUpdateSchema
 from app.schemas.file import FileInSchema
 
 
@@ -27,4 +27,15 @@ class CardService(BaseService):
             ValueError: If dish with `card_id` not found or material already exist.
         Returns:
             File put links with meta.
+        """
+
+    @abstractmethod
+    async def update_card(
+        self, card_id: int, card_update: BusinessCardUpdateSchema
+    ) -> BusinessCardSchema:
+        """Update card by `card_id`
+        Raises:
+            ValueError: If card with `id` not exist.
+        Returns:
+            Updated card.
         """
