@@ -23,7 +23,7 @@ export class KnowledgeService {
 		subdivisionsOffset: number,
 	): Promise<KnowledgeDivision | undefined> {
 		path = routerToActualPath(path);
-		const url = `${this._endpoint}/division/?path=${path}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
+		const url = `${this._endpoint}/divisions/?path=${path}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 
 		if (!resp.data) return;
@@ -57,7 +57,7 @@ export class KnowledgeService {
 		term: string,
 		subdivisionsOffset: number,
 	): Promise<KnowledgeSubdivision[]> {
-		const url = `${this._endpoint}/division/find/by/name?term=${term}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
+		const url = `${this._endpoint}/divisions/find/by/name?term=${term}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		const rows = resp.data;
 		const divisions: KnowledgeSubdivision[] = [];
@@ -81,10 +81,10 @@ export class KnowledgeService {
 		id: number,
 		type: DivisionType,
 	): Promise<Card | undefined> {
-		let url = `${this._endpoint}/dish/${id}`;
+		let url = `${this._endpoint}/dishes/${id}`;
 
 		if (type == DivisionType.business) {
-			url = url.replace("dish", "card");
+			url = url.replace("dishes", "cards");
 		}
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
@@ -96,7 +96,7 @@ export class KnowledgeService {
 	public async getDishModifiers(
 		dish_id: number,
 	): Promise<DishModifierSchema[] | undefined> {
-		const url = `${this._endpoint}/dish/${dish_id}/modifier`;
+		const url = `${this._endpoint}/dishes/${dish_id}/modifier`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
 
@@ -106,7 +106,7 @@ export class KnowledgeService {
 	public async getDishMaterials(
 		dish_id: number,
 	): Promise<DishMaterials | undefined> {
-		const url = `${this._endpoint}/dish/${dish_id}/materials`;
+		const url = `${this._endpoint}/dishes/${dish_id}/materials`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
 
