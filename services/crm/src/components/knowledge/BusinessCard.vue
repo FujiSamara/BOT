@@ -2,8 +2,8 @@
 import { PropType } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import CardMaterials from "@/components/knowledge/CardMaterials.vue";
-import CardDocument from "@/components/knowledge/CardDocument.vue";
 import { BusinessCard } from "@/components/knowledge";
+import PDFView from "../PDFView.vue";
 
 const props = defineProps({
 	card: {
@@ -24,7 +24,7 @@ const props = defineProps({
 				v-if="props.card.materials !== undefined && props.card.materials.length"
 				class="materials"
 			>
-				<CardDocument :file="props.card.materials[0]"></CardDocument>
+				<PDFView :file="props.card.materials[0]"></PDFView>
 				<CardMaterials :materials="props.card.materials"></CardMaterials>
 			</footer>
 			<div v-else class="spinner-wrapper">
