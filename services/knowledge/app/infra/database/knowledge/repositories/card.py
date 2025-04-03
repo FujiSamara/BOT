@@ -46,3 +46,10 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
         )
 
         return list((await self._session.execute(s)).scalars().all())
+
+    async def add_card_materials(self, card_id, materials):
+        for material in materials:
+            dm = BusinessCardMaterial(card_id=card_id, external_id=material)
+            self._session.add(dm)
+
+        await self._session.flush()

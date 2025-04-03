@@ -34,7 +34,7 @@ async def get_dish_by_id(
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
-@router.get("/{id}/modifier")
+@router.get("/{id}/modifiers")
 @inject
 async def get_dish_modifiers(
     id: int,

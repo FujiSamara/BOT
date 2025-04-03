@@ -10,6 +10,7 @@ from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
 
 from app.schemas.card import BusinessCardSchema
+from app.schemas.file import FileInSchema
 from app.contracts.services import CardService
 
 
@@ -47,6 +48,28 @@ async def get_card_materials(
 ) -> list[FileLinkSchema]:
     try:
         return await service.get_card_materials(id)
+    except Exception as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.post("/{id}/materials")
+@inject
+async def add_card_materials(
+    id: int,
+    materials: list[FileInSchema],
+    service: CardService = Depends(Provide[Container.card_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
+    _: ClientCredentials = Security(
+        Authorization,
+        scopes=[Scopes.CardWrite.value],
+    ),
+):
+    try:
+        return await service.add_card_materials(id, materials)
+    except ValueError as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

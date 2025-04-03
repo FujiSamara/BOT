@@ -26,3 +26,7 @@ class CardRepository(BaseRepository):
     @abstractmethod
     async def get_card_materials(self, card_id: int) -> list[int]:
         pass
+
+    @abstractmethod
+    async def add_card_materials(self, card_id: int, materials: list[int]):
+        pass
