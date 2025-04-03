@@ -9,5 +9,5 @@ class BusinessCardSchema(BaseSchema):
 
 
 class BusinessCardUpdateSchema(BaseSchema):
-    name: str | None
-    description: str | None
+    name: str | None = None
+    description: str | None = None
