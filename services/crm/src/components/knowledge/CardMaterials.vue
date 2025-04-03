@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import { FileLinkSchema } from "@/components/knowledge";
+
+import { FileLinkSchema } from "@/components/knowledge/types";
 import { formatDate } from "@/parser";
 
 const props = defineProps({

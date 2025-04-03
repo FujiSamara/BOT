@@ -2,7 +2,7 @@
 import { computed, PropType, ref } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import CardMaterials from "./CardMaterials.vue";
-import { DishCard } from "@/components/knowledge";
+import { DishCard } from "@/components/knowledge/types";
 
 const props = defineProps({
 	card: {

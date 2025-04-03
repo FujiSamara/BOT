@@ -7,7 +7,8 @@ import Division from "@/components/knowledge/Division.vue";
 import Card from "@/components/knowledge/Card.vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 
-import { DivisionType, KnowledgeController } from "@/components/knowledge";
+import { DivisionType } from "@/components/knowledge/types";
+import { KnowledgeController } from "@/components/knowledge";
 
 const router = useRouter();
 const route = useRoute();

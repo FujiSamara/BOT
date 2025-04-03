@@ -3,7 +3,7 @@ import { PropType } from "vue";
 
 import SubDivision from "@/components/knowledge/SubDivision.vue";
 
-import { KnowledgeDivision } from "@/components/knowledge";
+import { KnowledgeDivision } from "@/components/knowledge/types";
 
 const props = defineProps({
 	division: {

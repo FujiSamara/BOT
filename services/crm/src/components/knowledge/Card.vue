@@ -4,7 +4,12 @@ import { computed, PropType } from "vue";
 import DishCardView from "@/components/knowledge/DishCard.vue";
 import CommonCard from "@/components/knowledge/BusinessCard.vue";
 
-import { Card, CardType, DishCard, BusinessCard } from "@/components/knowledge";
+import {
+	BusinessCard,
+	Card,
+	CardType,
+	DishCard,
+} from "@/components/knowledge/types";
 
 const props = defineProps({
 	path: {

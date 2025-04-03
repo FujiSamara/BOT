@@ -1,16 +1,18 @@
 import axios from "axios";
 import { useNetworkStore } from "@/store/network";
 import {
+	Card,
+	DishMaterials,
+	DishModifierSchema,
+	DivisionType,
+	FileLinkSchema,
 	KnowledgeDivision,
 	KnowledgeSubdivision,
-	routerToActualPath,
+} from "@/components/knowledge/types";
+import {
 	actualToRouterPath,
-	DivisionType,
-	Card,
 	DIVISION_CHUNK_SIZE,
-	DishModifierSchema,
-	DishMaterials,
-	FileLinkSchema,
+	routerToActualPath,
 } from "@/components/knowledge";
 
 export class KnowledgeService {

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, PropType } from "vue";
-import { DivisionType, KnowledgeSubdivision } from "@/components/knowledge";
+
+import {
+	KnowledgeSubdivision,
+	DivisionType,
+} from "@/components/knowledge/types";
 
 const props = defineProps({
 	subDivision: {
