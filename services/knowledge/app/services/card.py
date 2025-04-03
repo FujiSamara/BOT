@@ -39,7 +39,7 @@ class CardServiceImpl(CardService):
             old_names_set = set(
                 [
                     (await self._file_client.request_get_link(id)).name
-                    for id in old_materials.materials
+                    for id in old_materials
                 ]
             )
             new_names_set = set([material.filename for material in materials])
