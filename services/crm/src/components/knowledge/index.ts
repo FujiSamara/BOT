@@ -37,7 +37,7 @@ export interface Card extends BaseSchema {
 export interface BusinessCard extends Card {
 	name: string;
 	description: string | undefined;
-	materials: [];
+	materials: FileLinkSchema[];
 }
 
 interface IngredientSchema extends BaseSchema {
@@ -130,10 +130,13 @@ export class KnowledgeController {
 		else card.type = CardType.business;
 
 		this._card.value = card;
+		const card_id = card.id;
 		this.divisionLoading.value = false;
 
 		if (division.type === DivisionType.dish) {
 			this._service.getDishModifiers(card.id).then((val) => {
+				if (card_id !== this._card.value?.id) return;
+
 				const fullCard: DishCard = {
 					...(this._card.value as any),
 					modifiers: val,
@@ -142,9 +145,22 @@ export class KnowledgeController {
 				this._card.value = fullCard;
 			});
 			this._service.getDishMaterials(card.id).then((val) => {
+				if (card_id !== this._card.value?.id) return;
+
 				const fullCard: DishCard = {
 					...(this._card.value as any),
 					materials: val,
+				};
+
+				this._card.value = fullCard;
+			});
+		} else {
+			this._service.getBusinessMaterials(card.id).then((val) => {
+				if (card_id !== this._card.value?.id) return;
+
+				const fullCard: BusinessCard = {
+					...(this._card.value as any),
+					materials: val === undefined ? [] : val,
 				};
 
 				this._card.value = fullCard;

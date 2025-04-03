@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { PropType } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
-import CardMaterials from "./CardMaterials.vue";
+import CardMaterials from "@/components/knowledge/CardMaterials.vue";
+import CardDocument from "@/components/knowledge/CardDocument.vue";
 import { BusinessCard } from "@/components/knowledge";
 
 const props = defineProps({
@@ -19,8 +20,11 @@ const props = defineProps({
 		</header>
 
 		<Transition name="fade" mode="out-in">
-			<footer v-if="props.card.materials !== undefined" class="materials">
-				<div class="main-document"></div>
+			<footer
+				v-if="props.card.materials !== undefined && props.card.materials.length"
+				class="materials"
+			>
+				<CardDocument :file="props.card.materials[0]"></CardDocument>
 				<CardMaterials :materials="props.card.materials"></CardMaterials>
 			</footer>
 			<div v-else class="spinner-wrapper">

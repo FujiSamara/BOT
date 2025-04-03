@@ -10,6 +10,7 @@ import {
 	DIVISION_CHUNK_SIZE,
 	DishModifierSchema,
 	DishMaterials,
+	FileLinkSchema,
 } from "@/components/knowledge";
 
 export class KnowledgeService {
@@ -111,6 +112,16 @@ export class KnowledgeService {
 		if (!resp.data) return;
 
 		if (resp.data.video === null) resp.data.video = undefined;
+
+		return resp.data;
+	}
+
+	public async getBusinessMaterials(
+		card_id: number,
+	): Promise<FileLinkSchema[] | undefined> {
+		const url = `${this._endpoint}/cards/${card_id}/materials`;
+		const resp = await this._networkStore.withAuthChecking(axios.get(url));
+		if (!resp.data) return;
 
 		return resp.data;
 	}
