@@ -1,4 +1,4 @@
-import { Access, PanelData } from "@types";
+import { Access, PanelData, TableData } from "@types";
 import { ExpenditureTable } from "@/pages/panels/expenditure";
 import { WorktimeTable } from "@/pages/panels/worktime";
 import { TimesheetTable } from "@/pages/panels/timesheet";
@@ -12,7 +12,7 @@ import {
 	ArchiveBidTable,
 } from "@/pages/panels/bid";
 
-const panels: Array<PanelData> = [
+const tables: Array<TableData> = [
 	{
 		label: "Статьи",
 		routeName: "table-expenditures",
@@ -114,15 +114,93 @@ const panels: Array<PanelData> = [
 		accesses: [Access.ArchiveBid],
 	},
 ];
+const knowledge: Array<PanelData> = [
+	{
+		label: "Продукт",
+		routeName: "knowledge-product",
+		iconURL: "/img/product.svg",
+		active: false,
+		name: "product",
+		accesses: [Access.ProductRead],
+		writeAccesses: [Access.ProductWrite],
+	},
+	{
+		label: "Маркетинг",
+		routeName: "knowledge-marketing",
+		iconURL: "/img/bag.svg",
+		active: false,
+		name: "marketing",
+		accesses: [Access.MarketingRead],
+		writeAccesses: [Access.MarketingWrite],
+	},
+	{
+		label: "Персонал",
+		routeName: "knowledge-staff",
+		iconURL: "/img/staff.svg",
+		active: false,
+		name: "staff",
+		accesses: [Access.StaffRead],
+		writeAccesses: [Access.StaffWrite],
+	},
+	{
+		label: "Закупки",
+		routeName: "knowledge-purchases",
+		iconURL: "/img/bag.svg",
+		active: false,
+		name: "purchases",
+		accesses: [Access.PurchasesRead],
+		writeAccesses: [Access.PurchasesWrite],
+	},
+	{
+		label: "ЦД",
+		routeName: "knowledge-cd",
+		iconURL: "/img/car.svg",
+		active: false,
+		name: "cd",
+		accesses: [Access.CdRead],
+		writeAccesses: [Access.CdWrite],
+	},
+	{
+		label: "Контроль",
+		routeName: "knowledge-control",
+		iconURL: "/img/shield.svg",
+		active: false,
+		name: "control",
+		accesses: [Access.ControlRead],
+		writeAccesses: [Access.ControlWrite],
+	},
+	{
+		label: "Учет",
+		routeName: "knowledge-accounting",
+		iconURL: "/img/safe.svg",
+		active: false,
+		name: "accounting",
+		accesses: [Access.AccountingRead],
+		writeAccesses: [Access.AccountingWrite],
+	},
 
-export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
-	const result: Array<PanelData> = [];
+	{
+		label: "Поиск",
+		routeName: "knowledge-search",
+		iconURL: "/img/product.svg",
+		active: false,
+		name: "stub",
+		accesses: [Access.Authed],
+	},
+];
+
+const panels: Array<PanelData> = [...tables, ...knowledge];
+
+function getByAccesses<T extends PanelData>(
+	accesses: Array<Access>,
+	panels: Array<T>,
+): Array<T> {
+	const result: Array<T> = [];
 
 	for (let j = 0; j < panels.length; j++) {
 		const panel = panels[j];
 
 		const accessesExist = panel.accesses.map((_) => false);
-		let accessGranted = true;
 
 		for (let i = 0; i < accesses.length; i++) {
 			const access = accesses[i];
@@ -135,17 +213,37 @@ export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 				}
 			}
 		}
-		for (const accessExist of accessesExist) {
-			if (!accessExist) {
-				accessGranted = false;
-				break;
-			}
-		}
-
-		if (accessGranted) {
+		if (accessesExist.every((accessExist) => accessExist)) {
 			result.push(panel);
 		}
 	}
 
 	return result;
+}
+
+export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
+	return getByAccesses(accesses, panels);
+}
+
+export function getTablesByAccesses(accesses: Array<Access>): Array<TableData> {
+	return getByAccesses(accesses, tables);
+}
+
+export function getKnowledgeByAccesses(
+	accesses: Array<Access>,
+): Array<PanelData> {
+	return getByAccesses(accesses, knowledge);
+}
+
+export function canEditPanel(
+	accesses: Array<Access>,
+	panel: PanelData,
+): boolean {
+	if (panel.writeAccesses === undefined) return true;
+
+	return panel.writeAccesses.every((neededAccess) =>
+		accesses.some(
+			(access) => neededAccess === access || access === Access.Admin,
+		),
+	);
 }
