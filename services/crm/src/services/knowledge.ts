@@ -2,6 +2,7 @@ import axios from "axios";
 import { useNetworkStore } from "@/store/network";
 import {
 	Card,
+	CardType,
 	DishMaterials,
 	DishModifierSchema,
 	DivisionType,
@@ -14,6 +15,7 @@ import {
 	DIVISION_CHUNK_SIZE,
 	routerToActualPath,
 } from "@/components/knowledge";
+import { DocumentSchema } from "@/types";
 
 export class KnowledgeService {
 	private _networkStore = useNetworkStore();
@@ -126,5 +128,59 @@ export class KnowledgeService {
 		if (!resp.data) return;
 
 		return resp.data;
+	}
+
+	public async updateCard(id: number, card_update: any, type: CardType) {
+		switch (type) {
+			case CardType.dish:
+				await this.updateDishCard(id, card_update);
+				break;
+			case CardType.business:
+				await this.updateBusinessCard(id, card_update);
+				break;
+		}
+	}
+
+	private async updateDishCard(id: number, card_update: any) {}
+
+	private async updateBusinessCard(id: number, card_update: any) {
+		const description: string = card_update["description"];
+		const materials: DocumentSchema[] = card_update["materials"];
+
+		let url = `${this._endpoint}/cards/${id}`;
+		await this._networkStore.withAuthChecking(
+			axios.patch(url, {
+				description: description,
+			}),
+		);
+
+		if (materials.length) {
+			const meta_list = [];
+			for (const material of materials) {
+				meta_list.push({
+					filename: material.name,
+					size: material.file!.size,
+				});
+			}
+
+			url = `${this._endpoint}/cards/${id}/materials`;
+			const resp = await this._networkStore.withAuthChecking(
+				axios.post(url, meta_list),
+			);
+			if (resp === undefined) return;
+			const links: FileLinkSchema[] = resp.data;
+
+			for (let index = 0; index < materials.length; index++) {
+				const material = materials[index];
+				const link = links[index];
+				await axios.put(link.url, material.file, {
+					headers: {
+						"Content-Type": material.file!.type,
+						Authorization: undefined,
+					},
+					withCredentials: false,
+				});
+			}
+		}
 	}
 }

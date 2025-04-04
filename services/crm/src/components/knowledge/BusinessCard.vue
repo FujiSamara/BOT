@@ -27,7 +27,10 @@ const props = defineProps({
 				<PDFView :file="props.card.materials[0]"></PDFView>
 				<CardMaterials :materials="props.card.materials"></CardMaterials>
 			</footer>
-			<div v-else class="spinner-wrapper">
+			<div
+				v-else-if="props.card.materials === undefined"
+				class="spinner-wrapper"
+			>
 				<PulseSpinner class="spinner"></PulseSpinner>
 			</div>
 		</Transition>

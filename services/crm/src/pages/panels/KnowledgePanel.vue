@@ -35,7 +35,8 @@ const onSearch = async (val: string) => {
 };
 
 const onCardSave = async (val: any) => {
-	console.log(val);
+	await controller.updateCard(val);
+	await loadDivision();
 };
 
 const subDivisionClicked = async (index: number) => {

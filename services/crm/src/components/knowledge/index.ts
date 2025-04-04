@@ -62,6 +62,7 @@ export class KnowledgeController {
 		this._service = new KnowledgeService(endpoint);
 	}
 
+	// Card
 	private async loadCard() {
 		const division = this._division.value!;
 
@@ -109,8 +110,17 @@ export class KnowledgeController {
 			});
 		}
 	}
+	public async updateCard(card_update: any) {
+		if (this._card.value === undefined) return;
+		this.divisionLoading.value = true;
+		await this._service.updateCard(
+			this._card.value.id,
+			card_update,
+			this._card.value.type,
+		);
+	}
 
-	// Load
+	// Division
 	public async loadDivision(path: string) {
 		this.divisionLoading.value = true;
 		this._subdivisionsPage = 1;
