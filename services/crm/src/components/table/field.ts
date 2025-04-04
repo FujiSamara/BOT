@@ -242,7 +242,7 @@ export class WorkerSmartField extends InputSmartField {
 		public readonly required: boolean = false,
 	) {
 		super(name, fieldName, defaultValue, canEdit, required, false);
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/worker`;
+		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/worker`;
 	}
 
 	protected formatter(value: any): string {
@@ -278,7 +278,7 @@ export class ExpenditureSmartField extends InputSmartField {
 		public readonly required: boolean = false,
 	) {
 		super(name, fieldName, defaultValue, canEdit, required, false);
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/expenditure`;
+		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/expenditure`;
 		if (chapterField) {
 			watch(this._rawField, () => {
 				chapterField.formattedField.value = this._rawField.value.chapter;
@@ -313,7 +313,7 @@ export class DepartmentSmartField extends InputSmartField {
 		public readonly required: boolean = false,
 	) {
 		super(name, fieldName, defaultValue, canEdit, required, false);
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/department`;
+		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/department`;
 	}
 
 	protected formatter(value: any): string {
@@ -348,7 +348,7 @@ export class PostSmartField extends InputSmartField {
 		public readonly required: boolean = false,
 	) {
 		super(name, fieldName, defaultValue, canEdit, required, false);
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/post`;
+		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/post`;
 	}
 
 	protected formatter(value: any): string {

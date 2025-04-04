@@ -183,7 +183,7 @@ export function formatWorkTimePhoto(photoID: string): Cell {
 	if (!photoID) {
 		return new Cell(new CellLine("Отсутствует"));
 	}
-	const href = `${config.fullBackendURL}/${config.crmEndpoint}/worktime/download_photo/${photoID}`;
+	const href = `${config.coreURL}/${config.crmEndpoint}/worktime/download_photo/${photoID}`;
 
 	return new Cell(new CellLine(`photo_${photoID}.jpg`, href, undefined, true));
 }

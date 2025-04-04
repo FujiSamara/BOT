@@ -72,6 +72,27 @@
   }
 }
 
+@mixin editMark() {
+  color: $main-dark-gray;
+  background-color: currentColor;
+  fill: currentColor;
+  width: 16px;
+  height: 16px;
+  display: block;
+  cursor: pointer;
+
+  mask: url("@/assets/icons/pencil.svg") no-repeat;
+  mask-size: contain;
+
+  transition:
+    color 0.25s,
+    background-color 0.25s;
+
+  &:hover {
+    color: $main-white;
+  }
+}
+
 @mixin field() {
   @include window();
 

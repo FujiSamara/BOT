@@ -30,7 +30,7 @@ const onClick = async (link: LinkData) => {
 			<li
 				class="sb-row"
 				:class="{ active: link.active }"
-				v-for="link in props.links"
+				v-for="link in props.links.filter((val) => val.name !== 'stub')"
 				@click="() => onClick(link)"
 			>
 				<div class="sb-icon-wrapper">
