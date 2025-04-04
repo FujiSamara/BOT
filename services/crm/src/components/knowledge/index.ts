@@ -56,6 +56,7 @@ export class KnowledgeController {
 
 	public divisionLoading = ref(false);
 	public divisionExtending = ref(false);
+	public cardLoading = ref(false);
 
 	constructor() {
 		const endpoint = `${config.knowledgeURL}/${config.knowledgeEndpoint}`;
@@ -68,7 +69,10 @@ export class KnowledgeController {
 
 		const card = await this._service.getCard(division.id, division.type);
 
-		if (card === undefined) return;
+		if (card === undefined) {
+			this.cardLoading.value = false;
+			return;
+		}
 		if (division.type === DivisionType.dish) card.type = CardType.dish;
 		else card.type = CardType.business;
 
@@ -77,7 +81,7 @@ export class KnowledgeController {
 		this.divisionLoading.value = false;
 
 		if (division.type === DivisionType.dish) {
-			this._service.getDishModifiers(card.id).then((val) => {
+			const modPromise = this._service.getDishModifiers(card.id).then((val) => {
 				if (card_id !== this._card.value?.id) return;
 
 				const fullCard: DishCard = {
@@ -87,7 +91,7 @@ export class KnowledgeController {
 
 				this._card.value = fullCard;
 			});
-			this._service.getDishMaterials(card.id).then((val) => {
+			const matPromise = this._service.getDishMaterials(card.id).then((val) => {
 				if (card_id !== this._card.value?.id) return;
 
 				const fullCard: DishCard = {
@@ -97,17 +101,23 @@ export class KnowledgeController {
 
 				this._card.value = fullCard;
 			});
+			Promise.all([modPromise, matPromise]).then(
+				() => (this.cardLoading.value = false),
+			);
 		} else {
-			this._service.getBusinessMaterials(card.id).then((val) => {
-				if (card_id !== this._card.value?.id) return;
+			this._service
+				.getBusinessMaterials(card.id)
+				.then((val) => {
+					if (card_id !== this._card.value?.id) return;
 
-				const fullCard: BusinessCard = {
-					...(this._card.value as any),
-					materials: val === undefined ? [] : val,
-				};
+					const fullCard: BusinessCard = {
+						...(this._card.value as any),
+						materials: val === undefined ? [] : val,
+					};
 
-				this._card.value = fullCard;
-			});
+					this._card.value = fullCard;
+				})
+				.then(() => (this.cardLoading.value = false));
 		}
 	}
 	public async updateCard(card_update: any) {
@@ -123,12 +133,14 @@ export class KnowledgeController {
 	// Division
 	public async loadDivision(path: string) {
 		this.divisionLoading.value = true;
+		this.cardLoading.value = true;
 		this._subdivisionsPage = 1;
 		this._division.value = undefined;
 		this._card.value = undefined;
 		const division = await this._service.getDivision(path, 0);
 		if (division === undefined) {
 			this.divisionLoading.value = false;
+			this.cardLoading.value = false;
 			return;
 		}
 		this._division.value = division;
@@ -138,6 +150,7 @@ export class KnowledgeController {
 			this.lastDivisionPage.value =
 				division.subdivisionsCount < DIVISION_CHUNK_SIZE;
 			this.divisionLoading.value = false;
+			this.cardLoading.value = false;
 		} else {
 			await this.loadCard();
 		}

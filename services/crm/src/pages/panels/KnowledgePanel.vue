@@ -143,7 +143,7 @@ onMounted(async () => {
 					:card="card"
 					:key="card.id"
 					:path="division.path"
-					:can-edit="division.canEdit"
+					:can-edit="division.canEdit && !controller.cardLoading.value"
 					@save="onCardSave"
 				></Card>
 
