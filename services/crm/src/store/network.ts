@@ -162,5 +162,20 @@ export const useNetworkStore = defineStore("network", {
 
 			FileSaver.saveAs(fileBlob, filename);
 		},
+		async putToS3(urls: string[], files: Blob[]) {
+			for (let index = 0; index < urls.length; index++) {
+				const file = files[index];
+				const url = urls[index];
+				try {
+					await axios.put(url, file, {
+						headers: {
+							"Content-Type": file.type,
+							Authorization: undefined,
+						},
+						withCredentials: false,
+					});
+				} catch {}
+			}
+		},
 	},
 });

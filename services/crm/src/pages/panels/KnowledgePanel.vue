@@ -67,7 +67,7 @@ const loadDivision = async () => {
 	if (route.name === "knowledge-search") {
 		const term = route.query["term"] as string;
 
-		if (term === undefined) await router.push("main");
+		if (term === undefined || term === null) await router.push("main");
 
 		searchValue.value = term;
 

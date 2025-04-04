@@ -141,7 +141,52 @@ export class KnowledgeService {
 		}
 	}
 
-	private async updateDishCard(id: number, card_update: any) {}
+	private async addMaterials(materials: DocumentSchema[], url: string) {
+		const meta_list = [];
+		for (const material of materials) {
+			meta_list.push({
+				filename: material.name,
+				size: material.file!.size,
+			});
+		}
+
+		const resp = await this._networkStore.withAuthChecking(
+			axios.post(url, meta_list),
+		);
+		if (resp === undefined) return;
+		const links: FileLinkSchema[] = resp.data;
+
+		await this._networkStore.putToS3(
+			links.map((link) => link.url),
+			materials.map((val) => val.file!),
+		);
+	}
+
+	private async updateDishCard(id: number, card_update: any) {
+		const videos: DocumentSchema[] | undefined = card_update["video"];
+		const materials = card_update["materials"];
+
+		if (videos) {
+			const video = videos[0];
+			const url = `${this._endpoint}/dishes/${id}/video`;
+			const resp = await this._networkStore.withAuthChecking(
+				axios.post(url, {
+					filename: video.name,
+					size: video.file!.size,
+				}),
+			);
+			if (resp === undefined) return;
+			const link: FileLinkSchema = resp.data;
+			await this._networkStore.putToS3([link.url], [video.file!]);
+		}
+
+		if (materials.length) {
+			await this.addMaterials(
+				materials,
+				`${this._endpoint}/dishes/${id}/materials`,
+			);
+		}
+	}
 
 	private async updateBusinessCard(id: number, card_update: any) {
 		const description: string = card_update["description"];
@@ -155,32 +200,10 @@ export class KnowledgeService {
 		);
 
 		if (materials.length) {
-			const meta_list = [];
-			for (const material of materials) {
-				meta_list.push({
-					filename: material.name,
-					size: material.file!.size,
-				});
-			}
-
-			url = `${this._endpoint}/cards/${id}/materials`;
-			const resp = await this._networkStore.withAuthChecking(
-				axios.post(url, meta_list),
+			await this.addMaterials(
+				materials,
+				`${this._endpoint}/cards/${id}/materials`,
 			);
-			if (resp === undefined) return;
-			const links: FileLinkSchema[] = resp.data;
-
-			for (let index = 0; index < materials.length; index++) {
-				const material = materials[index];
-				const link = links[index];
-				await axios.put(link.url, material.file, {
-					headers: {
-						"Content-Type": material.file!.type,
-						Authorization: undefined,
-					},
-					withCredentials: false,
-				});
-			}
 		}
 	}
 }
