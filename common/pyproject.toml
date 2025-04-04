@@ -14,7 +14,6 @@ authors = [
     { name = "Maxim Gerasimov", email = "infanasotku@gmail.com" }
 ]
 dependencies = [
-    "aiohttp==3.11.15",
     "pydantic==2.9.2",
     "pydantic-settings==2.6.0",
     "asyncpg==0.30.0",
