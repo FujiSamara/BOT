@@ -41,7 +41,7 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
             raise ValueError("File not exist")
         file = files[0]
 
-        self._session.delete(file)
+        await self._session.delete(file)
         await self._session.flush()
 
     async def get_by_key(self, key):

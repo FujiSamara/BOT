@@ -18,7 +18,7 @@ class HTTPFileClient(RemoteFileClient):
         self._with_ssl = with_ssl
         self._auth_client = auth_client
 
-    @retry()
+    @retry(ignored=[RuntimeError])
     async def request_put_link(self, filename, key, size, expiration=3600):
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
@@ -28,13 +28,15 @@ class HTTPFileClient(RemoteFileClient):
                 headers={"Authorization": authorization_header},
                 ssl=self._with_ssl,
             ) as resp:
+                if 400 <= resp.status < 500:
+                    raise RuntimeError("Bad request.")
                 if resp.status != 200:
-                    raise ValueError(f"Put link requested with error: {resp.reason}.")
+                    raise ValueError("Put link requested with error.")
                 body: dict = await resp.json()
 
                 return FileLinkSchema.model_validate(body)
 
-    @retry()
+    @retry(ignored=[RuntimeError])
     async def request_get_link(self, id, expiration=3600):
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
@@ -43,8 +45,11 @@ class HTTPFileClient(RemoteFileClient):
                 headers={"Authorization": authorization_header},
                 ssl=self._with_ssl,
             ) as resp:
+                if 400 <= resp.status < 500:
+                    raise RuntimeError("Bad request.")
                 if resp.status != 200:
-                    raise ValueError(f"Get link requested with error: {resp.reason}.")
+                    raise ValueError("Get link requested with error.")
+
                 body: dict = await resp.json()
 
                 return FileLinkSchema.model_validate(body)
