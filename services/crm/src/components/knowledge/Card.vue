@@ -10,12 +10,15 @@ import {
 	Card,
 	CardType,
 	DishCard,
+	FileLinkSchema,
 } from "@/components/knowledge/types";
 import {
 	Field,
 	getCardFields,
 	toCardUpdate,
 } from "@/components/knowledge/editor";
+import { toast } from "vue3-toastify";
+import { DocumentSchema } from "@/types";
 
 const props = defineProps({
 	path: {
@@ -43,6 +46,26 @@ const switchMode = () => {
 };
 const onSave = (val: Field[]) => {
 	const result = toCardUpdate(props.card.type, val);
+
+	if (result["materials"] !== undefined) {
+		let oldMaterials: FileLinkSchema[] = [];
+		if (props.card.type === CardType.dish) {
+			if (dish.value.materials !== undefined) {
+				oldMaterials = dish.value.materials?.materials;
+			}
+		} else {
+			oldMaterials = business.value.materials;
+		}
+
+		const materials: DocumentSchema[] = result["materials"];
+		for (const material of materials) {
+			if (oldMaterials.some((val) => val.name === material.name)) {
+				toast.error(`Файл ${material.name} уже существует!`);
+				return;
+			}
+		}
+	}
+
 	fields.value = [];
 	switchMode();
 	emits("save", result);
