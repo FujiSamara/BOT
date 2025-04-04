@@ -1,9 +1,5 @@
 import { BaseSchema } from "@/types";
 
-export interface Dish {
-	name: string;
-}
-
 export enum CardType {
 	dish = "dish",
 	business = "business",
@@ -25,6 +21,7 @@ export interface KnowledgeSubdivision extends BaseSchema {
 
 export interface KnowledgeDivision extends KnowledgeSubdivision {
 	subdivisions: KnowledgeSubdivision[];
+	canEdit?: boolean;
 }
 
 export interface Card extends BaseSchema {

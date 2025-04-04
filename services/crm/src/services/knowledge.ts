@@ -99,7 +99,7 @@ export class KnowledgeService {
 	public async getDishModifiers(
 		dish_id: number,
 	): Promise<DishModifierSchema[] | undefined> {
-		const url = `${this._endpoint}/dishes/${dish_id}/modifier`;
+		const url = `${this._endpoint}/dishes/${dish_id}/modifiers`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
 

@@ -4,7 +4,7 @@ import { KnowledgeService } from "@/services/knowledge";
 import * as config from "@/config";
 import { PanelData } from "@/types";
 import { useNetworkStore } from "@/store/network";
-import { getKnowledgeByAccesses } from "@/pages/panels";
+import { canEditPanel, getKnowledgeByAccesses } from "@/pages/panels";
 import {
 	BusinessCard,
 	Card,
@@ -203,6 +203,18 @@ export class KnowledgeController {
 
 		const networkStore = useNetworkStore();
 		const knowledgePanels = getKnowledgeByAccesses(networkStore.accesses);
+
+		const actualName = actualToRouterPath(this._division.value.path).split(
+			"/",
+		)[1];
+		const currentPanel = knowledgePanels.find((pan) => pan.name === actualName);
+
+		if (currentPanel) {
+			this._division.value.canEdit = canEditPanel(
+				networkStore.accesses,
+				currentPanel,
+			);
+		}
 
 		return {
 			...this._division.value,

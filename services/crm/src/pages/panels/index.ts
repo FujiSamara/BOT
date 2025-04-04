@@ -122,6 +122,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "product",
 		accesses: [Access.ProductRead],
+		writeAccesses: [Access.ProductWrite],
 	},
 	{
 		label: "Маркетинг",
@@ -130,6 +131,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "marketing",
 		accesses: [Access.MarketingRead],
+		writeAccesses: [Access.MarketingWrite],
 	},
 	{
 		label: "Персонал",
@@ -138,6 +140,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "staff",
 		accesses: [Access.StaffRead],
+		writeAccesses: [Access.StaffWrite],
 	},
 	{
 		label: "Закупки",
@@ -146,6 +149,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "purchases",
 		accesses: [Access.PurchasesRead],
+		writeAccesses: [Access.PurchasesWrite],
 	},
 	{
 		label: "ЦД",
@@ -154,6 +158,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "cd",
 		accesses: [Access.CdRead],
+		writeAccesses: [Access.CdWrite],
 	},
 	{
 		label: "Контроль",
@@ -162,6 +167,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "control",
 		accesses: [Access.ControlRead],
+		writeAccesses: [Access.ControlWrite],
 	},
 	{
 		label: "Учет",
@@ -170,6 +176,7 @@ const knowledge: Array<PanelData> = [
 		active: false,
 		name: "accounting",
 		accesses: [Access.AccountingRead],
+		writeAccesses: [Access.AccountingWrite],
 	},
 
 	{
@@ -194,7 +201,6 @@ function getByAccesses<T extends PanelData>(
 		const panel = panels[j];
 
 		const accessesExist = panel.accesses.map((_) => false);
-		let accessGranted = true;
 
 		for (let i = 0; i < accesses.length; i++) {
 			const access = accesses[i];
@@ -207,14 +213,7 @@ function getByAccesses<T extends PanelData>(
 				}
 			}
 		}
-		for (const accessExist of accessesExist) {
-			if (!accessExist) {
-				accessGranted = false;
-				break;
-			}
-		}
-
-		if (accessGranted) {
+		if (accessesExist.every((accessExist) => accessExist)) {
 			result.push(panel);
 		}
 	}
@@ -234,4 +233,17 @@ export function getKnowledgeByAccesses(
 	accesses: Array<Access>,
 ): Array<PanelData> {
 	return getByAccesses(accesses, knowledge);
+}
+
+export function canEditPanel(
+	accesses: Array<Access>,
+	panel: PanelData,
+): boolean {
+	if (panel.writeAccesses === undefined) return true;
+
+	return panel.writeAccesses.every((neededAccess) =>
+		accesses.some(
+			(access) => neededAccess === access || access === Access.Admin,
+		),
+	);
 }

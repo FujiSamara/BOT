@@ -17,6 +17,7 @@ export interface LinkData {
 export interface PanelData extends LinkData {
 	name: string;
 	accesses: Access[];
+	writeAccesses?: Access[];
 }
 
 export interface TableData extends PanelData {

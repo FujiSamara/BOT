@@ -6,7 +6,6 @@ import {
 	ref,
 	useTemplateRef,
 	markRaw,
-	nextTick,
 	onUnmounted,
 } from "vue";
 import {
@@ -135,7 +134,9 @@ onMounted(async () => {
 	if (!wrapper.value) return;
 
 	await loadFile();
+	if (!wrapper.value) return;
 	resizeObserver = new ResizeObserver(onResize);
+	if (!wrapper.value) return;
 	resizeObserver.observe(wrapper.value);
 });
 onUnmounted(() => {

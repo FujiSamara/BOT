@@ -34,6 +34,10 @@ const onSearch = async (val: string) => {
 	await router.push({ name: "knowledge-search", query: query });
 };
 
+const onCardSave = async (val: any) => {
+	console.log(val);
+};
+
 const subDivisionClicked = async (index: number) => {
 	if (division.value === undefined) return;
 
@@ -138,7 +142,10 @@ onMounted(async () => {
 					:card="card"
 					:key="card.id"
 					:path="division.path"
+					:can-edit="division.canEdit"
+					@save="onCardSave"
 				></Card>
+
 				<div
 					v-else-if="controller.divisionLoading.value"
 					class="spinner-wrapper"
