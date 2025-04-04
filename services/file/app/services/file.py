@@ -67,6 +67,12 @@ class FileServiceImpl(FileService):
             if file is None:
                 raise KeyError(f"File {id} not exists.")
 
+            if not file.confirmed:
+                await uow.file.delete(id)
+
+        if not file.confirmed:
+            raise KeyError(f"File {id} not exists.")
+
         url = await self._file_client.create_get_link(file.bucket, file.key, expiration)
 
         return FileLinkSchema(
