@@ -189,7 +189,7 @@ const knowledge: Array<PanelData> = [
 	},
 ];
 
-const panels: Array<PanelData> = [...knowledge];
+const panels: Array<PanelData> = [...tables, ...knowledge];
 
 function getByAccesses<T extends PanelData>(
 	accesses: Array<Access>,
