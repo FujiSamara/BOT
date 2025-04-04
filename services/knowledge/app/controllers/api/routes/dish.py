@@ -84,7 +84,7 @@ async def add_dish_video(
 ) -> FileLinkSchema:
     """Create put link for dish video and registrated it in database."""
     try:
-        return await service.add_dish_video(id, video.filename, video.size)
+        return await service.add_dish_video(id, video)
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))

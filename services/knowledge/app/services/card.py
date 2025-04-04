@@ -27,7 +27,16 @@ class CardServiceImpl(CardService):
         async with self._uow as uow:
             materials = await uow.card.get_card_materials(card_id)
 
-            return [await self._file_client.request_get_link(id) for id in materials]
+            meta_list = []
+
+            for material in materials:
+                try:
+                    meta = await self._file_client.request_get_link(material)
+                    meta_list.append(meta)
+                except Exception:
+                    pass
+
+            return meta_list
 
     async def add_card_materials(self, card_id, materials):
         async with self._uow as uow:
