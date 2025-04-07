@@ -116,6 +116,14 @@ const tables: Array<TableData> = [
 ];
 const knowledge: Array<PanelData> = [
 	{
+		label: "База знаний",
+		routeName: "knowledge",
+		iconURL: "/img/book.svg",
+		active: false,
+		name: "knowledge",
+		accesses: [Access.Authed],
+	},
+	{
 		label: "Продукт",
 		routeName: "knowledge-product",
 		iconURL: "/img/product.svg",
@@ -189,8 +197,6 @@ const knowledge: Array<PanelData> = [
 	},
 ];
 
-const panels: Array<PanelData> = [...tables, ...knowledge];
-
 function getByAccesses<T extends PanelData>(
 	accesses: Array<Access>,
 	panels: Array<T>,
@@ -222,7 +228,10 @@ function getByAccesses<T extends PanelData>(
 }
 
 export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
-	return getByAccesses(accesses, panels);
+	return [
+		...getTablesByAccesses(accesses),
+		...getKnowledgeByAccesses(accesses),
+	];
 }
 
 export function getTablesByAccesses(accesses: Array<Access>): Array<TableData> {
@@ -232,7 +241,12 @@ export function getTablesByAccesses(accesses: Array<Access>): Array<TableData> {
 export function getKnowledgeByAccesses(
 	accesses: Array<Access>,
 ): Array<PanelData> {
-	return getByAccesses(accesses, knowledge);
+	const result = getByAccesses(accesses, knowledge);
+
+	if (result.length === 2) {
+		return [];
+	}
+	return result;
 }
 
 export function canEditPanel(

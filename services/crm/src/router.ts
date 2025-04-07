@@ -6,6 +6,8 @@ import {
 } from "vue-router";
 import { useNetworkStore } from "@/store/network";
 
+const EmptyRouteComponent = { template: "<div></div>" };
+
 const routes = [
 	{
 		path: "/crm",
@@ -105,51 +107,43 @@ const routes = [
 					{
 						name: "knowledge-search",
 						path: "search",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					//
 					{
 						name: "knowledge-product",
 						path: "product/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-marketing",
 						path: "marketing/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-staff",
 						path: "staff/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-purchases",
 						path: "purchases/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-cd",
 						path: "cd/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-control",
 						path: "control/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 					{
 						name: "knowledge-accounting",
 						path: "accounting/:pathMatch(.*)*",
-						component: async () =>
-							await import("@/pages/panels/KnowledgePanel.vue"),
+						component: EmptyRouteComponent,
 					},
 				],
 			},

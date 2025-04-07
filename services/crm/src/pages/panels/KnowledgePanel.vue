@@ -6,6 +6,7 @@ import MaybeDelayInput from "@/components/MaybeDelayInput.vue";
 import Division from "@/components/knowledge/Division.vue";
 import Card from "@/components/knowledge/Card.vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
+import Root from "@/components/knowledge/Root.vue";
 
 import { DivisionType } from "@/components/knowledge/types";
 import { KnowledgeController } from "@/components/knowledge";
@@ -48,6 +49,15 @@ const subDivisionClicked = async (index: number) => {
 		division.value.subdivisions[index].path;
 	await router.push({ path: path });
 };
+const rootDivisionsClicked = async (index: number) => {
+	if (controller.rootDivisions.value === undefined) return;
+
+	const path =
+		route.path.split("knowledge")[0] +
+		"knowledge" +
+		controller.rootDivisions.value[index].path;
+	await router.push({ path: path });
+};
 const extendClicked = async () => {
 	if (route.name === "knowledge-search") {
 		const term = route.query["term"] as string;
@@ -62,29 +72,37 @@ const extendClicked = async () => {
 };
 
 const loadDivision = async () => {
-	await router.isReady();
+	try {
+		controller.clear();
+		await router.isReady();
 
-	if (route.name === "knowledge-search") {
-		const term = route.query["term"] as string;
+		if (route.name === "knowledge") {
+			return;
+		}
 
-		if (term === undefined || term === null) await router.push("main");
+		if (route.name === "knowledge-search") {
+			const term = route.query["term"] as string;
 
-		searchValue.value = term;
+			if (term === undefined || term === null) await router.push("main");
 
-		if (term.length > 2) await controller.searchDivisions(term);
-		return;
-	}
-	searchValue.value = "";
+			searchValue.value = term;
 
-	const path = route.path
-		.split("knowledge")[1]
-		.split("/")
-		.filter((v) => v);
-	await controller.loadDivision("/" + path.join("/"));
+			if (term.length > 2) await controller.searchDivisions(term);
+			return;
+		}
+		searchValue.value = "";
+
+		const path = route.path
+			.split("knowledge")[1]
+			.split("/")
+			.filter((v) => v);
+		await controller.loadDivision("/" + path.join("/"));
+	} catch {}
 };
 
 watch(route, loadDivision);
 onMounted(async () => {
+	controller.loadRootDivisions();
 	await loadDivision();
 	init.value = true;
 });
@@ -100,70 +118,77 @@ onMounted(async () => {
 		></MaybeDelayInput>
 
 		<div class="content">
-			<Transition name="fade" mode="out-in">
-				<Division
-					:key="division.id"
-					v-if="
-						!controller.divisionLoading.value &&
-						division &&
-						division.type == DivisionType.division
-					"
-					:division="division"
-					@click="subDivisionClicked"
-					class="division"
-				>
-					<div
-						class="extend-wrapper"
+			<KeepAlive>
+				<Transition name="fade" mode="out-in">
+					<Division
+						:key="division.id"
 						v-if="
-							!controller.lastDivisionPage.value ||
-							controller.divisionExtending.value
+							!controller.divisionLoading.value &&
+							division &&
+							division.type == DivisionType.division
+						"
+						:division="division"
+						@click="subDivisionClicked"
+						class="division"
+					>
+						<div
+							class="extend-wrapper"
+							v-if="
+								!controller.lastDivisionPage.value ||
+								controller.divisionExtending.value
+							"
+						>
+							<Transition name="fade" mode="out-in" :duration="250">
+								<div
+									v-if="!controller.divisionExtending.value"
+									class="next-button-wrapper"
+								>
+									<button
+										v-if="!controller.lastDivisionPage.value"
+										@click="extendClicked"
+										class="next-division"
+									>
+										Далее
+									</button>
+								</div>
+								<div v-else class="spinner-wrapper">
+									<PulseSpinner class="spinner"></PulseSpinner>
+								</div>
+							</Transition>
+						</div>
+					</Division>
+					<Card
+						v-else-if="!controller.divisionLoading.value && division && card"
+						:card="card"
+						:key="card.id"
+						:path="division.path"
+						:can-edit="division.canEdit && !controller.cardLoading.value"
+						@save="onCardSave"
+					></Card>
+
+					<div
+						v-else-if="controller.divisionLoading.value"
+						class="spinner-wrapper"
+					>
+						<PulseSpinner class="spinner"></PulseSpinner>
+					</div>
+					<Root
+						v-else-if="route.name === 'knowledge'"
+						@click="rootDivisionsClicked"
+						:divisions="controller.rootDivisions.value"
+					></Root>
+					<h2
+						v-else-if="
+							division === undefined &&
+							card === undefined &&
+							!controller.divisionLoading.value &&
+							init
 						"
 					>
-						<Transition name="fade" mode="out-in" :duration="250">
-							<div
-								v-if="!controller.divisionExtending.value"
-								class="next-button-wrapper"
-							>
-								<button
-									v-if="!controller.lastDivisionPage.value"
-									@click="extendClicked"
-									class="next-division"
-								>
-									Далее
-								</button>
-							</div>
-							<div v-else class="spinner-wrapper">
-								<PulseSpinner class="spinner"></PulseSpinner>
-							</div>
-						</Transition>
-					</div>
-				</Division>
-				<Card
-					v-else-if="!controller.divisionLoading.value && division && card"
-					:card="card"
-					:key="card.id"
-					:path="division.path"
-					:can-edit="division.canEdit && !controller.cardLoading.value"
-					@save="onCardSave"
-				></Card>
-
-				<div
-					v-else-if="controller.divisionLoading.value"
-					class="spinner-wrapper"
-				>
-					<PulseSpinner class="spinner"></PulseSpinner>
-				</div>
-				<h2
-					v-else-if="
-						division === undefined &&
-						card === undefined &&
-						!controller.divisionLoading.value &&
-						init
-					"
-				>
-					Не заполнено
-				</h2>
-			</Transition>
+						Не заполнено
+					</h2>
+				</Transition>
+			</KeepAlive>
 		</div>
 	</div>
 </template>

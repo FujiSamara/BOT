@@ -12,6 +12,7 @@ import {
 	DishCard,
 	DivisionType,
 	KnowledgeDivision,
+	KnowledgeRootDivision,
 } from "@/components/knowledge/types";
 
 const routerToActual = {
@@ -59,8 +60,7 @@ export class KnowledgeController {
 	public cardLoading = ref(false);
 
 	constructor() {
-		const endpoint = `${config.knowledgeURL}/${config.knowledgeEndpoint}`;
-		this._service = new KnowledgeService(endpoint);
+		this._service = new KnowledgeService(config.FullKnowledgeEndpoint);
 	}
 
 	// Card
@@ -182,6 +182,23 @@ export class KnowledgeController {
 		this._subdivisionsPage += 1;
 		this.divisionExtending.value = false;
 	}
+	public async loadRootDivisions() {
+		const networkStore = useNetworkStore();
+		const panels = getKnowledgeByAccesses(networkStore.accesses).filter(
+			(val) => val.name !== "stub" && val.name !== "knowledge",
+		);
+
+		const result: KnowledgeRootDivision[] = [];
+
+		for (const panel of panels) {
+			const path = "/" + routerToActualPath(panel.name);
+			const division = await this._service.getDivision(path, 0);
+
+			if (division) result.push({ ...division, iconURL: panel.iconURL });
+		}
+
+		this.rootDivisions.value = result;
+	}
 
 	// Search
 	public async searchDivisions(term: string) {
@@ -221,6 +238,8 @@ export class KnowledgeController {
 		this.divisionLoading.value = false;
 	}
 
+	public rootDivisions: Ref<KnowledgeRootDivision[] | undefined> =
+		ref(undefined);
 	public division = computed(() => {
 		if (this._division.value === undefined) return;
 
@@ -256,5 +275,15 @@ export class KnowledgeController {
 		const name = routerPath.split("/")[1];
 
 		return knowledgePanels.find((val) => val.name === name) !== undefined;
+	}
+
+	public clear() {
+		this._card.value = undefined;
+		this._division.value = undefined;
+		this.lastDivisionPage.value = false;
+		this._subdivisionsPage = 0;
+		this.divisionLoading.value = false;
+		this.divisionExtending.value = false;
+		this.cardLoading.value = false;
 	}
 }

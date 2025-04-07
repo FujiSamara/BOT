@@ -24,6 +24,10 @@ export interface KnowledgeDivision extends KnowledgeSubdivision {
 	canEdit?: boolean;
 }
 
+export interface KnowledgeRootDivision extends KnowledgeDivision {
+	iconURL: string;
+}
+
 export interface Card extends BaseSchema {
 	name: string;
 	type: CardType;

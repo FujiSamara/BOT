@@ -11,6 +11,12 @@ const props = defineProps({
 		type: Object as PropType<KnowledgeSubdivision>,
 		required: true,
 	},
+	icon: {
+		type: String,
+	},
+	titleSize: {
+		type: String,
+	},
 });
 
 const cards = computed(() => [] as KnowledgeSubdivision[]);
@@ -28,22 +34,33 @@ const pluralizeFiles = (count: number) => {
 </script>
 <template>
 	<div class="sub-division">
-		<h2 class="title">{{ props.subDivision.name }}</h2>
-		<ul class="cards" v-if="cards.length">
-			<li v-for="card in cards">
-				{{ card.name }}
-			</li>
-		</ul>
-		<div class="meta">
-			<span v-if="props.subDivision.type === DivisionType.division"
-				>{{ props.subDivision.subdivisionsCount }}
-				{{ pluralizeExpenditure(props.subDivision.subdivisionsCount) }}</span
-			>
-			<!-- <span v-if="props.subDivision.type == DivisionType.division">•</span> -->
-			<span v-if="props.subDivision.type !== DivisionType.division"
-				>{{ props.subDivision.filesCount }}
-				{{ pluralizeFiles(props.subDivision.filesCount) }}</span
-			>
+		<div class="title">
+			<div
+				class="icon"
+				v-if="props.icon"
+				:style="`mask: url(${props.icon}) no-repeat`"
+			></div>
+			<h2 class="title" :style="`font-size: ${props.titleSize}`">
+				{{ props.subDivision.name }}
+			</h2>
+		</div>
+		<div class="info">
+			<ul class="cards" v-if="cards.length">
+				<li v-for="card in cards">
+					{{ card.name }}
+				</li>
+			</ul>
+			<div class="meta">
+				<span v-if="props.subDivision.type === DivisionType.division"
+					>{{ props.subDivision.subdivisionsCount }}
+					{{ pluralizeExpenditure(props.subDivision.subdivisionsCount) }}</span
+				>
+				<!-- <span v-if="props.subDivision.type == DivisionType.division">•</span> -->
+				<span v-if="props.subDivision.type !== DivisionType.division"
+					>{{ props.subDivision.filesCount }}
+					{{ pluralizeFiles(props.subDivision.filesCount) }}</span
+				>
+			</div>
 		</div>
 	</div>
 </template>
@@ -51,6 +68,7 @@ const pluralizeFiles = (count: number) => {
 .sub-division {
 	display: flex;
 	flex-direction: column;
+	justify-content: space-between;
 
 	width: 100%;
 	height: fit-content;
@@ -69,9 +87,27 @@ const pluralizeFiles = (count: number) => {
 	}
 
 	.title {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+
+		gap: 12px;
+
 		font-family: Wix Madefor Display;
 		font-weight: 600;
 		font-size: 20px;
+
+		.icon {
+			width: 23.67px;
+			height: 23.67px;
+
+			background-color: currentColor;
+			fill: currentColor;
+		}
+
+		h2 {
+			margin: 0;
+		}
 	}
 
 	.cards {
@@ -100,6 +136,10 @@ const pluralizeFiles = (count: number) => {
 
 		opacity: 50%;
 		color: $main-dark-gray;
+
+		h2 {
+			font-size: 36px;
+		}
 	}
 }
 </style>
