@@ -8,6 +8,8 @@ export const knowledgeEndpoint = "api";
 export const coreURL = import.meta.env.VITE_CORE_URL;
 export const knowledgeURL = import.meta.env.VITE_KNOWLEDGE_URL;
 
+export const FullKnowledgeEndpoint = `${knowledgeURL}/${knowledgeEndpoint}`;
+
 export const cookiesExpires = "7d";
 
 export const accessesDict: any = {
