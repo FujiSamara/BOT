@@ -21,7 +21,7 @@ const routerToActual = {
 	staff: "Персонал",
 	purchases: "Закупки",
 	cd: "ЦД",
-	control: "Контроль",
+	control: "Контроль качества",
 	accounting: "Учет",
 };
 
