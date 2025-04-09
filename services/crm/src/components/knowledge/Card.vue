@@ -5,6 +5,7 @@ import DishCardView from "@/components/knowledge/DishCard.vue";
 import CommonCard from "@/components/knowledge/BusinessCard.vue";
 import EditCard from "@/components/knowledge/EditCard.vue";
 
+import { routerToActualPath } from "@/components/knowledge";
 import {
 	BusinessCard,
 	Card,
@@ -78,7 +79,7 @@ const business = computed(() => props.card as BusinessCard);
 <template>
 	<div class="k-card">
 		<div class="card-head">
-			<span class="path">{{ path }}</span>
+			<span class="path">{{ routerToActualPath(props.path) }}</span>
 			<Transition name="fade" mode="out-in">
 				<div
 					class="wrapper"
