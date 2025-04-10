@@ -10,11 +10,7 @@ import {
 	KnowledgeDivision,
 	KnowledgeSubdivision,
 } from "@/components/knowledge/types";
-import {
-	actualToRouterPath,
-	DIVISION_CHUNK_SIZE,
-	routerToActualPath,
-} from "@/components/knowledge";
+import { DIVISION_CHUNK_SIZE, pathToView } from "@/components/knowledge";
 import { DocumentSchema } from "@/types";
 
 export class KnowledgeService {
@@ -27,7 +23,6 @@ export class KnowledgeService {
 		path: string,
 		subdivisionsOffset: number,
 	): Promise<KnowledgeDivision | undefined> {
-		path = routerToActualPath(path);
 		const url = `${this._endpoint}/divisions/?path=${path}&limit=${DIVISION_CHUNK_SIZE}&offset=${subdivisionsOffset}`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 
@@ -38,7 +33,7 @@ export class KnowledgeService {
 			id: row.id,
 			name: row.name,
 			type: row.type,
-			path: actualToRouterPath(row.path),
+			path: pathToView(row.path),
 			subdivisionsCount: row.subdivisions.length,
 			filesCount: 0,
 			subdivisions: [],
@@ -48,7 +43,7 @@ export class KnowledgeService {
 			division.subdivisions.push({
 				id: sub.id,
 				name: sub.name,
-				path: actualToRouterPath(sub.path),
+				path: pathToView(sub.path),
 				type: sub.type,
 				filesCount: 0,
 				subdivisionsCount: sub.subdivisions_count,
@@ -71,7 +66,7 @@ export class KnowledgeService {
 			divisions.push({
 				id: row.id,
 				name: row.name,
-				path: actualToRouterPath(row.path),
+				path: pathToView(row.path),
 				type: row.type,
 				filesCount: row.files_count,
 				subdivisionsCount: row.subdivisions_count,
