@@ -3,7 +3,7 @@ import { computed, PropType } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import CardMaterials from "@/components/knowledge/CardMaterials.vue";
 import { BusinessCard } from "@/components/knowledge/types";
-import PDFView from "../PDFView.vue";
+import PDFView from "@/components/viewer/PDFView.vue";
 
 const props = defineProps({
 	card: {
