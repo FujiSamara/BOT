@@ -2,6 +2,7 @@
 import { PropType } from "vue";
 
 import SubDivision from "@/components/knowledge/SubDivision.vue";
+import DivisionPath from "@/components/knowledge/DivisionPath.vue";
 
 import { KnowledgeDivision } from "@/components/knowledge/types";
 
@@ -18,7 +19,7 @@ const emits = defineEmits<{
 </script>
 <template>
 	<div class="kn-chapter">
-		<span class="path">{{ props.division.path }}</span>
+		<DivisionPath :path="props.division.path"></DivisionPath>
 		<h2 v-if="props.division.subdivisionsCount === 0">Подразделов нет</h2>
 		<SubDivision
 			v-for="(subDivision, index) in props.division.subdivisions"
