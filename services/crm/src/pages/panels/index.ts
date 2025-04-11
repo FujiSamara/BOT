@@ -229,7 +229,7 @@ function getByAccesses<T extends PanelData>(
 
 export function getPanelsByAccesses(accesses: Array<Access>): Array<PanelData> {
 	return [
-		// ...getTablesByAccesses(accesses),
+		...getTablesByAccesses(accesses),
 		...getKnowledgeByAccesses(accesses),
 	];
 }
