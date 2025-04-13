@@ -29,10 +29,12 @@ class DishServiceImpl(DishService):
                     video = None
                 else:
                     video = video[0]
-
-            materials = await self._file_client.request_get_links(
-                materials_dto.materials
-            )
+            if len(materials_dto.materials) != 0:
+                materials = await self._file_client.request_get_links(
+                    materials_dto.materials
+                )
+            else:
+                materials = []
 
             return DishMaterialsSchema(video=video, materials=materials)
 
