@@ -18,7 +18,7 @@ class PathOptions {
 /** Service for handle requests to entity */
 export default class EntityService<T extends BaseSchema> {
 	private _networkStore = useNetworkStore();
-	private _endpoint = `${config.fullBackendURL}/${config.crmEndpoint}`;
+	private _endpoint = `${config.coreURL}/${config.crmEndpoint}`;
 
 	constructor(
 		public entityName: string,

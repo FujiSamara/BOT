@@ -1,30 +1,29 @@
 from abc import abstractmethod
 
 from common.contracts.services import BaseService
-from app.schemas.file import FileInSchema, FileConfirmSchema
+from common.schemas.file import FileInSchema
+from app.schemas.file import FileConfirmSchema
 from common.schemas.file import FileLinkSchema
 
 
 class FileService(BaseService):
     @abstractmethod
-    async def create_put_link(
-        self, file: FileInSchema, expiration: int = 3600
+    async def create_put_links(
+        self, files: list[FileInSchema], expiration: int = 3600
     ) -> FileLinkSchema:
-        """Create presigned url for putting file.
+        """Create presigned urls for putting files.
         Create metadata for file with `confirmed=False`.
-        Raises:
-            KeyError: if file with specified `FileInSchema.key` already exists in all buckets.
         Returns:
-            Created link.
+            Created links without files which `FileInSchema.key` already exists in all buckets.
         """
 
     @abstractmethod
-    async def create_get_link(self, id: int, expiration: int = 3600) -> FileLinkSchema:
-        """Create presigned url for getting file.
-        Raises:
-            KeyError: if file with specified `id` not exists.
+    async def create_get_links(
+        self, ids: list[int], expiration: int = 3600
+    ) -> FileLinkSchema:
+        """Create presigned urls for getting files.
         Returns:
-            Created link.
+            Created links without non existing files.
         """
 
     @abstractmethod

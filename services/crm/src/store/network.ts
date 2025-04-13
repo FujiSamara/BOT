@@ -33,7 +33,7 @@ export const useNetworkStore = defineStore("network", {
 	},
 	actions: {
 		async auth(): Promise<boolean> {
-			const url = `${config.fullBackendURL}/${config.authEndpoint}/`;
+			const url = `${config.coreURL}/${config.authEndpoint}/`;
 			this.authing = true;
 
 			return await axios
@@ -51,7 +51,7 @@ export const useNetworkStore = defineStore("network", {
 				});
 		},
 		async login(username: string, password: string): Promise<boolean> {
-			const url = `${config.fullBackendURL}/${config.authEndpoint}/token`;
+			const url = `${config.coreURL}/${config.authEndpoint}/token`;
 
 			return await axios
 				.post(
@@ -80,6 +80,8 @@ export const useNetworkStore = defineStore("network", {
 				});
 		},
 		setCredentials(token: string, token_type: string): void {
+			token_type =
+				token_type[0].toUpperCase() + token_type.substring(1).toLowerCase();
 			axios.defaults.headers.common["Authorization"] = `${token_type} ${token}`;
 			this.$cookies.set("access_token", token);
 			this.$cookies.set("token_type", token_type);
@@ -134,15 +136,26 @@ export const useNetworkStore = defineStore("network", {
 		},
 		async getFile(filename: string): Promise<Uint8Array> {
 			return this.getFileByURL(
-				`${config.fullBackendURL}/${config.filesEndpoint}?name=${filename}`,
+				`${config.coreURL}/${config.filesEndpoint}?name=${filename}`,
 			);
 		},
-		async getFileByURL(href: string): Promise<Uint8Array> {
-			const resp = await this.withAuthChecking(
-				axios.get(href, {
+		async getFileByURL(href: string, withAuth?: boolean): Promise<Uint8Array> {
+			let resp;
+			if (withAuth) {
+				resp = await this.withAuthChecking(
+					axios.get(href, {
+						responseType: "blob",
+					}),
+				);
+			} else {
+				resp = await axios.get(href, {
 					responseType: "blob",
-				}),
-			);
+					withCredentials: false,
+					headers: {
+						Authorization: undefined,
+					},
+				});
+			}
 
 			return resp.data as Uint8Array;
 		},
@@ -159,6 +172,21 @@ export const useNetworkStore = defineStore("network", {
 			});
 
 			FileSaver.saveAs(fileBlob, filename);
+		},
+		async putToS3(urls: string[], files: Blob[]) {
+			for (let index = 0; index < urls.length; index++) {
+				const file = files[index];
+				const url = urls[index];
+				try {
+					await axios.put(url, file, {
+						headers: {
+							"Content-Type": file.type,
+							Authorization: undefined,
+						},
+						withCredentials: false,
+					});
+				} catch {}
+			}
 		},
 	},
 });

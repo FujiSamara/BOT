@@ -45,13 +45,7 @@ export class Cell {
 
 export class CellLine {
 	public readonly isImage: boolean = false;
-	public readonly imageExtensions: Array<string> = [
-		"png",
-		"jpeg",
-		"jpg",
-		"svg",
-		"ico",
-	];
+	public readonly imageExtensions: Array<string> = config.imageExts;
 
 	constructor(
 		public value: string = "Не указано",
@@ -95,7 +89,7 @@ export class Table<T extends BaseSchema> {
 			exportEndpoint?: string;
 		},
 	) {
-		this._endpoint = `${config.fullBackendURL}/${config.crmEndpoint}/${endpoint}`;
+		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/${endpoint}`;
 
 		//#region endpoints
 		this._getEndpoint =
