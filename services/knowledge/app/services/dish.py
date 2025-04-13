@@ -63,7 +63,12 @@ class DishServiceImpl(DishService):
                 raise ValueError(f"Dish {dish_id} not found.")
 
             old_materials = await uow.dish.get_dish_materials(dish_id)
-            old_links = await self._file_client.request_get_links(old_materials)
+            if len(old_materials.materials) != 0:
+                old_links = await self._file_client.request_get_links(
+                    old_materials.materials
+                )
+            else:
+                old_links = []
             old_names_set = set([old_link.name for old_link in old_links])
             new_names_set = set([material.filename for material in materials])
 
