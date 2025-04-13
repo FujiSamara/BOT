@@ -152,6 +152,7 @@ export interface DocumentSchema {
 	href: string;
 	forceHref?: boolean;
 	file?: Blob;
+	raw?: boolean; // If true then request sends without auth.
 }
 
 export interface BidSchema extends BaseSchema {

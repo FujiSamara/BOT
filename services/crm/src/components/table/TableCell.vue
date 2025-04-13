@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PropType, Ref, ref } from "vue";
-import DocumentView from "@/components/DocumentView.vue";
+import ImageView from "@/components/viewer/ImageView.vue";
 
 import { Cell, CellLine } from "@/components/table";
 import { useNetworkStore } from "@/store/network";
@@ -86,7 +86,7 @@ const openPhoto = (cell: Cell, index: number) => {
 
 		<Suspense>
 			<Transition name="fade">
-				<DocumentView
+				<ImageView
 					v-if="documentViewVisible"
 					:documents="documents"
 					:index="initialDocumentIndex"
@@ -94,7 +94,7 @@ const openPhoto = (cell: Cell, index: number) => {
 						documentViewVisible = false;
 						emits('photoClose');
 					"
-				></DocumentView>
+				></ImageView>
 			</Transition>
 		</Suspense>
 	</div>

@@ -45,13 +45,7 @@ export class Cell {
 
 export class CellLine {
 	public readonly isImage: boolean = false;
-	public readonly imageExtensions: Array<string> = [
-		"png",
-		"jpeg",
-		"jpg",
-		"svg",
-		"ico",
-	];
+	public readonly imageExtensions: Array<string> = config.imageExts;
 
 	constructor(
 		public value: string = "Не указано",

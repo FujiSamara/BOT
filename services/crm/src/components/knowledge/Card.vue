@@ -4,6 +4,7 @@ import { computed, PropType, Ref, ref } from "vue";
 import DishCardView from "@/components/knowledge/DishCard.vue";
 import CommonCard from "@/components/knowledge/BusinessCard.vue";
 import EditCard from "@/components/knowledge/EditCard.vue";
+import DivisionPath from "@/components/knowledge/DivisionPath.vue";
 
 import {
 	BusinessCard,
@@ -78,7 +79,7 @@ const business = computed(() => props.card as BusinessCard);
 <template>
 	<div class="k-card">
 		<div class="card-head">
-			<span class="path">{{ path }}</span>
+			<DivisionPath :path="props.path"></DivisionPath>
 			<Transition name="fade" mode="out-in">
 				<div
 					class="wrapper"

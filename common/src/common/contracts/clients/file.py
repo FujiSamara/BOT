@@ -1,16 +1,18 @@
 from abc import abstractmethod
 
 from common.contracts.clients import BaseClient
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileInSchema
 
 
 class RemoteFileClient(BaseClient):
     @abstractmethod
-    async def request_put_link(
-        self, filename: str, key: str, size: int, expiration: int = 3600
-    ) -> FileLinkSchema:
+    async def request_put_links(
+        self, files: list[FileInSchema], expiration: int = 3600
+    ) -> list[FileLinkSchema]:
         pass
 
     @abstractmethod
-    async def request_get_link(self, id: int, expiration: int = 3600) -> FileLinkSchema:
+    async def request_get_links(
+        self, ids: list[int], expiration: int = 3600
+    ) -> list[FileLinkSchema]:
         pass

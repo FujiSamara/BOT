@@ -169,7 +169,7 @@ const knowledge: Array<PanelData> = [
 		writeAccesses: [Access.CdWrite],
 	},
 	{
-		label: "Контроль",
+		label: "Качество",
 		routeName: "knowledge-control",
 		iconURL: "/img/shield.svg",
 		active: false,

@@ -9,7 +9,11 @@ import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import Root from "@/components/knowledge/Root.vue";
 
 import { DivisionType } from "@/components/knowledge/types";
-import { KnowledgeController } from "@/components/knowledge";
+import {
+	KnowledgeController,
+	pathToRouter,
+	pathToRequest,
+} from "@/components/knowledge";
 
 const router = useRouter();
 const route = useRoute();
@@ -47,7 +51,7 @@ const subDivisionClicked = async (index: number) => {
 		route.path.split("knowledge")[0] +
 		"knowledge" +
 		division.value.subdivisions[index].path;
-	await router.push({ path: path });
+	await router.push({ path: pathToRouter(path) });
 };
 const rootDivisionsClicked = async (index: number) => {
 	if (controller.rootDivisions.value === undefined) return;
@@ -56,7 +60,7 @@ const rootDivisionsClicked = async (index: number) => {
 		route.path.split("knowledge")[0] +
 		"knowledge" +
 		controller.rootDivisions.value[index].path;
-	await router.push({ path: path });
+	await router.push({ path: pathToRouter(path) });
 };
 const extendClicked = async () => {
 	if (route.name === "knowledge-search") {
@@ -96,7 +100,7 @@ const loadDivision = async () => {
 			.split("knowledge")[1]
 			.split("/")
 			.filter((v) => v);
-		await controller.loadDivision("/" + path.join("/"));
+		await controller.loadDivision(pathToRequest("/" + path.join("/")));
 	} catch {}
 };
 

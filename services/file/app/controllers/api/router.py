@@ -1,21 +1,16 @@
 from logging import Logger
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Request,
-    Security,
-    status,
-)
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Request, Security, status, Query
 from dependency_injector.wiring import Provide, inject
 import json
 import hmac
 import hashlib
 
 from common.schemas.client_credential import ClientCredentials
+from common.schemas.file import FileInSchema
 from app.container import Container
 from app.contracts.services import FileService
-from app.schemas.file import FileInSchema, FileConfirmSchema
+from app.schemas.file import FileConfirmSchema
 from common.schemas.file import FileLinkSchema
 
 from app.controllers.api.dependencies import Authorization
@@ -26,46 +21,38 @@ router = APIRouter()
 
 @router.post(
     "/",
-    response_description="Created url with file id",
+    response_description="Created url with file ids",
 )
 @inject
-async def create_put_link(
-    file: FileInSchema,
+async def create_put_links(
+    files: list[FileInSchema],
     expiration: int = 3600,
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
         scopes=[Scopes.FileWrite.value],
     ),
-) -> FileLinkSchema:
-    """Creates presigned url for putting file with specified meta."""
-    try:
-        link = await file_service.create_put_link(file, expiration)
-    except KeyError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    return link
+) -> list[FileLinkSchema]:
+    """Creates presigned urls for putting files with specified meta."""
+    return await file_service.create_put_links(files, expiration)
 
 
 @router.get(
-    "/{id}",
+    "/",
     response_description="Created url with file id",
 )
 @inject
-async def create_get_link(
-    id: int,
+async def create_get_links(
+    ids: Annotated[list[int], Query()],
     expiration: int = 3600,
     file_service: FileService = Depends(Provide[Container.file_service]),
     _: ClientCredentials = Security(
         Authorization,
         scopes=[Scopes.FileRead.value],
     ),
-) -> FileLinkSchema:
-    """Creates presigned url for getting file with specified meta."""
-    try:
-        link = await file_service.create_get_link(id, expiration)
-    except KeyError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    return link
+) -> list[FileLinkSchema]:
+    """Creates presigned urls for getting files with specified meta."""
+    return await file_service.create_get_links(ids, expiration)
 
 
 @router.post("/s3_webhook")

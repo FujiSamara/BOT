@@ -139,12 +139,23 @@ export const useNetworkStore = defineStore("network", {
 				`${config.coreURL}/${config.filesEndpoint}?name=${filename}`,
 			);
 		},
-		async getFileByURL(href: string): Promise<Uint8Array> {
-			const resp = await this.withAuthChecking(
-				axios.get(href, {
+		async getFileByURL(href: string, withAuth?: boolean): Promise<Uint8Array> {
+			let resp;
+			if (withAuth) {
+				resp = await this.withAuthChecking(
+					axios.get(href, {
+						responseType: "blob",
+					}),
+				);
+			} else {
+				resp = await axios.get(href, {
 					responseType: "blob",
-				}),
-			);
+					withCredentials: false,
+					headers: {
+						Authorization: undefined,
+					},
+				});
+			}
 
 			return resp.data as Uint8Array;
 		},

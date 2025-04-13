@@ -165,7 +165,11 @@ const convertAmount = (amount: number): string => {
 								</Transition>
 							</div>
 							<div v-else class="recept-wrapper">
-								<span class="recept">{{ props.card.description }}</span>
+								<span
+									class="recept"
+									v-for="line in props.card.description.split('\n')"
+									>{{ line }}<br
+								/></span>
 							</div>
 						</Transition>
 					</div>

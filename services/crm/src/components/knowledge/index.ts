@@ -21,26 +21,35 @@ const routerToActual = {
 	staff: "Персонал",
 	purchases: "Закупки",
 	cd: "ЦД",
-	control: "Контроль",
+	control: "Контроль качества",
 	accounting: "Учет",
 };
 
-export function routerToActualPath(path: string): string {
+export function pathToView(path: string): string {
 	let result = path;
 	for (const key of Object.keys(routerToActual)) {
 		result = result.replace(key, (routerToActual as any)[key]);
 	}
-	result = result.replace("+", "%2B").replace("&", "%26");
-	return result;
+	return result.replaceAll("%2B", "+").replaceAll("%26", "&");
 }
 
-export function actualToRouterPath(path: string): string {
+export function pathToRouter(path: string): string {
 	let result = path;
 	for (const key of Object.keys(routerToActual)) {
 		result = result.replace((routerToActual as any)[key], key);
 	}
-	result = result.replace("%2B", "+").replace("%26", "&");
-	return result;
+	return result
+		.replaceAll("+", "%2B")
+		.replaceAll("&", "%26")
+		.replaceAll(" ", "%20");
+}
+
+export function pathToRequest(path: string): string {
+	let result = path;
+	for (const key of Object.keys(routerToActual)) {
+		result = result.replace(key, (routerToActual as any)[key]);
+	}
+	return result.replaceAll("+", "%2B").replaceAll("&", "%26");
 }
 
 export const DIVISION_CHUNK_SIZE = 50;
@@ -191,7 +200,7 @@ export class KnowledgeController {
 		const result: KnowledgeRootDivision[] = [];
 
 		for (const panel of panels) {
-			const path = "/" + routerToActualPath(panel.name);
+			const path = "/" + pathToRequest(panel.name);
 			const division = await this._service.getDivision(path, 0);
 
 			if (division) result.push({ ...division, iconURL: panel.iconURL });
@@ -246,9 +255,7 @@ export class KnowledgeController {
 		const networkStore = useNetworkStore();
 		const knowledgePanels = getKnowledgeByAccesses(networkStore.accesses);
 
-		const actualName = actualToRouterPath(this._division.value.path).split(
-			"/",
-		)[1];
+		const actualName = pathToRouter(this._division.value.path).split("/")[1];
 		const currentPanel = knowledgePanels.find((pan) => pan.name === actualName);
 
 		if (currentPanel) {
@@ -271,7 +278,7 @@ export class KnowledgeController {
 		path: string,
 		knowledgePanels: PanelData[],
 	): boolean {
-		const routerPath = actualToRouterPath(path);
+		const routerPath = pathToRouter(path);
 		const name = routerPath.split("/")[1];
 
 		return knowledgePanels.find((val) => val.name === name) !== undefined;
