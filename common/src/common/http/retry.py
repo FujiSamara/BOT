@@ -14,15 +14,24 @@ def retry(times: int = 5, ignored: list[Exception] | None = None):
     def wrap(func: Callable):
         async def repeat_request(*args, **kwargs):
             times_left = times
-            while True:
-                try:
-                    times_left -= 1
-                    return await func(*args, **kwargs)
-                except ignored:
-                    raise
-                except Exception:
-                    if not times_left:
+            if len(ignored) == 0:
+                while True:
+                    try:
+                        times_left -= 1
+                        return await func(*args, **kwargs)
+                    except Exception:
+                        if not times_left:
+                            raise
+            else:
+                while True:
+                    try:
+                        times_left -= 1
+                        return await func(*args, **kwargs)
+                    except ignored:
                         raise
+                    except Exception:
+                        if not times_left:
+                            raise
 
         return repeat_request
 

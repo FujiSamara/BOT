@@ -30,7 +30,9 @@ class HTTPFileClient(RemoteFileClient):
                 ssl=self._with_ssl,
             ) as resp:
                 if 400 <= resp.status < 500:
-                    raise ValueError(f"Put links requested with errors: {resp.reason}")
+                    raise RuntimeError(
+                        f"Put links requested with errors: {resp.reason}"
+                    )
 
                 body: dict = await resp.json()
                 return [FileLinkSchema.model_validate(file) for file in body]
@@ -46,7 +48,9 @@ class HTTPFileClient(RemoteFileClient):
                 ssl=self._with_ssl,
             ) as resp:
                 if 400 <= resp.status < 500:
-                    raise ValueError(f"Get links requested with errors: {resp.reason}")
+                    raise RuntimeError(
+                        f"Get links requested with errors: {resp.reason}"
+                    )
 
                 body: dict = await resp.json()
                 return [FileLinkSchema.model_validate(file) for file in body]
