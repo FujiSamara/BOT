@@ -46,8 +46,10 @@ class DishServiceImpl(DishService):
 
             key = f"dish/{dish_id}/video/{video.filename}"
 
-            meta = await self._file_client.request_put_links(
-                [FileInSchema(filename=video.filename, key=key, size=video.size)]
+            meta = (
+                await self._file_client.request_put_links(
+                    [FileInSchema(filename=video.filename, key=key, size=video.size)]
+                )
             )[0]
 
             await uow.dish.update(dish_id, DishUpdateSchema(video=meta.id))
