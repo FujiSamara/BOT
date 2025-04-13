@@ -25,7 +25,7 @@ class FileInSchema(BaseSchema):
 class FileMetaSchema(BaseSchema):
     id: int
     name: str
-    size: float
+    size: int
     created: datetime
 
 
