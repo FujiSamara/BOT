@@ -35,12 +35,8 @@ class CardServiceImpl(CardService):
                 raise ValueError(f"Dish {card_id} not found.")
 
             old_materials = await uow.card.get_card_materials(card_id)
-            old_names_set = set(
-                [
-                    (await self._file_client.request_get_link(id)).name
-                    for id in old_materials
-                ]
-            )
+            old_links = await self._file_client.request_get_links(old_materials)
+            old_names_set = set([old_link.name for old_link in old_links])
             new_names_set = set([material.filename for material in materials])
 
             if len(old_names_set & set(new_names_set)) != 0:
