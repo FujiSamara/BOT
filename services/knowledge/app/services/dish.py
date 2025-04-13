@@ -1,5 +1,5 @@
 from common.contracts.clients import RemoteFileClient
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileInSchema
 from app.contracts.services import DishService
 from app.contracts.uow import DishUnitOfWork
 from app.schemas.dish import DishMaterialsSchema, DishUpdateSchema
@@ -24,21 +24,15 @@ class DishServiceImpl(DishService):
 
             video = None
             if materials_dto.video is not None:
-                try:
-                    video = await self._file_client.request_get_link(
-                        materials_dto.video
-                    )
-                except Exception:
+                video = await self._file_client.request_get_links([materials_dto.video])
+                if len(video) == 0:
                     video = None
+                else:
+                    video = video[0]
 
-            materials = []
-
-            for id in materials_dto.materials:
-                try:
-                    material = await self._file_client.request_get_link(id)
-                    materials.append(material)
-                except Exception:
-                    pass
+            materials = await self._file_client.request_get_links(
+                materials_dto.materials
+            )
 
             return DishMaterialsSchema(video=video, materials=materials)
 
@@ -50,9 +44,9 @@ class DishServiceImpl(DishService):
 
             key = f"dish/{dish_id}/video/{video.filename}"
 
-            meta = await self._file_client.request_put_link(
-                video.filename, key, video.size
-            )
+            meta = await self._file_client.request_put_links(
+                [FileInSchema(filename=video.filename, key=key, size=video.size)]
+            )[0]
 
             await uow.dish.update(dish_id, DishUpdateSchema(video=meta.id))
 
@@ -76,14 +70,16 @@ class DishServiceImpl(DishService):
             if len(old_names_set & set(new_names_set)) != 0:
                 raise ValueError("Provided material already exist.")
 
-            meta_list: list[FileLinkSchema] = []
-
-            for material in materials:
-                key = f"dish/{dish_id}/materials/{material.filename}"
-                meta = await self._file_client.request_put_link(
-                    material.filename, key, material.size
-                )
-                meta_list.append(meta)
+            meta_list: list[FileLinkSchema] = await self._file_client.request_put_links(
+                [
+                    FileInSchema(
+                        filename=material.filename,
+                        key=f"card/{dish_id}/materials/{material.filename}",
+                        size=material.size,
+                    )
+                    for material in materials
+                ]
+            )
 
             await uow.dish.add_dish_materials(dish_id, [meta.id for meta in meta_list])
 

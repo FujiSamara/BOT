@@ -1,5 +1,5 @@
 from common.contracts.clients import RemoteFileClient
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileInSchema
 from app.contracts.services import CardService
 from app.contracts.uow import CardUnitOfWork
 
@@ -26,17 +26,7 @@ class CardServiceImpl(CardService):
     async def get_card_materials(self, card_id):
         async with self._uow as uow:
             materials = await uow.card.get_card_materials(card_id)
-
-            meta_list = []
-
-            for material in materials:
-                try:
-                    meta = await self._file_client.request_get_link(material)
-                    meta_list.append(meta)
-                except Exception:
-                    pass
-
-            return meta_list
+            return await self._file_client.request_get_links(materials)
 
     async def add_card_materials(self, card_id, materials):
         async with self._uow as uow:
@@ -56,14 +46,16 @@ class CardServiceImpl(CardService):
             if len(old_names_set & set(new_names_set)) != 0:
                 raise ValueError("Provided material already exist.")
 
-            meta_list: list[FileLinkSchema] = []
-
-            for material in materials:
-                key = f"card/{card_id}/materials/{material.filename}"
-                meta = await self._file_client.request_put_link(
-                    material.filename, key, material.size
-                )
-                meta_list.append(meta)
+            meta_list: list[FileLinkSchema] = await self._file_client.request_put_links(
+                [
+                    FileInSchema(
+                        filename=material.filename,
+                        key=f"card/{card_id}/materials/{material.filename}",
+                        size=material.size,
+                    )
+                    for material in materials
+                ]
+            )
 
             await uow.card.add_card_materials(card_id, [meta.id for meta in meta_list])
 
