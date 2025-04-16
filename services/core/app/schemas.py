@@ -26,7 +26,7 @@ class BaseSchema(BaseModel):
 SchemaT = TypeVar("SchemaT", bound=BaseSchema)
 
 
-# region Shemas for models
+# region Schemas for models
 class BaseSchemaPK(BaseSchema):
     id: int | None = -1
 
@@ -439,6 +439,39 @@ class AuthClientSchema(BaseSchema):
     secret: str
 
     scopes: list[str]
+
+
+class CleaningProblemSchema(BaseSchemaPK):
+    problem_name: str
+
+
+class CleaningRequestSchema(BaseSchemaPK):
+    problem: CleaningProblemSchema
+    description: str
+    state: ApprovalStatus
+    score: int | None = None
+    worker: WorkerSchema
+
+    problem_photos: list[DocumentSchema] | None = None
+    cleaning_photos: list[DocumentSchema] | None = None
+    cleaner: WorkerSchema
+    appraiser: WorkerSchema
+    department: DepartmentSchema
+
+    open_date: datetime.datetime
+    cleaning_date: datetime.datetime | None = None
+
+    confirmation_date: datetime.datetime | None = None
+    confirmation_description: str | None = None
+
+    reopen_date: datetime.datetime | None = None
+    reopen_cleaning_date: datetime.datetime | None = None
+
+    reopen_cleaning_date: datetime.datetime | None = None
+    reopen_confirmation_date: datetime.datetime | None = None
+
+    close_date: datetime.datetime | None = None
+    close_description: str | None = None
 
 
 # endregion

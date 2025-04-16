@@ -11,8 +11,8 @@ from fastapi import UploadFile
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     download_file,
     handle_documents,
@@ -20,9 +20,9 @@ from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
 )
-from app.adapters.bot.handlers.tech_request.utils import (
+from app.adapters.bot.handlers.department_request.utils import (
     handle_department,
-    show_form,
+    show_form_technician,
     department_names_with_count,
 )
 
@@ -112,7 +112,7 @@ async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(tech_kb.ct_own_waiting.text + f"\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_waiting",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
@@ -138,7 +138,7 @@ async def show_own_waiting_form_format_cb(
         ]
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -234,7 +234,7 @@ async def show_rework_form_format_cb(
             )
         ]
     ]
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -334,7 +334,7 @@ async def show_own_history(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(tech_kb.ct_own_history.text + f"\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="show_CT_TR_own_history_form",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
@@ -349,7 +349,7 @@ async def show_own_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -413,7 +413,7 @@ async def show_admin_form(
         ],
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,

@@ -116,6 +116,8 @@ class DepartmentView(ModelView, model=Department):
         Department.chief_technician_id,
         Department.bids_it,
         Department.it_repairman_id,
+        Department.cleaning_requests,
+        Department.cleaner_id,
     ]
     form_excluded_columns = [
         Department.workers,
@@ -124,6 +126,7 @@ class DepartmentView(ModelView, model=Department):
         Department.workers_bids,
         Department.technical_requests,
         Department.budget_records,
+        Department.cleaning_requests,
     ]
     can_export = False
 
@@ -150,6 +153,7 @@ class DepartmentView(ModelView, model=Department):
         Department.electrician: "Электрик",
         Department.it_repairman: "IT ремотник",
         Department.fingerprint_device_hex: "Номер СКУД устройства",
+        Department.cleaner: "Клинер",
     }
 
     form_ajax_refs = {
@@ -186,6 +190,10 @@ class DepartmentView(ModelView, model=Department):
             "order_by": "l_name",
         },
         "electrician": {
+            "fields": ("l_name", "f_name", "o_name"),
+            "order_by": "l_name",
+        },
+        "cleaner": {
             "fields": ("l_name", "f_name", "o_name"),
             "order_by": "l_name",
         },

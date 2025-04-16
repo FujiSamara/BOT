@@ -43,11 +43,13 @@ from app.adapters.bot.kb import (
     get_menu_changing_form_button,
     get_coordinate_worker_bids_FD_btn,
 )
-from app.adapters.bot.handlers.tech_request.kb import (
+from app.adapters.bot.handlers.department_request.kb import (
     wr_menu_button,  # worker
-    rm_button,  # repairman
+    repairman_button,
+    cleaner_button,
     ct_button,  # chief technician
-    ar_button,  # appraiser
+    AR_TR_button,  # territorial manager tech req
+    AR_CR_button,  # territorial manager cleaning req
     ed_button,  # extensive director
     td_button,  # territorial director
 )
@@ -69,9 +71,9 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_worker_bid: worker_bid_menu_button,
         FujiScope.bot_bid_create: create_bid_menu_button,
         FujiScope.bot_technical_request_worker: wr_menu_button,
-        FujiScope.bot_technical_request_repairman: rm_button,
+        FujiScope.bot_technical_request_repairman: repairman_button,
         FujiScope.bot_technical_request_chief_technician: ct_button,
-        FujiScope.bot_technical_request_appraiser: ar_button,
+        FujiScope.bot_technical_request_appraiser: AR_TR_button,
         FujiScope.bot_technical_request_extensive_director: ed_button,
         FujiScope.bot_bid_it_worker: create_bid_it_menu_button,
         FujiScope.bot_bid_it_repairman: get_it_repairman_menu_btn,
@@ -85,6 +87,8 @@ def get_scope_menu_dict() -> dict[FujiScope, InlineKeyboardMarkup]:
         FujiScope.bot_worker_bid_iiko: get_coordinate_worker_bids_iiko_btn,
         FujiScope.bot_technical_request_department_director: td_button,
         FujiScope.bot_change_restaurant_menu: get_menu_changing_form_button,
+        FujiScope.bot_cleaning_request_cleaner: cleaner_button,
+        FujiScope.bot_cleaning_request_territorial_manager: AR_CR_button,
     }
 
 

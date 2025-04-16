@@ -4,12 +4,19 @@ from aiogram.types import (
 )
 from aiogram.fsm.context import FSMContext
 
-from app.services import get_technical_problem_by_id, get_technical_request_by_id
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
+from app.services import (
+    get_technical_problem_by_id,
+    get_technical_request_by_id,
+    get_cleaning_request_by_id,
+)
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    RequestType,
+)
 from app.adapters.bot.kb import main_menu_button
 from app.adapters.bot.text import back
 
-from app.schemas import TechnicalRequestSchema
+from app.schemas import TechnicalRequestSchema, CleaningRequestSchema
 
 
 # region Chief technician (CT)
@@ -121,7 +128,7 @@ async def ct_repair_waiting_kb(
         )
     ]
     photo_button = InlineKeyboardButton(
-        text="Фото после ремонта",
+        text="Фото проделанной работы",
         callback_data=ShowRequestCallbackData(
             request_id=callback_data.request_id,
             end_point="get_CT_TR_photo_waiting",
@@ -150,7 +157,7 @@ async def ct_repair_rework_kb(
         )
     ]
     photo_button = InlineKeyboardButton(
-        text="Фото после ремонта",
+        text="Фото проделанной работы",
         callback_data=ShowRequestCallbackData(
             request_id=callback_data.request_id,
             end_point="get_CT_TR_photo_rework",
@@ -278,17 +285,19 @@ async def ct_close_request_kb(
 # region Worker (WR)
 
 wr_menu_button = InlineKeyboardButton(
-    text="Подать техническую заявку", callback_data="get_WR_TR_menu"
+    text="Проблемы на предприятие", callback_data="get_WR_TR_CR_menu"
 )
 
-wr_create = InlineKeyboardButton(text="Создать заявку", callback_data="get_TR_create")
+wr_create = InlineKeyboardButton(
+    text="Создать заявку", callback_data="get_WR_TR_CR_create"
+)
 
 wr_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_WR_TR_waiting"
+    text="Ожидающие заявки", callback_data="get_WR_TR_CR_waiting"
 )
 
 wr_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_WR_TR_history"
+    text="История заявок", callback_data="get_WR_TR_CR_history"
 )
 
 wr_menu = InlineKeyboardMarkup(
@@ -341,19 +350,26 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
     buttons = [
         [
-            InlineKeyboardButton(text="Поломка", callback_data="problem_type_WR_TR"),
+            InlineKeyboardButton(
+                text="Проблема",
+                callback_data="problem_group_WR_TR_CR",
+            ),
             InlineKeyboardButton(text=f"{problem_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Комментарий", callback_data="description_WR_TR"),
+            InlineKeyboardButton(
+                text="Комментарий", callback_data="description_WR_TR_CR"
+            ),
             InlineKeyboardButton(text=f"{description}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Предприятие", callback_data="department_WR_TR"),
+            InlineKeyboardButton(
+                text="Предприятие", callback_data="department_WR_TR_CR"
+            ),
             InlineKeyboardButton(text=f"{department_name}", callback_data="dummy"),
         ],
         [
-            InlineKeyboardButton(text="Фото поломки", callback_data="photo_WR_TR"),
+            InlineKeyboardButton(text="Фото проблемы", callback_data="photo_WR_TR_CR"),
             InlineKeyboardButton(text=f"{photo}", callback_data="dummy"),
         ],
         [InlineKeyboardButton(text=back, callback_data=wr_menu_button.callback_data)],
@@ -363,7 +379,7 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
         buttons.append(
             [
                 InlineKeyboardButton(
-                    text="Отправить проблему", callback_data="send_WR_TR"
+                    text="Отправить проблему", callback_data="send_WR_TR_CR"
                 )
             ]
         )
@@ -373,52 +389,24 @@ async def wr_create_kb(state: FSMContext) -> InlineKeyboardMarkup:
 
 # endregion
 
-# region Repairman (RM)
+# region Executors (Repairman and Cleaner)
 
-rm_button = InlineKeyboardButton(
+repairman_button = InlineKeyboardButton(
     text="Технические заявки техник", callback_data="get_RM_TR"
 )
 
-rm_change_department_button = InlineKeyboardButton(
-    text="Выбрать предприятие", callback_data="set_RM_TR_department"
-)
 
-rm_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_RM_TR_waiting"
-)
-
-rm_rework = InlineKeyboardButton(
-    text="Заявки на доработку", callback_data="get_RM_TR_rework"
-)
-
-rm_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_RM_TR_history"
-)
-
-rm_change_department_menu = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [rm_change_department_button],
-        [main_menu_button],
-    ]
-)
-
-rm_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_RM_TR_menu")
-
-rm_menu_markup = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [rm_waiting],
-        [rm_rework],
-        [rm_history],
-        [rm_button],
-    ]
+cleaner_button = InlineKeyboardButton(
+    text="Заявки клининг клинер", callback_data="get_Cleaner_CR"
 )
 
 
-async def rm_repair_kb(
+async def executer_repair_kb(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
     back_button: list[InlineKeyboardButton],
     photo_button: InlineKeyboardButton,
+    executor_type: RequestType,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
@@ -443,7 +431,7 @@ async def rm_repair_kb(
                 InlineKeyboardButton(
                     text="Отметить выполненной",
                     callback_data=ShowRequestCallbackData(
-                        end_point="save_RM_TR_repair",
+                        end_point=f"save_{executor_type.name}_work",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )
@@ -453,47 +441,16 @@ async def rm_repair_kb(
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-async def rm_repair_waiting_kb(
-    state: FSMContext, callback_data: ShowRequestCallbackData
+async def executer_work_waiting_kb(
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    executor_type: RequestType,
 ) -> InlineKeyboardMarkup:
     photo_button = InlineKeyboardButton(
-        text="Фото после ремонта",
+        text="Фото проделанной работы",
         callback_data=ShowRequestCallbackData(
             request_id=callback_data.request_id,
-            end_point="get_RM_TR_waiting_photo",
-            last_end_point=callback_data.last_end_point,
-        ).pack(),
-    )
-    data = await state.get_data()
-    if "department_name" in data:
-        back_button = [
-            InlineKeyboardButton(
-                text="К заявке",
-                callback_data=ShowRequestCallbackData(
-                    request_id=callback_data.request_id,
-                    end_point="RM_TR_show_form_waiting",
-                    last_end_point=callback_data.last_end_point,
-                ).pack(),
-            )
-        ]
-    else:
-        back_button = main_menu_button
-    return await rm_repair_kb(
-        state=state,
-        callback_data=callback_data,
-        back_button=back_button,
-        photo_button=photo_button,
-    )
-
-
-async def rm_repair_rework_kb(
-    state: FSMContext, callback_data: ShowRequestCallbackData
-) -> InlineKeyboardMarkup:
-    photo_button = InlineKeyboardButton(
-        text="Фото после ремонта",
-        callback_data=ShowRequestCallbackData(
-            request_id=callback_data.request_id,
-            end_point="get_RM_TR_rework_photo",
+            end_point=f"get_{executor_type.name}_waiting_photo",
             last_end_point=callback_data.last_end_point,
         ).pack(),
     )
@@ -502,16 +459,49 @@ async def rm_repair_rework_kb(
             text="К заявке",
             callback_data=ShowRequestCallbackData(
                 request_id=callback_data.request_id,
-                end_point="RM_TR_show_form_rework",
+                end_point=f"{executor_type.name}_show_waiting_form",
                 last_end_point=callback_data.last_end_point,
             ).pack(),
         )
     ]
-    return await rm_repair_kb(
+    return await executer_repair_kb(
         state=state,
         callback_data=callback_data,
         back_button=back_button,
         photo_button=photo_button,
+        executor_type=executor_type,
+    )
+
+
+async def executor_repair_rework_kb(
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    executor_type: RequestType,
+) -> InlineKeyboardMarkup:
+    photo_button = InlineKeyboardButton(
+        text="Фото проделанной работы",
+        callback_data=ShowRequestCallbackData(
+            request_id=callback_data.request_id,
+            end_point=f"get_{executor_type.name}_rework_photo",
+            last_end_point=callback_data.last_end_point,
+        ).pack(),
+    )
+    back_button = [
+        InlineKeyboardButton(
+            text="К заявке",
+            callback_data=ShowRequestCallbackData(
+                request_id=callback_data.request_id,
+                end_point=f"{executor_type.name}_show_rework_form",
+                last_end_point=callback_data.last_end_point,
+            ).pack(),
+        )
+    ]
+    return await executer_repair_kb(
+        state=state,
+        callback_data=callback_data,
+        back_button=back_button,
+        photo_button=photo_button,
+        executor_type=executor_type,
     )
 
 
@@ -519,43 +509,19 @@ async def rm_repair_rework_kb(
 
 # region Appraiser (AR)
 
-ar_button = InlineKeyboardButton(
+AR_TR_button = InlineKeyboardButton(
     text="Приём технических заявок", callback_data="get_AR_TR"
 )
 
-ar_menu_button = InlineKeyboardButton(text="Назад", callback_data="get_AR_TR_menu")
-
-ar_waiting = InlineKeyboardButton(
-    text="Ожидающие заявки", callback_data="get_AR_TR_waiting"
-)
-
-ar_history = InlineKeyboardButton(
-    text="История заявок", callback_data="get_AR_TR_history"
-)
-
-appraiser_change_department_button = InlineKeyboardButton(
-    text="Выбрать предприятие",
-    callback_data="set_AR_TR_department",
-)
-
-ar_change_department_menu = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [appraiser_change_department_button],
-        [main_menu_button],
-    ]
-)
-
-ar_menu_markup = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [ar_waiting],
-        [ar_history],
-        [ar_button],
-    ]
+AR_CR_button = InlineKeyboardButton(
+    text="Приём заявок клининга", callback_data="get_AR_CR"
 )
 
 
 async def ar_rate_kb(
-    state: FSMContext, callback_data: ShowRequestCallbackData
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    request_type: RequestType,
 ) -> InlineKeyboardMarkup:
     data = await state.get_data()
     form_complete = True
@@ -582,7 +548,7 @@ async def ar_rate_kb(
                 text="Оценка",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="AR_TR_rate",
+                    end_point=f"{request_type.name}_rate_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -593,7 +559,7 @@ async def ar_rate_kb(
                 text="Комментарий",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="description_AR_TR",
+                    end_point=f"{request_type.name}_description_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             ),
@@ -604,20 +570,23 @@ async def ar_rate_kb(
                 text="К заявке",
                 callback_data=ShowRequestCallbackData(
                     request_id=callback_data.request_id,
-                    end_point="AR_TR_show_form_waiting",
+                    end_point=f"{request_type.name}_show_waiting_form_AR",
                     last_end_point=callback_data.last_end_point,
                 ).pack(),
             )
         ],
     ]
-
+    reopen_complete_date = (
+        get_technical_request_by_id(
+            request_id=callback_data.request_id
+        ).reopen_repair_date
+        if request_type == RequestType.TR
+        else get_cleaning_request_by_id(
+            request_id=callback_data.request_id
+        ).reopen_cleaning_date
+    )
     if form_complete:
-        if mark > 1 or (
-            get_technical_request_by_id(
-                request_id=data.get("request_id")
-            ).reopen_repair_date
-            is not None
-        ):
+        if mark > 1 or (reopen_complete_date is not None):
             text = "Закрыть заявку"
         else:
             text = "Отправить на доработку"
@@ -626,7 +595,7 @@ async def ar_rate_kb(
                 InlineKeyboardButton(
                     text=text,
                     callback_data=ShowRequestCallbackData(
-                        end_point="save_AR_TR_rate",
+                        end_point=f"{request_type.name}_save_rate_AR",
                         request_id=callback_data.request_id,
                     ).pack(),
                 )
@@ -638,7 +607,7 @@ async def ar_rate_kb(
 
 # endregion
 
-# region Department director
+# region Extensive director
 
 ed_button = InlineKeyboardButton(
     text="Технические заявки директор", callback_data="get_ED_TR"
@@ -960,7 +929,7 @@ async def td_approval_form_kb(
 # region Universal
 
 
-def create_kb_with_end_point(
+def create_kb_with_end_point_TR(
     requests: list[TechnicalRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
@@ -975,7 +944,34 @@ def create_kb_with_end_point(
 {request.reopen_deadline_date.strftime('%d.%m') if request.reopen_deadline_date else request.deadline_date.strftime('%d.%m')} до\
  {request.reopen_deadline_date.strftime('%H') if request.reopen_deadline_date else request.deadline_date.strftime('%H')}",
                         callback_data=ShowRequestCallbackData(
-                            request_id=request.id, end_point=end_point
+                            request_id=request.id,
+                            end_point=end_point,
+                            req_type=RequestType.TR.value,
+                        ).pack(),
+                    )
+                ]
+            )
+    finally:
+        buttons.append([menu_button])
+        return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def create_kb_with_end_point_CR(
+    requests: list[CleaningRequestSchema],
+    end_point: str,
+    menu_button: InlineKeyboardButton,
+) -> InlineKeyboardMarkup:
+    buttons: list[list[InlineKeyboardButton]] = []
+    try:
+        for request in requests:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text=f"{request.department.name} {request.id}",
+                        callback_data=ShowRequestCallbackData(
+                            request_id=request.id,
+                            end_point=end_point,
+                            req_type=RequestType.CR.value,
                         ).pack(),
                     )
                 ]

@@ -48,6 +48,10 @@ from app.infra.database.models import (
     ViewStatus,
     AuthClient,
     WorkerBidCoordinator,
+    CleaningProblem,
+    CleaningRequest,
+    CleaningRequestCleaningPhoto,
+    CleaningRequestProblemPhoto,
 )
 from app.schemas import (
     BidSchema,
@@ -75,6 +79,8 @@ from app.schemas import (
     CompanySchema,
     WorkerBidDocumentRequestSchema,
     AuthClientSchema,
+    CleaningProblemSchema,
+    CleaningRequestSchema,
 )
 
 
@@ -177,7 +183,7 @@ def get_worker_bid_by_column(column: any, value: any) -> WorkerBidSchema:
     If worker bid not exist return `None`.
     """
     with session.begin() as s:
-        raw_bid = s.execute(select(WorkerBid).filter(column == value)).scalars().first()
+        raw_bid = s.query(WorkerBid).filter(column == value).first()
         if not raw_bid:
             return None
         return WorkerBidSchema.model_validate(raw_bid)
@@ -195,7 +201,6 @@ def update_worker(worker: WorkerSchema):
         cur_worker.o_name = worker.o_name
         cur_worker.phone_number = worker.phone_number
         cur_worker.telegram_id = worker.telegram_id
-        cur_worker.state = worker.state
 
 
 def get_departments_columns(*columns: list[Any]) -> list[DepartmentSchema]:
@@ -621,18 +626,17 @@ def get_workers_with_post_by_column(column: Any, value: Any) -> list[WorkerSchem
 
 
 def get_workers_with_post_by_columns(
-    columns: list[Any],
-    values: list[Any],
+    columns: list[Any], values: list[Any]
 ) -> list[WorkerSchema]:
     """
     Returns all `Worker` as `WorkerSchema` in database
     by `columns` with `values`.
     """
     with session.begin() as s:
-        stmt = select(Worker).join(Worker.post)
+        query = s.query(Worker).join(Worker.post)
         for column, value in zip(columns, values):
-            stmt = stmt.filter(column == value)
-        raw_models = s.execute(stmt).scalars().all()
+            query = query.filter(column == value)
+        raw_models = query.all()
         return [WorkerSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
@@ -745,11 +749,9 @@ def get_posts() -> list[PostSchema]:
         return [PostSchema.model_validate(raw_model) for raw_model in raw_models]
 
 
-def add_worker_bid(bid: WorkerBidSchema) -> bool:
+def add_worker_bid(bid: WorkerBidSchema):
     """
     Adds `bid` to database.
-
-    Returns: `bool`
     """
     with session.begin() as s:
         department = (
@@ -772,8 +774,6 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
             iiko_service_state=bid.iiko_service_state,
             create_date=bid.create_date,
             sender=sender,
-            birth_date=bid.birth_date,
-            phone_number=bid.phone_number,
             official_work=bid.official_work,
             employed=bid.employed,
         )
@@ -794,7 +794,6 @@ def add_worker_bid(bid: WorkerBidSchema) -> bool:
         for doc in bid.work_permission:
             file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
             s.add(file)
-        return True
 
 
 def update_worker_bid(bid: WorkerBidSchema):
@@ -1233,8 +1232,8 @@ def update_tech_request_executor(request_id: int, repairman_id: int):
         cur_request = (
             s.query(TechnicalRequest).filter(TechnicalRequest.id == request_id).first()
         )
-        repairman = s.query(Worker).filter(Worker.id == repairman_id)
-        cur_request.executor = repairman
+        repairman = s.query(Worker).filter(Worker.id == repairman_id).first()
+        cur_request.repairman = repairman
         cur_request.repairman_id = repairman_id
     return True
 
@@ -1406,7 +1405,7 @@ def get_rework_tech_request(
 
 
 def get_technical_requests_for_repairman_history(
-    repairman_id: int, department_id: int
+    repairman_id: int, department_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -1423,7 +1422,8 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
-            .order_by(TechnicalRequest.id)
+            .limit(limit)
+            .order_by(TechnicalRequest.id.desc)
             .all()
         )
         return [
@@ -1513,34 +1513,43 @@ def set_not_relevant_state(request: TechnicalRequestSchema) -> bool:
 
 def get_count_req_in_departments(
     state: ApprovalStatus,
+    model: TechnicalRequest | CleaningRequest,
     worker_id: int | None = None,
     departments_id: list[int] = [],
-) -> tuple[str, int]:
-    """Count technical requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
+) -> list[tuple[str, int]]:
+    """Count model requests in department for executor(ApprovalStatus pending = technician, pending_approval = TM or DD)"""
     with session.begin() as s:
-        stmt = select(Department.name, func.count(TechnicalRequest.id)).join(Department)
+        stmt = select(Department.name, func.count(getattr(model, "id"))).join(
+            Department
+        )
 
         if worker_id is not None:
             match state:
                 case ApprovalStatus.pending:
                     stmt = stmt.filter(
                         and_(
-                            TechnicalRequest.repairman_id == worker_id,
-                            TechnicalRequest.state == state,
+                            getattr(
+                                model,
+                                "repairman_id"
+                                if model == TechnicalRequest
+                                else "cleaner_id",
+                            )
+                            == worker_id,
+                            getattr(model, "state") == state,
                         )
                     )
                 case ApprovalStatus.pending_approval:
                     stmt = stmt.filter(
                         and_(
-                            TechnicalRequest.appraiser_id == worker_id,
-                            TechnicalRequest.state == state,
+                            getattr(model, "appraiser_id") == worker_id,
+                            getattr(model, "state") == state,
                         )
                     )
         else:
             stmt = stmt.filter(
                 or_(
                     *[
-                        TechnicalRequest.department_id == department_id
+                        getattr(model, "department_id") == department_id
                         for department_id in departments_id
                     ]
                 )
@@ -1548,15 +1557,15 @@ def get_count_req_in_departments(
             if state == ApprovalStatus.not_relevant:
                 stmt = stmt.filter(
                     and_(
-                        TechnicalRequest.close_date == null(),
-                        TechnicalRequest.state == state,
+                        getattr(model, "close_date") == null(),
+                        getattr(model, "state") == state,
                     )
                 )
             else:
                 stmt = stmt.filter(
                     or_(
-                        TechnicalRequest.state == ApprovalStatus.pending,
-                        TechnicalRequest.state == ApprovalStatus.pending_approval,
+                        getattr(model, "state") == ApprovalStatus.pending,
+                        getattr(model, "state") == ApprovalStatus.pending_approval,
                     )
                 )
 
@@ -3000,3 +3009,251 @@ def get_worker_bid_coordinators(bid_id: int) -> list[WorkerSchema]:
             WorkerSchema.model_validate(raw_bid_coordinator.coordinator)
             for raw_bid_coordinator in raw_bid_coordinators
         ]
+
+
+# region Cleaning requests
+def get_cleaning_problems() -> list[CleaningProblemSchema]:
+    with session.begin() as s:
+        raw_problems = s.execute(select(CleaningProblem)).scalars().all()
+        return [
+            CleaningProblemSchema.model_validate(raw_problem)
+            for raw_problem in raw_problems
+        ]
+
+
+def get_last_cleaning_request_id() -> int:
+    with session.begin() as s:
+        return s.execute(select(func.max(CleaningRequest.id))).scalar()
+
+
+def get_cleaning_problem_by_problem_name(name: str) -> CleaningProblemSchema:
+    with session.begin() as s:
+        raw_problem = (
+            s.execute(
+                select(CleaningProblem).filter(CleaningProblem.problem_name == name)
+            )
+            .scalars()
+            .first()
+        )
+        if raw_problem is None:
+            return None
+        return CleaningProblemSchema.model_validate(raw_problem)
+
+
+def create_cleaning_request(record: CleaningRequestSchema) -> bool:
+    with session.begin() as s:
+        cleaning_request = CleaningRequest(
+            problem_id=record.problem.id,
+            description=record.description,
+            state=record.state,
+            score=None,
+            open_date=record.open_date,
+            cleaning_date=None,
+            confirmation_date=None,
+            confirmation_description=None,
+            close_description=None,
+            reopen_date=None,
+            close_date=None,
+            reopen_confirmation_date=None,
+            reopen_cleaning_date=None,
+            worker_id=record.worker.id,
+            cleaner_id=record.cleaner.id,
+            appraiser_id=record.appraiser.id,
+            department_id=record.department.id,
+        )
+        s.add(cleaning_request)
+
+        for doc in record.problem_photos:
+            file = CleaningRequestProblemPhoto(
+                cleaning_request=cleaning_request, document=doc.document
+            )
+            s.add(file)
+    return True
+
+
+def get_cleaner_in_department(department_id: int) -> WorkerSchema | None:
+    with session.begin() as s:
+        raw_worker = (
+            s.execute(
+                select(Worker)
+                .join(Department, onclause=Department.cleaner_id == Worker.id)
+                .filter(Department.id == department_id)
+            )
+            .scalars()
+            .first()
+        )
+        if raw_worker is None:
+            return None
+        return WorkerSchema.model_validate(raw_worker)
+
+
+def update_cleaning_request_from_cleaner(record: CleaningRequestSchema) -> bool:
+    with session.begin() as s:
+        cur_req = (
+            s.execute(select(CleaningRequest).filter(CleaningRequest.id == record.id))
+            .scalars()
+            .first()
+        )
+        if cur_req is None:
+            return False
+        cur_req.state = record.state
+        cur_req.cleaning_date = record.cleaning_date
+        cur_req.reopen_cleaning_date = record.reopen_cleaning_date
+
+        for doc in record.cleaning_photos:
+            file = CleaningRequestCleaningPhoto(
+                cleaning_request=cur_req, document=doc.document
+            )
+            s.add(file)
+    return True
+
+
+def get_departments_names_for_cleaner(cleaner_id: int) -> list[str]:
+    with session.begin() as s:
+        deps = (
+            s.execute(select(Department).filter(Department.cleaner_id == cleaner_id))
+            .scalars()
+            .all()
+        )
+        return [DepartmentSchema.model_validate(dep).name for dep in deps]
+
+
+def get_last_cleaning_requests_by_columns(
+    and_col: list[Any] = [],
+    and_val: list[Any] = [],
+    or_col: list[Any] = [],
+    or_val: list[Any] = [],
+    limit: int = 15,
+) -> list[CleaningRequestSchema]:
+    with session.begin() as s:
+        stmt = select(CleaningRequest)
+        for col, val in zip(and_col, and_val):
+            stmt = stmt.filter(col == val)
+
+        or_filter = False
+        for col, val in zip(or_col, or_val):
+            or_filter = or_(col == val, or_filter)
+        if or_col == [] or or_val == []:
+            or_filter = True
+
+        cl_reqs = (
+            s.execute(
+                stmt.filter(or_filter).limit(limit).order_by(CleaningRequest.id.desc())
+            )
+            .scalars()
+            .all()
+        )
+        return [CleaningRequestSchema.model_validate(cl_req) for cl_req in cl_reqs]
+
+
+def get_all_rework_cleaning_requests_for_cleaner(
+    cleaner_id: int,
+    department_id: int,
+    limit: int = 15,
+) -> list[CleaningRequestSchema]:
+    with session.begin() as s:
+        raw_requests = (
+            s.execute(
+                select(CleaningRequest)
+                .filter(
+                    CleaningRequest.cleaner_id == cleaner_id,
+                    CleaningRequest.department_id == department_id,
+                    CleaningRequest.state == ApprovalStatus.pending,
+                    CleaningRequest.reopen_date != null(),
+                )
+                .limit(limit)
+                .order_by(CleaningRequest.id.desc())
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            CleaningRequestSchema.model_validate(raw_request)
+            for raw_request in raw_requests
+        ]
+
+
+def get_cleaning_request_by_id(request_id: int) -> CleaningRequestSchema | None:
+    with session.begin() as s:
+        raw_req = (
+            s.execute(select(CleaningRequest).filter(CleaningRequest.id == request_id))
+            .scalars()
+            .first()
+        )
+        if raw_req is None:
+            return None
+        return CleaningRequestSchema.model_validate(raw_req)
+
+
+def update_cleaning_request_from_appraiser(
+    record: CleaningRequestSchema,
+) -> bool:
+    with session.begin() as s:
+        cur_request = (
+            s.execute(select(CleaningRequest).filter(CleaningRequest.id == record.id))
+            .scalars()
+            .first()
+        )
+
+        if cur_request is None:
+            return False
+
+        cur_request.state = record.state
+        cur_request.close_date = record.close_date
+        cur_request.reopen_date = record.reopen_date
+        cur_request.confirmation_date = record.confirmation_date
+        cur_request.reopen_confirmation_date = record.reopen_confirmation_date
+        cur_request.score = record.score
+        cur_request.confirmation_description = record.confirmation_description
+        cur_request.close_description = record.close_description
+    return True
+
+
+def get_all_history_cleaning_requests_for_worker(
+    worker_id: int, limit: int = 15
+) -> list[CleaningRequestSchema]:
+    with session.begin() as s:
+        raw_requests = (
+            s.execute(
+                select(CleaningRequest)
+                .filter(
+                    CleaningRequest.worker_id == worker_id,
+                    CleaningRequest.state != ApprovalStatus.pending_approval,
+                    CleaningRequest.state != ApprovalStatus.pending,
+                )
+                .limit(limit)
+                .order_by(CleaningRequest.id.desc())
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            CleaningRequestSchema.model_validate(raw_request)
+            for raw_request in raw_requests
+        ]
+
+
+def get_all_waiting_cleaning_requests_for_worker(
+    worker_id: int, limit: int = 15
+) -> list[CleaningRequestSchema]:
+    with session.begin() as s:
+        raw_requests = (
+            s.execute(
+                select(CleaningRequest)
+                .filter(
+                    CleaningRequest.worker_id == worker_id,
+                    CleaningRequest.close_date == null(),
+                )
+                .limit(limit)
+                .order_by(CleaningRequest.id.desc())
+            )
+            .scalars()
+            .all()
+        )
+        return [
+            CleaningRequestSchema.model_validate(raw_request)
+            for raw_request in raw_requests
+        ]
+
+
+# endregion

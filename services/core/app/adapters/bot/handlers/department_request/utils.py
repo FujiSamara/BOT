@@ -20,6 +20,7 @@ from app.services.technical_request import (
     get_request_count_in_departments_by_tg_id,
     get_request_count_in_departments,
 )
+from app.services.cleaning_request import get_cleaning_request_by_id
 
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
@@ -30,12 +31,28 @@ from app.adapters.bot.kb import (
     create_reply_keyboard,
     main_menu_button,
 )
-from app.adapters.bot.handlers.tech_request.schemas import (
+from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    RequestType,
 )
 
+from app.schemas import DepartmentSchema
 
-async def show_form(
+
+def get_departments_names_executor(
+    tg_id: int, type: RequestType
+) -> list[DepartmentSchema]:
+    import app.services as s
+
+    match type.name:
+        case RequestType.TR.name:
+            return s.get_departments_names_for_repairman(tg_id)
+        case RequestType.CR.name:
+            return s.get_departments_names_for_cleaner(tg_id)
+    return []
+
+
+async def show_form_technician(
     state: FSMContext,
     callback_data: ShowRequestCallbackData,
     history_or_waiting_button: InlineKeyboardButton,
@@ -200,6 +217,158 @@ async def show_form(
         await try_edit_or_answer(message=message, text=text_form, reply_markup=keyboard)
 
 
+async def show_form_cleaning(
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    history_or_waiting_button: InlineKeyboardButton,
+    buttons: list[list[InlineKeyboardButton]],
+    callback: Optional[CallbackQuery] = None,
+    message: Optional[Message] = None,
+):
+    data = await state.get_data()
+    if "msgs" in data:
+        for msg in data["msgs"]:
+            await try_delete_message(msg)
+        await state.update_data(msgs=[])
+
+    request = get_cleaning_request_by_id(callback_data.request_id)
+    text_form = (
+        f"{hbold(request.problem.problem_name)} от "
+        + request.open_date.date().strftime(settings.date_format)
+        + f"\nОписание:\n{request.description}\n\
+Адрес: {request.worker.department.address}\n\
+ФИО сотрудника: {request.worker.l_name} {request.worker.f_name} {request.worker.o_name}\n\
+Номер телефона: {request.worker.phone_number}\n\
+Должность: {request.worker.post.name}\n\
+ФИО исполнителя: {request.cleaner.l_name} {request.cleaner.f_name} {request.cleaner.o_name}\n\
+Номер телефона: {request.cleaner.phone_number}\n\
+Статус: "
+    )
+
+    match request.state:
+        case ApprovalStatus.approved:
+            text_form += "Выполнено"
+        case ApprovalStatus.pending:
+            text_form += "В процессе выполнения"
+        case ApprovalStatus.pending_approval:
+            text_form += "Ожидание оценки от ТУ"
+        case ApprovalStatus.denied:
+            text_form += "Отправлено на доработку"
+        case ApprovalStatus.skipped:
+            text_form += "Не выполнено"
+        case ApprovalStatus.not_relevant:
+            text_form += "Не актуально"
+
+    text_form += "\n \n"
+
+    if request.cleaning_date:
+        text_form += (
+            "Дата клининга: "
+            + request.cleaning_date.date().strftime(settings.date_format)
+            + "\n"
+        )
+    if request.confirmation_date:
+        text_form += (
+            "Дата утверждения проделанной работы: "
+            + request.confirmation_date.date().strftime(settings.date_format)
+            + "\n"
+        )
+        if request.confirmation_description:
+            text_form += "Комментарий ТУ: " + request.confirmation_description + "\n \n"
+
+        if request.reopen_date:
+            text_form += (
+                "Дата переоткрытия заявки: "
+                + request.reopen_date.date().strftime(settings.date_format)
+                + "\n"
+            )
+        if request.reopen_cleaning_date:
+            text_form += (
+                "Повторная дата клининга: "
+                + request.reopen_cleaning_date.date().strftime(settings.date_format)
+                + "\n"
+            )
+        if request.reopen_confirmation_date:
+            text_form += (
+                "Повторная дата утверждения: "
+                + request.reopen_confirmation_date.date().strftime(settings.date_format)
+                + "\n"
+            )
+            if request.close_description:
+                text_form += "Комментарий ТУ: " + request.close_description + "\n \n"
+
+        if request.close_date:
+            text_form += (
+                "Дата закрытия заявки: "
+                + request.close_date.date().strftime(settings.date_format)
+                + "\n"
+            )
+
+        if request.score:
+            text_form += f"\nОценка проделанной работы: {request.score}\n"
+
+    buttons.append(
+        [
+            InlineKeyboardButton(
+                text="Фотографии проблемы",
+                callback_data=ShowRequestCallbackData(
+                    request_id=request.id,
+                    end_point=f"{RequestType.CR.name}_problem_docs",
+                    last_end_point=callback_data.end_point,
+                ).pack(),
+            )
+        ]
+    )
+
+    if request.cleaning_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Фотографии клининга",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request.id,
+                        end_point=f"{RequestType.CR.name}_repair_docs",
+                        last_end_point=callback_data.end_point,
+                    ).pack(),
+                )
+            ]
+        )
+
+    if request.reopen_cleaning_date:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text="Фотографии повторного клининга",
+                    callback_data=ShowRequestCallbackData(
+                        request_id=request.id,
+                        end_point=f"{RequestType.CR.name}_reopen_docs",
+                        last_end_point=callback_data.end_point,
+                    ).pack(),
+                )
+            ]
+        )
+
+    if "department_name" in data or "WR" in callback_data.end_point:
+        buttons.append(
+            [
+                InlineKeyboardButton(
+                    text=text.back,
+                    callback_data=history_or_waiting_button.callback_data,
+                )
+            ]
+        )
+    else:
+        buttons.append([main_menu_button])
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+    if callback:
+        await try_edit_or_answer(
+            message=callback.message, text=text_form, reply_markup=keyboard
+        )
+    else:
+        await try_edit_or_answer(message=message, text=text_form, reply_markup=keyboard)
+
+
 async def send_photos(
     callback: CallbackQuery,
     state: FSMContext,
@@ -263,16 +432,21 @@ def department_names_with_count(
     state: ApprovalStatus,
     department_names: list[str],
     tg_id: int | None = None,
+    type: RequestType = RequestType.TR,
 ) -> list[str]:
+    from app.infra.database.models import TechnicalRequest, CleaningRequest
+
+    model = TechnicalRequest if type == RequestType.TR else CleaningRequest
+
     if tg_id is not None:
         request_count = get_request_count_in_departments_by_tg_id(
-            state=state, tg_id=tg_id
+            state=state, tg_id=tg_id, model=model
         )
         if department_names == []:
             return [f"{dep_count[1]} {dep_count[0]}" for dep_count in request_count]
     else:
         request_count = get_request_count_in_departments(
-            state=state, department_names=department_names
+            state=state, department_names=department_names, model=model
         )
     out_department_names = []
     if len(department_names) > 0:

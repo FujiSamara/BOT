@@ -163,6 +163,21 @@ from app.services.worktime import (
     get_last_completed_worktimes_by_tg_id,
     get_hours_sum_in_month,
 )
+from app.services.cleaning_request import (
+    get_cleaning_problem_names,
+    create_cleaning_request,
+    get_departments_names_for_cleaner,
+    get_all_history_cleaning_requests_for_cleaner,
+    get_all_waiting_cleaning_requests_for_cleaner,
+    get_all_rework_cleaning_requests_for_cleaner,
+    update_cleaning_request_from_cleaner,
+    get_cleaning_request_by_id,
+    get_all_history_cleaning_requests_for_appraiser,
+    get_all_waiting_cleaning_requests_for_appraiser,
+    update_cleaning_request_from_appraiser,
+    get_all_history_cleaning_requests_for_worker,
+    get_all_waiting_cleaning_requests_for_worker,
+)
 
 __all__ = [
     "add_documents_to_bid",
@@ -314,4 +329,17 @@ __all__ = [
     "get_all_history_technical_requests_territorial_director",
     "update_technical_request_by_territorial_director",
     "get_worker_bid_coordinators",
+    "get_cleaning_problem_names",
+    "create_cleaning_request",
+    "get_departments_names_for_cleaner",
+    "get_all_history_cleaning_requests_for_cleaner",
+    "get_all_waiting_cleaning_requests_for_cleaner",
+    "get_all_rework_cleaning_requests_for_cleaner",
+    "update_cleaning_request_from_cleaner",
+    "get_cleaning_request_by_id",
+    "get_all_history_cleaning_requests_for_appraiser",
+    "get_all_waiting_cleaning_requests_for_appraiser",
+    "update_cleaning_request_from_appraiser",
+    "get_all_history_cleaning_requests_for_worker",
+    "get_all_waiting_cleaning_requests_for_worker",
 ]

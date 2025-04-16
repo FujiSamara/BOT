@@ -98,6 +98,8 @@ class FujiScope(enum.Enum):
     bot_technical_request_department_director = 38
     bot_change_restaurant_menu = 39
     bot_worker_bid_financial_director = 40
+    bot_cleaning_request_cleaner = 41
+    bot_cleaning_request_territorial_manager = 42
 
 
 class DepartmentType(enum.Enum):
@@ -297,6 +299,8 @@ class Department(Base):
     electrician: Mapped["Worker"] = relationship(
         "Worker", foreign_keys=[electrician_id]
     )
+    cleaner_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=True)
+    cleaner: Mapped["Worker"] = relationship("Worker", foreign_keys=[cleaner_id])
 
     budget_records: Mapped[List["BudgetRecord"]] = relationship(
         "BudgetRecord", back_populates="department"
@@ -319,6 +323,11 @@ class Department(Base):
         "TechnicalRequest", back_populates="department"
     )
     bids_it: Mapped[List["BidIT"]] = relationship("BidIT", back_populates="department")
+    cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
+        "CleaningRequest",
+        back_populates="department",
+        foreign_keys="[CleaningRequest.department_id]",
+    )
 
     # Для сервиса мониторинга
     asterisk_id: Mapped[str] = mapped_column(nullable=True)
@@ -463,6 +472,21 @@ class Worker(Base):
         "Subordination",
         back_populates="chief",
         foreign_keys="[Subordination.chief_id]",
+    )
+    worker_cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
+        "CleaningRequest",
+        back_populates="worker",
+        foreign_keys="[CleaningRequest.worker_id]",
+    )
+    cleaner_cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
+        "CleaningRequest",
+        back_populates="cleaner",
+        foreign_keys="[CleaningRequest.cleaner_id]",
+    )
+    appraiser_cleaning_requests: Mapped[List["CleaningRequest"]] = relationship(
+        "CleaningRequest",
+        back_populates="appraiser",
+        foreign_keys="[CleaningRequest.appraiser_id]",
     )
 
     documents: Mapped[List["WorkerDocument"]] = relationship(
@@ -1364,3 +1388,116 @@ class TTKAssemblyChart(Base):
     ingredient: Mapped["TTKIngredient"] = relationship(
         "TTKIngredient", foreign_keys=[ingredient_id]
     )
+
+
+class CleaningProblem(Problem):
+    __tablename__ = "cleaning_problems"
+    requests: Mapped[list["CleaningRequest"]] = relationship(
+        "CleaningRequest", back_populates="problem"
+    )
+
+
+class CleaningRequestDocument(Base):
+    """Общий класс для документов у заявок на клининг"""
+
+    __abstract__ = True
+
+    document: Mapped[FileType] = mapped_column(FileType(storage=settings.storage))
+    cleaning_request_id: Mapped[int] = mapped_column(ForeignKey("cleaning_requests.id"))
+
+
+class CleaningRequestProblemPhoto(CleaningRequestDocument):
+    """Фото поломок для тех заявок"""
+
+    __tablename__ = "cleaning_requests_problem_photos"
+
+    cleaning_request: Mapped["CleaningRequest"] = relationship(
+        "CleaningRequest", back_populates="problem_photos"
+    )
+
+
+class CleaningRequestCleaningPhoto(CleaningRequestDocument):
+    """Фото ремонта для тех заявок"""
+
+    __tablename__ = "cleaning_requests_photos_work"
+
+    cleaning_request: Mapped["CleaningRequest"] = relationship(
+        "CleaningRequest", back_populates="cleaning_photos"
+    )
+
+
+class CleaningRequest(Base):
+    __tablename__ = "cleaning_requests"
+
+    problem_id: Mapped[int] = mapped_column(ForeignKey("cleaning_problems.id"))
+    problem: Mapped["CleaningProblem"] = relationship(
+        "CleaningProblem",
+        back_populates="requests",
+        foreign_keys=[problem_id],
+    )
+    description: Mapped[str] = mapped_column(nullable=False)
+    state: Mapped[approvalstatus]
+    score: Mapped[int] = mapped_column(
+        CheckConstraint("(score>0 AND score<6) OR NULL"), nullable=True
+    )
+
+    problem_photos: Mapped[List["CleaningRequestProblemPhoto"]] = relationship(
+        "CleaningRequestProblemPhoto",
+        cascade="all,delete",
+        back_populates="cleaning_request",
+    )
+
+    cleaning_photos: Mapped[List["CleaningRequestCleaningPhoto"]] = relationship(
+        "CleaningRequestCleaningPhoto",
+        cascade="all,delete",
+        back_populates="cleaning_request",
+    )
+
+    cleaner_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"),
+        nullable=False,
+    )
+    cleaner: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="cleaner_cleaning_requests",
+        foreign_keys=[cleaner_id],
+    )
+
+    worker_id: Mapped[int] = mapped_column(
+        ForeignKey("workers.id"),
+        nullable=False,
+    )
+    worker: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="worker_cleaning_requests",
+        foreign_keys=[worker_id],
+    )
+
+    appraiser_id: Mapped[int] = mapped_column(ForeignKey("workers.id"), nullable=False)
+    appraiser: Mapped["Worker"] = relationship(
+        "Worker",
+        back_populates="appraiser_cleaning_requests",
+        foreign_keys=[appraiser_id],
+    )
+
+    department_id: Mapped[int] = mapped_column(
+        ForeignKey("departments.id"), nullable=False
+    )
+    department: Mapped["Department"] = relationship(
+        "Department",
+        back_populates="cleaning_requests",
+        foreign_keys=[department_id],
+    )
+
+    open_date: Mapped[datetime.datetime] = mapped_column(nullable=False)
+
+    cleaning_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    confirmation_description: Mapped[str] = mapped_column(nullable=True)
+
+    reopen_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    reopen_cleaning_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    reopen_confirmation_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_date: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    close_description: Mapped[str] = mapped_column(nullable=True)

@@ -11,6 +11,7 @@ from app.infra.database.models import (
     Department,
     ApprovalStatus,
     TechnicalRequest,
+    CleaningRequest,
     Worker,
     FujiScope,
 )
@@ -20,6 +21,10 @@ from app.schemas import (
     WorkerSchema,
     DocumentSchema,
 )
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    RequestType,
+)
 
 
 async def notify_worker_by_telegram_id_in_technical_request(
@@ -28,9 +33,6 @@ async def notify_worker_by_telegram_id_in_technical_request(
     from app.adapters.bot.kb import create_inline_keyboard
     from app.adapters.bot.handlers.utils import notify_worker_by_telegram_id
     from app.adapters.bot import text
-    from app.adapters.bot.handlers.tech_request.schemas import (
-        ShowRequestCallbackData,
-    )
     from aiogram.types import InlineKeyboardButton
 
     await notify_worker_by_telegram_id(
@@ -88,7 +90,7 @@ def get_technical_request_by_id(request_id: int) -> TechnicalRequestSchema:
         logger.error(f"Request with id: {request_id} wasn't founds")
 
 
-def get_technical_problem_names() -> list[TechnicalProblemSchema]:
+def get_technical_problem_names() -> list[str]:
     return [problem.problem_name for problem in orm.get_technical_problems()]
 
 
@@ -115,7 +117,7 @@ async def create_technical_request(
 
     """
     Create technical request
-    Return: repairman telegram id
+    Return: bool
     """
     cur_date = datetime.now()
 
@@ -176,7 +178,7 @@ async def create_technical_request(
     )
 
     if not orm.create_technical_request(request):
-        logger.error("Technical problem record wasn't created")
+        logger.error("Technical request record wasn't created")
         return False
     else:
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -210,11 +212,10 @@ async def create_technical_request(
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.repairman.telegram_id,
             message=text.notification_repairman
-            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятие: {request.department.name}",
+            + f"\nНомер заявки: {last_technical_request_id + 1}\nНа предприятии: {request.department.name}",
             request_id=last_technical_request_id + 1,
-            end_point="RM_TR_repair_waiting_form",
+            end_point=f"{RequestType.TR.name}_show_waiting_form",
         )
-
     return True
 
 
@@ -270,16 +271,20 @@ async def update_technical_request_from_repairman(
     else:
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.appraiser.telegram_id,
-            message=text.notification_appraiser
-            + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+            message=text.notification_appraiser_TR
+            + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
             request_id=request_id,
-            end_point="AR_TR_show_form_waiting",
+            end_point=f"{RequestType.TR.name}_show_waiting_form_AR",
         )
         await notify_worker_by_telegram_id_in_technical_request(
             telegram_id=request.worker.telegram_id,
-            message=text.notification_worker + f"\nЗаявка {request_id} на проверке ТУ.",
-            request_id=request_id,
-            end_point="WR_TR_show_form_history",
+            message=text.notification_worker_TR
+            + f"\nЗаявка {request_id} на проверке ТУ.",
+            callback_data=ShowRequestCallbackData(
+                request_id=request_id,
+                req_type=RequestType.TR.value,
+                end_point="WR_DR_show_form_waiting",
+            ).pack(),
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -367,9 +372,9 @@ async def update_technical_request_from_appraiser(
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.repairman.telegram_id,
                 message=text.notification_repairman_reopen
-                + f"\nНомер заявки: {request_id}\nНа предприятие: {request.department.name}",
+                + f"\nНомер заявки: {request_id}\nНа предприятии: {request.department.name}",
                 request_id=request_id,
-                end_point="RM_TR_show_form_rework",
+                end_point=f"{RequestType.TR.name}_show_rework_form",
             )
 
             chief_technician = orm.get_chief_technician(request.department.id)
@@ -402,19 +407,24 @@ async def update_technical_request_from_appraiser(
                     )
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.worker.telegram_id,
-                message=text.notification_worker
+                message=text.notification_worker_TR
                 + f"\nЗаявка {request_id} отправлена на доработку.",
-                request_id=request_id,
-                end_point="WR_TR_show_form_history",
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    req_type=RequestType.TR.value,
+                    end_point="WR_DR_show_form_waiting",
+                ).pack(),
             )
         else:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.worker.telegram_id,
-                message=text.notification_worker + f"\nЗаявка {request_id} закрыта.",
-                request_id=request_id,
-                end_point="WR_TR_show_form_history",
+                message=text.notification_worker_TR + f"\nЗаявка {request_id} закрыта.",
+                callback_data=ShowRequestCallbackData(
+                    request_id=request_id,
+                    req_type=RequestType.TR.value,
+                    end_point="WR_DR_show_form_waiting",
+                ).pack(),
             )
-
     return True
 
 
@@ -568,19 +578,19 @@ async def update_tech_request_executor(
     Update executor in technical request return telegram id
     """
     try:
-        repairman = orm.get_workers_with_post_by_columns(
+        new_repairman = orm.get_workers_with_post_by_columns(
             [Worker.l_name, Worker.f_name, Worker.o_name], repairman_full_name
         )[0]
     except IndexError:
         logger.error(f"Worker with full name: {repairman_full_name} wasn't found")
 
     if not orm.update_tech_request_executor(
-        request_id=request_id, repairman_id=repairman.id
+        request_id=request_id, repairman_id=new_repairman.id
     ):
         logger.error(f"Technical request with id: {request_id} wasn't update executor")
         return False
     await notify_worker_by_telegram_id_in_technical_request(
-        telegram_id=repairman.telegram_id,
+        telegram_id=new_repairman.telegram_id,
         message=f"Вас назначили на заявку {request_id}\nНа предприятие: {department_name}",
         request_id=request_id,
         end_point="RM_TR_repair_waiting_form",
@@ -596,7 +606,7 @@ def update_technical_request_problem(request_id: int, problem_id: int):
 
 
 def get_all_waiting_technical_requests_for_worker(
-    telegram_id: int,
+    telegram_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
@@ -607,16 +617,16 @@ def get_all_waiting_technical_requests_for_worker(
         logger.error(f"Worker with telegram id {telegram_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id, TechnicalRequest.close_date],
-            [worker.id, null()],
+            columns=[TechnicalRequest.worker_id, TechnicalRequest.close_date],
+            values=[worker.id, null()],
+            limit=limit,
         )
 
     return requests
 
 
 def get_all_waiting_technical_requests_for_repairman(
-    telegram_id: int,
-    department_name: str,
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -634,16 +644,36 @@ def get_all_waiting_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.repairman_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                     TechnicalRequest.confirmation_date,
                 ],
-                [repairman.id, ApprovalStatus.pending, department_id, null()],
+                values=[repairman.id, ApprovalStatus.pending, department_id, null()],
+                limit=limit,
             )
 
-            return requests
+        return requests
+
+
+def get_all_active_technical_requests_for_extensive_director(
+    department_name: str, limit: int = 15
+) -> list[TechnicalRequestSchema]:
+    """
+    Return all waiting technical requests by Telegram id for extensive_director
+    """
+    try:
+        department = orm.find_departments_by_name(department_name)[0]
+    except IndexError:
+        logger.error(f"Department with name {department_name} wasn't found")
+    else:
+        requests = orm.get_all_technical_requests_in_department(
+            department_id=department.id,
+            history_flag=False,
+            limit=limit,
+        )
+        return requests
 
 
 def get_all_pending_technical_requests_for_territorial_director(
@@ -696,8 +726,7 @@ def get_all_rework_technical_requests_for_repairman(
 
 
 def get_all_waiting_technical_requests_for_appraiser(
-    telegram_id: int,
-    department_name: str,
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for appraiser
@@ -715,22 +744,23 @@ def get_all_waiting_technical_requests_for_appraiser(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.appraiser_id,
                     TechnicalRequest.state,
                     TechnicalRequest.department_id,
                 ],
-                [
+                values=[
                     appraiser.id,
                     ApprovalStatus.pending_approval,
                     department_id,
                 ],
+                limit=limit,
             )
 
             return requests
 
 
-def get_all_active_technical_requests_for_extensive_director(
+def get_all_active_technical_requests_for_department_director(
     department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
@@ -750,7 +780,7 @@ def get_all_active_technical_requests_for_extensive_director(
 
 
 def get_all_history_technical_requests_for_repairman(
-    telegram_id: int, department_name: str
+    telegram_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for repairman
@@ -768,24 +798,22 @@ def get_all_history_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_for_repairman_history(
-                repairman.id, department_id
-            )[:-16:-1]
+                repairman.id, department_id, limit=limit
+            )
 
             return requests
 
 
 def get_all_history_technical_requests_for_appraiser(
-    telegram_id: int, department_name: str
+    tg_id: int, department_name: str, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for appraiser
     """
     try:
-        appraiser = orm.get_workers_with_post_by_column(
-            Worker.telegram_id, telegram_id
-        )[0]
+        appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Appraiser with telegram id: {telegram_id} wasn't found")
+        logger.error(f"Appraiser with telegram id: {tg_id} wasn't found")
     else:
         try:
             department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -793,30 +821,37 @@ def get_all_history_technical_requests_for_appraiser(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_by_columns(
-                [
+                columns=[
                     TechnicalRequest.appraiser_id,
                     TechnicalRequest.department_id,
                 ],
-                [appraiser.id, department_id],
+                values=[
+                    appraiser.id,
+                    department_id,
+                ],
                 history=True,
+                limit=limit,
             )
 
             return requests
 
 
 def get_all_history_technical_requests_for_worker(
-    telegram_id: int,
+    tg_id: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
     """
     try:
-        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, telegram_id)[0]
+        worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
     except IndexError:
-        logger.error(f"Worker with telegram id: {telegram_id} wasn't found")
+        logger.error(f"Worker with telegram id: {tg_id} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
-            [TechnicalRequest.worker_id], [worker.id], history=True
+            columns=[TechnicalRequest.worker_id],
+            values=[worker.id],
+            history=True,
+            limit=limit,
         )
 
         return requests
@@ -1040,24 +1075,32 @@ async def set_not_relevant_state(
 
 
 def get_request_count_in_departments_by_tg_id(
-    state: ApprovalStatus, tg_id: int
-) -> tuple[str, int]:
+    state: ApprovalStatus,
+    tg_id: int,
+    model: TechnicalRequest | CleaningRequest,
+) -> list[tuple[str, int]]:
     worker_id = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if len(worker_id) == 0:
         logger.error(f"Worker with telegram id: {tg_id} not found")
     else:
         worker_id = worker_id[0].id
 
-    return orm.get_count_req_in_departments(state=state, worker_id=worker_id)
+    return orm.get_count_req_in_departments(
+        state=state, worker_id=worker_id, model=model
+    )
 
 
 def get_request_count_in_departments(
-    state: ApprovalStatus, department_names: list[str]
+    state: ApprovalStatus,
+    department_names: list[str],
+    model: TechnicalRequest | CleaningRequest,
 ) -> tuple[str, int]:
     if department_names == []:
         return []
     departments_id = orm.get_departments_id_by_names(department_names)
-    return orm.get_count_req_in_departments(state=state, departments_id=departments_id)
+    return orm.get_count_req_in_departments(
+        state=state, departments_id=departments_id, model=model
+    )
 
 
 def update_repairman_worktimes(start_work_day: int, end_work_day: int) -> None:

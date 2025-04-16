@@ -14,13 +14,13 @@ from app.adapters.bot.states import (
     ExtensiveDirectorRequestForm,
 )
 
-from app.adapters.bot.handlers.tech_request.utils import (
+from app.adapters.bot.handlers.department_request.utils import (
     handle_department,
-    show_form,
+    show_form_technician,
     department_names_with_count,
 )
-from app.adapters.bot.handlers.tech_request.schemas import ShowRequestCallbackData
-from app.adapters.bot.handlers.tech_request import kb as tech_kb
+from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
     try_edit_or_answer,
@@ -125,7 +125,7 @@ async def show_history_form(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
     buttons: list[list[InlineKeyboardButton]] = []
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,
@@ -190,7 +190,7 @@ async def show_active_request_form(
         ],
     ]
 
-    await show_form(
+    await show_form_technician(
         callback=callback,
         callback_data=callback_data,
         state=state,

@@ -96,14 +96,15 @@ class TMForm(StatesGroup):
 # Technical Request
 
 
-class WorkerTechnicalRequestForm(StatesGroup):
+class WorkerDepartmentRequestForm(StatesGroup):
+    problem_group = State()
     problem_name = State()
     description = State()
     photo = State()
     department = State()
 
 
-class RepairmanTechnicalRequestForm(StatesGroup):
+class ExecutorDepartmentRequestForm(StatesGroup):
     department = State()
     photo_waiting = State()
     photo_rework = State()
@@ -138,7 +139,7 @@ class TerritorialDirectorRequestForm(StatesGroup):
     correct = State()
 
 
-# Persconal Cabinet form
+# Personal Cabinet form
 class PersonalCabinet(StatesGroup):
     department = State()
 
