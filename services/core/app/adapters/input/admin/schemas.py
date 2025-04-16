@@ -799,20 +799,45 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     ]
 
     @staticmethod
-    def search_query(stmt: Select, term):
-        # Searches corresponding depatrmtens and problems
-        deps = select(Department.id).filter(Department.name.ilike(f"%{term}%"))
-        probs = select(TechnicalProblem.id).filter(
-            TechnicalProblem.problem_name.ilike(f"%{term}%")
-        )
+    def search_query(stmt: Select, term: str):
+        try:
+            id = int(term)
+            order = [
+                TechnicalRequest.id,
+                TechnicalRequest.state,
+                TechnicalRequest.department_id,
+            ]
+            if_stmt = [TechnicalRequest.id == id]
 
-        # Chooses requests with found deps or probs.
-        return select(TechnicalRequest).filter(
-            or_(
+        except ValueError:
+            id = None
+            order = [
+                TechnicalRequest.state,
+                TechnicalRequest.department_id,
+                TechnicalRequest.id,
+            ]
+            if_stmt = []
+
+        finally:
+            deps = select(Department.id).filter(Department.name.ilike(f"%{term}%"))
+            probs = select(TechnicalProblem.id).filter(
+                TechnicalProblem.problem_name.ilike(f"%{term}%")
+            )
+
+            repairman_ids = select(Worker.id).filter(
+                or_(
+                    Worker.f_name.ilike(f"%{term}%"),
+                    Worker.l_name.ilike(f"%{term}%"),
+                    Worker.o_name.ilike(f"%{term}%"),
+                )
+            )
+
+            if_stmt += [
+                TechnicalRequest.repairman_id.in_(repairman_ids),
                 TechnicalRequest.department_id.in_(deps),
                 TechnicalRequest.problem_id.in_(probs),
-            )
-        )
+            ]
+            return select(TechnicalRequest).filter(or_(*if_stmt)).order_by(*order)
 
     column_searchable_list = [TechnicalRequest.department, TechnicalRequest.problem]
 
@@ -830,6 +855,12 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     def approval_status_format(inst, column):
         value = getattr(inst, column)
         return approval_status_technical_request_dict.get(value)
+
+    column_default_sort = [
+        ("state", True),
+        ("department_id", True),
+        ("id", True),
+    ]
 
     column_formatters = {
         TechnicalRequest.state: approval_status_format,
@@ -851,7 +882,6 @@ class TechnicalRequestView(ModelView, model=TechnicalRequest):
     column_formatters_detail = column_formatters
     form_converter = TechnicalRequestConverter
 
-    column_default_sort = "state"
     form_ajax_refs = {
         "repairman": {
             "fields": ("l_name", "f_name", "o_name"),
