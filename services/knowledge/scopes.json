@@ -1,0 +1,8 @@
+{
+  "DivisionWrite": "authenticated",
+  "DivisionRead": "authenticated",
+  "CardWrite": "authenticated",
+  "CardRead": "authenticated",
+  "DishWrite": "authenticated",
+  "DishRead": "authenticated"
+}

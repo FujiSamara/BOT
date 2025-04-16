@@ -6,7 +6,7 @@ from app.schemas.file import FileCreateSchema, FileSchema, FileUpdateSchema
 
 class FileRepository(BaseRepository):
     @abstractmethod
-    async def create(self, file_create: FileCreateSchema) -> FileSchema:
+    async def create(self, file_creates: list[FileCreateSchema]) -> list[FileSchema]:
         pass
 
     @abstractmethod
@@ -23,6 +23,10 @@ class FileRepository(BaseRepository):
 
     @abstractmethod
     async def get_by_id(self, id: int) -> FileSchema | None:
+        pass
+
+    @abstractmethod
+    async def get_by_ids(self, ids: list[int]) -> list[FileSchema]:
         pass
 
     @abstractmethod

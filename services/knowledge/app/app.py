@@ -3,9 +3,12 @@ from fastapi import FastAPI
 
 from common.logging import logger
 from common.config import generate
+from common import with_cors
 
 from app.container import Container
 from app.infra.config import Settings
+from app.controllers import api
+from app.controllers import admin
 
 
 def create_lifespan(container: Container):
@@ -25,14 +28,38 @@ def create_lifespan(container: Container):
 
 
 def create_app() -> FastAPI:
-    settings = generate(Settings, logger)
+    settings: Settings = generate(Settings, logger)
     container = Container(logger=logger)
     container.config.from_pydantic(settings)
+    container.postgres_dish_container.container.config.override(
+        {"psql_dsn": settings.dish_psql_dsn, "psql_schema": settings.dish_psql_schema}
+    )
+    container.postgres_knowledge_container.container.config.override(
+        {
+            "psql_dsn": settings.knowledge_ppsql_dsn,
+            "psql_schema": settings.knowledge_psql_schema,
+        }
+    )
 
-    container.wire(modules=[])
+    container.wire(
+        modules=[
+            "app.controllers.api.routes.division",
+            "app.controllers.api.routes.card",
+            "app.controllers.api.routes.dish",
+            "app.controllers.admin.main",
+        ]
+    )
 
     app = FastAPI(redoc_url=None, docs_url=None, lifespan=create_lifespan(container))
     app.container = container
+
+    with_cors(app, cors_settings=settings)
+    admin.register_admin(
+        app,
+        username=settings.admin_username,
+        password=settings.admin_password,
+    )
+    app.mount("/api", api.create_api())
 
     return app
 

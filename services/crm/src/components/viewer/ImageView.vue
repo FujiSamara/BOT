@@ -47,11 +47,10 @@ const documents: Array<string> = [];
 for (const document of props.documents) {
 	let documentData;
 	if (document.forceHref) {
-		documentData = await network.getFileByURL(document.href);
+		documentData = await network.getFileByURL(document.href, !document.raw);
 	} else {
 		documentData = await network.getFile(document.name);
 	}
-	emits("ready");
 
 	let type = "application/octet-stream";
 	let extension = document.name.split(".").reverse()[0];
@@ -64,6 +63,7 @@ for (const document of props.documents) {
 
 	documents.push(window.URL.createObjectURL(blob));
 }
+emits("ready");
 
 onMounted(() => {
 	viewer.value = new Viewer(imageContainer.value!, viewerOptions);

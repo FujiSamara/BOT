@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 from common.config.postgres import PostgreSQLSettings
-from common.config.network import NetworkSettings
+from common.config.network import NetworkSettings, CORSSettings
 from common.config.admin import AdminSettings
 from common.config.auth import RemoteAuthSettings, LocalAuthSettings
 from common.config.file import FileSettings
@@ -32,4 +32,5 @@ __all__ = [
     "RemoteAuthSettings",
     "LocalAuthSettings",
     "FileSettings",
+    "CORSSettings",
 ]

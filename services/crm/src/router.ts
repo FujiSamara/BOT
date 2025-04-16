@@ -6,21 +6,19 @@ import {
 } from "vue-router";
 import { useNetworkStore } from "@/store/network";
 
+const EmptyRouteComponent = { template: "<div></div>" };
+
 const routes = [
 	{
 		path: "/crm",
+		name: "main",
+		component: async () => await import("@/pages/MainPage.vue"),
 		children: [
 			{
 				name: "tables",
 				path: "tables",
-				component: async () => await import("@/pages/TablePanelsPage.vue"),
+				component: async () => await import("@/pages/panels/TablePanels.vue"),
 				children: [
-					{
-						name: "table-default",
-						path: "default",
-						component: async () =>
-							await import("@/pages/panels/DefaultPanel.vue"),
-					},
 					{
 						name: "table-expenditures",
 						path: "expenditures",
@@ -96,37 +94,92 @@ const routes = [
 				],
 			},
 			{
-				path: "guest",
-				redirect: (to: RouteLocation): RouteLocationRaw => {
-					if (
-						to.query.token === undefined ||
-						to.query.token_type === undefined
-					) {
-						return { name: "login" };
-					}
-
-					const network = useNetworkStore();
-					network.setCredentials(
-						to.query.token as string,
-						to.query.token_type as string,
-					);
-
-					to.query = {};
-
-					return { name: "home" };
-				},
+				name: "default",
+				path: "default",
+				component: async () => await import("@/pages/panels/DefaultPanel.vue"),
 			},
 			{
-				name: "login",
-				path: "login",
-				component: async () => await import("@/pages/AuthPage.vue"),
-			},
-			{
-				name: "logout",
-				path: "/logout",
-				component: () => {},
+				name: "knowledge",
+				path: "knowledge",
+				component: async () =>
+					await import("@/pages/panels/KnowledgePanel.vue"),
+				children: [
+					{
+						name: "knowledge-search",
+						path: "search",
+						component: EmptyRouteComponent,
+					},
+					//
+					{
+						name: "knowledge-product",
+						path: "product/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-marketing",
+						path: "marketing/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-staff",
+						path: "staff/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-purchases",
+						path: "purchases/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-cd",
+						path: "cd/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-control",
+						path: "control/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+					{
+						name: "knowledge-accounting",
+						path: "accounting/:pathMatch(.*)*",
+						component: EmptyRouteComponent,
+					},
+				],
 			},
 		],
+	},
+	{
+		path: "/guest",
+		redirect: (to: RouteLocation): RouteLocationRaw => {
+			if (to.query.token === undefined || to.query.token_type === undefined) {
+				return { name: "login" };
+			}
+
+			const network = useNetworkStore();
+			network.setCredentials(
+				to.query.token as string,
+				to.query.token_type as string,
+			);
+
+			to.query = {};
+
+			return { name: "home" };
+		},
+	},
+	{
+		name: "login",
+		path: "/login",
+		component: async () => await import("@/pages/AuthPage.vue"),
+	},
+	{
+		name: "logout",
+		path: "/logout",
+		component: () => {},
+	},
+	{
+		path: "/:pathMatch(.*)*",
+		redirect: "/crm",
 	},
 ];
 
@@ -140,16 +193,11 @@ router.beforeEach(async (to, _, next) => {
 	const authed = networkStore.authorized || (await networkStore.auth());
 
 	if (authed) {
-		if (to.name === "login") {
-			next({ name: "tables" });
-		} else {
-			if (to.name === "logout") {
-				networkStore.logout();
-				next({ name: "login" });
-			} else {
-				next();
-			}
+		if (to.name === "logout") {
+			networkStore.logout();
+			next({ name: "login" });
 		}
+		next();
 	} else {
 		if (to.name === "login") {
 			next();

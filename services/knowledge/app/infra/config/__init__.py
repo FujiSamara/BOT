@@ -1,17 +1,21 @@
 from common.config import (
-    PostgreSQLSettings,
     NetworkSettings,
     LocalAuthSettings,
     RemoteAuthSettings,
     FileSettings,
+    AdminSettings,
+    CORSSettings,
 )
+from app.infra.config.database import DBSettings
 
 
 class Settings(
-    PostgreSQLSettings,
     NetworkSettings,
     LocalAuthSettings,
     RemoteAuthSettings,
     FileSettings,
+    DBSettings,
+    AdminSettings,
+    CORSSettings,
 ):
     pass

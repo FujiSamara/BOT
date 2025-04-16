@@ -28,12 +28,16 @@ class FileServiceImpl(FileService):
 
         return None
 
-    async def create_put_link(self, file, expiration=3600):
-        bucket = await self._find_free_bucket(file.key)
-        if bucket is None:
-            raise KeyError(f"File {file.key} exists in each bucket.")
+    async def create_put_links(self, files, expiration=3600):
+        file_create_list = []
+        urls: list[str] = []
+        result = []
 
-        async with self._file_uow as uow:
+        for file in files:
+            bucket = await self._find_free_bucket(file.key)
+            if bucket is None:
+                continue
+
             raw = file.filename.split(".")
             name = raw[0]
             ext = None
@@ -50,32 +54,57 @@ class FileServiceImpl(FileService):
                 created=datetime.now(),
                 confirmed=False,
             )
-            file = await uow.file.create(file_create)
-            url = await self._file_client.create_put_link(bucket, file.key, expiration)
+            file_create_list.append(file_create)
 
-            return FileLinkSchema(
+            url = await self._file_client.create_put_link(bucket, file.key, expiration)
+            urls.append(url)
+
+        async with self._file_uow as uow:
+            schemas = await uow.file.create(file_create_list)
+
+            for schema, url in zip(schemas, urls):
+                name = schema.name
+                if schema.ext is not None:
+                    name += f".{schema.ext}"
+                meta = FileLinkSchema(
+                    id=schema.id,
+                    url=url,
+                    name=name,
+                    size=schema.size,
+                    created=schema.created,
+                )
+                result.append(meta)
+
+        return result
+
+    async def create_get_links(self, ids, expiration=3600):
+        async with self._file_uow as uow:
+            files = await uow.file.get_by_ids(ids)
+
+            for file in files:
+                if not file.confirmed:
+                    await uow.file.delete(id)
+
+        result = []
+
+        for file in files:
+            url = await self._file_client.create_get_link(
+                file.bucket, file.key, expiration
+            )
+            name = file.name
+            if file.ext is not None:
+                name += f".{file.ext}"
+
+            meta = FileLinkSchema(
                 id=file.id,
                 url=url,
-                name=f"{name}.{ext}",
+                name=f"{file.name}.{file.ext}",
                 size=file.size,
                 created=file.created,
             )
+            result.append(meta)
 
-    async def create_get_link(self, id: int, expiration=3600):
-        async with self._file_uow as uow:
-            file = await uow.file.get_by_id(id)
-            if file is None:
-                raise KeyError(f"File {id} not exists.")
-
-        url = await self._file_client.create_get_link(file.bucket, file.key, expiration)
-
-        return FileLinkSchema(
-            id=file.id,
-            url=url,
-            name=f"{file.name}.{file.ext}",
-            size=file.size,
-            created=file.created,
-        )
+        return result
 
     async def confirm_putting(self, file_confirm):
         async with self._file_uow as uow:

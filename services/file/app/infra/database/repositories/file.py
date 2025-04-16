@@ -13,13 +13,19 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
 
         return (await self._session.execute(s)).scalars().all()
 
-    async def create(self, file_create):
-        file = converters.file_create_schema_to_file(file_create)
-        self._session.add(file)
-        await self._session.flush()
-        await self._session.refresh(file)
+    async def create(self, file_creates):
+        files = [
+            converters.file_create_schema_to_file(file_create)
+            for file_create in file_creates
+        ]
+        for file in files:
+            self._session.add(file)
 
-        return converters.file_to_file_schema(file)
+        await self._session.flush()
+        for file in files:
+            await self._session.refresh(file)
+
+        return [converters.file_to_file_schema(file) for file in files]
 
     async def update(self, id, file_update):
         files = await self._get_by_criteria(File.id == id)
@@ -41,7 +47,7 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
             raise ValueError("File not exist")
         file = files[0]
 
-        self._session.delete(file)
+        await self._session.delete(file)
         await self._session.flush()
 
     async def get_by_key(self, key):
@@ -64,3 +70,8 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
             return
 
         return converters.file_to_file_schema(files[0])
+
+    async def get_by_ids(self, ids):
+        files = await self._get_by_criteria(File.id.in_(ids))
+
+        return [converters.file_to_file_schema(file) for file in files]

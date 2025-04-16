@@ -1,32 +1,35 @@
 <script setup lang="ts">
-import { LinkData } from "@/types";
-import { computed, onMounted, Ref, ref, useTemplateRef, watch } from "vue";
+import { onMounted, Ref, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import PageSidebar from "@/components/PageSidebar.vue";
-import { getPanelsByAccesses } from "./panels";
+import { LinkData } from "@/types";
 import { useNetworkStore } from "@/store/network";
-import { TableService } from "@/services/table";
+import { getPanelsByAccesses } from "@/pages/panels";
+import PageSidebar from "@/components/PageSidebar.vue";
+import LoadingPage from "@/pages/LoadingPage.vue";
 
 const router = useRouter();
 const route = useRoute();
 const networkStore = useNetworkStore();
+
 const links: Ref<LinkData[]> = ref([]);
 const sidebarFolded = ref(false);
-const contentRef = useTemplateRef("content");
-const tableService = new TableService(contentRef);
+const activeLink: Ref<LinkData | undefined> = ref();
 
 const loadPanels = () => {
 	const panels = getPanelsByAccesses(networkStore.accesses);
-	const grantedLinks: LinkData[] = [...panels];
+	let grantedLinks: LinkData[] = [...panels];
 
-	if (grantedLinks.length === 0) {
-		grantedLinks.push({
-			label: "Нет таблиц",
-			routeName: "table-default",
-			iconURL: "/img/logout.svg",
-			active: false,
-		});
+	if (grantedLinks.filter((val) => val.name !== "stub").length === 0) {
+		grantedLinks = [
+			{
+				label: "Нет панелей",
+				routeName: "default",
+				iconURL: "/img/logout.svg",
+				active: false,
+			},
+			...grantedLinks,
+		];
 	}
 
 	grantedLinks.push({
@@ -37,16 +40,6 @@ const loadPanels = () => {
 	});
 
 	links.value = grantedLinks;
-
-	// Calcs table height
-
-	for (const panel of panels) {
-		tableService.register(
-			panel.name,
-			panel.create,
-			panel.withUpdatingLoop !== false,
-		);
-	}
 };
 const linkChange = async (link: LinkData) => {
 	const currentLink = links.value.find((val) => val.active);
@@ -56,42 +49,36 @@ const linkChange = async (link: LinkData) => {
 
 	if (currentLink) currentLink.active = false;
 	link.active = true;
+	activeLink.value = link;
 };
 const syncCurrentLink = async () => {
-	let tableChoosed = false;
+	let linkChoosed = false;
 	for (const currentLink of links.value) {
 		if (currentLink.routeName === route.name) {
-			tableChoosed = true;
+			linkChoosed = true;
 		}
 	}
 
-	if (!tableChoosed) {
+	if (!linkChoosed) {
 		await linkChange(links.value[0]);
 		return;
 	}
 
 	for (const currentLink of links.value) {
 		currentLink.active = currentLink.routeName === route.name;
+
+		if (currentLink.active) activeLink.value = currentLink;
 	}
 };
 
-const currentTable = computed(() => {
-	const activeLink = links.value.find((link) => link.active);
-	return tableService.get(activeLink?.name!);
-});
-
 watch(route, async () => {
 	await syncCurrentLink();
-});
-onMounted(async () => {
-	await tableService.startLoops();
 });
 onMounted(async () => {
 	await syncCurrentLink();
 });
 loadPanels();
 </script>
-
 <template>
 	<div class="layout">
 		<PageSidebar
@@ -101,20 +88,23 @@ loadPanels();
 			v-model="sidebarFolded"
 			:class="{ folded: sidebarFolded }"
 		></PageSidebar>
-		<div ref="content" class="content" :class="{ expanded: sidebarFolded }">
+		<div class="content" :class="{ expanded: sidebarFolded }">
 			<RouterView v-slot="{ Component }">
-				<template v-if="Component && currentTable !== undefined">
+				<template v-if="Component && activeLink">
 					<Transition mode="out-in" name="fade">
 						<KeepAlive>
-							<Suspense timeout="300">
+							<Suspense timeout="500">
 								<!-- main content -->
-								<component :table="currentTable" class="panel" :is="Component">
+								<component
+									:activeLink="activeLink?.name"
+									class="panel"
+									:is="Component"
+								>
 								</component>
 
 								<!-- loading state -->
 								<template #fallback>
-									<p>Loading</p>
-									<!-- <LoadingPage></LoadingPage> -->
+									<LoadingPage></LoadingPage>
 								</template>
 							</Suspense>
 						</KeepAlive>
@@ -124,8 +114,7 @@ loadPanels();
 		</div>
 	</div>
 </template>
-
-<style scoped lang="scss">
+<style lang="scss" scoped>
 @import "bootstrap/scss/functions";
 @import "bootstrap/scss/variables";
 @import "bootstrap/scss/mixins";
@@ -162,6 +151,8 @@ loadPanels();
 
 		width: 100%;
 		height: 100%;
+
+		overflow-y: auto;
 
 		transition: padding-left 0.25s;
 

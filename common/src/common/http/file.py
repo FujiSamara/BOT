@@ -19,32 +19,38 @@ class HTTPFileClient(RemoteFileClient):
         self._auth_client = auth_client
 
     @retry()
-    async def request_put_link(self, filename, key, size, expiration=3600):
+    async def request_put_links(self, files, expiration=3600):
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
+            json = [file.model_dump() for file in files]
             async with session.post(
-                f"{self._url}/api/file/?expiration={expiration}",
-                json={filename: filename, key: key, size: size},
+                f"{self._url}/api/files/?expiration={expiration}",
+                json=json,
                 headers={"Authorization": authorization_header},
                 ssl=self._with_ssl,
             ) as resp:
-                if resp.status != 200:
-                    raise ValueError("Get link requested with error.")
-                body: dict = await resp.json()
+                if 400 <= resp.status < 500:
+                    raise RuntimeError(
+                        f"Put links requested with errors: {resp.reason}"
+                    )
 
-                return FileLinkSchema.model_validate(body)
+                body: dict = await resp.json()
+                return [FileLinkSchema.model_validate(file) for file in body]
 
     @retry()
-    async def request_get_link(self, id, expiration=3600):
+    async def request_get_links(self, ids, expiration=3600):
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
+            params = "&".join([f"ids={id}" for id in ids])
             async with session.get(
-                f"{self._url}/api/file/{id}?expiration={expiration}",
+                f"{self._url}/api/files/?{params}&expiration={expiration}",
                 headers={"Authorization": authorization_header},
                 ssl=self._with_ssl,
             ) as resp:
-                if resp.status != 200:
-                    raise ValueError("Get link requested with error.")
-                body: dict = await resp.json()
+                if 400 <= resp.status < 500:
+                    raise RuntimeError(
+                        f"Get links requested with errors: {resp.reason}"
+                    )
 
-                return FileLinkSchema.model_validate(body)
+                body: dict = await resp.json()
+                return [FileLinkSchema.model_validate(file) for file in body]
