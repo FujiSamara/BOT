@@ -511,6 +511,10 @@ class Worker(Base):
     passport_str: Mapped[str] = mapped_column(nullable=True)
     iiko_id: Mapped[int] = mapped_column(nullable=True)
 
+    workers_fingerprints: Mapped["WorkerFingerprint"] = relationship(
+        "WorkerFingerprint", back_populates="worker"
+    )
+
 
 class WorkerDocument(Base):
     """Документы работников"""
