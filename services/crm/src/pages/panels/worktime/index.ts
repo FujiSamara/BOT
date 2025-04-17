@@ -64,7 +64,7 @@ export class WorktimeTable extends Table<WorktimeSchema> {
 }
 
 export async function setupWorktime(
-	table: Table<WorkTimeSchema>,
+	table: WorktimeTable,
 	routeData: RouteData,
 ): Promise<WorktimePanelData> {
 	const searchList = await useSearch(table, routeData, {

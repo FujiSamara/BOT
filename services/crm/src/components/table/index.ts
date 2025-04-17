@@ -1,6 +1,6 @@
 import { computed, ref, Ref, watch } from "vue";
 import * as config from "@/config";
-import axios from "axios";
+import { toast } from "vue3-toastify";
 import {
 	BaseSchema,
 	DateSchema,
@@ -9,7 +9,8 @@ import {
 	FilterSchema,
 	QuerySchema,
 } from "@types";
-import { useNetworkStore } from "@/store/network";
+import EntityService from "@/services/entity";
+import { PathOptions } from "@/services/entity";
 
 class TableElementObserver<T> {
 	constructor(
@@ -68,47 +69,46 @@ export class Table<T extends BaseSchema> {
 	private _highlighted: Ref<Array<boolean>> = ref([]);
 	private _checked: Ref<Array<boolean>> = ref([]);
 	protected _loadedRows: Ref<Array<T>> = ref([]);
-	protected _network = useNetworkStore();
 	private _refreshKey: Ref<number> = ref(0);
 	protected _newIds: Ref<Array<number>> = ref([]);
 	private _refreshingCount = 0;
 
+	protected _service: EntityService<T>;
+	protected _pathOptions = new PathOptions();
+
 	/**
-	 * @param endpoint Endpoint name for api.
+	 * @param entityName Endpoint name for api.
 	 */
 	constructor(
-		endpoint: string,
+		entityName: string,
 		options?: {
 			getEndpoint?: string;
 			infoEndpoint?: string;
 			createEndpoint?: string;
 			updateEndpoint?: string;
 			deleteEndpoint?: string;
-			approveEndpoint?: string;
-			rejectEndpoint?: string;
 			exportEndpoint?: string;
 		},
 	) {
-		this._endpoint = `${config.coreURL}/${config.crmEndpoint}/${endpoint}`;
+		const pathOptions = new PathOptions();
 
 		//#region endpoints
-		this._getEndpoint =
+		pathOptions.getExtraPath =
 			options && options.getEndpoint ? options.getEndpoint : "";
-		this._infoEndpoint =
+		pathOptions.getInfoExtraPath =
 			options && options.infoEndpoint ? options.infoEndpoint : "";
-		this._createEndpoint =
+		pathOptions.createExtraPath =
 			options && options.createEndpoint ? options.createEndpoint : "";
-		this._updateEndpoint =
+		pathOptions.updateExtraPath =
 			options && options.updateEndpoint ? options.updateEndpoint : "";
-		this._deleteEndpoint =
+		pathOptions.deleteExtraPath =
 			options && options.deleteEndpoint ? options.deleteEndpoint : "";
-		this._approveEndpoint =
-			options && options.approveEndpoint ? options.approveEndpoint : "";
-		this._rejectEndpoint =
-			options && options.rejectEndpoint ? options.rejectEndpoint : "";
-		this._exportEndpoint =
+		pathOptions.exportExtraPath =
 			options && options.exportEndpoint ? options.exportEndpoint : "";
 		//#endregion
+
+		this._service = new EntityService(entityName, pathOptions);
+		this._pathOptions = pathOptions;
 	}
 
 	//#region Rows
@@ -117,7 +117,7 @@ export class Table<T extends BaseSchema> {
 		let skipLoop = false;
 
 		watch(
-			[this._completedQuery, this._rowsQuery, this._refreshKey],
+			[this._completedQuery, this.currentPage, this._refreshKey],
 			async () => {
 				this.emulateLoading(true);
 				this._refreshingCount++;
@@ -154,34 +154,45 @@ export class Table<T extends BaseSchema> {
 	private async refreshInfo(fromLoop: boolean = false) {
 		if (this.blockLoop.value) return;
 		// Info about filtered table.
-		const resp = await this._network.withAuthChecking(
-			axios.post(this._infoQuery.value, this._completedQuery.value),
-		);
+		const info = await this._service
+			.getEntitiesInfo(this._completedQuery.value, this.rowsPerPage.value)
+			.catch(() => {
+				toast.error("Информация о таблице загрузилась с ошибкой.");
+				return undefined;
+			});
+		if (info === undefined) return;
 
-		if (fromLoop && this.rowCountWithFilters.value !== resp.data.record_count) {
+		if (fromLoop && this.rowCountWithFilters.value !== info.record_count) {
 			if (this._loadedRows.value.length !== this.rowsPerPage.value) {
 				this.isLoading.value = true;
 			}
 
 			await this.refreshRows(
-				this.rowCount.value !== resp.data.all_record_count &&
+				this.rowCount.value !== info.all_record_count &&
 					this.rowCount.value !== 0,
 			);
 			this.isLoading.value = false;
 		}
 
-		this.pageCount.value = resp.data.page_count;
-		this.rowCountWithFilters.value = resp.data.record_count;
-		this.rowCount.value = resp.data.all_record_count;
+		this.pageCount.value = info.page_count;
+		this.rowCountWithFilters.value = info.record_count;
+		this.rowCount.value = info.all_record_count;
 	}
 	/** Updates rows. */
 	private async refreshRows(findNew: boolean = false) {
 		if (this.blockLoop.value) return;
-		const resp = await this._network.withAuthChecking(
-			axios.post(this._rowsQuery.value, this._completedQuery.value),
-		);
 
-		const rows: Array<T> = resp.data;
+		const rows = await this._service
+			.getEntities(
+				this._completedQuery.value,
+				this.currentPage.value,
+				this.rowsPerPage.value,
+			)
+			.catch(() => {
+				toast.error("Таблица загрузилась с ошибкой.");
+				return undefined;
+			});
+		if (rows === undefined) return;
 
 		const rowsLength = rows.length;
 
@@ -227,9 +238,6 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Generating query
-	private _query = computed(() => {
-		return `records_per_page=${this.rowsPerPage.value}`;
-	});
 	private _searchedQuery = computed((): Array<SearchSchema> => {
 		return this.searchQuery.value;
 	});
@@ -252,12 +260,6 @@ export class Table<T extends BaseSchema> {
 			date_query: this._datedQuery.value,
 			filter_query: this._filteredQuery.value,
 		};
-	});
-	private _infoQuery = computed(() => {
-		return `${this._endpoint}${this._infoEndpoint}/page/info?${this._query.value}`;
-	});
-	private _rowsQuery = computed(() => {
-		return `${this._endpoint}${this._getEndpoint}/page/${this.currentPage.value}?${this._query.value}`;
 	});
 	//#endregion
 
@@ -645,118 +647,53 @@ export class Table<T extends BaseSchema> {
 	}
 	/** Exports table with current query. */
 	public async export() {
-		const url = `${this._endpoint}${this._exportEndpoint}/export`;
-		const resp = await this._network.withAuthChecking(
-			axios.post(url, this._completedQuery.value, {
-				responseType: "blob",
-				withCredentials: true,
-			}),
-		);
-
-		const filename = (resp.headers["content-disposition"] as string).split(
-			"=",
-		)[1];
-
-		this._network.saveFile(filename, resp.data);
+		await this._service.exportEntities(this._completedQuery.value).catch(() => {
+			toast.error("Таблица выгрузилась с ошибкой.");
+		});
 	}
 	// Endpoints.
-	protected _endpoint: string = "";
-	protected _getEndpoint: string = "";
-	protected _infoEndpoint: string = "";
-	protected _createEndpoint: string = "";
-	protected _updateEndpoint: string = "";
-	protected _deleteEndpoint: string = "";
 	protected _approveEndpoint: string = "";
 	protected _rejectEndpoint: string = "";
-	protected _exportEndpoint: string = "";
 	//#endregion
 
 	//#region CRUD
 	public async create(model: T): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
-			)
-			.catch((_) => {});
-
-		this.forceRefresh();
+		await this._service
+			.createEntity(model)
+			.then(() => {
+				this.forceRefresh();
+			})
+			.catch(() => {
+				toast.error("Запись создалась с ошибкой.");
+			});
 	}
 	public async update(model: T, index: number): Promise<void> {
 		let elementChanged = this.updateModel(this._loadedRows.value[index], model);
 
 		if (elementChanged) {
-			await this._network
-				.withAuthChecking(
-					axios.patch(
-						`${this._endpoint}${this._updateEndpoint}/`,
-						this._loadedRows.value[index],
-					),
-				)
-				.catch((_) => {});
+			this._service.updateEntity(this._loadedRows.value[index]).catch(() => {
+				toast.error("Запись обновилась с ошибкой.");
+			});
 		}
 	}
 	public async delete(
 		index: number,
 		needRefresh: boolean = false,
 	): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.delete(
-					`${this._endpoint}${this._deleteEndpoint}/${this._loadedRows.value[index].id}`,
-				),
-			)
-			.catch((_) => {});
-
-		if (needRefresh) {
-			this.forceRefresh();
-		}
+		await this._service
+			.deleteEntity(this._loadedRows.value[index].id)
+			.then(() => {
+				if (needRefresh) {
+					this.forceRefresh();
+				}
+			})
+			.catch(() => {
+				toast.error("Запись удалилась с ошибкой.");
+			});
 	}
 	public async deleteChecked(): Promise<void> {
 		await this.manageChecked(
 			async (index: number, _?: string) => await this.delete(index),
-		);
-	}
-	public async approve(
-		index: number,
-		needRefresh: boolean = false,
-	): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.patch(
-					`${this._endpoint}${this._approveEndpoint}/approve/${this._loadedRows.value[index].id}`,
-				),
-			)
-			.catch((_) => {});
-
-		if (needRefresh) {
-			this.forceRefresh();
-		}
-	}
-	public async approveChecked(): Promise<void> {
-		await this.manageChecked(
-			async (index: number, _?: string) => await this.approve(index),
-		);
-	}
-	public async reject(
-		index: number,
-		needRefresh: boolean = false,
-		reason: string,
-	): Promise<void> {
-		await this._network
-			.withAuthChecking(
-				axios.patch(
-					`${this._endpoint}${this._rejectEndpoint}/reject/${this._loadedRows.value[index].id}?reason=${reason}`,
-				),
-			)
-			.catch((_) => {});
-
-		if (needRefresh) {
-			this.forceRefresh();
-		}
-	}
-	public async rejectChecked(reason: string): Promise<void> {
-		await this.manageChecked(
-			async (index: number) => await this.reject(index, false, reason),
 		);
 	}
 	//#endregion
