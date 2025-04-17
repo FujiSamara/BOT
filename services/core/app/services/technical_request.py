@@ -44,6 +44,7 @@ async def notify_worker_by_telegram_id_in_technical_request(
                 callback_data=ShowRequestCallbackData(
                     request_id=request_id,
                     end_point=end_point,
+                    req_type=RequestType.TR.value,
                 ).pack(),
             )
         ),
@@ -280,11 +281,8 @@ async def update_technical_request_from_repairman(
             telegram_id=request.worker.telegram_id,
             message=text.notification_worker_TR
             + f"\nЗаявка {request_id} на проверке ТУ.",
-            callback_data=ShowRequestCallbackData(
-                request_id=request_id,
-                req_type=RequestType.TR.value,
-                end_point="WR_DR_show_form_waiting",
-            ).pack(),
+            request_id=request_id,
+            end_point="WR_DR_show_form_waiting",
         )
 
         chief_technician = orm.get_chief_technician(request.department.id)
@@ -409,21 +407,15 @@ async def update_technical_request_from_appraiser(
                 telegram_id=request.worker.telegram_id,
                 message=text.notification_worker_TR
                 + f"\nЗаявка {request_id} отправлена на доработку.",
-                callback_data=ShowRequestCallbackData(
-                    request_id=request_id,
-                    req_type=RequestType.TR.value,
-                    end_point="WR_DR_show_form_waiting",
-                ).pack(),
+                request_id=request_id,
+                end_point="WR_DR_show_form_waiting",
             )
         else:
             await notify_worker_by_telegram_id_in_technical_request(
                 telegram_id=request.worker.telegram_id,
                 message=text.notification_worker_TR + f"\nЗаявка {request_id} закрыта.",
-                callback_data=ShowRequestCallbackData(
-                    request_id=request_id,
-                    req_type=RequestType.TR.value,
-                    end_point="WR_DR_show_form_waiting",
-                ).pack(),
+                request_id=request_id,
+                end_point="WR_DR_show_form_waiting",
             )
     return True
 
