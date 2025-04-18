@@ -19,7 +19,10 @@ from app.adapters.bot.handlers.department_request.utils import (
     show_form_technician,
     department_names_with_count,
 )
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    PageCallbackData,
+)
 from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
@@ -98,7 +101,11 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.td_history.callback_data)
-async def show_history_menu(callback: CallbackQuery, state: FSMContext):
+async def show_history_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_territorial_director(
         department_name=department_name
@@ -108,10 +115,12 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("История заявок"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="TD_TR_show_history_form",
             menu_button=tech_kb.td_menu_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.td_history.callback_data,
         ),
     )
 
@@ -133,7 +142,11 @@ async def show_history_form(
 
 
 @router.callback_query(F.data == tech_kb.td_pending.callback_data)
-async def show_pending_menu(callback: CallbackQuery, state: FSMContext):
+async def show_pending_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_pending_technical_requests_for_territorial_director(
         department_name=department_name
@@ -143,10 +156,12 @@ async def show_pending_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold("Ожидающие заявки"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="TD_TR_show_pending_form",
             menu_button=tech_kb.td_menu_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.td_history.callback_data,
         ),
     )
 

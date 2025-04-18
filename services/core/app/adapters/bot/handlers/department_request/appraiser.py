@@ -25,6 +25,7 @@ from app.adapters.bot.handlers.department_request.utils import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    PageCallbackData,
     RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
@@ -179,7 +180,12 @@ class CoordinationFactory:
             reply_markup=self.menu_markup,
         )
 
-    async def show_history_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_history_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData,
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.problem_type:
             case RequestType.TR:
@@ -193,6 +199,8 @@ class CoordinationFactory:
                                 department_name=department_name,
                             )
                         ),
+                        page=callback_data.page,
+                        requests_endpoint=self.history_button.callback_data,
                     ),
                 )
             case RequestType.CR:
@@ -203,6 +211,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.history_button.callback_data,
                 )
             case _:
                 reply_markup = None
@@ -239,7 +249,12 @@ class CoordinationFactory:
                     history_or_waiting_button=self.history_button,
                 )
 
-    async def show_waiting_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_waiting_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData,
+    ):
         department_name = (await state.get_data()).get("department_name")
 
         match self.problem_type:
@@ -251,6 +266,8 @@ class CoordinationFactory:
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -260,6 +277,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case _:
                 reply_markup = []

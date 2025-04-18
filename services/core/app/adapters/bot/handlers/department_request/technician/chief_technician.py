@@ -11,7 +11,10 @@ from fastapi import UploadFile
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    PageCallbackData,
+)
 from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     download_file,
@@ -103,7 +106,11 @@ async def show_own_requests(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.ct_own_waiting.callback_data)
-async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
+async def show_own_waiting(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=1),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_waiting_technical_requests_for_repairman(
         telegram_id=callback.message.chat.id, department_name=department_name
@@ -116,6 +123,8 @@ async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
             end_point="CT_TR_show_form_waiting",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
+            page=callback_data,
+            requests_endpoint=tech_kb.ct_own_waiting.callback_data,
         ),
     )
 
@@ -200,7 +209,11 @@ async def set_waiting_repairman_photo(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.ct_rework.callback_data)
-async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
+async def show_rework_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_rework_technical_requests_for_repairman(
         telegram_id=callback.message.chat.id, department_name=department_name
@@ -209,10 +222,12 @@ async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
     await try_edit_or_answer(
         message=callback.message,
         text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_rework.callback_data,
         ),
     )
 
@@ -364,7 +379,11 @@ async def show_own_history_form(
 
 
 @router.callback_query(F.data == tech_kb.ct_admin_button.callback_data)
-async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
+async def show_admin_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_requests_in_department_for_chief_technician(
         department_name
@@ -376,6 +395,8 @@ async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
             end_point="show_CT_TR_admin_form",
             menu_button=tech_kb.ct_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_admin_button.callback_data,
         ),
     )
 

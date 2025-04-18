@@ -618,7 +618,7 @@ def get_all_waiting_technical_requests_for_worker(
 
 
 def get_all_waiting_technical_requests_for_repairman(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -643,6 +643,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.confirmation_date,
                 ],
                 values=[repairman.id, ApprovalStatus.pending, department_id, null()],
+                offset=page * limit,
                 limit=limit,
             )
 
@@ -850,7 +851,7 @@ def get_all_history_technical_requests_for_worker(
 
 
 def get_all_history_technical_requests_for_extensive_director(
-    department_name: str, limit: int = 15
+    department_name: str, offset: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -864,6 +865,7 @@ def get_all_history_technical_requests_for_extensive_director(
             department_id=department.id,
             history_flag=True,
             limit=limit,
+            offset=offset,
         )
 
         return requests

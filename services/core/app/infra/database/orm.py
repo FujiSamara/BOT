@@ -1320,7 +1320,11 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 
 
 def get_technical_requests_by_columns(
-    columns: list[Any], values: list[Any], history: bool = False, limit: int = 15
+    columns: list[Any],
+    values: list[Any],
+    offset: int,
+    history: bool = False,
+    limit: int = 15,
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
@@ -1335,7 +1339,9 @@ def get_technical_requests_by_columns(
             s.execute(
                 stmt.order_by(
                     TechnicalRequest.id.desc() if history else TechnicalRequest.id
-                ).limit(limit=limit)
+                )
+                .offset(offset)
+                .limit(limit=limit)
             )
             .scalars()
             .all()
@@ -1346,7 +1352,7 @@ def get_technical_requests_by_columns(
 
 
 def get_all_technical_requests_in_department(
-    department_id: int, history_flag: bool = False, limit: int = 15
+    department_id: int, offset: int, history_flag: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema for extensive director.
@@ -1366,7 +1372,9 @@ def get_all_technical_requests_in_department(
             s.execute(
                 stmt.order_by(
                     TechnicalRequest.id.desc() if history_flag else TechnicalRequest.id
-                ).limit(limit=limit)
+                )
+                .offset(offset)
+                .limit(limit=limit)
             )
             .scalars()
             .all()

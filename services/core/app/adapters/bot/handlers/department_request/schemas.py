@@ -3,6 +3,11 @@ from aiogram.filters.callback_data import CallbackData
 from enum import Enum
 
 
+class RequestType(Enum):
+    TR = 1  # Technical
+    CR = 2  # Cleaning
+
+
 class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
     request_id: int
     end_point: str
@@ -10,6 +15,6 @@ class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
     req_type: int | None = None
 
 
-class RequestType(Enum):
-    TR = 1  # Technical
-    CR = 2  # Cleaning
+class PageCallbackData(CallbackData, prefix="dep_req_page"):
+    page: int = 0
+    requests_endpoint: str | None = None

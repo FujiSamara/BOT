@@ -19,7 +19,10 @@ from app.adapters.bot.handlers.department_request.utils import (
     show_form_technician,
     department_names_with_count,
 )
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    PageCallbackData,
+)
 from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     try_delete_message,
@@ -100,7 +103,11 @@ async def show_menu(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.ed_history.callback_data)
-async def show_history_menu(callback: CallbackQuery, state: FSMContext):
+async def show_history_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_extensive_director(
         department_name=department_name
@@ -114,6 +121,8 @@ async def show_history_menu(callback: CallbackQuery, state: FSMContext):
             end_point="ED_TR_show_form_history",
             menu_button=tech_kb.ed_menu_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ed_active.callback_data,
         ),
     )
 
@@ -135,7 +144,11 @@ async def show_history_form(
 
 
 @router.callback_query(F.data == tech_kb.ed_active.callback_data)
-async def show_active_menu(callback: CallbackQuery, state: FSMContext):
+async def show_active_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_technical_requests_for_extensive_director(
         department_name=department_name
@@ -149,6 +162,8 @@ async def show_active_menu(callback: CallbackQuery, state: FSMContext):
             end_point="ED_TR_show_form_active",
             menu_button=tech_kb.ed_menu_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ed_active.callback_data,
         ),
     )
 

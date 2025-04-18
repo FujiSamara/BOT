@@ -19,6 +19,7 @@ from app.adapters.bot.states import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    PageCallbackData,
     RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
@@ -196,7 +197,12 @@ class CoordinationFactory:
             reply_markup=self.menu_markup,
         )
 
-    async def show_history_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_history_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
@@ -208,6 +214,8 @@ class CoordinationFactory:
                             telegram_id=callback.message.chat.id,
                             department_name=department_name,
                         ),
+                        page=callback_data.page,
+                        menu_endpoint=self.history_button.callback_data,
                     ),
                 )
             case RequestType.CR:
@@ -218,6 +226,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    menu_endpoint=self.history_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -254,7 +264,12 @@ class CoordinationFactory:
                     history_or_waiting_button=self.history_button,
                 )
 
-    async def show_waiting_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_waiting_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
@@ -264,7 +279,10 @@ class CoordinationFactory:
                     requests=get_all_waiting_technical_requests_for_repairman(
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -274,6 +292,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    menu_endpoint=self.waiting_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -356,7 +376,12 @@ class CoordinationFactory:
             callback.message, state, ExecutorDepartmentRequestForm.photo_waiting
         )
 
-    async def show_rework_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_rework_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
@@ -367,6 +392,8 @@ class CoordinationFactory:
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.rework_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -376,6 +403,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.rework_button.callback_data,
                 )
             case _:
                 reply_markup = []
