@@ -776,6 +776,8 @@ def add_worker_bid(bid: WorkerBidSchema):
             sender=sender,
             official_work=bid.official_work,
             employed=bid.employed,
+            phone_number=bid.phone_number,
+            birth_date=bid.birth_date,
         )
 
         s.add(worker_bid)
@@ -794,6 +796,8 @@ def add_worker_bid(bid: WorkerBidSchema):
         for doc in bid.work_permission:
             file = WorkerBidWorkPermission(worker_bid=worker_bid, document=doc.document)
             s.add(file)
+
+        return True
 
 
 def update_worker_bid(bid: WorkerBidSchema):
