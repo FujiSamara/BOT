@@ -56,6 +56,9 @@ async def update_equipment_status(
     if equipment_status.status in bad_statuses:
         if last_incident is None:
             await add_equipment_incident(equipment_status)
+            last_incident = orm.find_last_unresolved_equipment_incident(
+                equipment_status
+            )
         await notify_workers_by_scope(
             FujiScope.bot_incident_monitoring,
             f"""Оборудование не доступно!
@@ -65,7 +68,7 @@ async def update_equipment_status(
                 InlineKeyboardButton(
                     text=view,
                     callback_data=IncidentCallbackData(
-                        id=id,
+                        id=last_incident.id,
                         with_confirm=True,
                         callback_from=get_incidents_btn.callback_data,
                     ).pack(),
