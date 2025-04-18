@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import BlurModal from "@/components/BlurModal.vue";
-import { EditorMode, RowEditor } from "@/hooks/rowEditorHook";
+import { EditorMode, BaseEntityEditor } from "@/hooks/entityEditorHook";
 import { PropType } from "vue";
 import EntitySelect from "../entity/EntitySelect.vue";
 import DefaultButton from "../UI-new/DefaultButton.vue";
 
 const props = defineProps({
 	editor: {
-		type: Object as PropType<RowEditor<any>>,
+		type: Object as PropType<BaseEntityEditor>,
 		required: true,
 	},
 });

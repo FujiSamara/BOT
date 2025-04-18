@@ -95,7 +95,7 @@ export async function setupWorktime(
 		},
 	);
 	const dateInterval = await useDateInterval(table, "day", routeData);
-	const rowEditor = useRowEditor(
+	const rowEditor = useRowEditor<WorktimeSchema, WorktimeTable>(
 		table,
 		[
 			{
