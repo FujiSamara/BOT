@@ -215,9 +215,20 @@ export function capitalize(val: string) {
 
 export function formatFloat(val: number): Cell {
 	if (!val) {
-		return new Cell(new CellLine("0"));
+		return new Cell(new CellLine("0", undefined, config.colors.null));
 	}
 	return new Cell(new CellLine(val.toFixed(2).toString()));
+}
+
+export function formatFloatTime(val: number): Cell {
+	if (!val) {
+		return new Cell(new CellLine("0", undefined, config.colors.null));
+	}
+	const decimal = Math.floor(val);
+	const fraction = val - decimal;
+
+	const formatted = `${decimal}ч${Math.floor(fraction * 60)}м`;
+	return new Cell(new CellLine(formatted));
 }
 
 export async function fileToDocumentSchema(val: File): Promise<DocumentSchema> {

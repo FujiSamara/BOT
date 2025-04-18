@@ -28,9 +28,9 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 	constructor() {
 		super("timesheet");
 
-		this._formatters.set("total_hours", parser.formatFloat);
+		this._formatters.set("total_hours", parser.formatFloatTime);
 		for (let index = 1; index < 32; index++) {
-			this._formatters.set(index.toString(), parser.formatFloat);
+			this._formatters.set(index.toString(), parser.formatFloatTime);
 		}
 
 		this._aliases.set("id", "ID");
