@@ -173,9 +173,15 @@ onMounted(() => {
 							lock: props.table.orderDisabled(title),
 						}"
 					>
-						<p :style="{ color: props.table.getHeaderColor(title) }">
-							{{ title }}
-						</p>
+						<div class="title-lines">
+							<p
+								:style="{ color: props.table.getHeaderColor(title) }"
+								v-for="line in title.split('\n')"
+							>
+								{{ line }}
+							</p>
+						</div>
+
 						<Transition name="fade">
 							<div
 								class="icon"
@@ -315,6 +321,14 @@ onMounted(() => {
 
 				p {
 					margin: 0;
+				}
+
+				.title-lines {
+					display: flex;
+					flex-direction: column;
+					align-items: center;
+
+					gap: 8px;
 				}
 
 				.icon {

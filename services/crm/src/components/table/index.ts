@@ -542,7 +542,10 @@ export class Table<T extends BaseSchema> {
 	/** Order of column in table. */
 	protected _columsOrder: Map<string, number> = new Map<string, number>();
 	/** Aliases for column names. */
-	protected _aliases: Map<string, string> = new Map<string, string>();
+	protected _aliases: Map<string, string | (() => string)> = new Map<
+		string,
+		string
+	>();
 	/** Specify ingored column. */
 	protected _ignored: Array<string> = [];
 	/** Specufies hidden columns. */
@@ -585,7 +588,9 @@ export class Table<T extends BaseSchema> {
 		if (alias === undefined) {
 			alias = fieldName;
 		}
-		return alias;
+		if (typeof alias === "string") return alias;
+
+		return alias();
 	}
 	/** Returns original column name by **alias** */
 	protected aliasToColumnName(alias: string): string | undefined {

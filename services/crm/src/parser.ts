@@ -227,7 +227,9 @@ export function formatFloatTime(val: number): Cell {
 	const decimal = Math.floor(val);
 	const fraction = val - decimal;
 
-	const formatted = `${decimal}ч${Math.floor(fraction * 60)}м`;
+	const formatted = `${decimal}:${Math.floor(fraction * 60)
+		.toString()
+		.padStart(2, "0")}`;
 	return new Cell(new CellLine(formatted));
 }
 

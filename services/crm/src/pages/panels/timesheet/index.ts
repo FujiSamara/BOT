@@ -38,6 +38,11 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._aliases.set("post_name", "Должность");
 		this._aliases.set("department_name", "Предприятие");
 		this._aliases.set("total_hours", "Всего отработано");
+		for (let index = 1; index < 32; index++) {
+			this._aliases.set(index.toString(), () =>
+				this.formatDateHeader(index.toString()),
+			);
+		}
 
 		this._columsOrder.set("id", 0);
 		this._columsOrder.set("worker_fullname", 1);
@@ -46,22 +51,47 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._columsOrder.set("total_hours", 4);
 	}
 
+	private formatDateHeader(day: string): string {
+		const date = this.toDate(day);
+
+		if (date === undefined) return "";
+
+		const dayOfWeek = date.getDay();
+		const str: any = {
+			0: "ВС",
+			1: "ПН",
+			2: "ВТ",
+			3: "СР",
+			4: "ЧТ",
+			5: "ПТ",
+			6: "СБ",
+		};
+
+		return `${date.getDate()}\n${str[dayOfWeek]}`;
+	}
+
 	public orderDisabled(header: string): boolean {
 		let status = this.getAlias("total_hours") === header;
 
 		for (let index = 1; index < 32; index++) {
-			status ||= index.toString() === header;
+			status ||= this.formatDateHeader(index.toString()) === header;
 		}
 
 		return status;
 	}
 
-	public getHeaderColor(alias: string): string | undefined {
-		let num = parseInt(alias);
-
+	private toDate(stringNum: string): Date | undefined {
+		let num = parseInt(stringNum);
 		if (isNaN(num)) return;
-		const start = this.byDate.value!.start;
+		if (this.byDate.value === undefined) return;
+		const start = this.byDate.value.start;
 		const date = new Date(start.getFullYear(), start.getMonth(), num, 10);
+		return date;
+	}
+
+	public getHeaderColor(alias: string): string | undefined {
+		const date = this.toDate(alias);
+		if (date === undefined) return;
 		if (this.holidays.isHoliday(date) || date.getDay() % 6 === 0)
 			return colors.holiday;
 	}
