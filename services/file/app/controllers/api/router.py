@@ -84,8 +84,9 @@ async def got_records(
 
         s3 = record["s3"]
         bucket: str = s3["bucket"]["name"]
-        key = s3["object"]["key"]
-        size = s3["object"]["size"]
+        obj: dict = s3["object"]
+        key = obj["key"]
+        size = obj.get("size", 0)
 
         file_confirm = FileConfirmSchema(key=key, bucket=bucket, size=size)
 
