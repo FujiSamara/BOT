@@ -83,7 +83,7 @@ class FileServiceImpl(FileService):
 
             for file in files:
                 if not file.confirmed:
-                    await uow.file.delete(id)
+                    await uow.file.delete(file.id)
 
         result = []
 
