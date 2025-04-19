@@ -2,7 +2,12 @@ import Holidays from "date-holidays";
 
 import { Table } from "@/components/table";
 import { colors } from "@/config";
-import { RouteData, TimesheetSchema, WorkTimeSchema } from "@/types";
+import {
+	RouteData,
+	ShiftDurationSchema,
+	TimesheetSchema,
+	WorkTimeSchema,
+} from "@/types";
 import {
 	DateIntervalModelOut,
 	useDateInterval,
@@ -25,9 +30,10 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 	constructor() {
 		super("timesheet");
 
+		this._formatters.set("total_shifts", parser.formatInt);
 		this._formatters.set("total_hours", parser.formatFloatTime);
 		for (let index = 1; index < 32; index++) {
-			this._formatters.set(index.toString(), parser.formatFloatTime);
+			this._formatters.set(index.toString(), parser.formatShiftDuration);
 		}
 
 		this._aliases.set("id", "ID");
@@ -35,6 +41,7 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._aliases.set("post_name", "Должность");
 		this._aliases.set("department_name", "Предприятие");
 		this._aliases.set("total_hours", "Всего отработано");
+		this._aliases.set("total_shifts", "Всего смен");
 		for (let index = 1; index < 32; index++) {
 			this._aliases.set(index.toString(), () =>
 				this.formatDateHeader(index.toString()),
@@ -46,6 +53,7 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 		this._columsOrder.set("post_name", 2);
 		this._columsOrder.set("department_name", 3);
 		this._columsOrder.set("total_hours", 4);
+		this._columsOrder.set("total_shifts", 5);
 	}
 
 	private formatDateHeader(day: string): string {
@@ -120,9 +128,13 @@ export function useTimesheetEditor(table: TimesheetTable) {
 		const num = parseInt(fieldName);
 		if (isNaN(num)) return;
 
-		const worktime = model[fieldName];
+		const shift_duration = model[fieldName];
 
-		console.log(worktime);
+		if (typeof shift_duration === "number") return;
+
+		const worktime_id = (shift_duration as ShiftDurationSchema).worktime_id;
+
+		console.log(worktime_id);
 	};
 
 	return {
