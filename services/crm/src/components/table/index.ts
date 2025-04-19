@@ -461,6 +461,12 @@ export class Table<T extends BaseSchema> {
 	//#endregion
 
 	//#region Auxiliary
+	/** Finds field name by cell index. */
+	public getFieldName(cellIndex: number): string {
+		const header = this.visibleHeaders.value[cellIndex];
+		return this.aliasToColumnName(header)!;
+	}
+
 	/** Sorts elements by **this._columsOrder**. Returns sorted elements. */
 	private sort(elements: Array<any>, fieldNames: Array<any>): Array<any> {
 		const length = this._columsOrder.size;

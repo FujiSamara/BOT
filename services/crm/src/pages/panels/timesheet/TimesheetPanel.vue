@@ -9,6 +9,7 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
+import RowEditor from "@/components/entity/EntityEditor.vue";
 
 import { setupTimesheet, TimesheetTable } from "@/pages/panels/timesheet";
 
@@ -73,11 +74,14 @@ const filtersExist = computed(
 			class="table"
 			:table="props.table"
 			:blockLoading="!filtersExist"
+			@cell-click="setup.rowEditor.edit"
 		></Table>
 		<TablePagination
 			v-model:currentPage="props.table.currentPage.value"
 			:pageCount="props.table.pageCount.value"
 		></TablePagination>
+
+		<RowEditor :editor="setup.rowEditor"></RowEditor>
 	</div>
 </template>
 

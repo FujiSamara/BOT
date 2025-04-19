@@ -2,7 +2,7 @@ import Holidays from "date-holidays";
 
 import { Table } from "@/components/table";
 import { colors } from "@/config";
-import { RouteData, TimesheetSchema } from "@/types";
+import { RouteData, TimesheetSchema, WorkTimeSchema } from "@/types";
 import {
 	DateIntervalModelOut,
 	useDateInterval,
@@ -15,12 +15,9 @@ import {
 } from "@/hooks/tableSearchHook";
 import { DepartmentEntity, PostEntity } from "@/components/entity";
 import * as parser from "@/parser";
-
-interface TimesheetPanelData {
-	searchList: SearchModelOut[];
-	entitySearchList: EntitySearchModelOut;
-	dateInterval: DateIntervalModelOut;
-}
+import { BaseEntityEditor, useEntityEditor } from "@/hooks/entityEditorHook";
+import { getWorktimeEditorFields } from "@/pages/panels/worktime";
+import EntityService from "@/services/entity";
 
 export class TimesheetTable extends Table<TimesheetSchema> {
 	private holidays: Holidays = new Holidays("RU");
@@ -97,6 +94,57 @@ export class TimesheetTable extends Table<TimesheetSchema> {
 	}
 }
 
+export interface TimesheetEditor extends BaseEntityEditor {
+	edit: (rowIndex: number, cellIndex: number) => void;
+	create: () => void;
+}
+
+export function useTimesheetEditor(table: TimesheetTable) {
+	const service = new EntityService<WorkTimeSchema>("worktime");
+
+	const onUpdate = async (worktime: WorkTimeSchema) => {};
+	const onCreate = async (worktime: WorkTimeSchema) => {};
+
+	const editor = useEntityEditor(
+		getWorktimeEditorFields(),
+		"Создать Явку",
+		(_) => "Изменить явку",
+		onUpdate,
+		onCreate,
+	);
+
+	const edit = (rowIndex: number, cellIndex: number) => {
+		const model = table.getModel(rowIndex);
+		const fieldName = table.getFieldName(cellIndex);
+
+		const num = parseInt(fieldName);
+		if (isNaN(num)) return;
+
+		const worktime = model[fieldName];
+
+		console.log(worktime);
+	};
+
+	return {
+		active: editor.active,
+		close: editor.close,
+		edit,
+		create: editor.create,
+		save: editor.save,
+		fields: editor.fields,
+		title: editor.title,
+		mode: editor.mode,
+		showCustom: editor.showCustom,
+	};
+}
+
+interface TimesheetPanelData {
+	searchList: SearchModelOut[];
+	entitySearchList: EntitySearchModelOut;
+	dateInterval: DateIntervalModelOut;
+	rowEditor: TimesheetEditor;
+}
+
 export async function setupTimesheet(
 	table: TimesheetTable,
 	routeData: RouteData,
@@ -141,10 +189,12 @@ export async function setupTimesheet(
 		},
 	);
 	const dateInterval = await useDateInterval(table, "", routeData);
+	const rowEditor = useTimesheetEditor(table);
 
 	return {
 		entitySearchList,
 		searchList,
 		dateInterval,
+		rowEditor,
 	};
 }
