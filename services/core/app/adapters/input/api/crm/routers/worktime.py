@@ -16,6 +16,14 @@ from app.adapters.input.api.auth import User, get_user
 router = APIRouter()
 
 
+@router.get("/{id}")
+async def get_worktime_by_id(
+    id: int,
+    _: User = Security(get_user, scopes=["crm_worktime"]),
+) -> WorkTimeSchema:
+    return services.get_work_time_record_by_id(id)
+
+
 @router.post("/page/info")
 async def get_pages_info(
     query: QuerySchema,
