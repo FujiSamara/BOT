@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
@@ -64,6 +64,7 @@ from app.schemas import (
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
+    ShiftDurationSchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     TimeSheetSchema,
@@ -1681,16 +1682,19 @@ def get_timesheets(
         workers_sel = query_builder.select
         w_sub = workers_sel.subquery()
 
+        # Worker id, worktime id, day, duration
         per_day_sel = (
             select(
                 w_sub.c.id,
+                WorkTime.id,
                 WorkTime.day,
                 func.sum(WorkTime.work_duration).label("hours"),
             )
             .join(w_sub, w_sub.c.id == WorkTime.worker_id)
-            .group_by(w_sub.c.id, WorkTime.day)
+            .group_by(w_sub.c.id, WorkTime.day, WorkTime.id)
             .where(
                 WorkTime.work_duration != null(),
+                WorkTime.work_duration != 0,
                 WorkTime.work_begin != null(),
                 WorkTime.work_end != null(),
                 WorkTime.work_begin >= start,
@@ -1700,11 +1704,13 @@ def get_timesheets(
             .order_by(WorkTime.day)
         )
 
+        # Worker id, total duration, total shifts
         total_sel = (
-            select(w_sub.c.id, func.sum(WorkTime.work_duration))
+            select(w_sub.c.id, func.sum(WorkTime.work_duration), func.count())
             .join(w_sub, w_sub.c.id == WorkTime.worker_id)
             .where(
                 WorkTime.work_duration != null(),
+                WorkTime.work_duration != 0,
                 WorkTime.work_begin != null(),
                 WorkTime.work_end != null(),
                 WorkTime.work_begin >= start,
@@ -1714,21 +1720,24 @@ def get_timesheets(
         )
 
         workers: list[Worker] = s.execute(workers_sel).scalars().all()
-        per_days: list[tuple[int, datetime.date, float]] = s.execute(per_day_sel).all()
+        # Worker id/worktime id/day/duration
+        per_days: list[tuple[int, int, date, float]] = s.execute(per_day_sel).all()
         totals = s.execute(total_sel).all()
 
-        total_dict = {total[0]: total[1] for total in totals}
-        per_days_dict: dict[int, dict[datetime.date, float]] = {}
+        total_dict = {total[0]: (total[1], total[2]) for total in totals}
+        per_days_dict: dict[int, dict[date, ShiftDurationSchema]] = {}
 
-        for worker_id, day, duration in per_days:
-            per_days_dict.setdefault(worker_id, {})[day] = duration
+        for worker_id, worktime_id, day, duration in per_days:
+            per_days_dict.setdefault(worker_id, {})[day] = ShiftDurationSchema(
+                duration=duration, worktime_id=worktime_id
+            )
 
         result: list[TimeSheetSchema] = []
 
         for worker in workers:
             worker_fullname = f"{worker.l_name} {worker.f_name} {worker.o_name}"
             post_name = worker.post.name
-            total_hours = total_dict.get(worker.id, 0)
+            total_hours, total_shifts = total_dict.get(worker.id, (0, 0))
             duration_per_day = per_days_dict.get(worker.id, {})
 
             timesheet = TimeSheetSchema(
@@ -1737,6 +1746,7 @@ def get_timesheets(
                 post_name=post_name,
                 department_name=worker.department.name,
                 total_hours=total_hours,
+                total_shifts=total_shifts,
                 duration_per_day=duration_per_day,
             )
             result.append(timesheet)

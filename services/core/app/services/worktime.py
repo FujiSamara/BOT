@@ -130,7 +130,7 @@ async def update_worktime(record: WorkTimeSchema) -> None:
             json=dif,
         ) as resp:
             if resp.status >= 400:
-                raise HTTPException(status_code=resp.status)
+                raise HTTPException(status_code=resp.status, detail=resp.reason)
 
 
 async def create_worktime(record: WorkTimeSchema) -> None:
