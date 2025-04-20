@@ -408,12 +408,18 @@ class EquipmentIncidentSchema(BaseSchemaPK):
     stage: IncidentStage
 
 
+class ShiftDurationSchema(BaseSchema):
+    worktime_id: int
+    duration: float
+
+
 class TimeSheetSchema(BaseSchemaPK):
     worker_fullname: str
     post_name: str
     department_name: str
+    total_shifts: int
     total_hours: float
-    duration_per_day: dict[datetime.date, float]
+    duration_per_day: dict[datetime.date, ShiftDurationSchema | float]
     last_day: int | None = Field(exclude=True, default=None)
 
     def model_dump(self, **_) -> dict[str, Any]:
@@ -423,13 +429,14 @@ class TimeSheetSchema(BaseSchemaPK):
             "department_name": self.department_name,
             "post_name": self.post_name,
             "total_hours": self.total_hours,
+            "total_shifts": self.total_shifts,
             **{str(day): 0 for day in range(1, self.last_day + 1)},
         }
 
         duration_per_day = self.duration_per_day
 
         for date in duration_per_day:
-            data[str(date.day)] = duration_per_day[date]
+            data[str(date.day)] = duration_per_day[date].model_dump()
 
         return data
 

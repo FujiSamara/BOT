@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import BlurModal from "@/components/BlurModal.vue";
-import { EditorMode, RowEditor } from "@/hooks/rowEditorHook";
+import { EditorMode, BaseEntityEditor } from "@/hooks/entityEditorHook";
 import { PropType } from "vue";
 import EntitySelect from "../entity/EntitySelect.vue";
 import DefaultButton from "../UI-new/DefaultButton.vue";
+import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 
 const props = defineProps({
 	editor: {
-		type: Object as PropType<RowEditor<any>>,
+		type: Object as PropType<BaseEntityEditor>,
 		required: true,
 	},
 });
@@ -46,29 +47,34 @@ const save = () => {
 	<Transition name="fade">
 		<BlurModal
 			:title="editor.title.value"
-			v-if="editor.active.value"
+			v-if="editor.active.value || editor.loading.value"
 			@close="editor.close"
 			class="modal"
 		>
-			<div class="e-selects">
-				<EntitySelect
-					v-for="field in editor.fields.filter((val) => val.active)"
-					:entity="field.entity"
-					:select-type="field.type"
-					class="select-wrapper"
-					v-if="!editor.showCustom.value"
-				></EntitySelect>
-				<DefaultButton
-					v-if="
-						editor.mode.value !== EditorMode.View && !editor.showCustom.value
-					"
-					@click="save"
-					title="Сохранить"
-				></DefaultButton>
-				<slot name="view"></slot>
-				<slot name="create"></slot>
-				<slot name="edit"></slot>
-			</div>
+			<Transition nam="fade" mode="out-in">
+				<div class="e-selects" v-if="!editor.loading.value">
+					<EntitySelect
+						v-for="field in editor.fields.filter((val) => val.active)"
+						:entity="field.entity"
+						:select-type="field.type"
+						class="select-wrapper"
+						v-if="!editor.showCustom.value"
+					></EntitySelect>
+					<DefaultButton
+						v-if="
+							editor.mode.value !== EditorMode.View && !editor.showCustom.value
+						"
+						@click="save"
+						title="Сохранить"
+					></DefaultButton>
+					<slot name="view"></slot>
+					<slot name="create"></slot>
+					<slot name="edit"></slot>
+				</div>
+				<div v-else class="spinner-wrapper">
+					<PulseSpinner class="spinner"></PulseSpinner>
+				</div>
+			</Transition>
 		</BlurModal>
 	</Transition>
 </template>
@@ -87,5 +93,21 @@ const save = () => {
 	}
 
 	overflow-y: auto;
+}
+
+.spinner-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	width: 100%;
+	height: 100%;
+
+	.spinner {
+		width: 84px;
+		height: 84px;
+
+		color: $main-accent-blue;
+	}
 }
 </style>

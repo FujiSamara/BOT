@@ -221,6 +221,10 @@ export interface QuerySchema {
 	filter_query?: Array<FilterSchema>;
 }
 
+export interface ShiftDurationSchema extends BaseSchema {
+	worktime_id: number;
+	duration: number;
+}
 export interface TimesheetSchema extends BaseSchema {
 	worker_fullname: string;
 	post_name: string;

@@ -30,6 +30,7 @@ export const accessesDict: any = {
 
 export const colors = {
 	holiday: "#519BCA",
+	null: "#33474747",
 };
 
 export const imageExts = ["png", "jpeg", "jpg", "svg", "ico"];

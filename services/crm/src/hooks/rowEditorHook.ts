@@ -1,152 +1,76 @@
-import { BaseEntity, SelectType } from "@/components/entity";
-import { Table } from "@/components/table";
-import { BaseSchema } from "@/types";
 import { Ref, ref } from "vue";
 
-export interface RowField {
-	entity: BaseEntity<any>;
-	type: SelectType;
-	name: string;
-	active?: boolean;
-}
+import { Table } from "@/components/table";
+import { BaseSchema } from "@/types";
+import {
+	EntityField,
+	useEntityEditor,
+	BaseEntityEditor,
+} from "@/hooks/entityEditorHook";
 
-export enum EditorMode {
-	Create,
-	View,
-	Edit,
-}
+export interface RowField extends EntityField {}
 
-export interface RowEditor<T extends BaseSchema> {
-	active: Ref<boolean>;
-	close: () => void;
-	save: () => void;
+export interface RowEditor<S extends BaseSchema, T extends Table<S>>
+	extends BaseEntityEditor {
 	edit: (index: number) => void;
 	view: (index: number) => void;
 	create: () => void;
+
 	fields: RowField[];
-	title: Ref<string>;
-	mode: Ref<EditorMode>;
 	modelIndex: Ref<number | undefined>;
-	table: Table<T>;
-	showCustom: Ref<boolean>;
+	table: T;
 }
 
-export function useRowEditor<T extends BaseSchema>(
-	table: Table<T>,
+export function useRowEditor<S extends BaseSchema, T extends Table<S>>(
+	table: T,
 	fields: RowField[],
 	createTitle: string,
-	getTitle: (model: T) => string,
-): RowEditor<T> {
-	const active = ref(false);
-	const title = ref("");
+	getTitle: (model: S) => string,
+): RowEditor<S, T> {
 	const modelIndex: Ref<number | undefined> = ref(undefined);
-	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
-	const mode = ref(EditorMode.View);
-	const showCustom = ref(false);
 
-	fields.forEach((f) => (f.active = true));
-
-	const close = () => {
-		active.value = false;
-
-		switch (mode.value) {
-			case EditorMode.View:
-				for (let index = 0; index < fields.length; index++) {
-					const field = fields[index];
-					field.entity.readonly = readonlyStates[index];
-				}
-				fields.forEach((f) => f.entity.clear());
-				break;
-			case EditorMode.Edit:
-				fields.forEach((f) => f.entity.clear());
-				break;
-			case EditorMode.Create:
-				fields.forEach((f) => (f.active = true));
-				break;
-		}
-		fields.forEach((f) => (f.entity.withTitle = false));
-		showCustom.value = false;
+	const onCreate = async (model: S) => {
+		await table.create(model);
 	};
 
-	const load = (index: number) => {
-		active.value = true;
-		const model = table.getModel(index);
-		modelIndex.value = index;
-
-		for (const field of fields) {
-			const name = field.name;
-			const entity = field.entity;
-
-			if ((model as any)[name] !== undefined && (model as any)[name] !== null) {
-				entity.init((model as any)[name]);
-			}
-		}
+	const onUpdate = async (model: S) => {
+		if (modelIndex.value !== undefined)
+			await table.update(model, modelIndex.value);
 	};
+
+	const editor = useEntityEditor(
+		fields,
+		createTitle,
+		getTitle,
+		onUpdate,
+		onCreate,
+	);
 
 	const edit = (index: number) => {
-		mode.value = EditorMode.Edit;
-		title.value = getTitle(table.getModel(index));
-		fields.forEach((f) => (f.entity.withTitle = true));
-
-		load(index);
+		const model = table.getModel(index);
+		modelIndex.value = index;
+		editor.edit(model);
 	};
 
 	const view = (index: number) => {
-		title.value = getTitle(table.getModel(index));
-		mode.value = EditorMode.View;
-		fields.forEach((f) => (f.entity.withTitle = true));
-
-		load(index);
-
-		for (let index = 0; index < fields.length; index++) {
-			const field = fields[index];
-
-			readonlyStates[index] = field.entity.readonly as boolean;
-			field.entity.readonly = true;
-		}
-	};
-
-	const create = () => {
-		active.value = true;
-		title.value = createTitle;
-		mode.value = EditorMode.Create;
-
-		for (const field of fields) {
-			field.active = !field.entity.readonly;
-			field.entity.withTitle = true;
-		}
-	};
-
-	const save = async () => {
-		const result: any = {};
-
-		for (const field of fields) {
-			if (!field.entity.completed.value || field.entity.readonly) continue;
-			result[field.name] = field.entity.getResult();
-		}
-
-		if (mode.value === EditorMode.Create) {
-			await table.create(result);
-			fields.forEach((f) => f.entity.clear());
-		} else {
-			if (modelIndex.value !== undefined)
-				await table.update(result, modelIndex.value);
-		}
-		active.value = false;
+		const model = table.getModel(index);
+		modelIndex.value = index;
+		editor.view(model);
 	};
 
 	return {
-		active,
-		close,
+		active: editor.active,
+		close: editor.close,
 		edit,
-		create,
-		save,
+		create: editor.create,
+		save: editor.save,
 		view,
 		fields,
-		title,
-		mode,
+		title: editor.title,
+		mode: editor.mode,
 		modelIndex,
 		table,
-		showCustom,
+		showCustom: editor.showCustom,
+		loading: editor.loading,
 	};
 }

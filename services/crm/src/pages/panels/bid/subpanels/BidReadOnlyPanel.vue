@@ -6,7 +6,7 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
-import RowEditor from "@/components/table/RowEditor.vue";
+import RowEditor from "@/components/entity/EntityEditor.vue";
 
 import { PropType } from "vue";
 import { BidTable, setupBid } from "@/pages/panels/bid";
