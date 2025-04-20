@@ -30,7 +30,7 @@ interface WorktimePanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
-	rowEditor: RowEditor<WorkTimeSchema>;
+	rowEditor: RowEditor<WorkTimeSchema, WorktimeTable>;
 }
 
 export class WorktimeTable extends Table<WorktimeSchema> {

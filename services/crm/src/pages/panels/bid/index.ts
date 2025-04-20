@@ -37,7 +37,7 @@ interface BidPanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
-	rowEditor: RowEditor<BidSchema>;
+	rowEditor: RowEditor<BidSchema, BidTable>;
 }
 
 // Bid

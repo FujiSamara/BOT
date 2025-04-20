@@ -91,7 +91,9 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
         "company_id": record.department.company.id,
         "post_id": record.post.id,
         "department_id": record.department.id,
-        "work_begin": record.work_begin.strftime(settings.date_time_format),
+        "work_begin": record.work_begin.strftime(
+            day_format + " " + settings.time_format
+        ),
         "day": record.day.strftime(day_format),
     }
 
