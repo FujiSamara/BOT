@@ -10,14 +10,15 @@ import {
 
 export interface RowField extends EntityField {}
 
-export interface RowEditor<T extends BaseSchema> extends BaseEntityEditor {
+export interface RowEditor<S extends BaseSchema, T extends Table<S>>
+	extends BaseEntityEditor {
 	edit: (index: number) => void;
 	view: (index: number) => void;
 	create: () => void;
 
 	fields: RowField[];
 	modelIndex: Ref<number | undefined>;
-	table: Table<T>;
+	table: T;
 }
 
 export function useRowEditor<S extends BaseSchema, T extends Table<S>>(
@@ -25,7 +26,7 @@ export function useRowEditor<S extends BaseSchema, T extends Table<S>>(
 	fields: RowField[],
 	createTitle: string,
 	getTitle: (model: S) => string,
-): RowEditor<S> {
+): RowEditor<S, T> {
 	const modelIndex: Ref<number | undefined> = ref(undefined);
 
 	const onCreate = async (model: S) => {
