@@ -21,6 +21,7 @@ export interface BaseEntityEditor {
 	title: Ref<string>;
 	showCustom: Ref<boolean>;
 	mode: Ref<EditorMode>;
+	loading: Ref<boolean>;
 
 	close: () => void;
 	save: () => void;
@@ -32,6 +33,8 @@ export interface EntityEditor<T extends BaseSchema> extends BaseEntityEditor {
 	edit: (entity: T) => void;
 	view: (entity: T) => void;
 	create: () => void;
+
+	currentModel: Ref<T | undefined>;
 }
 
 export function useEntityEditor<T extends BaseSchema>(
@@ -40,13 +43,14 @@ export function useEntityEditor<T extends BaseSchema>(
 	getTitle: (model: T) => string,
 	onUpdate: (model: T) => Promise<void>,
 	onCreate: (model: T) => Promise<void>,
-) {
+): EntityEditor<T> {
 	const active = ref(false);
 	const title = ref("");
 	const readonlyStates = fields.map((val) => val.entity.readonly as boolean);
 	const mode = ref(EditorMode.View);
 	const showCustom = ref(false);
 	const currentModel: Ref<undefined | T> = ref(undefined);
+	const loading = ref(false);
 
 	fields.forEach((f) => (f.active = true));
 
@@ -148,5 +152,7 @@ export function useEntityEditor<T extends BaseSchema>(
 		title,
 		mode,
 		showCustom,
+		loading,
+		currentModel,
 	};
 }

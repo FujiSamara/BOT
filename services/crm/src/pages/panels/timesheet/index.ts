@@ -23,6 +23,7 @@ import * as parser from "@/parser";
 import { BaseEntityEditor, useEntityEditor } from "@/hooks/entityEditorHook";
 import { getWorktimeEditorFields } from "@/pages/panels/worktime";
 import EntityService from "@/services/entity";
+import { toast } from "vue3-toastify";
 
 export class TimesheetTable extends Table<TimesheetSchema> {
 	private holidays: Holidays = new Holidays("RU");
@@ -110,8 +111,42 @@ export interface TimesheetEditor extends BaseEntityEditor {
 export function useTimesheetEditor(table: TimesheetTable) {
 	const service = new EntityService<WorkTimeSchema>("worktime");
 
-	const onUpdate = async (worktime: WorkTimeSchema) => {};
-	const onCreate = async (worktime: WorkTimeSchema) => {};
+	const onUpdate = async (worktime: WorkTimeSchema) => {
+		if (editor.currentModel.value === undefined) return;
+
+		for (const fieldName in worktime) {
+			(editor.currentModel.value as any)[fieldName] = (worktime as any)[
+				fieldName
+			];
+		}
+
+		editor.loading.value = true;
+
+		// Передавать все данные с таблицы
+		await service
+			.updateEntity(editor.currentModel.value)
+			.then(() => {
+				editor.loading.value = false;
+				table.forceRefresh();
+			})
+			.catch(() => {
+				editor.loading.value = false;
+				toast.error("Запись обновилась с ошибкой.");
+			});
+	};
+	const onCreate = async (worktime: WorkTimeSchema) => {
+		editor.loading.value = true;
+		await service
+			.createEntity(worktime)
+			.then(() => {
+				editor.loading.value = false;
+				table.forceRefresh();
+			})
+			.catch(() => {
+				editor.loading.value = false;
+				toast.error("Запись создалась с ошибкой.");
+			});
+	};
 
 	const editor = useEntityEditor(
 		getWorktimeEditorFields(),
@@ -121,7 +156,7 @@ export function useTimesheetEditor(table: TimesheetTable) {
 		onCreate,
 	);
 
-	const edit = (rowIndex: number, cellIndex: number) => {
+	const edit = async (rowIndex: number, cellIndex: number) => {
 		const model = table.getModel(rowIndex);
 		const fieldName = table.getFieldName(cellIndex);
 
@@ -134,7 +169,16 @@ export function useTimesheetEditor(table: TimesheetTable) {
 
 		const worktime_id = (shift_duration as ShiftDurationSchema).worktime_id;
 
-		console.log(worktime_id);
+		editor.loading.value = true;
+		const worktime = await service.getEntityByID(worktime_id);
+
+		if (worktime === undefined) {
+			toast.error("Явка загрузилась с ошибкой.");
+			return;
+		}
+
+		editor.loading.value = false;
+		editor.edit(worktime);
 	};
 
 	return {
@@ -147,6 +191,7 @@ export function useTimesheetEditor(table: TimesheetTable) {
 		title: editor.title,
 		mode: editor.mode,
 		showCustom: editor.showCustom,
+		loading: editor.loading,
 	};
 }
 

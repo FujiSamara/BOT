@@ -9,6 +9,7 @@ import ColumnFilter from "@/components/table/tools/ColumnFilter.vue";
 import SearchFilter from "@/components/table/tools/SearchFilter.vue";
 import ExportToExcel from "@/components/table/tools/ExportToExcel.vue";
 import DateFilter from "@/components/table/tools/DateFilter.vue";
+import CreateButton from "@/components/UI-new/CreateButton.vue";
 import RowEditor from "@/components/entity/EntityEditor.vue";
 
 import { setupTimesheet, TimesheetTable } from "@/pages/panels/timesheet";
@@ -34,6 +35,7 @@ const filtersExist = computed(
 		<div class="toolbar">
 			<div class="tb-outer-group">
 				<div class="tb-group">
+					<CreateButton @click="setup.rowEditor.create()"></CreateButton>
 					<SearchInput
 						v-for="(search, index) in setup.searchList"
 						:style="search.style"

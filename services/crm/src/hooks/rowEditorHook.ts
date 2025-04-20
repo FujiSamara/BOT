@@ -70,5 +70,6 @@ export function useRowEditor<S extends BaseSchema, T extends Table<S>>(
 		modelIndex,
 		table,
 		showCustom: editor.showCustom,
+		loading: editor.loading,
 	};
 }
