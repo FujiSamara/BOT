@@ -98,7 +98,9 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
     }
 
     if hasattr(record, "work_end") and record.work_end is not None:
-        dump["work_end"] = record.work_end.strftime(settings.date_time_format)
+        dump["work_end"] = record.work_end.strftime(
+            day_format + " " + settings.time_format
+        )
     if hasattr(record, "work_duration") and record.work_duration is not None:
         dump["work_duration"] = record.work_duration
     if hasattr(record, "salary") and record.salary is not None:
