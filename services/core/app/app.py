@@ -8,9 +8,9 @@ from app.middlewares.setup import setup_core_middlewares
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(docs_url=None, redoc_url=None)
+    app = FastAPI(lifespan=global_lifespan, docs_url=None, redoc_url=None)
 
-    # bot.create(app)
+    bot.create(app)
     admin.create(app)
     api.create(app)
 
