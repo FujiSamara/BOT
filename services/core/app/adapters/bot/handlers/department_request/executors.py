@@ -105,6 +105,12 @@ class CoordinationFactory:
             self.show_history_menu, F.data == self.history_button.callback_data
         )
         router.callback_query.register(
+            self.show_history_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.history_button.callback_data
+            ),
+        )
+        router.callback_query.register(
             self.show_history_form,
             ShowRequestCallbackData.filter(
                 F.end_point == f"{self.name}_show_history_form"
@@ -112,6 +118,13 @@ class CoordinationFactory:
         )
         router.callback_query.register(
             self.show_waiting_menu, F.data == self.waiting_button.callback_data
+        )
+
+        router.callback_query.register(
+            self.show_waiting_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.waiting_button.callback_data
+            ),
         )
         router.callback_query.register(
             self.show_waiting_form,
@@ -133,6 +146,12 @@ class CoordinationFactory:
         )
         router.callback_query.register(
             self.show_rework_menu, F.data == self.rework_button.callback_data
+        )
+        router.callback_query.register(
+            self.show_rework_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.rework_button.callback_data
+            ),
         )
         router.callback_query.register(
             self.show_rework_form,
@@ -206,17 +225,16 @@ class CoordinationFactory:
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
-                reply_markup = (
-                    department_kb.create_kb_with_end_point_TR(
-                        end_point=f"{self.name}_show_history_form",
-                        menu_button=self.menu_button,
-                        requests=get_all_history_technical_requests_for_repairman(
-                            telegram_id=callback.message.chat.id,
-                            department_name=department_name,
-                        ),
+                reply_markup = department_kb.create_kb_with_end_point_TR(
+                    end_point=f"{self.name}_show_history_form",
+                    menu_button=self.menu_button,
+                    requests=get_all_history_technical_requests_for_repairman(
+                        telegram_id=callback.message.chat.id,
+                        department_name=department_name,
                         page=callback_data.page,
-                        menu_endpoint=self.history_button.callback_data,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.history_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -225,9 +243,10 @@ class CoordinationFactory:
                     requests=get_all_history_cleaning_requests_for_cleaner(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
                     page=callback_data.page,
-                    menu_endpoint=self.history_button.callback_data,
+                    requests_endpoint=self.history_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -291,9 +310,10 @@ class CoordinationFactory:
                     requests=get_all_waiting_cleaning_requests_for_cleaner(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
                     page=callback_data.page,
-                    menu_endpoint=self.waiting_button.callback_data,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case _:
                 reply_markup = []

@@ -955,25 +955,29 @@ def create_kb_with_end_point_TR(
                 ]
             )
     finally:
-        if len(buttons) == 15:
+        if len(buttons) == 1:
             buttons.append(
-                InlineKeyboardButton(
-                    text="Следующая страница",
-                    callback_data=PageCallbackData(
-                        page=page + 1,
-                        requests_endpoint=requests_endpoint,
-                    ).pack(),
-                )
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=PageCallbackData(
+                            page=page + 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
             )
         if page > 0:
             buttons.append(
-                InlineKeyboardButton(
-                    text="Предыдущая страница",
-                    callback_data=PageCallbackData(
-                        page=page - 1,
-                        requests_endpoint=requests_endpoint,
-                    ).pack(),
-                )
+                [
+                    InlineKeyboardButton(
+                        text="Предыдущая страница",
+                        callback_data=PageCallbackData(
+                            page=page - 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
             )
         buttons.append([menu_button])
         return InlineKeyboardMarkup(inline_keyboard=buttons)
@@ -1004,23 +1008,27 @@ def create_kb_with_end_point_CR(
     finally:
         if len(buttons) == 1:
             buttons.append(
-                InlineKeyboardButton(
-                    text="Следующая страница",
-                    callback_data=PageCallbackData(
-                        page=page + 1,
-                        requests_endpoint=requests_endpoint,
-                    ).pack(),
-                )
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=PageCallbackData(
+                            page=page + 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
             )
         if page > 0:
             buttons.append(
-                InlineKeyboardButton(
-                    text="Предыдущая страница",
-                    callback_data=PageCallbackData(
-                        page=page - 1,
-                        requests_endpoint=requests_endpoint,
-                    ).pack(),
-                )
+                [
+                    InlineKeyboardButton(
+                        text="Предыдущая страница",
+                        callback_data=PageCallbackData(
+                            page=page - 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
             )
         buttons.append([menu_button])
         return InlineKeyboardMarkup(inline_keyboard=buttons)

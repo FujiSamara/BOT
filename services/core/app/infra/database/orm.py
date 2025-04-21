@@ -1326,7 +1326,7 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 def get_technical_requests_by_columns(
     columns: list[Any],
     values: list[Any],
-    offset: int,
+    offset: int = 0,
     history: bool = False,
     limit: int = 15,
 ) -> list[TechnicalRequestSchema]:
@@ -1417,7 +1417,7 @@ def get_rework_tech_request(
 
 
 def get_technical_requests_for_repairman_history(
-    repairman_id: int, department_id: int, limit: int = 15
+    repairman_id: int, department_id: int, offset: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -1434,8 +1434,9 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
+            .order_by(TechnicalRequest.id.desc())
+            .offset(offset)
             .limit(limit)
-            .order_by(TechnicalRequest.id.desc)
             .all()
         )
         return [
@@ -3136,6 +3137,7 @@ def get_last_cleaning_requests_by_columns(
     or_col: list[Any] = [],
     or_val: list[Any] = [],
     limit: int = 15,
+    offset: int = 0,
 ) -> list[CleaningRequestSchema]:
     with session.begin() as s:
         stmt = select(CleaningRequest)
@@ -3150,7 +3152,10 @@ def get_last_cleaning_requests_by_columns(
 
         cl_reqs = (
             s.execute(
-                stmt.filter(or_filter).limit(limit).order_by(CleaningRequest.id.desc())
+                stmt.filter(or_filter)
+                .limit(limit)
+                .offset(offset)
+                .order_by(CleaningRequest.id.desc())
             )
             .scalars()
             .all()

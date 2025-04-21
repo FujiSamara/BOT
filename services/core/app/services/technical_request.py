@@ -719,7 +719,7 @@ def get_all_rework_technical_requests_for_repairman(
 
 
 def get_all_waiting_technical_requests_for_appraiser(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, limit: int = 15, page: int = 0
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for appraiser
@@ -748,6 +748,7 @@ def get_all_waiting_technical_requests_for_appraiser(
                     department_id,
                 ],
                 limit=limit,
+                offset=page * limit,
             )
 
             return requests
@@ -773,7 +774,7 @@ def get_all_active_technical_requests_for_department_director(
 
 
 def get_all_history_technical_requests_for_repairman(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for repairman
@@ -791,14 +792,17 @@ def get_all_history_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_for_repairman_history(
-                repairman.id, department_id, limit=limit
+                repairman_id=repairman.id,
+                department_id=department_id,
+                offset=page * limit,
+                limit=limit,
             )
 
             return requests
 
 
 def get_all_history_technical_requests_for_appraiser(
-    tg_id: int, department_name: str, limit: int = 15
+    tg_id: int, department_name: str, limit: int = 15, page: int = 0
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for appraiser
@@ -824,6 +828,7 @@ def get_all_history_technical_requests_for_appraiser(
                 ],
                 history=True,
                 limit=limit,
+                offset=page * limit,
             )
 
             return requests
