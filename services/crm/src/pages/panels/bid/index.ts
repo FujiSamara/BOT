@@ -57,10 +57,28 @@ export class BidTable extends Table<BidSchema> {
 	}) {
 		super("bid", options);
 
-		this._pathOptions.approveExtraPath =
+		const pathOptions = new BidPathOptions();
+
+		//#region endpoints
+		pathOptions.getExtraPath =
+			options && options.getEndpoint ? options.getEndpoint : "";
+		pathOptions.getInfoExtraPath =
+			options && options.infoEndpoint ? options.infoEndpoint : "";
+		pathOptions.createExtraPath =
+			options && options.createEndpoint ? options.createEndpoint : "";
+		pathOptions.updateExtraPath =
+			options && options.updateEndpoint ? options.updateEndpoint : "";
+		pathOptions.deleteExtraPath =
+			options && options.deleteEndpoint ? options.deleteEndpoint : "";
+		pathOptions.exportExtraPath =
+			options && options.exportEndpoint ? options.exportEndpoint : "";
+		pathOptions.approveExtraPath =
 			options && options.approveEndpoint ? options.approveEndpoint : "";
-		this._pathOptions.rejectExtraPath =
+		pathOptions.rejectExtraPath =
 			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		//#endregion
+
+		this._pathOptions = pathOptions;
 
 		this._service = new BidService("bid", this._pathOptions);
 
