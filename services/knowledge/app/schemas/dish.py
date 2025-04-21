@@ -7,6 +7,7 @@ class DishSchema(BaseSchema):
     title: str
     description: str
     image: str
+    materials_count: int
 
 
 class IngredientSchema(BaseSchema):
