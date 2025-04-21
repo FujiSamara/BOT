@@ -1669,8 +1669,19 @@ def get_timesheets(
 ) -> list[TimeSheetSchema]:
     with session.begin() as s:
         local = pytz.timezone(settings.timezone)
-        start = local.localize(query_schema.date_query.start)
-        end = local.localize(query_schema.date_query.end)
+
+        start = (
+            query_schema.date_query.start.astimezone(local)
+            if query_schema.date_query.start.tzinfo
+            else local.localize(query_schema.date_query.start)
+        )
+
+        end = (
+            query_schema.date_query.end.astimezone(local)
+            if query_schema.date_query.end.tzinfo
+            else local.localize(query_schema.date_query.end)
+        )
+
         query_schema.date_query = None
 
         if query_schema.order_by_query:
