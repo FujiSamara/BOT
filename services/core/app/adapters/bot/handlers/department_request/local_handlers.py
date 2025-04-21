@@ -1,17 +1,17 @@
 from aiogram import Router, F
-from app.adapters.bot.handlers.department_request.utils import send_photos
-from app.adapters.bot.handlers.department_request.schemas import (
-    ShowRequestCallbackData,
-    RequestType,
-)
 from aiogram.types import (
     CallbackQuery,
-    InputMediaDocument,
-    BufferedInputFile,
 )
 from aiogram.fsm.context import FSMContext
 
 from app.services import get_technical_request_by_id, get_cleaning_request_by_id
+from app.adapters.bot.handlers.department_request.utils import (
+    send_many_docs,
+)
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    RequestType,
+)
 
 router = Router()
 
@@ -20,22 +20,14 @@ router = Router()
 async def technical_problem_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_technical_request_by_id(callback_data.request_id)
-    for photo in request.problem_photos:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await photo.document.read(), filename=photo.document.filename
-                )
-            )
-        )
-    await send_photos(
+    await send_many_docs(
+        request=request,
+        doc_type="problem_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=False,
     )
 
 
@@ -43,24 +35,14 @@ async def technical_problem_documents(
 async def repair_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_technical_request_by_id(callback_data.request_id)
-    for photo in request.repair_photos:
-        if "_reopen_" not in photo.document.filename:
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=await photo.document.read(),
-                        filename=photo.document.filename,
-                    )
-                )
-            )
-    await send_photos(
+    await send_many_docs(
+        request=request,
+        doc_type="repair_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=False,
     )
 
 
@@ -70,22 +52,15 @@ async def repair_documents(
 async def cleaning_problem_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_cleaning_request_by_id(callback_data.request_id)
-    for photo in request.problem_photos:
-        media.append(
-            InputMediaDocument(
-                media=BufferedInputFile(
-                    file=await photo.document.read(), filename=photo.document.filename
-                )
-            )
-        )
-    await send_photos(
+
+    await send_many_docs(
+        request=request,
+        doc_type="problem_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=False,
     )
 
 
@@ -95,24 +70,15 @@ async def cleaning_problem_documents(
 async def cleaning_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_cleaning_request_by_id(callback_data.request_id)
-    for photo in request.cleaning_photos:
-        if "_reopen_" not in photo.document.filename:
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=await photo.document.read(),
-                        filename=photo.document.filename,
-                    )
-                )
-            )
-    await send_photos(
+
+    await send_many_docs(
+        request=request,
+        doc_type="cleaning_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=False,
     )
 
 
@@ -122,24 +88,15 @@ async def cleaning_documents(
 async def reopen_repair_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_technical_request_by_id(callback_data.request_id)
-    for photo in request.repair_photos:
-        if "_reopen_" in photo.document.filename:
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=await photo.document.read(),
-                        filename=photo.document.filename,
-                    )
-                )
-            )
-    await send_photos(
+
+    await send_many_docs(
+        request=request,
+        doc_type="repair_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=True,
     )
 
 
@@ -151,22 +108,13 @@ async def reopen_repair_documents(
 async def cleaning_reopen_documents(
     callback: CallbackQuery, state: FSMContext, callback_data: ShowRequestCallbackData
 ):
-    media: list[InputMediaDocument] = []
     request = get_cleaning_request_by_id(callback_data.request_id)
-    for photo in request.cleaning_photos:
-        if "_reopen_" in photo.document.filename:
-            media.append(
-                InputMediaDocument(
-                    media=BufferedInputFile(
-                        file=await photo.document.read(),
-                        filename=photo.document.filename,
-                    )
-                )
-            )
-    await send_photos(
+
+    await send_many_docs(
+        request=request,
+        doc_type="cleaning_photos",
         callback=callback,
         state=state,
         callback_data=callback_data,
-        media=media,
-        request_id=request.id,
+        reopen=True,
     )
