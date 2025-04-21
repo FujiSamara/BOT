@@ -137,6 +137,7 @@ export const useNetworkStore = defineStore("network", {
 		async getFile(filename: string): Promise<Uint8Array> {
 			return this.getFileByURL(
 				`${config.coreURL}/${config.filesEndpoint}?name=${filename}`,
+				true,
 			);
 		},
 		async getFileByURL(href: string, withAuth?: boolean): Promise<Uint8Array> {
