@@ -48,7 +48,7 @@ class TaskScheduler:
     async def run_tasks(self):
         self.logger.info("Running tasks.")
         for task_data in self.tasks:
-            asyncio.create_task(self._run_task(task_data))
+            task_data.task = asyncio.create_task(self._run_task(task_data))
         self.logger.info("Running tasks are completed.")
 
     async def _run_task(self, task_data: _Task):
@@ -76,18 +76,40 @@ class TaskScheduler:
         )
 
         try:
-            task_data.task = asyncio.create_task(task_data.callback())
+            return task_data.callback()
         except Exception as e:
             self.logger.error(f"Task {task_data.name} was not started: {e}")
 
     async def stop_tasks(self):
         self.logger.info("Termination tasks.")
+
         for running_task in self.tasks:
+            if running_task.task is None:
+                self.logger.info(
+                    f"The time of the task [{running_task.name}] has not arrived. The task is not running."
+                )
+                continue
+
+            if running_task.task.done():
+                self.logger.info(f"Task [{running_task.name}] has already completed.")
+                continue
+
+            self.logger.info(f"Cancelling task: {running_task.name}")
+            running_task.task.cancel()
+
             try:
-                running_task.task.cancel()
                 await running_task.task
+
+            except asyncio.CancelledError:
+                self.logger.info(
+                    f"Task [{running_task.name}] was successfully cancelled."
+                )
+
             except Exception as e:
-                self.logger.error(f"Task didn't stopped: {e}")
+                self.logger.error(
+                    f"Error while stopping task [{running_task.name}]: {e}",
+                    exc_info=True,
+                )
         self.logger.info("Termination tasks are completed.")
 
 

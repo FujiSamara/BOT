@@ -295,8 +295,8 @@ def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
             s.execute(
                 select(Bid)
                 .filter(Bid.worker_id == worker.id)
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -466,8 +466,8 @@ def get_specified_history_bids(pending_column, limit: int) -> list[BidSchema]:
                         pending_column == ApprovalStatus.approved,
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -501,8 +501,8 @@ def get_specified_history_bids_in_department(tg_id: int, limit: int) -> list[Bid
                         Bid.paying_department_id == department_id,
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -546,8 +546,8 @@ def get_history_bids_for_cc_fac(tg_id: int, limit) -> list[BidSchema]:
                         ),
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -1429,8 +1429,8 @@ def get_technical_requests_for_repairman_history(
                     TechnicalRequest.department_id == department_id,
                 )
             )
+            .order_by(TechnicalRequest.id.desc())
             .limit(limit)
-            .order_by(TechnicalRequest.id.desc)
             .all()
         )
         return [
@@ -3189,8 +3189,8 @@ def get_all_rework_cleaning_requests_for_cleaner(
                     CleaningRequest.state == ApprovalStatus.pending,
                     CleaningRequest.reopen_date != null(),
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -3249,8 +3249,8 @@ def get_all_history_cleaning_requests_for_worker(
                     CleaningRequest.state != ApprovalStatus.pending_approval,
                     CleaningRequest.state != ApprovalStatus.pending,
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -3272,8 +3272,8 @@ def get_all_waiting_cleaning_requests_for_worker(
                     CleaningRequest.worker_id == worker_id,
                     CleaningRequest.close_date == null(),
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
