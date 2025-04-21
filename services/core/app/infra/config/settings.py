@@ -36,6 +36,8 @@ class Settings(PostgreSQLSettings, BotSettings, SecuritySettings):
     date_time_format: str = "%d.%m.%Y %H:%M:%S"
     time_format: str = "%H:%M:%S"
 
+    timezone: str = Field(validation_alias="TZ", default="UTC")
+
 
 def _generate() -> Settings:
     """Generates settings of app."""

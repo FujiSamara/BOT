@@ -5,10 +5,12 @@ from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect, update
+import pytz
 
 from app.infra.database.query import QueryBuilder
 from app.adapters.output.file.export import XlSXWriterExporter
 from app.infra.database.database import Base, engine, session
+from app.infra.config import settings
 from app.infra.database.models import (
     Bid,
     BidCoordinator,
@@ -1662,8 +1664,9 @@ def get_timesheets(
     records_per_page: int | None = None,
 ) -> list[TimeSheetSchema]:
     with session.begin() as s:
-        start = query_schema.date_query.start
-        end = query_schema.date_query.end
+        local = pytz.timezone(settings.timezone)
+        start = local.localize(query_schema.date_query.start)
+        end = local.localize(query_schema.date_query.end)
         query_schema.date_query = None
 
         if query_schema.order_by_query:
