@@ -1,6 +1,4 @@
 from typing import Optional
-from app.adapters.bot.states import Base
-from app.infra.config import settings
 
 from aiogram.types import (
     CallbackQuery,
@@ -8,13 +6,26 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     Message,
+    BufferedInputFile,
 )
 from aiogram.fsm.context import FSMContext
 from aiogram.utils.markdown import hbold
 
+from app.infra.config import settings
 from app.adapters.bot import text
+from app.adapters.bot.states import Base
+from app.adapters.bot.kb import (
+    create_inline_keyboard,
+    create_reply_keyboard,
+    main_menu_button,
+)
+from app.adapters.bot.handlers.utils import (
+    try_delete_message,
+    try_edit_or_answer,
+)
 
 from app.infra.database.models import ApprovalStatus
+
 from app.services.technical_request import (
     get_technical_request_by_id,
     get_request_count_in_departments_by_tg_id,
@@ -22,21 +33,13 @@ from app.services.technical_request import (
 )
 from app.services.cleaning_request import get_cleaning_request_by_id
 
-from app.adapters.bot.handlers.utils import (
-    try_delete_message,
-    try_edit_or_answer,
-)
-from app.adapters.bot.kb import (
-    create_inline_keyboard,
-    create_reply_keyboard,
-    main_menu_button,
-)
+
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
     RequestType,
 )
 
-from app.schemas import DepartmentSchema
+from app.schemas import DepartmentSchema, TechnicalRequestSchema, CleaningRequestSchema
 
 
 def get_departments_names_executor(
@@ -369,30 +372,6 @@ async def show_form_cleaning(
         await try_edit_or_answer(message=message, text=text_form, reply_markup=keyboard)
 
 
-async def send_photos(
-    callback: CallbackQuery,
-    state: FSMContext,
-    callback_data: ShowRequestCallbackData,
-    media: list[InputMediaDocument],
-    request_id: int,
-):
-    await try_delete_message(callback.message)
-    msgs = await callback.message.answer_media_group(media=media)
-    await state.update_data(msgs=msgs)
-    await msgs[0].reply(
-        text=hbold("Выберите действие:"),
-        reply_markup=create_inline_keyboard(
-            InlineKeyboardButton(
-                text=text.back,
-                callback_data=ShowRequestCallbackData(
-                    request_id=request_id,
-                    end_point=callback_data.last_end_point,
-                ).pack(),
-            )
-        ),
-    )
-
-
 async def handle_department(
     message: Message,
     state: FSMContext,
@@ -459,3 +438,52 @@ def department_names_with_count(
 
         out_department_names.sort(reverse=True)
     return out_department_names
+
+
+async def send_many_docs(
+    request: TechnicalRequestSchema | CleaningRequestSchema,
+    doc_type: str,
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: ShowRequestCallbackData,
+    reopen: bool = False,
+) -> list[Message]:
+    await try_delete_message(callback.message)
+
+    msgs: list[Message] = []
+    photos = [
+        photo
+        for photo in getattr(request, doc_type)
+        if ("_reopen_" in photo.document.filename) == reopen
+    ]
+    docs_len = len(photos)
+
+    for iteration in range(docs_len // 10 + (1 if docs_len % 10 != 0 else 0)):
+        media: list[InputMediaDocument] = []
+        for photo in photos[iteration * 10 : (iteration + 1) * 10]:
+            media.append(
+                InputMediaDocument(
+                    media=BufferedInputFile(
+                        file=await photo.document.read(),
+                        filename=photo.document.filename,
+                    )
+                )
+            )
+
+        msgs += await callback.message.answer_media_group(
+            media=media,
+        )
+    await state.update_data(msgs=msgs)
+
+    await msgs[0].reply(
+        text=hbold("Выберите действие:"),
+        reply_markup=create_inline_keyboard(
+            InlineKeyboardButton(
+                text=text.back,
+                callback_data=ShowRequestCallbackData(
+                    request_id=request.id,
+                    end_point=callback_data.last_end_point,
+                ).pack(),
+            )
+        ),
+    )
