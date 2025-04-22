@@ -8,6 +8,7 @@ import Vue3Toastify, { type ToastContainerOptions } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
 import * as config from "@/config";
 import "@/assets/scss/main.scss";
+import "gridjs/dist/theme/mermaid.css";
 
 const app = createApp(App);
 const pinia = createPinia();
