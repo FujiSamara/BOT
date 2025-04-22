@@ -26,10 +26,7 @@ class CardServiceImpl(CardService):
     async def get_card_materials(self, card_id):
         async with self._uow as uow:
             materials = await uow.card.get_card_materials(card_id)
-            if len(materials) != 0:
-                return await self._file_client.request_get_links(materials)
-            else:
-                return []
+            return await self._file_client.request_get_links(materials)
 
     async def add_card_materials(self, card_id, materials):
         async with self._uow as uow:
