@@ -56,6 +56,12 @@ export interface FileLinkSchema extends BaseSchema {
 	created: string;
 }
 
+export function getExt(fileLink: FileLinkSchema): string {
+	const names = fileLink.name.split(".");
+	const ext = names[names.length - 1];
+	return ext;
+}
+
 export interface DishMaterials {
 	video?: FileLinkSchema;
 	materials: FileLinkSchema[];

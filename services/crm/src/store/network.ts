@@ -134,13 +134,13 @@ export const useNetworkStore = defineStore("network", {
 				return Promise.reject(error);
 			});
 		},
-		async getFile(filename: string): Promise<Uint8Array> {
+		async getFile(filename: string): Promise<Blob> {
 			return this.getFileByURL(
 				`${config.coreURL}/${config.filesEndpoint}?name=${filename}`,
 				true,
 			);
 		},
-		async getFileByURL(href: string, withAuth?: boolean): Promise<Uint8Array> {
+		async getFileByURL(href: string, withAuth?: boolean): Promise<Blob> {
 			let resp;
 			if (withAuth) {
 				resp = await this.withAuthChecking(
@@ -158,7 +158,7 @@ export const useNetworkStore = defineStore("network", {
 				});
 			}
 
-			return resp.data as Uint8Array;
+			return resp.data as Blob;
 		},
 		async downloadFile(filename: string, href?: string) {
 			if (href) {
@@ -167,7 +167,7 @@ export const useNetworkStore = defineStore("network", {
 				this.saveFile(filename, await this.getFile(filename));
 			}
 		},
-		saveFile(filename: string, file: Uint8Array) {
+		saveFile(filename: string, file: Blob) {
 			const fileBlob = new Blob([file], {
 				type: "application/octet-stream",
 			});

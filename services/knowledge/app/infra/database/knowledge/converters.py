@@ -20,9 +20,10 @@ def division_to_subdivision_schema(
     )
 
 
-def card_to_card_schema(card: BusinessCard) -> BusinessCardSchema:
+def card_to_card_schema(card: BusinessCard, *, materials_count=0) -> BusinessCardSchema:
     return BusinessCardSchema(
         id=card.id,
         name=card.name,
         description=card.description,
+        materials_count=materials_count,
     )

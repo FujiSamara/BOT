@@ -15,24 +15,26 @@ class DivisionServiceImpl(DivisionService):
     def __init__(self, full_division_uow: DivisionUnitOfWork):
         self._uow = full_division_uow
 
-    def _business_card_to_division(
+    def _business_card_to_subdivision(
         self, card: BusinessCardSchema, *, division_path: str
-    ) -> DivisionSchema:
-        return DivisionSchema(
+    ):
+        return SubdivisionSchema(
             id=card.id,
             name=card.name,
             type=DivisionType.business,
             path=division_path + "/" + card.name,
+            files_count=card.materials_count,
         )
 
     def _dish_to_division(
         self, dish: DishSchema, *, division_path: str
     ) -> DivisionSchema:
-        return DivisionSchema(
+        return SubdivisionSchema(
             id=dish.id,
             name=dish.title,
             type=DivisionType.dish,
             path=division_path + "/" + dish.title,
+            files_count=dish.materials_count,
         )
 
     async def _try_find_division(self, path: str) -> DivisionSchema | None:
@@ -87,7 +89,7 @@ class DivisionServiceImpl(DivisionService):
             subdivisions = await uow.division.get_subdivisions_by_path(division.path)
 
             business_cards = [
-                self._business_card_to_division(c, division_path=division.path)
+                self._business_card_to_subdivision(c, division_path=division.path)
                 for c in await uow.card.get_by_division_id(division.id)
             ]
             subdivisions.extend(business_cards)
@@ -125,7 +127,7 @@ class DivisionServiceImpl(DivisionService):
             divisions.extend(
                 [
                     SubdivisionSchema.model_validate(
-                        self._business_card_to_division(
+                        self._business_card_to_subdivision(
                             c, division_path=card_divsion_paths[i]
                         )
                     )
