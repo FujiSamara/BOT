@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, PropType } from "vue";
+import { computed, PropType, ref } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import CardMaterials from "@/components/knowledge/CardMaterials.vue";
 import { BusinessCard } from "@/components/knowledge/types";
@@ -12,6 +12,16 @@ const props = defineProps({
 	},
 });
 
+const expanded = ref(false);
+const excelFile = computed(() => {
+	if (props.card.materials === undefined) return;
+
+	return props.card.materials.find((val) => {
+		const names = val.name.split(".");
+		const ext = names[names.length - 1];
+		return ext === "xlsx";
+	});
+});
 const pdfFile = computed(() => {
 	if (props.card.materials === undefined) return;
 
@@ -34,7 +44,17 @@ const pdfFile = computed(() => {
 				v-if="props.card.materials !== undefined && props.card.materials.length"
 				class="materials"
 			>
-				<PDFView v-if="pdfFile" :file="pdfFile"></PDFView>
+				<div class="main-file">
+					<PDFView
+						v-if="pdfFile"
+						:file="pdfFile"
+						:expanded="expanded"
+					></PDFView>
+					<div class="expand" @click="() => (expanded = !expanded)">
+						<span>{{ expanded ? "Свернуть" : "Развернуть" }}</span>
+						<span class="icon" :class="{ reversed: expanded }"></span>
+					</div>
+				</div>
 				<CardMaterials :materials="props.card.materials"></CardMaterials>
 			</footer>
 			<div
@@ -48,16 +68,4 @@ const pdfFile = computed(() => {
 </template>
 <style scoped lang="scss">
 @import url("./style.scss");
-
-.card-wrapper {
-	header {
-		display: flex;
-		flex-direction: column;
-
-		width: 100%;
-		height: fit-content;
-
-		gap: 36px;
-	}
-}
 </style>

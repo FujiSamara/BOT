@@ -7,6 +7,7 @@ import {
 	useTemplateRef,
 	markRaw,
 	onUnmounted,
+	watch,
 } from "vue";
 import {
 	getDocument,
@@ -24,6 +25,9 @@ const props = defineProps({
 	file: {
 		type: Object as PropType<FileLinkSchema>,
 		required: true,
+	},
+	expanded: {
+		type: Boolean,
 	},
 });
 
@@ -57,7 +61,7 @@ const renderDocument = async () => {
 		});
 
 		canvas.width = wrapper.offsetWidth;
-		if (pdfExpanded.value) {
+		if (props.expanded) {
 			canvas.height = viewport.height;
 		} else {
 			canvas.height =
@@ -94,7 +98,7 @@ const renderDocument = async () => {
 const normalizeParentHeight = async () => {
 	if (!canvaParent.value) return;
 
-	if (pdfExpanded.value) {
+	if (props.expanded) {
 		canvaParent.value.style.height = `${fullHeight.value}px`;
 	} else {
 		const height = Math.min(480, firstPageHeight.value);
@@ -108,15 +112,13 @@ const loadFile = async () => {
 	ready.value = true;
 };
 
-const pdfExpanded = ref(false);
 const expand = async () => {
 	if (!canvaParent.value) return;
-
-	pdfExpanded.value = !pdfExpanded.value;
 
 	await renderDocument();
 	normalizeParentHeight();
 };
+watch(() => props.expanded, expand);
 
 let resizeTimeout: number = setTimeout(() => {}, 0);
 const onResize = async () => {
@@ -156,19 +158,12 @@ onUnmounted(() => {
 				<PulseSpinner class="spinner"></PulseSpinner>
 			</div>
 		</Transition>
-		<div class="expand" @click="expand">
-			<span>{{ pdfExpanded ? "Свернуть" : "Развернуть" }}</span>
-			<span class="icon" :class="{ reversed: pdfExpanded }"></span>
-		</div>
 	</div>
 </template>
 <style scoped lang="scss">
 .pdf-wrapper {
 	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	gap: 16px;
+	width: 100%;
 
 	.canva-wrapper {
 		display: flex;
@@ -194,50 +189,6 @@ onUnmounted(() => {
 			height: 128px;
 
 			color: $main-accent-blue;
-		}
-	}
-
-	.expand {
-		display: flex;
-		flex-direction: row;
-		align-items: center;
-
-		gap: 10px;
-
-		cursor: pointer;
-		color: $main-dark-gray;
-
-		span {
-			position: relative;
-			display: inline-block;
-
-			font-family: Wix Madefor Display;
-			font-weight: 500;
-			font-size: 16px;
-
-			&::after {
-				content: "";
-				position: absolute;
-				left: 0;
-				bottom: 0;
-				opacity: 0;
-				height: 1px;
-				width: 100%;
-				background-color: currentColor;
-				transition: opacity 0.25s;
-			}
-		}
-
-		&:hover span::after {
-			opacity: 1;
-		}
-
-		.icon {
-			@include arrow();
-
-			transition:
-				transform 0.25s,
-				opacity 0.5s ease;
 		}
 	}
 }
