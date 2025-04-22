@@ -20,6 +20,8 @@ class HTTPFileClient(RemoteFileClient):
 
     @retry()
     async def request_put_links(self, files, expiration=3600):
+        if len(files) == 0:
+            return []
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
             json = [file.model_dump() for file in files]
@@ -39,6 +41,8 @@ class HTTPFileClient(RemoteFileClient):
 
     @retry()
     async def request_get_links(self, ids, expiration=3600):
+        if len(ids) == 0:
+            return []
         authorization_header = await self._auth_client.get_authorization_header()
         async with aiohttp.ClientSession() as session:
             params = "&".join([f"ids={id}" for id in ids])
