@@ -252,7 +252,7 @@ async def show_rework_menu(
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Заявки на доработку")
+        text=hbold("Заявки на доработку")
         + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_rework",
