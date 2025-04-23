@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_
+from sqlalchemy import ColumnElement, func, select, and_
 
 from common.sql.repository import SQLBaseRepository
 from app.contracts.repositories import CardRepository
@@ -7,38 +7,50 @@ from app.infra.database.knowledge.models import BusinessCard, BusinessCardMateri
 
 
 class SQLCardRepository(CardRepository, SQLBaseRepository):
-    async def get_by_id(self, id):
-        s = select(BusinessCard).where(BusinessCard.id == id)
-
-        card = (await self._session.execute(s)).scalars().first()
-        if card is None:
-            return None
-
-        return converters.card_to_card_schema(card)
-
-    async def get_by_division_id(self, id):
-        s = select(BusinessCard).where(BusinessCard.division_id == id)
-
-        cards = (await self._session.execute(s)).scalars().all()
-
-        return [converters.card_to_card_schema(c) for c in cards]
-
-    async def get_by_division_id_with_name(self, id, name):
-        s = select(BusinessCard).where(
-            and_(BusinessCard.division_id == id, BusinessCard.name == name)
+    async def _get_by_criteria(self, element: ColumnElement) -> list[BusinessCard]:
+        s = select(BusinessCard).where(element)
+        s_files = (
+            select(
+                BusinessCard.id, func.coalesce(func.count(BusinessCardMaterial.id), 0)
+            )
+            .join(BusinessCardMaterial, BusinessCard.id == BusinessCardMaterial.card_id)
+            .group_by(BusinessCard.id)
+            .where(element)
         )
 
-        card = (await self._session.execute(s)).scalars().first()
-        if card is None:
-            return None
+        cards = (await self._session.execute(s)).scalars().all()
+        card_files = (await self._session.execute(s_files)).all()
 
-        return converters.card_to_card_schema(card)
+        card_files_dict = {card_id: files_count for card_id, files_count in card_files}
+
+        return [
+            converters.card_to_card_schema(
+                card, materials_count=card_files_dict.get(card.id, 0)
+            )
+            for card in cards
+        ]
+
+    async def get_by_id(self, id):
+        cards = await self._get_by_criteria(BusinessCard.id == id)
+        if len(cards) == 0:
+            return
+
+        return cards[0]
+
+    async def get_by_division_id(self, id):
+        return await self._get_by_criteria(BusinessCard.division_id == id)
+
+    async def get_by_division_id_with_name(self, id, name):
+        cards = await self._get_by_criteria(
+            and_(BusinessCard.division_id == id, BusinessCard.name == name)
+        )
+        if len(cards) == 0:
+            return
+
+        return cards[0]
 
     async def find_by_name(self, term):
-        s = select(BusinessCard).where(BusinessCard.name.ilike(f"%{term}%"))
-        cards = (await self._session.execute(s)).scalars().all()
-
-        return [converters.card_to_card_schema(c) for c in cards]
+        return await self._get_by_criteria(BusinessCard.name.ilike(f"%{term}%"))
 
     async def get_card_materials(self, card_id):
         s = select(BusinessCardMaterial.external_id).where(

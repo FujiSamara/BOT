@@ -7,10 +7,11 @@ import EntitySelect from "@/components/entity/EntitySelect.vue";
 import { RowEditor } from "@/hooks/rowEditorHook";
 import { BidSchema } from "@/types";
 import { SelectType, StringInputEntity } from "@/components/entity";
+import { BidTable } from "@/pages/panels/bid";
 
 const props = defineProps({
 	editor: {
-		type: Object as PropType<RowEditor<BidSchema>>,
+		type: Object as PropType<RowEditor<BidSchema, BidTable>>,
 		required: true,
 	},
 });

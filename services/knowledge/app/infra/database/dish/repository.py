@@ -1,4 +1,4 @@
-from sqlalchemy import select, and_, func
+from sqlalchemy import ColumnElement, select, and_, func
 
 
 from common.sql.repository import SQLBaseRepository
@@ -11,9 +11,31 @@ from app.infra.database.dish.models import (
     TTKIngredient,
 )
 from app.infra.database.knowledge.models import DishDivision, DishMaterial
+from app.schemas.dish import DishSchema
 
 
 class SQLDishRepository(DishRepository, SQLBaseRepository):
+    async def _get_by_criteria(self, element: ColumnElement) -> list[DishSchema]:
+        s = select(TTKProduct).where(element)
+        s_ids = select(TTKProduct.id).where(element)
+        product_ids = (await self._session.execute(s_ids)).scalars().all()
+        s_files = (
+            select(DishMaterial.dish_id, func.coalesce(func.count(DishMaterial.id), 0))
+            .group_by(DishMaterial.dish_id)
+            .where(DishMaterial.dish_id.in_(product_ids))
+        )
+
+        dishes = (await self._session.execute(s)).scalars().all()
+        dishes_id = (await self._session.execute(s_files)).all()
+        dish_files_dict = {dish_id: files_count for dish_id, files_count in dishes_id}
+
+        return [
+            converters.product_to_dish_schema(
+                dish, materials_count=dish_files_dict.get(dish.id, 0)
+            )
+            for dish in dishes
+        ]
+
     async def _get_dish_division_ids(self, id) -> list[int]:
         dish_divisions = select(DishDivision.dish_id).where(
             DishDivision.division_id == id
@@ -23,22 +45,18 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
 
     async def get_by_division_id(self, id):
         dish_divisions = await self._get_dish_division_ids(id)
-        s = select(TTKProduct).where(TTKProduct.id.in_(dish_divisions))
-
-        dishes = (await self._session.execute(s)).scalars().all()
-        return [converters.product_to_dish_schema(d) for d in dishes]
+        return await self._get_by_criteria(TTKProduct.id.in_(dish_divisions))
 
     async def get_by_division_id_with_name(self, id, title):
         dish_divisions = await self._get_dish_division_ids(id)
-        s = select(TTKProduct).where(
+        dishes = await self._get_by_criteria(
             and_(TTKProduct.id.in_(dish_divisions), TTKProduct.title == title)
         )
 
-        dish = (await self._session.execute(s)).scalars().first()
-        if dish is None:
-            return None
+        if len(dishes) == 0:
+            return
 
-        return converters.product_to_dish_schema(dish)
+        return dishes[0]
 
     async def get_modifiers(self, product_id):
         modifiers_count = (
@@ -105,19 +123,14 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         ]
 
     async def get_by_id(self, id):
-        s = select(TTKProduct).where(TTKProduct.id == id)
+        dishes = await self._get_by_criteria(TTKProduct.id == id)
+        if len(dishes) == 0:
+            return
 
-        dish = (await self._session.execute(s)).scalars().first()
-        if dish is None:
-            return None
-
-        return converters.product_to_dish_schema(dish)
+        return dishes[0]
 
     async def find_by_title(self, term):
-        s = select(TTKProduct).where(TTKProduct.title.ilike(f"%{term}%"))
-        dishes = (await self._session.execute(s)).scalars().all()
-
-        return [converters.product_to_dish_schema(d) for d in dishes]
+        return await self._get_by_criteria(TTKProduct.title.ilike(f"%{term}%"))
 
     async def get_dish_materials(self, product_id):
         s_materials = select(DishMaterial.external_id).where(

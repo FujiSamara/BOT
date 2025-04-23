@@ -135,7 +135,7 @@ const knowledge: Array<PanelData> = [
 	{
 		label: "Маркетинг",
 		routeName: "knowledge-marketing",
-		iconURL: "/img/bag.svg",
+		iconURL: "/img/megaphone.svg",
 		active: false,
 		name: "marketing",
 		accesses: [Access.MarketingRead],

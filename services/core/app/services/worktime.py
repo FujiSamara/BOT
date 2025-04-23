@@ -91,12 +91,16 @@ def dump_worktime(record: WorkTimeSchema) -> dict:
         "company_id": record.department.company.id,
         "post_id": record.post.id,
         "department_id": record.department.id,
-        "work_begin": record.work_begin.strftime(settings.date_time_format),
+        "work_begin": record.work_begin.strftime(
+            day_format + " " + settings.time_format
+        ),
         "day": record.day.strftime(day_format),
     }
 
     if hasattr(record, "work_end") and record.work_end is not None:
-        dump["work_end"] = record.work_end.strftime(settings.date_time_format)
+        dump["work_end"] = record.work_end.strftime(
+            day_format + " " + settings.time_format
+        )
     if hasattr(record, "work_duration") and record.work_duration is not None:
         dump["work_duration"] = record.work_duration
     if hasattr(record, "salary") and record.salary is not None:
@@ -130,7 +134,7 @@ async def update_worktime(record: WorkTimeSchema) -> None:
             json=dif,
         ) as resp:
             if resp.status >= 400:
-                raise HTTPException(status_code=resp.status)
+                raise HTTPException(status_code=resp.status, detail=resp.reason)
 
 
 async def create_worktime(record: WorkTimeSchema) -> None:

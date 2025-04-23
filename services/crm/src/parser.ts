@@ -3,6 +3,7 @@ import {
 	DocumentSchema,
 	ExpenditureSchema,
 	PostSchema,
+	ShiftDurationSchema,
 	WorkerSchema,
 } from "@types";
 import * as config from "@/config";
@@ -215,9 +216,36 @@ export function capitalize(val: string) {
 
 export function formatFloat(val: number): Cell {
 	if (!val) {
-		return new Cell(new CellLine("0"));
+		return new Cell(new CellLine("0", undefined, config.colors.null));
 	}
 	return new Cell(new CellLine(val.toFixed(2).toString()));
+}
+
+export function formatFloatTime(val: number): Cell {
+	if (!val) {
+		return new Cell(new CellLine("0", undefined, config.colors.null));
+	}
+	const decimal = Math.floor(val);
+	const fraction = val - decimal;
+
+	const formatted = `${decimal}:${Math.floor(fraction * 60)
+		.toString()
+		.padStart(2, "0")}`;
+	return new Cell(new CellLine(formatted));
+}
+
+export function formatShiftDuration(val: number | ShiftDurationSchema): Cell {
+	if (typeof val === "number") {
+		return new Cell(new CellLine("0", undefined, config.colors.null));
+	}
+	return formatFloatTime(val.duration);
+}
+
+export function formatInt(val: number): Cell {
+	if (!val) {
+		return new Cell(new CellLine("0", undefined, config.colors.null));
+	}
+	return new Cell(new CellLine(val.toString()));
 }
 
 export async function fileToDocumentSchema(val: File): Promise<DocumentSchema> {

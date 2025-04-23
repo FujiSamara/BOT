@@ -6,6 +6,7 @@ class BusinessCardSchema(BaseSchema):
 
     name: str
     description: str | None
+    materials_count: int = 0
 
 
 class BusinessCardUpdateSchema(BaseSchema):

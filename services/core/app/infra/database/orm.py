@@ -1,14 +1,16 @@
-from datetime import datetime
+from datetime import datetime, date
 from io import BytesIO
 from typing import Any, Callable, Optional, Type, TypeVar
 from pydantic import BaseModel
 from sqlalchemy.sql.expression import func
 from sqlalchemy.orm import selectinload, Session
 from sqlalchemy import Select, case, null, or_, and_, desc, select, inspect, update
+import pytz
 
 from app.infra.database.query import QueryBuilder
 from app.adapters.output.file.export import XlSXWriterExporter
 from app.infra.database.database import Base, engine, session
+from app.infra.config import settings
 from app.infra.database.models import (
     Bid,
     BidCoordinator,
@@ -64,6 +66,7 @@ from app.schemas import (
     ExpenditureSchema,
     GroupSchema,
     QuerySchema,
+    ShiftDurationSchema,
     TechnicalProblemSchema,
     TechnicalRequestSchema,
     TimeSheetSchema,
@@ -292,8 +295,8 @@ def get_bids_by_worker(worker: WorkerSchema, limit: int) -> list[BidSchema]:
             s.execute(
                 select(Bid)
                 .filter(Bid.worker_id == worker.id)
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -463,8 +466,8 @@ def get_specified_history_bids(pending_column, limit: int) -> list[BidSchema]:
                         pending_column == ApprovalStatus.approved,
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -498,8 +501,8 @@ def get_specified_history_bids_in_department(tg_id: int, limit: int) -> list[Bid
                         Bid.paying_department_id == department_id,
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -543,8 +546,8 @@ def get_history_bids_for_cc_fac(tg_id: int, limit) -> list[BidSchema]:
                         ),
                     )
                 )
-                .limit(limit)
                 .order_by(Bid.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -1674,8 +1677,20 @@ def get_timesheets(
     records_per_page: int | None = None,
 ) -> list[TimeSheetSchema]:
     with session.begin() as s:
-        start = query_schema.date_query.start
-        end = query_schema.date_query.end
+        local = pytz.timezone(settings.timezone)
+
+        start = (
+            query_schema.date_query.start.astimezone(local)
+            if query_schema.date_query.start.tzinfo
+            else local.localize(query_schema.date_query.start)
+        )
+
+        end = (
+            query_schema.date_query.end.astimezone(local)
+            if query_schema.date_query.end.tzinfo
+            else local.localize(query_schema.date_query.end)
+        )
+
         query_schema.date_query = None
 
         if query_schema.order_by_query:
@@ -1694,16 +1709,19 @@ def get_timesheets(
         workers_sel = query_builder.select
         w_sub = workers_sel.subquery()
 
+        # Worker id, worktime id, day, duration
         per_day_sel = (
             select(
                 w_sub.c.id,
+                WorkTime.id,
                 WorkTime.day,
                 func.sum(WorkTime.work_duration).label("hours"),
             )
             .join(w_sub, w_sub.c.id == WorkTime.worker_id)
-            .group_by(w_sub.c.id, WorkTime.day)
+            .group_by(w_sub.c.id, WorkTime.day, WorkTime.id)
             .where(
                 WorkTime.work_duration != null(),
+                WorkTime.work_duration != 0,
                 WorkTime.work_begin != null(),
                 WorkTime.work_end != null(),
                 WorkTime.work_begin >= start,
@@ -1713,11 +1731,13 @@ def get_timesheets(
             .order_by(WorkTime.day)
         )
 
+        # Worker id, total duration, total shifts
         total_sel = (
-            select(w_sub.c.id, func.sum(WorkTime.work_duration))
+            select(w_sub.c.id, func.sum(WorkTime.work_duration), func.count())
             .join(w_sub, w_sub.c.id == WorkTime.worker_id)
             .where(
                 WorkTime.work_duration != null(),
+                WorkTime.work_duration != 0,
                 WorkTime.work_begin != null(),
                 WorkTime.work_end != null(),
                 WorkTime.work_begin >= start,
@@ -1727,21 +1747,24 @@ def get_timesheets(
         )
 
         workers: list[Worker] = s.execute(workers_sel).scalars().all()
-        per_days: list[tuple[int, datetime.date, float]] = s.execute(per_day_sel).all()
+        # Worker id/worktime id/day/duration
+        per_days: list[tuple[int, int, date, float]] = s.execute(per_day_sel).all()
         totals = s.execute(total_sel).all()
 
-        total_dict = {total[0]: total[1] for total in totals}
-        per_days_dict: dict[int, dict[datetime.date, float]] = {}
+        total_dict = {total[0]: (total[1], total[2]) for total in totals}
+        per_days_dict: dict[int, dict[date, ShiftDurationSchema]] = {}
 
-        for worker_id, day, duration in per_days:
-            per_days_dict.setdefault(worker_id, {})[day] = duration
+        for worker_id, worktime_id, day, duration in per_days:
+            per_days_dict.setdefault(worker_id, {})[day] = ShiftDurationSchema(
+                duration=duration, worktime_id=worktime_id
+            )
 
         result: list[TimeSheetSchema] = []
 
         for worker in workers:
             worker_fullname = f"{worker.l_name} {worker.f_name} {worker.o_name}"
             post_name = worker.post.name
-            total_hours = total_dict.get(worker.id, 0)
+            total_hours, total_shifts = total_dict.get(worker.id, (0, 0))
             duration_per_day = per_days_dict.get(worker.id, {})
 
             timesheet = TimeSheetSchema(
@@ -1750,6 +1773,7 @@ def get_timesheets(
                 post_name=post_name,
                 department_name=worker.department.name,
                 total_hours=total_hours,
+                total_shifts=total_shifts,
                 duration_per_day=duration_per_day,
             )
             result.append(timesheet)
@@ -3178,8 +3202,8 @@ def get_all_rework_cleaning_requests_for_cleaner(
                     CleaningRequest.state == ApprovalStatus.pending,
                     CleaningRequest.reopen_date != null(),
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -3238,8 +3262,8 @@ def get_all_history_cleaning_requests_for_worker(
                     CleaningRequest.state != ApprovalStatus.pending_approval,
                     CleaningRequest.state != ApprovalStatus.pending,
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -3261,8 +3285,8 @@ def get_all_waiting_cleaning_requests_for_worker(
                     CleaningRequest.worker_id == worker_id,
                     CleaningRequest.close_date == null(),
                 )
-                .limit(limit)
                 .order_by(CleaningRequest.id.desc())
+                .limit(limit)
             )
             .scalars()
             .all()

@@ -1,4 +1,3 @@
-import axios from "axios";
 import { computed } from "vue";
 import { Table } from "@/components/table";
 import { BidSchema, RouteData } from "@/types";
@@ -31,16 +30,21 @@ import {
 	filterBidByStatus,
 	BidState,
 } from "@/pages/panels/bid/bidStatusFilter";
+import { toast } from "vue3-toastify";
+import { BidPathOptions, BidService } from "@/services/entity";
 
 interface BidPanelData {
 	searchList: SearchModelOut[];
 	entitySearchList: EntitySearchModelOut;
 	dateInterval: DateIntervalModelOut;
-	rowEditor: RowEditor<BidSchema>;
+	rowEditor: RowEditor<BidSchema, BidTable>;
 }
 
 // Bid
 export class BidTable extends Table<BidSchema> {
+	protected _pathOptions: BidPathOptions = new BidPathOptions();
+	protected _service: BidService;
+
 	constructor(options?: {
 		getEndpoint?: string;
 		infoEndpoint?: string;
@@ -52,6 +56,31 @@ export class BidTable extends Table<BidSchema> {
 		exportEndpoint?: string;
 	}) {
 		super("bid", options);
+
+		const pathOptions = new BidPathOptions();
+
+		//#region endpoints
+		pathOptions.getExtraPath =
+			options && options.getEndpoint ? options.getEndpoint : "";
+		pathOptions.getInfoExtraPath =
+			options && options.infoEndpoint ? options.infoEndpoint : "";
+		pathOptions.createExtraPath =
+			options && options.createEndpoint ? options.createEndpoint : "";
+		pathOptions.updateExtraPath =
+			options && options.updateEndpoint ? options.updateEndpoint : "";
+		pathOptions.deleteExtraPath =
+			options && options.deleteEndpoint ? options.deleteEndpoint : "";
+		pathOptions.exportExtraPath =
+			options && options.exportEndpoint ? options.exportEndpoint : "";
+		pathOptions.approveExtraPath =
+			options && options.approveEndpoint ? options.approveEndpoint : "";
+		pathOptions.rejectExtraPath =
+			options && options.rejectEndpoint ? options.rejectEndpoint : "";
+		//#endregion
+
+		this._pathOptions = pathOptions;
+
+		this._service = new BidService("bid", this._pathOptions);
 
 		this._formatters.set("department", parser.formatDepartment);
 		this._formatters.set("worker", parser.formatWorker);
@@ -107,26 +136,51 @@ export class BidTable extends Table<BidSchema> {
 	}
 
 	public async create(model: BidSchema): Promise<void> {
-		const data = new FormData();
-		model.documents.map((doc) => data.append("files", doc.file!, doc.name));
-
-		const resp = await this._network.withAuthChecking(
-			axios.post(`${this._endpoint}${this._createEndpoint}/`, model),
-		);
-
-		await this._network.withAuthChecking(
-			axios.post(`${this._endpoint}/${resp.data.id}`, data, {
-				headers: {
-					"Content-Type": `multipart/form-data`,
-				},
-			}),
-		);
-
-		this.forceRefresh();
+		await this._service
+			.createEntity(model)
+			.then(() => {
+				this.forceRefresh();
+			})
+			.catch(() => {
+				toast.error("Запись создалась с ошибкой.");
+			});
 	}
 
 	public orderDisabled(header: string): boolean {
 		return ["Документы", "Статус"].includes(header);
+	}
+
+	public async approve(
+		index: number,
+		needRefresh: boolean = false,
+	): Promise<void> {
+		await this._service
+			.approveBid(this._loadedRows.value[index].id)
+			.then(() => {
+				if (needRefresh) {
+					this.forceRefresh();
+				}
+			})
+			.catch(() => {
+				toast.error("Заявка согласована с ошибкой.");
+			});
+	}
+
+	public async reject(
+		index: number,
+		needRefresh: boolean = false,
+		reason: string,
+	): Promise<void> {
+		await this._service
+			.rejectBid(this._loadedRows.value[index].id, reason)
+			.then(() => {
+				if (needRefresh) {
+					this.forceRefresh();
+				}
+			})
+			.catch(() => {
+				toast.error("Заявка отклонена с ошибкой.");
+			});
 	}
 }
 export async function setupBid(

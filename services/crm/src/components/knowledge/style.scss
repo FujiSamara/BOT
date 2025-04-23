@@ -6,6 +6,16 @@
   width: 100%;
   height: fit-content;
 
+  header {
+    display: flex;
+    flex-direction: column;
+
+    width: 100%;
+    height: fit-content;
+
+    gap: 36px;
+  }
+
   .spinner-wrapper {
     display: flex;
     justify-content: center;
@@ -28,6 +38,59 @@
     font-size: 48px;
 
     margin: 0;
+  }
+
+  .main-file {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 16px;
+    width: 100%;
+
+    .expand {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      gap: 10px;
+
+      cursor: pointer;
+      color: $main-dark-gray;
+
+      span {
+        position: relative;
+        display: inline-block;
+
+        font-family: Wix Madefor Display;
+        font-weight: 500;
+        font-size: 16px;
+
+        &::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          bottom: 0;
+          opacity: 0;
+          height: 1px;
+          width: 100%;
+          background-color: currentColor;
+          transition: opacity 0.25s;
+        }
+      }
+
+      &:hover span::after {
+        opacity: 1;
+      }
+
+      .icon {
+        @include arrow();
+
+        transition:
+          transform 0.25s,
+          opacity 0.5s ease;
+      }
+    }
   }
 
   .materials {

@@ -45,7 +45,7 @@ export class KnowledgeService {
 				name: sub.name,
 				path: pathToView(sub.path),
 				type: sub.type,
-				filesCount: 0,
+				filesCount: sub.files_count,
 				subdivisionsCount: sub.subdivisions_count,
 			});
 		}
