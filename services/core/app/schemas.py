@@ -122,6 +122,7 @@ class WorkerSchema(BaseSchemaPK):
     patent: str | None = None
     official_work: bool | None = None
     iiko_id: int | None = None
+    actual_residence: str | None = None
 
 
 class WorkerChildrenSchema(BaseSchemaPK):
