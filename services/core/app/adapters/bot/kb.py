@@ -340,6 +340,7 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
     phone_number = data.get("phone_number")
     official_work = data.get("official_work")
     employed = data.get("employed")
+    actual_residence = data.get("actual_residence")
 
     if not l_name:
         l_name = ""
@@ -415,6 +416,12 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
         employed = "Да"
     else:
         employed = "Нет"
+
+    if actual_residence is None:
+        actual_residence = ""
+        form_complete = False
+    else:
+        actual_residence = actual_residence[:12] + "..."
 
     buttons = [
         [
@@ -501,6 +508,16 @@ async def get_create_worker_bid_menu(state: FSMContext) -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(
                 text=employed,
+                callback_data="dummy",
+            ),
+        ],
+        [
+            InlineKeyboardButton(
+                text="Фактическое место жительства",
+                callback_data="get_worker_bid_actual_residence",
+            ),
+            InlineKeyboardButton(
+                text=actual_residence,
                 callback_data="dummy",
             ),
         ],

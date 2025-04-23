@@ -51,6 +51,7 @@ class WorkerBidCreating(StatesGroup):
     work_permission = State()
     official_work = State()
     employed = State()
+    actual_residence = State()
 
 
 class WorkerBidUpdate(StatesGroup):

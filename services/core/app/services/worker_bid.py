@@ -134,12 +134,12 @@ def create_and_add_worker(worker_bid: WorkerBidSchema) -> int | None:
         snils=None,
         inn=None,
         registration=None,
-        actual_residence=None,
         children=False,
         children_born_date=[],
         military_ticket=None,
         official_work=worker_bid.official_work,
         iiko_id=worker_bid.iiko_worker_id,
+        actual_residence=worker_bid.actual_residence,
     )
     if orm.add_worker(worker, passport):
         return worker.id
@@ -406,6 +406,7 @@ async def create_worker_bid(
     phone_number: str,
     official_work: bool,
     employed: bool,
+    actual_residence: str,
 ):
     """Creates worker bid"""
     department = orm.find_department_by_column(Department.name, department_name)
@@ -481,6 +482,7 @@ async def create_worker_bid(
         phone_number=phone_number,
         official_work=official_work,
         employed=employed,
+        actual_residence=actual_residence,
     )
     if worker_bid.post.name == "Курьер консоль":
         worker_bid.financial_director_state = ApprovalStatus.pending
