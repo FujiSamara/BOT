@@ -49,6 +49,19 @@ from app.infra.database.models import ApprovalStatus
 router = Router(name="technical_request_extensive_director")
 
 
+def include_extensions_callback_query():
+    router.callback_query.register(
+        show_history_menu,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.ed_history.callback_data
+        ),
+    )
+    router.callback_query.register(
+        show_active_menu,
+        PageCallbackData.filter(F.requests_endpoint == tech_kb.ed_active.callback_data),
+    )
+
+
 @router.callback_query(F.data == tech_kb.ed_button.callback_data)
 async def show_tech_req_menu(message: Message | CallbackQuery):
     if isinstance(message, CallbackQuery):
@@ -110,13 +123,14 @@ async def show_history_menu(
 ):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_extensive_director(
-        department_name=department_name
+        department_name=department_name, page=callback_data.page
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("История заявок"),
+        text=hbold("История заявок")
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="ED_TR_show_form_history",
             menu_button=tech_kb.ed_menu_button,
@@ -151,13 +165,15 @@ async def show_active_menu(
 ):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_technical_requests_for_extensive_director(
-        department_name=department_name
+        department_name=department_name,
+        page=callback_data.page,
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Активные заявки"),
+        text=hbold("Активные заявки")
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="ED_TR_show_form_active",
             menu_button=tech_kb.ed_menu_button,

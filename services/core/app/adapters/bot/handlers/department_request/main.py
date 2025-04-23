@@ -16,6 +16,10 @@ router = Router(name="department_request_main")
 
 executors.build_coordinations()
 appraiser.build_coordinations()
+chief_technician.include_extensions_callback_query()
+territorial_director.include_extensions_callback_query()
+extensive_director.include_extensions_callback_query()
+
 
 router.include_routers(
     worker.router,

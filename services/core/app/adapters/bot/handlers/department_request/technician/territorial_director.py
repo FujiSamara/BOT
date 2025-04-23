@@ -43,6 +43,21 @@ from app.infra.database.models import ApprovalStatus
 router = Router(name="technical_request_territorial_director")
 
 
+def include_extensions_callback_query():
+    router.callback_query.register(
+        show_history_menu,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.td_history.callback_data
+        ),
+    )
+    router.callback_query.register(
+        show_pending_menu,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.td_pending.callback_data
+        ),
+    )
+
+
 @router.callback_query(F.data == tech_kb.td_button.callback_data)
 async def show_tech_req_menu(message: CallbackQuery | Message):
     if isinstance(message, CallbackQuery):
@@ -108,13 +123,14 @@ async def show_history_menu(
 ):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_territorial_director(
-        department_name=department_name
+        department_name=department_name, page=callback_data.page
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("История заявок"),
+        text=hbold("История заявок")
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="TD_TR_show_history_form",
             menu_button=tech_kb.td_menu_button,
@@ -149,13 +165,15 @@ async def show_pending_menu(
 ):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_pending_technical_requests_for_territorial_director(
-        department_name=department_name
+        department_name=department_name,
+        page=callback_data.page,
     )
 
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold("Ожидающие заявки"),
+        text=hbold("Ожидающие заявки")
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="TD_TR_show_pending_form",
             menu_button=tech_kb.td_menu_button,

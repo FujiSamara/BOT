@@ -254,7 +254,8 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"История заявок.\nПредприятие: {department_name}"),
+            text=hbold("История заявок.")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 
@@ -322,7 +323,8 @@ class CoordinationFactory:
 
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Ожидающие заявки\nПредприятие: {department_name}"),
+            text=hbold("Ожидающие заявки")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 
@@ -432,7 +434,8 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
+            text=hbold("Заявки на доработку")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 
