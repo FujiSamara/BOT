@@ -77,7 +77,11 @@ async def delete_files(
     if any([result.error is not None for result in results]):
         error_msg = "Several files not deleted:\n"
         files_msg = "\n".join(
-            [f"ID: [{result.file_id}], {result.error.message}" for result in results]
+            [
+                f"ID: [{result.file_id}], {result.error.message}"
+                for result in results
+                if result.error is not None
+            ]
         )
         logger.warning(error_msg + files_msg)
     return results
