@@ -10,7 +10,7 @@ from common.schemas.client_credential import ClientCredentials
 from common.schemas.file import FileInSchema
 from app.container import Container
 from app.contracts.services import FileService
-from app.schemas.file import FileConfirmSchema, FileErrorSchema
+from app.schemas.file import FileConfirmSchema, FileDeleteResultSchema
 from common.schemas.file import FileLinkSchema
 
 from app.controllers.api.dependencies import Authorization
@@ -67,19 +67,20 @@ async def delete_files(
         Authorization,
         scopes=[Scopes.FileWrite.value],
     ),
-) -> list[FileErrorSchema]:
+) -> list[FileDeleteResultSchema]:
     """Delete files by specified `ids`.
 
     Returns:
-        A list of `FileErrorSchema` objects describing the files that failed to be deleted.
+        A list of `FileDeleteResultSchema` objects describing the files that failed to be deleted.
     """
-    errors = await file_service.delete_files(ids)
-    if len(errors) != 0:
+    results = await file_service.delete_files(ids)
+    if any([result.error is not None for result in results]):
         error_msg = "Several files not deleted:\n"
         files_msg = "\n".join(
-            [f"ID: {error.file_id}, Reason: {error.message}" for error in errors]
+            [f"ID: [{result.file_id}], {result.error.message}" for result in results]
         )
         logger.warning(error_msg + files_msg)
+    return results
 
 
 @router.post("/s3_webhook")

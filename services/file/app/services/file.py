@@ -2,7 +2,8 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema, FileErrorSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema, FileDeleteResultSchema
+from common.schemas import ErrorSchema
 from common.schemas.file import FileLinkSchema
 
 
@@ -137,8 +138,26 @@ class FileServiceImpl(FileService):
             await uow.file.delete(ids_to_delete)
 
         key_id_dict = {file.key: file.id for file in files}
+        id_error_msg_dict = {key_id_dict[error.key]: error.message for error in errors}
 
-        return [
-            FileErrorSchema(file_id=key_id_dict[error.key], message=error.message)
-            for error in errors
-        ]
+        found_ids = set(file.id for file in files)
+
+        results = []
+
+        for id in ids:
+            if id not in found_ids:
+                results.append(
+                    FileDeleteResultSchema(
+                        file_id=id, error=ErrorSchema(message="File not exist")
+                    )
+                )
+            elif id in id_error_msg_dict:
+                results.append(
+                    FileDeleteResultSchema(
+                        file_id=id, error=ErrorSchema(message=id_error_msg_dict[id])
+                    )
+                )
+            else:
+                results.append(FileDeleteResultSchema(file_id=id, error=None))
+
+        return results

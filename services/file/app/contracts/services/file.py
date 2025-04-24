@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from common.contracts.services import BaseService
 from common.schemas.file import FileInSchema
-from app.schemas.file import FileConfirmSchema, FileErrorSchema
+from app.schemas.file import FileConfirmSchema, FileDeleteResultSchema
 from common.schemas.file import FileLinkSchema
 
 
@@ -35,12 +35,12 @@ class FileService(BaseService):
         """
 
     @abstractmethod
-    async def delete_files(self, ids: list[int]) -> list[FileErrorSchema]:
+    async def delete_files(self, ids: list[int]) -> list[FileDeleteResultSchema]:
         """Delete files meta from db and files from storage by `ids`.
 
         At first, tries to delete the files from the storage.
         Any file that fails to be deleted from the storage will not be removed from the database.
 
         Returns:
-            A list of `FileErrorSchema` objects describing the files that failed to be deleted.
+            A list of `FileDeleteResultSchema` objects describing the files that failed to be deleted.
         """
