@@ -12,3 +12,4 @@ cryptography==44.0.0
 pyjwt[crypto]
 PyYAML==6.0.2
 aiohttp>=3.9.3
+greenlet==3.2.1
