@@ -1,3 +1,5 @@
+import "promise.withresolvers/shim"; // For safari <= 17.3.
+
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "@/router.ts";
