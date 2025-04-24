@@ -2,6 +2,11 @@ from datetime import datetime
 from common.schemas import BaseSchemaPK, BaseSchema
 
 
+class FileErrorSchema(BaseSchema):
+    file_id: int
+    message: str
+
+
 class FileConfirmSchema(BaseSchema):
     key: str
     bucket: str
@@ -19,7 +24,7 @@ class FileCreateSchema(BaseSchemaPK):
 
 
 class FileSchema(FileCreateSchema):
-    pass
+    id: int
 
 
 class FileUpdateSchema(BaseSchema):

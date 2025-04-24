@@ -14,7 +14,7 @@ class FileRepository(BaseRepository):
         pass
 
     @abstractmethod
-    async def delete(self, id: int):
+    async def delete(self, ids: list[int]):
         pass
 
     @abstractmethod

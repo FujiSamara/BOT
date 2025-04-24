@@ -2,7 +2,7 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema, FileErrorSchema
 from common.schemas.file import FileLinkSchema
 
 
@@ -81,9 +81,8 @@ class FileServiceImpl(FileService):
         async with self._file_uow as uow:
             files = await uow.file.get_by_ids(ids)
 
-            for file in files:
-                if not file.confirmed:
-                    await uow.file.delete(file.id)
+            unconfirmed_files = [file for file in files if not file.confirmed]
+            await uow.file.delete(unconfirmed_files)
 
         result = []
 
@@ -121,3 +120,25 @@ class FileServiceImpl(FileService):
 
             update = FileUpdateSchema(confirmed=True)
             await uow.file.update(file.id, update)
+
+    async def delete_files(self, ids):
+        async with self._file_uow as uow:
+            files = await uow.file.get_by_ids(ids)
+
+            confirmed_file_kyes_buckets = [
+                (file.key, file.bucket) for file in files if file.confirmed
+            ]
+            errors = await self._file_client.delete(confirmed_file_kyes_buckets)
+            not_deleted_keys = set(error.key for error in errors)
+
+            ids_to_delete = [
+                file.id for file in files if file.key not in not_deleted_keys
+            ]
+            await uow.file.delete(ids_to_delete)
+
+        key_id_dict = {file.key: file.id for file in files}
+
+        return [
+            FileErrorSchema(file_id=key_id_dict[error.key], message=error.message)
+            for error in errors
+        ]
