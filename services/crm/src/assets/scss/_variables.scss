@@ -38,3 +38,12 @@ $table-toollbar-height: 48px;
   --row-height: 72px;
   --max-hint-width: 250px;
 }
+
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 768px,
+  lg: 992px,
+  xl: 1200px,
+  xxl: 1650px,
+);

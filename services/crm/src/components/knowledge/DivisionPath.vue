@@ -36,6 +36,7 @@ const onClick = async (index: number) => {
 .division-path {
 	display: flex;
 	flex-direction: row;
+	flex-wrap: wrap;
 
 	.path {
 		position: relative;

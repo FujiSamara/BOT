@@ -197,6 +197,10 @@ const convertAmount = (amount: number): string => {
 	</div>
 </template>
 <style scoped lang="scss">
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/mixins";
+
 @import url("./style.scss");
 
 .card-wrapper {
@@ -222,6 +226,7 @@ const convertAmount = (amount: number): string => {
 			overflow-x: auto;
 			max-height: 100%;
 			height: 480px;
+			width: 100%;
 
 			padding: 16px;
 			background-color: $bg-light-blue;
@@ -398,6 +403,27 @@ const convertAmount = (amount: number): string => {
 						font-family: Wix Madefor Display;
 						font-weight: 400;
 						font-size: 14px;
+					}
+				}
+			}
+		}
+
+		@include media-breakpoint-down(xxl) {
+			flex-direction: column;
+			align-items: center;
+		}
+
+		@include media-breakpoint-down(xl) {
+			.info-wrapper {
+				.info {
+					.compound-wrapper {
+						.compound-inner {
+							.part {
+								.group {
+									flex-direction: column;
+								}
+							}
+						}
 					}
 				}
 			}
