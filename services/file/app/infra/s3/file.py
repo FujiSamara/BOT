@@ -41,7 +41,9 @@ class S3FileClient(FileClient):
 
             return await client.delete_objects(Bucket=bucket, Delete=delete_body)
 
-    async def _delete_keys(self, bucket: str, keys: list[str], *, chunk_size: int):
+    async def _delete_keys(
+        self, bucket: str, keys: list[str], *, chunk_size: int
+    ) -> list[ErrorTypeDef]:
         chunk_it = iter(keys)
         chunks: Iterator[list[int]] = iter(
             lambda: list(islice(chunk_it, chunk_size)), []
