@@ -7,3 +7,7 @@ class BaseSchema(BaseModel):
 
 class BaseSchemaPK(BaseSchema):
     id: int | None = None
+
+
+class ErrorSchema(BaseSchema):
+    message: str
