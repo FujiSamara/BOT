@@ -41,13 +41,12 @@ class SQLFileRepository(FileRepository, SQLBaseRepository):
 
         return converters.file_to_file_schema(file)
 
-    async def delete(self, id):
-        files = await self._get_by_criteria(File.id == id)
-        if len(files) == 0:
-            raise ValueError("File not exist")
-        file = files[0]
+    async def delete(self, ids):
+        files = await self._get_by_criteria(File.id.in_(ids))
 
-        await self._session.delete(file)
+        for file in files:
+            await self._session.delete(file)
+
         await self._session.flush()
 
     async def get_by_key(self, key):

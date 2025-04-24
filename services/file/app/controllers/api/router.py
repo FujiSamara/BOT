@@ -10,7 +10,7 @@ from common.schemas.client_credential import ClientCredentials
 from common.schemas.file import FileInSchema
 from app.container import Container
 from app.contracts.services import FileService
-from app.schemas.file import FileConfirmSchema
+from app.schemas.file import FileConfirmSchema, FileDeleteResultSchema
 from common.schemas.file import FileLinkSchema
 
 from app.controllers.api.dependencies import Authorization
@@ -39,7 +39,7 @@ async def create_put_links(
 
 @router.get(
     "/",
-    response_description="Created url with file id",
+    response_description="Created urls with file meta",
 )
 @inject
 async def create_get_links(
@@ -51,8 +51,40 @@ async def create_get_links(
         scopes=[Scopes.FileRead.value],
     ),
 ) -> list[FileLinkSchema]:
-    """Creates presigned urls for getting files with specified meta."""
+    """Create presigned urls for getting files with specified meta."""
     return await file_service.create_get_links(ids, expiration)
+
+
+@router.delete(
+    "/",
+)
+@inject
+async def delete_files(
+    ids: Annotated[list[int], Query()],
+    file_service: FileService = Depends(Provide[Container.file_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
+    _: ClientCredentials = Security(
+        Authorization,
+        scopes=[Scopes.FileWrite.value],
+    ),
+) -> list[FileDeleteResultSchema]:
+    """Delete files by specified `ids`.
+
+    Returns:
+        A list of `FileDeleteResultSchema` objects describing the files that failed to be deleted.
+    """
+    results = await file_service.delete_files(ids)
+    if any([result.error is not None for result in results]):
+        error_msg = "Several files not deleted:\n"
+        files_msg = "\n".join(
+            [
+                f"ID: [{result.file_id}], {result.error.message}"
+                for result in results
+                if result.error is not None
+            ]
+        )
+        logger.warning(error_msg + files_msg)
+    return results
 
 
 @router.post("/s3_webhook")

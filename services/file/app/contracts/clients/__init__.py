@@ -1,3 +1,3 @@
-from app.contracts.clients.file import FileClient
+from app.contracts.clients.file import FileClient, KeyErrorSchema
 
-__all__ = ["FileClient"]
+__all__ = ["FileClient", "KeyErrorSchema"]
