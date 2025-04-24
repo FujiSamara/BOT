@@ -5,10 +5,20 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
 	plugins: [vue()],
 	resolve: {
-		alias: {
-			"@": fileURLToPath(new URL("./src", import.meta.url)),
-			"@types": fileURLToPath(new URL("./src/types.ts", import.meta.url)),
-		},
+		alias: [
+			{
+				find: "@",
+				replacement: fileURLToPath(new URL("./src", import.meta.url)),
+			},
+			{
+				find: "@types",
+				replacement: fileURLToPath(new URL("./src/types.ts", import.meta.url)),
+			},
+			{
+				find: /^pdfjs-dist$/,
+				replacement: "pdfjs-dist/legacy/build/pdf.mjs",
+			},
+		],
 	},
 	server: {
 		host: "0.0.0.0",
