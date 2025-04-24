@@ -15,7 +15,7 @@ import {
 	PDFDocumentProxy,
 	PDFPageProxy,
 } from "pdfjs-dist";
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker?url";
+import pdfjsWorker from "pdfjs-dist/legacy/build/pdf.worker?url";
 GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
