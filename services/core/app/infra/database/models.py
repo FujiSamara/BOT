@@ -699,6 +699,7 @@ class WorkerBid(Base):
     coordinators: Mapped[list["WorkerBidCoordinator"]] = relationship(
         "WorkerBidCoordinator", cascade="all,delete"
     )
+    actual_residence: Mapped[str] = mapped_column(nullable=True)
 
 
 class WorkerBidCoordinator(Base):

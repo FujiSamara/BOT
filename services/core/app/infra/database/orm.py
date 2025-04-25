@@ -781,6 +781,7 @@ def add_worker_bid(bid: WorkerBidSchema):
             employed=bid.employed,
             phone_number=bid.phone_number,
             birth_date=bid.birth_date,
+            actual_residence=bid.actual_residence,
         )
 
         s.add(worker_bid)

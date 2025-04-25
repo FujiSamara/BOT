@@ -40,6 +40,7 @@ def get_full_worker_bid_info(bid: WorkerBidSchema) -> str:
 {hbold("Статус")}: {stage}
 {hbold("Официальное трудоустройство")}: {"Да" if bid.official_work else "Нет"}
 {hbold("Уже трудоустроен")}: {"Да" if bid.employed else "Нет"}
+{hbold("Фактическое место жительства")}: {bid.actual_residence if bid.actual_residence is not None else "Отсутствует"}
 
 {hbold("Данные заявителя")}
 {hbold("Фамилия")}: {bid.sender.l_name}

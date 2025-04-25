@@ -216,6 +216,7 @@ class WorkerBidSchema(BaseSchemaPK):
     official_work: bool | None = None
     employed: bool | None = None
     document_request: list["WorkerBidDocumentRequestSchema"] = []
+    actual_residence: str | None = None
 
 
 class WorkerBidDocumentRequestSchema(BaseSchemaPK):

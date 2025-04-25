@@ -70,6 +70,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
     phone_number = data["phone_number"]
     official_work = data["official_work"]
     employed = data["employed"]
+    actual_residence = data["actual_residence"]
 
     if not work_permission:
         work_permission = []
@@ -99,6 +100,7 @@ async def save_worker_bid(callback: CallbackQuery, state: FSMContext):
         phone_number,
         True if official_work == 1 else False,
         True if employed == 1 else False,
+        actual_residence,
     )
     await state.clear()
     await state.set_state(Base.none)
@@ -505,6 +507,29 @@ async def set_worker_bid_employed(message: Message, state: FSMContext):
         await sleep(3)
         await utils.try_delete_message(msg)
         await get_worker_bid_official_work(message=message, state=state)
+
+
+@router.callback_query(F.data == "get_worker_bid_actual_residence")
+async def get_worker_bid_actual_residence(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(WorkerBidCreating.actual_residence)
+    msg = await utils.try_edit_or_answer(
+        message=callback.message,
+        text=hbold("Введите фактическое место жительства"),
+        reply_markup=kb.create_inline_keyboard(
+            InlineKeyboardButton(
+                text=text.back, callback_data="get_create_worker_bid_menu"
+            )
+        ),
+        return_message=True,
+    )
+    await state.update_data(msg=msg)
+
+
+@router.message(WorkerBidCreating.actual_residence)
+async def set_worker_bid_actual_residence(message: Message, state: FSMContext):
+    await state.update_data(actual_residence=message.text)
+    await utils.try_delete_message(message)
+    await send_create_menu(message=(await state.get_data()).get("msg"), state=state)
 
 
 # Documents
