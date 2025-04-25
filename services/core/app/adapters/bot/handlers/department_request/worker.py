@@ -30,6 +30,7 @@ from app.adapters.bot.handlers.department_request.utils import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    PageCallbackData,
     RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
@@ -235,18 +236,18 @@ async def change_waiting_type(callback: CallbackQuery):
     buttons = [
         InlineKeyboardButton(
             text="Технические заявки",
-            callback_data=ShowRequestCallbackData(
-                request_id=-1,
-                end_point="WR_DR_waiting_menu",
-                last_end_point="tech",
+            callback_data=PageCallbackData(
+                page=0,
+                requests_endpoint="WR_DR_waiting_menu",
+                req_type=RequestType.TR.value,
             ).pack(),
         ),
         InlineKeyboardButton(
             text="Заявки в клининг",
-            callback_data=ShowRequestCallbackData(
-                request_id=-1,
-                end_point="WR_DR_waiting_menu",
-                last_end_point="clean",
+            callback_data=PageCallbackData(
+                page=0,
+                requests_endpoint="WR_DR_waiting_menu",
+                req_type=RequestType.CR.value,
             ).pack(),
         ),
         InlineKeyboardButton(
@@ -262,11 +263,11 @@ async def change_waiting_type(callback: CallbackQuery):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "WR_DR_waiting_menu")
+    PageCallbackData.filter(F.requests_endpoint == "WR_DR_waiting_menu")
 )
 async def show_worker_waiting_menu(
     callback: CallbackQuery,
-    callback_data: ShowRequestCallbackData,
+    callback_data: PageCallbackData,
 ):
     reply_markup = (
         department_kb.create_kb_with_end_point_TR(
@@ -274,15 +275,21 @@ async def show_worker_waiting_menu(
             menu_button=department_kb.wr_waiting,
             requests=get_all_waiting_technical_requests_for_worker(
                 telegram_id=callback.message.chat.id,
+                page=callback_data.page,
             ),
+            page=callback_data.page,
+            requests_endpoint=callback_data.requests_endpoint,
         )
-        if callback_data.last_end_point == "tech"
+        if callback_data.req_type == RequestType.TR.value
         else department_kb.create_kb_with_end_point_CR(
             end_point="WR_DR_show_form_waiting",
             menu_button=department_kb.wr_waiting,
             requests=get_all_waiting_cleaning_requests_for_worker(
-                tg_id=callback.message.chat.id
+                tg_id=callback.message.chat.id,
+                page=callback_data.page,
             ),
+            page=callback_data.page,
+            requests_endpoint=callback_data.requests_endpoint,
         )
     )
 
@@ -324,17 +331,17 @@ async def change_history_type(callback: CallbackQuery):
     buttons = [
         InlineKeyboardButton(
             text="Технические заявки",
-            callback_data=ShowRequestCallbackData(
-                request_id=-1,
-                end_point="WR_DR_history_menu",
+            callback_data=PageCallbackData(
+                page=0,
+                requests_endpoint="WR_DR_history_menu",
                 req_type=RequestType.TR.value,
             ).pack(),
         ),
         InlineKeyboardButton(
             text="Заявки в клининг",
-            callback_data=ShowRequestCallbackData(
-                request_id=-1,
-                end_point="WR_DR_history_menu",
+            callback_data=PageCallbackData(
+                page=0,
+                requests_endpoint="WR_DR_history_menu",
                 req_type=RequestType.CR.value,
             ).pack(),
         ),
@@ -351,11 +358,11 @@ async def change_history_type(callback: CallbackQuery):
 
 
 @router.callback_query(
-    ShowRequestCallbackData.filter(F.end_point == "WR_DR_history_menu")
+    PageCallbackData.filter(F.requests_endpoint == "WR_DR_history_menu")
 )
 async def show_worker_history_menu(
     callback: CallbackQuery,
-    callback_data: ShowRequestCallbackData,
+    callback_data: PageCallbackData,
 ):
     reply_markup = (
         department_kb.create_kb_with_end_point_TR(
@@ -363,15 +370,21 @@ async def show_worker_history_menu(
             menu_button=department_kb.wr_history,
             requests=get_all_history_technical_requests_for_worker(
                 tg_id=callback.message.chat.id,
+                page=callback_data.page,
             ),
+            page=callback_data.page,
+            requests_endpoint="WR_DR_show_form_history",
         )
-        if callback_data.last_end_point == "tech"
+        if callback_data.req_type == RequestType.TR.value
         else department_kb.create_kb_with_end_point_CR(
             end_point="WR_DR_show_form_history",
             menu_button=department_kb.wr_history,
             requests=get_all_history_cleaning_requests_for_worker(
-                tg_id=callback.message.chat.id
+                tg_id=callback.message.chat.id,
+                page=callback_data.page,
             ),
+            page=callback_data.page,
+            requests_endpoint="WR_DR_show_form_history",
         )
     )
 

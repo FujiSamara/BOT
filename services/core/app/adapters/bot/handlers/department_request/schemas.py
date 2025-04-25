@@ -18,3 +18,4 @@ class ShowRequestCallbackData(CallbackData, prefix="dep_req"):
 class PageCallbackData(CallbackData, prefix="dep_req_page"):
     page: int = 0
     requests_endpoint: str | None = None
+    req_type: int = 1
