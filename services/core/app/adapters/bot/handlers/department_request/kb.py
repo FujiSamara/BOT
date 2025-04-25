@@ -963,6 +963,7 @@ def create_kb_with_end_point_TR(
                         callback_data=PageCallbackData(
                             page=page + 1,
                             requests_endpoint=requests_endpoint,
+                            req_type=RequestType.TR.value,
                         ).pack(),
                     )
                 ]
@@ -975,6 +976,7 @@ def create_kb_with_end_point_TR(
                         callback_data=PageCallbackData(
                             page=page - 1,
                             requests_endpoint=requests_endpoint,
+                            req_type=RequestType.TR.value,
                         ).pack(),
                     )
                 ]
@@ -1026,6 +1028,7 @@ def create_kb_with_end_point_CR(
                         callback_data=PageCallbackData(
                             page=page - 1,
                             requests_endpoint=requests_endpoint,
+                            req_type=RequestType.CR.value,
                         ).pack(),
                     )
                 ]

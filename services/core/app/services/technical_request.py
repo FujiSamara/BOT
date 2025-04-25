@@ -598,7 +598,7 @@ def update_technical_request_problem(request_id: int, problem_id: int):
 
 
 def get_all_waiting_technical_requests_for_worker(
-    telegram_id: int, limit: int = 15
+    telegram_id: int, page: int = 0, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all technical requests by Telegram id
@@ -612,6 +612,7 @@ def get_all_waiting_technical_requests_for_worker(
             columns=[TechnicalRequest.worker_id, TechnicalRequest.close_date],
             values=[worker.id, null()],
             limit=limit,
+            offset=page * limit,
         )
 
     return requests
@@ -840,7 +841,7 @@ def get_all_history_technical_requests_for_appraiser(
 
 
 def get_all_history_technical_requests_for_worker(
-    tg_id: int, limit: int = 15
+    tg_id: int, page: int = 0, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -855,6 +856,7 @@ def get_all_history_technical_requests_for_worker(
             values=[worker.id],
             history=True,
             limit=limit,
+            offset=page * limit,
         )
 
         return requests

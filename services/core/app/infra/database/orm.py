@@ -3268,7 +3268,7 @@ def update_cleaning_request_from_appraiser(
 
 
 def get_all_history_cleaning_requests_for_worker(
-    worker_id: int, limit: int = 15
+    worker_id: int, offset: int = 0, limit: int = 15
 ) -> list[CleaningRequestSchema]:
     with session.begin() as s:
         raw_requests = (
@@ -3280,6 +3280,7 @@ def get_all_history_cleaning_requests_for_worker(
                     CleaningRequest.state != ApprovalStatus.pending,
                 )
                 .order_by(CleaningRequest.id.desc())
+                .offset(offset)
                 .limit(limit)
             )
             .scalars()
@@ -3292,7 +3293,7 @@ def get_all_history_cleaning_requests_for_worker(
 
 
 def get_all_waiting_cleaning_requests_for_worker(
-    worker_id: int, limit: int = 15
+    worker_id: int, offset: int = 0, limit: int = 15
 ) -> list[CleaningRequestSchema]:
     with session.begin() as s:
         raw_requests = (
@@ -3303,6 +3304,7 @@ def get_all_waiting_cleaning_requests_for_worker(
                     CleaningRequest.close_date == null(),
                 )
                 .order_by(CleaningRequest.id.desc())
+                .offset(offset)
                 .limit(limit)
             )
             .scalars()
