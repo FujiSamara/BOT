@@ -11,7 +11,10 @@ from fastapi import UploadFile
 from app.adapters.bot import text, kb
 from app.adapters.bot.states import Base, ChiefTechnicianTechnicalRequestForm
 
-from app.adapters.bot.handlers.department_request.schemas import ShowRequestCallbackData
+from app.adapters.bot.handlers.department_request.schemas import (
+    ShowRequestCallbackData,
+    PageCallbackData,
+)
 from app.adapters.bot.handlers.department_request import kb as tech_kb
 from app.adapters.bot.handlers.utils import (
     download_file,
@@ -42,6 +45,32 @@ from app.services import (
 from app.infra.database.models import ApprovalStatus
 
 router = Router(name="technical_request_chief_technician")
+
+
+def include_extensions_callback_query():
+    router.callback_query.register(
+        show_own_waiting,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.ct_own_waiting.callback_data
+        ),
+    )
+    router.callback_query.register(
+        show_rework_menu,
+        PageCallbackData.filter(F.requests_endpoint == tech_kb.ct_rework.callback_data),
+    )
+    router.callback_query.register(
+        show_own_history,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.ct_own_history.callback_data
+        ),
+    )
+
+    router.callback_query.register(
+        show_admin_menu,
+        PageCallbackData.filter(
+            F.requests_endpoint == tech_kb.ct_admin_button.callback_data
+        ),
+    )
 
 
 @router.callback_query(F.data == tech_kb.ct_button.callback_data)
@@ -103,19 +132,28 @@ async def show_own_requests(callback: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.ct_own_waiting.callback_data)
-async def show_own_waiting(callback: CallbackQuery, state: FSMContext):
+async def show_own_waiting(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_waiting_technical_requests_for_repairman(
-        telegram_id=callback.message.chat.id, department_name=department_name
+        telegram_id=callback.message.chat.id,
+        department_name=department_name,
+        page=callback_data.page,
     )
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.ct_own_waiting.text + f"\nПредприятие: {department_name}"),
+        text=hbold(tech_kb.ct_own_waiting.text)
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_waiting",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_own_waiting.callback_data,
         ),
     )
 
@@ -200,19 +238,28 @@ async def set_waiting_repairman_photo(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == tech_kb.ct_rework.callback_data)
-async def show_rework_menu(callback: CallbackQuery, state: FSMContext):
+async def show_rework_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_rework_technical_requests_for_repairman(
-        telegram_id=callback.message.chat.id, department_name=department_name
+        telegram_id=callback.message.chat.id,
+        department_name=department_name,
+        page=callback_data.page,
     )
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
-        reply_markup=tech_kb.create_kb_with_end_point(
+        text=hbold("Заявки на доработку")
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
+        reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="CT_TR_show_form_rework",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_rework.callback_data,
         ),
     )
 
@@ -325,19 +372,28 @@ async def save_repair(
 
 
 @router.callback_query(F.data == tech_kb.ct_own_history.callback_data)
-async def show_own_history(callback: CallbackQuery, state: FSMContext):
+async def show_own_history(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_history_technical_requests_for_repairman(
-        telegram_id=callback.message.chat.id, department_name=department_name
+        telegram_id=callback.message.chat.id,
+        department_name=department_name,
+        page=callback_data.page,
     )
     await try_delete_message(callback.message)
     await try_edit_or_answer(
         message=callback.message,
-        text=hbold(tech_kb.ct_own_history.text + f"\nПредприятие: {department_name}"),
+        text=hbold(tech_kb.ct_own_history.text)
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_TR(
             end_point="show_CT_TR_own_history_form",
             menu_button=tech_kb.ct_own_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_own_history,
         ),
     )
 
@@ -364,18 +420,26 @@ async def show_own_history_form(
 
 
 @router.callback_query(F.data == tech_kb.ct_admin_button.callback_data)
-async def show_admin_menu(callback: CallbackQuery, state: FSMContext):
+async def show_admin_menu(
+    callback: CallbackQuery,
+    state: FSMContext,
+    callback_data: PageCallbackData = PageCallbackData(page=0),
+):
     department_name = (await state.get_data()).get("department_name")
     requests = get_all_active_requests_in_department_for_chief_technician(
-        department_name
+        department_name,
+        page=callback_data.page,
     )
     await try_edit_or_answer(
         callback.message,
-        text=hbold(tech_kb.ct_admin_button.text + f"\nПредприятие: {department_name}"),
+        text=hbold(tech_kb.ct_admin_button.text)
+        + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
         reply_markup=tech_kb.create_kb_with_end_point_and_symbols(
             end_point="show_CT_TR_admin_form",
             menu_button=tech_kb.ct_button,
             requests=requests,
+            page=callback_data.page,
+            requests_endpoint=tech_kb.ct_admin_button.callback_data,
         ),
     )
 

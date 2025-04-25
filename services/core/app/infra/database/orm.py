@@ -1328,7 +1328,11 @@ def get_territorial_manager_by_department_id(department_id: int) -> WorkerSchema
 
 
 def get_technical_requests_by_columns(
-    columns: list[Any], values: list[Any], history: bool = False, limit: int = 15
+    columns: list[Any],
+    values: list[Any],
+    offset: int = 0,
+    history: bool = False,
+    limit: int = 15,
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
@@ -1343,7 +1347,9 @@ def get_technical_requests_by_columns(
             s.execute(
                 stmt.order_by(
                     TechnicalRequest.id.desc() if history else TechnicalRequest.id
-                ).limit(limit=limit)
+                )
+                .offset(offset)
+                .limit(limit=limit)
             )
             .scalars()
             .all()
@@ -1354,7 +1360,7 @@ def get_technical_requests_by_columns(
 
 
 def get_all_technical_requests_in_department(
-    department_id: int, history_flag: bool = False, limit: int = 15
+    department_id: int, offset: int, history_flag: bool = False, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema for extensive director.
@@ -1374,7 +1380,9 @@ def get_all_technical_requests_in_department(
             s.execute(
                 stmt.order_by(
                     TechnicalRequest.id.desc() if history_flag else TechnicalRequest.id
-                ).limit(limit=limit)
+                )
+                .offset(offset)
+                .limit(limit=limit)
             )
             .scalars()
             .all()
@@ -1386,24 +1394,32 @@ def get_all_technical_requests_in_department(
 
 
 def get_rework_tech_request(
-    department_id: int, repairman_id: int
+    department_id: int,
+    repairman_id: int,
+    offset: int,
+    limit,
 ) -> list[TechnicalRequestSchema]:
     """
     Returns all TechnicalRequest as TechnicalRequestSchema by columns with values.
     """
     with session.begin() as s:
         raw_models = (
-            s.query(TechnicalRequest)
-            .filter(
-                TechnicalRequest.department_id == department_id,
-                TechnicalRequest.repairman_id == repairman_id,
-                TechnicalRequest.reopen_repair_date == null(),
-                TechnicalRequest.confirmation_date != null(),
-                TechnicalRequest.state != ApprovalStatus.approved,
-                TechnicalRequest.state != ApprovalStatus.skipped,
-                TechnicalRequest.state != ApprovalStatus.not_relevant,
+            s.execute(
+                select(TechnicalRequest)
+                .filter(
+                    TechnicalRequest.department_id == department_id,
+                    TechnicalRequest.repairman_id == repairman_id,
+                    TechnicalRequest.reopen_repair_date == null(),
+                    TechnicalRequest.confirmation_date != null(),
+                    TechnicalRequest.state != ApprovalStatus.approved,
+                    TechnicalRequest.state != ApprovalStatus.skipped,
+                    TechnicalRequest.state != ApprovalStatus.not_relevant,
+                )
+                .order_by(TechnicalRequest.id.desc())
+                .offset(offset)
+                .limit(limit)
             )
-            .order_by(TechnicalRequest.id)
+            .scalars()
             .all()
         )
 
@@ -1413,7 +1429,7 @@ def get_rework_tech_request(
 
 
 def get_technical_requests_for_repairman_history(
-    repairman_id: int, department_id: int, limit: int = 15
+    repairman_id: int, department_id: int, offset: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
@@ -1431,6 +1447,7 @@ def get_technical_requests_for_repairman_history(
                 )
             )
             .order_by(TechnicalRequest.id.desc())
+            .offset(offset)
             .limit(limit)
             .all()
         )
@@ -1477,17 +1494,21 @@ def get_departments_names_for_repairman(
 
 
 def get_all_active_requests_in_department_for_chief_technician(
-    department_id: int, limit: int = 15
+    department_id: int, offset: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_models = (
-            s.query(TechnicalRequest)
-            .filter(
-                TechnicalRequest.department_id == department_id,
-                TechnicalRequest.close_date == null(),
+            s.execute(
+                select(TechnicalRequest)
+                .filter(
+                    TechnicalRequest.department_id == department_id,
+                    TechnicalRequest.close_date == null(),
+                )
+                .order_by(TechnicalRequest.id)
+                .offset(offset)
+                .limit(limit)
             )
-            .order_by(TechnicalRequest.id)
-            .limit(limit=limit)
+            .scalars()
             .all()
         )
         return [
@@ -2979,15 +3000,19 @@ def get_departments_id_by_names(departments_name: list[str]) -> list[int]:
 
 
 def get_all_history_technical_requests_territorial_director(
-    department_id: int,
+    department_id: int, offset: int, limit: int
 ) -> list[TechnicalRequestSchema]:
     with session.begin() as s:
         raw_requests = (
             s.execute(
-                select(TechnicalRequest).filter(
+                select(TechnicalRequest)
+                .filter(
                     TechnicalRequest.department_id == department_id,
                     TechnicalRequest.not_relevant_confirmation_date != null(),
                 )
+                .order_by(TechnicalRequest.id.desc())
+                .offset(offset)
+                .limit(limit)
             )
             .scalars()
             .all()
@@ -3153,6 +3178,7 @@ def get_last_cleaning_requests_by_columns(
     or_col: list[Any] = [],
     or_val: list[Any] = [],
     limit: int = 15,
+    offset: int = 0,
 ) -> list[CleaningRequestSchema]:
     with session.begin() as s:
         stmt = select(CleaningRequest)
@@ -3167,7 +3193,10 @@ def get_last_cleaning_requests_by_columns(
 
         cl_reqs = (
             s.execute(
-                stmt.filter(or_filter).limit(limit).order_by(CleaningRequest.id.desc())
+                stmt.filter(or_filter)
+                .limit(limit)
+                .offset(offset)
+                .order_by(CleaningRequest.id.desc())
             )
             .scalars()
             .all()

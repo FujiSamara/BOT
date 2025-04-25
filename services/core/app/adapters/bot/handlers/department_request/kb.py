@@ -11,6 +11,7 @@ from app.services import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    PageCallbackData,
     RequestType,
 )
 from app.adapters.bot.kb import main_menu_button
@@ -933,6 +934,8 @@ def create_kb_with_end_point_TR(
     requests: list[TechnicalRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
+    page: int,
+    requests_endpoint: str,
 ) -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
     try:
@@ -952,6 +955,30 @@ def create_kb_with_end_point_TR(
                 ]
             )
     finally:
+        if len(buttons) >= 15:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=PageCallbackData(
+                            page=page + 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
+        if page > 0:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Предыдущая страница",
+                        callback_data=PageCallbackData(
+                            page=page - 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
         buttons.append([menu_button])
         return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -960,6 +987,8 @@ def create_kb_with_end_point_CR(
     requests: list[CleaningRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
+    page: int,
+    requests_endpoint: str,
 ) -> InlineKeyboardMarkup:
     buttons: list[list[InlineKeyboardButton]] = []
     try:
@@ -977,6 +1006,30 @@ def create_kb_with_end_point_CR(
                 ]
             )
     finally:
+        if len(buttons) >= 15:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=PageCallbackData(
+                            page=page + 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
+        if page > 0:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Предыдущая страница",
+                        callback_data=PageCallbackData(
+                            page=page - 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
         buttons.append([menu_button])
         return InlineKeyboardMarkup(inline_keyboard=buttons)
 
@@ -985,6 +1038,8 @@ def create_kb_with_end_point_and_symbols(
     requests: list[TechnicalRequestSchema],
     end_point: str,
     menu_button: InlineKeyboardButton,
+    page: int,
+    requests_endpoint: str,
 ) -> InlineKeyboardMarkup:
     from app.infra.database.models import ApprovalStatus
 
@@ -1012,6 +1067,30 @@ def create_kb_with_end_point_and_symbols(
                 ]
             )
     finally:
+        if len(buttons) >= 15:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Следующая страница",
+                        callback_data=PageCallbackData(
+                            page=page + 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
+        if page > 0:
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        text="Предыдущая страница",
+                        callback_data=PageCallbackData(
+                            page=page - 1,
+                            requests_endpoint=requests_endpoint,
+                        ).pack(),
+                    )
+                ]
+            )
         buttons.append([menu_button])
         return InlineKeyboardMarkup(inline_keyboard=buttons)
 

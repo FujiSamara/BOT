@@ -19,6 +19,7 @@ from app.adapters.bot.states import (
 )
 from app.adapters.bot.handlers.department_request.schemas import (
     ShowRequestCallbackData,
+    PageCallbackData,
     RequestType,
 )
 from app.adapters.bot.handlers.department_request import kb as department_kb
@@ -104,6 +105,12 @@ class CoordinationFactory:
             self.show_history_menu, F.data == self.history_button.callback_data
         )
         router.callback_query.register(
+            self.show_history_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.history_button.callback_data
+            ),
+        )
+        router.callback_query.register(
             self.show_history_form,
             ShowRequestCallbackData.filter(
                 F.end_point == f"{self.name}_show_history_form"
@@ -111,6 +118,13 @@ class CoordinationFactory:
         )
         router.callback_query.register(
             self.show_waiting_menu, F.data == self.waiting_button.callback_data
+        )
+
+        router.callback_query.register(
+            self.show_waiting_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.waiting_button.callback_data
+            ),
         )
         router.callback_query.register(
             self.show_waiting_form,
@@ -132,6 +146,12 @@ class CoordinationFactory:
         )
         router.callback_query.register(
             self.show_rework_menu, F.data == self.rework_button.callback_data
+        )
+        router.callback_query.register(
+            self.show_rework_menu,
+            PageCallbackData.filter(
+                F.requests_endpoint == self.rework_button.callback_data
+            ),
         )
         router.callback_query.register(
             self.show_rework_form,
@@ -196,19 +216,25 @@ class CoordinationFactory:
             reply_markup=self.menu_markup,
         )
 
-    async def show_history_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_history_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
-                reply_markup = (
-                    department_kb.create_kb_with_end_point_TR(
-                        end_point=f"{self.name}_show_history_form",
-                        menu_button=self.menu_button,
-                        requests=get_all_history_technical_requests_for_repairman(
-                            telegram_id=callback.message.chat.id,
-                            department_name=department_name,
-                        ),
+                reply_markup = department_kb.create_kb_with_end_point_TR(
+                    end_point=f"{self.name}_show_history_form",
+                    menu_button=self.menu_button,
+                    requests=get_all_history_technical_requests_for_repairman(
+                        telegram_id=callback.message.chat.id,
+                        department_name=department_name,
+                        page=callback_data.page,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.history_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -217,7 +243,10 @@ class CoordinationFactory:
                     requests=get_all_history_cleaning_requests_for_cleaner(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.history_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -225,7 +254,8 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"История заявок.\nПредприятие: {department_name}"),
+            text=hbold("История заявок.")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 
@@ -254,7 +284,12 @@ class CoordinationFactory:
                     history_or_waiting_button=self.history_button,
                 )
 
-    async def show_waiting_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_waiting_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
@@ -264,7 +299,10 @@ class CoordinationFactory:
                     requests=get_all_waiting_technical_requests_for_repairman(
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -273,7 +311,10 @@ class CoordinationFactory:
                     requests=get_all_waiting_cleaning_requests_for_cleaner(
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
+                        page=callback_data.page,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.waiting_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -282,7 +323,8 @@ class CoordinationFactory:
 
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Ожидающие заявки\nПредприятие: {department_name}"),
+            text=hbold("Ожидающие заявки")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 
@@ -356,7 +398,12 @@ class CoordinationFactory:
             callback.message, state, ExecutorDepartmentRequestForm.photo_waiting
         )
 
-    async def show_rework_menu(self, callback: CallbackQuery, state: FSMContext):
+    async def show_rework_menu(
+        self,
+        callback: CallbackQuery,
+        state: FSMContext,
+        callback_data: PageCallbackData = PageCallbackData(page=0),
+    ):
         department_name = (await state.get_data()).get("department_name")
         match self.type:
             case RequestType.TR:
@@ -367,6 +414,8 @@ class CoordinationFactory:
                         telegram_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.rework_button.callback_data,
                 )
             case RequestType.CR:
                 reply_markup = department_kb.create_kb_with_end_point_CR(
@@ -376,6 +425,8 @@ class CoordinationFactory:
                         tg_id=callback.message.chat.id,
                         department_name=department_name,
                     ),
+                    page=callback_data.page,
+                    requests_endpoint=self.rework_button.callback_data,
                 )
             case _:
                 reply_markup = []
@@ -383,7 +434,8 @@ class CoordinationFactory:
         await try_delete_message(callback.message)
         await try_edit_or_answer(
             message=callback.message,
-            text=hbold(f"Заявки на доработку\nПредприятие: {department_name}"),
+            text=hbold("Заявки на доработку")
+            + f"\nПредприятие: {department_name}\nСтраница :{callback_data.page + 1}",
             reply_markup=reply_markup,
         )
 

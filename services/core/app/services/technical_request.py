@@ -618,7 +618,7 @@ def get_all_waiting_technical_requests_for_worker(
 
 
 def get_all_waiting_technical_requests_for_repairman(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -643,6 +643,7 @@ def get_all_waiting_technical_requests_for_repairman(
                     TechnicalRequest.confirmation_date,
                 ],
                 values=[repairman.id, ApprovalStatus.pending, department_id, null()],
+                offset=page * limit,
                 limit=limit,
             )
 
@@ -650,7 +651,7 @@ def get_all_waiting_technical_requests_for_repairman(
 
 
 def get_all_active_technical_requests_for_extensive_director(
-    department_name: str, limit: int = 15
+    department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for extensive_director
@@ -663,13 +664,14 @@ def get_all_active_technical_requests_for_extensive_director(
         requests = orm.get_all_technical_requests_in_department(
             department_id=department.id,
             history_flag=False,
+            offset=page * limit,
             limit=limit,
         )
         return requests
 
 
 def get_all_pending_technical_requests_for_territorial_director(
-    department_name: str,
+    department_name: str, page: int, limit: int = 15
 ):
     try:
         department_id = (orm.find_departments_by_name(department_name)[0]).id
@@ -677,24 +679,25 @@ def get_all_pending_technical_requests_for_territorial_director(
         logger.error(f"Department with name: {department_name} wasn't found")
     else:
         requests = orm.get_technical_requests_by_columns(
-            [
+            columns=[
                 TechnicalRequest.state,
                 TechnicalRequest.department_id,
                 TechnicalRequest.close_date,
             ],
-            [
+            values=[
                 ApprovalStatus.not_relevant,
                 department_id,
                 null(),
             ],
+            limit=limit,
+            offset=page * limit,
         )
 
         return requests
 
 
 def get_all_rework_technical_requests_for_repairman(
-    telegram_id: int,
-    department_name: str,
+    telegram_id: int, department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for repairman
@@ -712,13 +715,16 @@ def get_all_rework_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_rework_tech_request(
-                department_id=department_id, repairman_id=repairman.id
-            )[:-16:-1]
+                department_id=department_id,
+                repairman_id=repairman.id,
+                offset=page * limit,
+                limit=limit,
+            )
             return requests
 
 
 def get_all_waiting_technical_requests_for_appraiser(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, limit: int = 15, page: int = 0
 ) -> list[TechnicalRequestSchema]:
     """
     Return all waiting technical requests by Telegram id for appraiser
@@ -747,6 +753,7 @@ def get_all_waiting_technical_requests_for_appraiser(
                     department_id,
                 ],
                 limit=limit,
+                offset=page * limit,
             )
 
             return requests
@@ -772,7 +779,7 @@ def get_all_active_technical_requests_for_department_director(
 
 
 def get_all_history_technical_requests_for_repairman(
-    telegram_id: int, department_name: str, limit: int = 15
+    telegram_id: int, department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for repairman
@@ -790,14 +797,17 @@ def get_all_history_technical_requests_for_repairman(
             logger.error(f"Department with name: {department_name} wasn't found")
         else:
             requests = orm.get_technical_requests_for_repairman_history(
-                repairman.id, department_id, limit=limit
+                repairman_id=repairman.id,
+                department_id=department_id,
+                offset=page * limit,
+                limit=limit,
             )
 
             return requests
 
 
 def get_all_history_technical_requests_for_appraiser(
-    tg_id: int, department_name: str, limit: int = 15
+    tg_id: int, department_name: str, limit: int = 15, page: int = 0
 ) -> list[TechnicalRequestSchema]:
     """
     Return all history technical requests by Telegram id for appraiser
@@ -823,6 +833,7 @@ def get_all_history_technical_requests_for_appraiser(
                 ],
                 history=True,
                 limit=limit,
+                offset=page * limit,
             )
 
             return requests
@@ -850,7 +861,7 @@ def get_all_history_technical_requests_for_worker(
 
 
 def get_all_history_technical_requests_for_extensive_director(
-    department_name: str, limit: int = 15
+    department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return history technical requests by Telegram id for worker
@@ -864,13 +875,14 @@ def get_all_history_technical_requests_for_extensive_director(
             department_id=department.id,
             history_flag=True,
             limit=limit,
+            offset=page * limit,
         )
 
         return requests
 
 
 def get_all_history_technical_requests_territorial_director(
-    department_name: str,
+    department_name: str, page: int, limit: int = 15
 ):
     department = orm.find_departments_by_name(department_name)
     if department == []:
@@ -879,7 +891,7 @@ def get_all_history_technical_requests_territorial_director(
     department = department[0]
 
     return orm.get_all_history_technical_requests_territorial_director(
-        department_id=department.id
+        department_id=department.id, offset=page * limit, limit=limit
     )
 
 
@@ -943,7 +955,7 @@ def get_departments_names_for_chief_technician(
 
 
 def get_all_active_requests_in_department_for_chief_technician(
-    department_name: str, limit: int = 15
+    department_name: str, page: int, limit: int = 15
 ) -> list[TechnicalRequestSchema]:
     """
     Return all request in department
@@ -954,7 +966,9 @@ def get_all_active_requests_in_department_for_chief_technician(
         logger.error(f"Department with name: {department_name} wasn't found")
     else:
         requests = orm.get_all_active_requests_in_department_for_chief_technician(
-            department_id, limit
+            department_id=department_id,
+            offset=page * limit,
+            limit=limit,
         )
         return requests
 

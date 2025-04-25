@@ -143,7 +143,7 @@ def get_departments_names_for_cleaner(tg_id: int) -> list[str]:
 
 
 def get_all_history_cleaning_requests_for_cleaner(
-    tg_id: int, department_name: str, limit: int = 15
+    tg_id: int, department_name: str, page: int = 0, limit: int = 15
 ) -> list[CleaningRequestSchema]:
     try:
         cleaner = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
@@ -178,13 +178,15 @@ def get_all_history_cleaning_requests_for_cleaner(
                     ApprovalStatus.not_relevant,
                     ApprovalStatus.skipped,
                 ],
+                offset=page * limit,
+                limit=limit,
             )
 
             return requests
 
 
 def get_all_waiting_cleaning_requests_for_cleaner(
-    tg_id: int, department_name: str
+    tg_id: int, department_name: str, page: int = 0, limit: int = 15
 ) -> list[CleaningRequestSchema]:
     try:
         cleaner = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)[0]
@@ -209,6 +211,8 @@ def get_all_waiting_cleaning_requests_for_cleaner(
                     ApprovalStatus.pending,
                     null(),
                 ],
+                offset=page * limit,
+                limit=limit,
             )
 
             return requests
@@ -320,8 +324,7 @@ async def update_cleaning_request_from_cleaner(
 
 
 def get_all_history_cleaning_requests_for_appraiser(
-    tg_id: int,
-    department_name: str,
+    tg_id: int, department_name: str, page: int = 0, limit: int = 15
 ):
     appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if appraiser == []:
@@ -355,13 +358,14 @@ def get_all_history_cleaning_requests_for_appraiser(
             ApprovalStatus.not_relevant,
             ApprovalStatus.skipped,
         ],
+        offset=page * limit,
+        limit=limit,
     )
     return requests
 
 
 def get_all_waiting_cleaning_requests_for_appraiser(
-    tg_id: int,
-    department_name: str,
+    tg_id: int, department_name: str, page: int = 0, limit: int = 15
 ):
     appraiser = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if appraiser == []:
@@ -383,6 +387,8 @@ def get_all_waiting_cleaning_requests_for_appraiser(
             department_id,
             ApprovalStatus.pending_approval,
         ],
+        offset=page * limit,
+        limit=limit,
     )
     return requests
 
