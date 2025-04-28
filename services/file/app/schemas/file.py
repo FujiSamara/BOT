@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from common.schemas import BaseSchemaPK, BaseSchema, ErrorSchema
+from common.schemas import BaseSchemaPK, BaseSchema
 
 
 class FileConfirmSchema(BaseSchema):
@@ -27,8 +27,3 @@ class FileUpdateSchema(BaseSchema):
     name: str | None = None
     ext: str | None = None
     confirmed: bool | None = None
-
-
-class FileDeleteResultSchema(BaseSchema):
-    file_id: int
-    error: ErrorSchema | None

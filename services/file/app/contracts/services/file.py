@@ -1,9 +1,8 @@
 from abc import abstractmethod
 
 from common.contracts.services import BaseService
-from common.schemas.file import FileInSchema
-from app.schemas.file import FileConfirmSchema, FileDeleteResultSchema
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileInSchema, FileDeleteResultSchema, FileLinkSchema
+from app.schemas.file import FileConfirmSchema
 
 
 class FileService(BaseService):

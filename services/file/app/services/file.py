@@ -2,9 +2,9 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema, FileDeleteResultSchema
+from app.schemas.file import FileCreateSchema, FileUpdateSchema
 from common.schemas import ErrorSchema
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 
 
 class FileServiceImpl(FileService):
