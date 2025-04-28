@@ -114,20 +114,30 @@ async def create_cleaning_request(
     return True
 
 
-def get_all_history_cleaning_requests_for_worker(tg_id: int):
+def get_all_history_cleaning_requests_for_worker(
+    tg_id: int, page: int = 0, limit: int = 15
+):
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if worker == []:
         logger.error()
     worker = worker[0]
-    return orm.get_all_history_cleaning_requests_for_worker(worker_id=worker.id)
+    return orm.get_all_history_cleaning_requests_for_worker(
+        worker_id=worker.id,
+        offset=page * limit,
+        limit=limit,
+    )
 
 
-def get_all_waiting_cleaning_requests_for_worker(tg_id: int):
+def get_all_waiting_cleaning_requests_for_worker(
+    tg_id: int, page: int = 0, limit: int = 15
+):
     worker = orm.get_workers_with_post_by_column(Worker.telegram_id, tg_id)
     if worker == []:
         logger.error()
     worker = worker[0]
-    return orm.get_all_waiting_cleaning_requests_for_worker(worker_id=worker.id)
+    return orm.get_all_waiting_cleaning_requests_for_worker(
+        worker_id=worker.id, offset=page * limit, limit=limit
+    )
 
 
 # endregion
