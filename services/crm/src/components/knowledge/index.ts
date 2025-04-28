@@ -14,6 +14,7 @@ import {
 	KnowledgeDivision,
 	KnowledgeRootDivision,
 } from "@/components/knowledge/types";
+import { toast } from "vue3-toastify";
 
 const routerToActual = {
 	product: "Продукт",
@@ -132,11 +133,40 @@ export class KnowledgeController {
 	public async updateCard(card_update: any) {
 		if (this._card.value === undefined) return;
 		this.divisionLoading.value = true;
-		await this._service.updateCard(
-			this._card.value.id,
+		const error = await this._service.updateCard(
+			this._card.value,
 			card_update,
 			this._card.value.type,
 		);
+		if (error !== undefined) {
+			toast.error(`Карточка обновилась с ошибкой: ${error.message}`, {
+				autoClose: 10000,
+			});
+		}
+	}
+
+	public async deleteCardMaterial(materialId: number) {
+		if (this._card.value === undefined) return;
+
+		this.divisionLoading.value = true;
+		const result = await this._service.deleteMaterial(
+			this._card.value.id,
+			materialId,
+			this._card.value.type,
+		);
+
+		if (result === undefined) {
+			toast.error("Файл удалился с неопознанной ошибкой.", {
+				autoClose: 10000,
+			});
+			return;
+		}
+
+		if (result.error) {
+			toast.error(`Файл удалился с ошибкой: ${result.error.message}`, {
+				autoClose: 10000,
+			});
+		}
 	}
 
 	// Division

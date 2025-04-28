@@ -2,7 +2,7 @@
 import { computed, PropType, Ref, ref } from "vue";
 
 import DishCardView from "@/components/knowledge/DishCard.vue";
-import CommonCard from "@/components/knowledge/BusinessCard.vue";
+import BusinessCardView from "@/components/knowledge/BusinessCard.vue";
 import EditCard from "@/components/knowledge/EditCard.vue";
 import DivisionPath from "@/components/knowledge/DivisionPath.vue";
 
@@ -34,10 +34,10 @@ const props = defineProps({
 		type: Boolean,
 	},
 });
-
 const editMode = ref(false);
 const emits = defineEmits<{
 	(e: "save", card_update: any): void;
+	(e: "delete", materialId: number): void;
 }>();
 const switchMode = () => {
 	editMode.value = !editMode.value;
@@ -99,12 +99,16 @@ const business = computed(() => props.card as BusinessCard);
 					v-if="props.card.type == CardType.dish"
 					:key="props.card.id"
 					:card="dish"
+					@delete="(id: number) => emits('delete', id)"
+					:can-edit="props.canEdit"
 				></DishCardView>
-				<CommonCard
+				<BusinessCardView
 					v-if="props.card.type == CardType.business"
 					:key="props.card.id"
 					:card="business"
-				></CommonCard>
+					@delete="(id: number) => emits('delete', id)"
+					:can-edit="props.canEdit"
+				></BusinessCardView>
 			</div>
 
 			<EditCard

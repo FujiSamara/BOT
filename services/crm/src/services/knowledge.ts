@@ -3,6 +3,7 @@ import { useNetworkStore } from "@/store/network";
 import {
 	Card,
 	CardType,
+	DishCard,
 	DishMaterials,
 	DishModifierSchema,
 	DivisionType,
@@ -11,7 +12,7 @@ import {
 	KnowledgeSubdivision,
 } from "@/components/knowledge/types";
 import { DIVISION_CHUNK_SIZE, pathToView } from "@/components/knowledge";
-import { DocumentSchema } from "@/types";
+import { DocumentSchema, ErrorSchema } from "@/types";
 
 export class KnowledgeService {
 	private _networkStore = useNetworkStore();
@@ -125,15 +126,37 @@ export class KnowledgeService {
 		return resp.data;
 	}
 
-	public async updateCard(id: number, card_update: any, type: CardType) {
+	public async updateCard(
+		old_card: Card,
+		card_update: any,
+		type: CardType,
+	): Promise<ErrorSchema | undefined> {
 		switch (type) {
 			case CardType.dish:
-				await this.updateDishCard(id, card_update);
-				break;
+				return await this.updateDishCard(old_card as DishCard, card_update);
 			case CardType.business:
-				await this.updateBusinessCard(id, card_update);
-				break;
+				return await this.updateBusinessCard(old_card.id, card_update);
 		}
+	}
+
+	public async deleteMaterial(
+		id: number,
+		materialId: number,
+		type: CardType,
+	): Promise<{ file_id: number; error: ErrorSchema | null } | undefined> {
+		let url = `${this._endpoint}/dishes/${id}/materials?ids=${materialId}`;
+
+		if (type == CardType.business) {
+			url = url.replace("dishes", "cards");
+		}
+
+		const resp = await this._networkStore.withAuthChecking(axios.delete(url));
+
+		if (resp === undefined) return;
+
+		const data: { file_id: number; error: ErrorSchema | null }[] = resp.data;
+
+		return data[0];
 	}
 
 	private async addMaterials(materials: DocumentSchema[], url: string) {
@@ -157,22 +180,48 @@ export class KnowledgeService {
 		);
 	}
 
-	private async updateDishCard(id: number, card_update: any) {
+	private async updateDishCard(
+		old_card: DishCard,
+		card_update: any,
+	): Promise<ErrorSchema | undefined> {
+		const id = old_card.id;
 		const videos: DocumentSchema[] | undefined = card_update["video"];
 		const materials = card_update["materials"];
 
 		if (videos) {
 			const video = videos[0];
-			const url = `${this._endpoint}/dishes/${id}/video`;
-			const resp = await this._networkStore.withAuthChecking(
-				axios.post(url, {
-					filename: video.name,
-					size: video.file!.size,
-				}),
-			);
-			if (resp === undefined) return;
-			const link: FileLinkSchema = resp.data;
-			await this._networkStore.putToS3([link.url], [video.file!]);
+
+			let link: FileLinkSchema | undefined = undefined;
+			if (
+				old_card.materials === undefined ||
+				old_card.materials.video === undefined
+			) {
+				const url = `${this._endpoint}/dishes/${id}/video`;
+				const resp = await this._networkStore.withAuthChecking(
+					axios.post(url, {
+						filename: video.name,
+						size: video.file!.size,
+					}),
+				);
+				if (resp === undefined) return;
+				link = resp.data;
+			} else {
+				const url = `${this._endpoint}/dishes/${id}/video`;
+				const resp = await this._networkStore.withAuthChecking(
+					axios.patch(url, {
+						filename: video.name,
+						size: video.file!.size,
+					}),
+				);
+				if (resp === undefined) return;
+				const res: { meta: FileLinkSchema; error: ErrorSchema | null } =
+					resp.data;
+				if (res.error === null) link = res.meta;
+				else return res.error;
+			}
+
+			if (link !== undefined)
+				await this._networkStore.putToS3([link.url], [video.file!]);
 		}
 
 		if (materials.length) {
@@ -183,7 +232,10 @@ export class KnowledgeService {
 		}
 	}
 
-	private async updateBusinessCard(id: number, card_update: any) {
+	private async updateBusinessCard(
+		id: number,
+		card_update: any,
+	): Promise<undefined> {
 		const description: string = card_update["description"];
 		const materials: DocumentSchema[] = card_update["materials"];
 

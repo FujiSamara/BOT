@@ -3,6 +3,7 @@ import { computed, PropType, Ref, ref } from "vue";
 
 import ImageView from "@/components/viewer/ImageView.vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
+import DeleteButton from "@/components/UI-new/DeleteButton.vue";
 
 import { imageExts } from "@/config";
 import { FileLinkSchema } from "@/components/knowledge/types";
@@ -14,7 +15,13 @@ const props = defineProps({
 		type: Array as PropType<FileLinkSchema[]>,
 		required: true,
 	},
+	canDelete: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits<{
+	(e: "delete", index: number): void;
+}>();
 
 const materials = computed(() => props.materials);
 
@@ -62,7 +69,7 @@ const downloadClicked = (url: string) => {
 		<div class="c-materials">
 			<span>Материалы</span>
 			<ul>
-				<li v-for="material in materials">
+				<li v-for="(material, index) in materials">
 					<span
 						class="title"
 						@click="() => openPhoto(material)"
@@ -82,6 +89,10 @@ const downloadClicked = (url: string) => {
 						<button @click="downloadClicked(material.url)" class="download">
 							Скачать
 						</button>
+						<DeleteButton
+							v-if="props.canDelete"
+							@click="emits('delete', index)"
+						></DeleteButton>
 					</div>
 				</li>
 			</ul>

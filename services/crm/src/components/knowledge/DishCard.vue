@@ -9,7 +9,13 @@ const props = defineProps({
 		type: Object as PropType<DishCard>,
 		required: true,
 	},
+	canEdit: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits<{
+	(e: "delete", materialId: number): void;
+}>();
 const isCompound = ref(true);
 
 const modifiers = computed(() => {
@@ -188,6 +194,11 @@ const convertAmount = (amount: number): string => {
 				<CardMaterials
 					v-if="props.card.materials.materials.length"
 					:materials="props.card.materials.materials"
+					@delete="
+						(index: number) =>
+							emits('delete', props.card.materials!.materials[index].id)
+					"
+					:can-delete="props.canEdit"
 				></CardMaterials>
 			</footer>
 			<div v-else class="spinner-wrapper">

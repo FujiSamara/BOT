@@ -265,3 +265,7 @@ export interface QuerySchema {
 	filter_query?: Array<FilterSchema>;
 }
 // #endregion
+
+export interface ErrorSchema {
+	message: string;
+}

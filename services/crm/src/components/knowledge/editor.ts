@@ -32,22 +32,17 @@ function getBusinessCardFields(card: BusinessCard): Field[] {
 	];
 }
 
-function getDishCardFields(dish: DishCard): Field[] {
-	const result = [];
-
-	if (dish.materials === undefined || dish.materials.video === undefined) {
-		result.push({
+function getDishCardFields(_: DishCard): Field[] {
+	return [
+		{
 			entity: new DocumentEntity(false, "Видео"),
 			type: SelectType.MonoDocument,
-		});
-	}
-
-	result.push({
-		entity: new DocumentEntity(false, "Материалы"),
-		type: SelectType.MultiDocument,
-	});
-
-	return result;
+		},
+		{
+			entity: new DocumentEntity(false, "Материалы"),
+			type: SelectType.MultiDocument,
+		},
+	];
 }
 
 function toBusinessCardUpdate(fields: Field[]) {
@@ -63,12 +58,8 @@ function toBusinessCardUpdate(fields: Field[]) {
 function toDishCardUpdate(fields: Field[]) {
 	const result: any = {};
 
-	if (fields.length === 2) {
-		result["video"] = fields[0].entity.getResult();
-		result["materials"] = fields[1].entity.getResult();
-	} else {
-		result["materials"] = fields[0].entity.getResult();
-	}
+	result["video"] = fields[0].entity.getResult();
+	result["materials"] = fields[1].entity.getResult();
 
 	return result;
 }
