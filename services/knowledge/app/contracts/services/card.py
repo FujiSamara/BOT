@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 from common.contracts.services import BaseService
 
 from app.schemas.card import BusinessCardSchema, BusinessCardUpdateSchema
@@ -38,4 +38,15 @@ class CardService(BaseService):
             ValueError: If card with `id` not exist.
         Returns:
             Updated card.
+        """
+
+    @abstractmethod
+    async def deleta_card_materials(
+        self, card_id: int, material_ids: list[int]
+    ) -> list[FileDeleteResultSchema]:
+        """Delete materials from card.
+        Raises:
+            ValueError: If card with `id` not exist.
+        Returns:
+            A list of `FileDeleteResultSchema` objects describing the files that failed to be deleted.
         """
