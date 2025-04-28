@@ -3,7 +3,7 @@ import aiohttp
 from common.contracts.clients import RemoteFileClient
 from common.http.retry import retry
 from common.http.auth import AuthHTTPClient
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 
 
 class HTTPFileClient(RemoteFileClient):
@@ -58,3 +58,20 @@ class HTTPFileClient(RemoteFileClient):
 
                 body: dict = await resp.json()
                 return [FileLinkSchema.model_validate(file) for file in body]
+
+    async def delete_files(self, ids):
+        if len(ids) == 0:
+            return []
+        authorization_header = await self._auth_client.get_authorization_header()
+        async with aiohttp.ClientSession() as session:
+            params = "&".join([f"ids={id}" for id in ids])
+            async with session.delete(
+                f"{self._url}/api/files/?{params}",
+                headers={"Authorization": authorization_header},
+                ssl=self._with_ssl,
+            ) as resp:
+                if 400 <= resp.status < 500:
+                    raise RuntimeError(f"Files deleted with error: {resp.reason}")
+
+                body: dict = await resp.json()
+                return [FileDeleteResultSchema.model_validate(res) for res in body]

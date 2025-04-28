@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from common.contracts.clients import BaseClient
-from common.schemas.file import FileLinkSchema, FileInSchema
+from common.schemas.file import FileLinkSchema, FileInSchema, FileDeleteResultSchema
 
 
 class RemoteFileClient(BaseClient):
@@ -15,4 +15,8 @@ class RemoteFileClient(BaseClient):
     async def request_get_links(
         self, ids: list[int], expiration: int = 3600
     ) -> list[FileLinkSchema]:
+        pass
+
+    @abstractmethod
+    async def delete_files(self, ids: list[int]) -> list[FileDeleteResultSchema]:
         pass
