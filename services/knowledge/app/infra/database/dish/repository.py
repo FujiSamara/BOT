@@ -172,7 +172,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         if product is None:
             raise ValueError(f"Dish {id} not found.")
 
-        s_materials = select(DishMaterial.external_id).where(
+        s_materials = select(DishMaterial).where(
             DishMaterial.external_id.in_(material_ids)
         )
         materials = list((await self._session.execute(s_materials)).scalars().all())

@@ -35,7 +35,7 @@ class FileLinkSchema(FileMetaSchema):
 
 
 class FileUpdateResultSchema(BaseSchema):
-    meta: FileMetaSchema | None
+    meta: FileLinkSchema | None
     error: ErrorSchema | None
 
 
