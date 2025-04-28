@@ -46,3 +46,10 @@ class DishRepository(BaseRepository):
         Returns:
             Added material ids.
         """
+
+    @abstractmethod
+    async def delete_dish_materials_by_external_id(self, id, material_ids: list[int]):
+        """Delete dish materials by `material_ids`.
+        Raises:
+            ValueError: If dish with `id` not exist.
+        """

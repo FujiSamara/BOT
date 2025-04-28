@@ -1,5 +1,6 @@
 from common.contracts.clients import RemoteFileClient
-from common.schemas.file import FileLinkSchema, FileInSchema
+from common.schemas import ErrorSchema
+from common.schemas.file import FileLinkSchema, FileInSchema, FileDeleteResultSchema
 from app.contracts.services import DishService
 from app.contracts.uow import DishUnitOfWork
 from app.schemas.dish import DishMaterialsSchema, DishUpdateSchema
@@ -16,10 +17,18 @@ class DishServiceImpl(DishService):
 
     async def get_dish_modifiers(self, dish_id):
         async with self._uow as uow:
+            dish = await uow.dish.get_by_id(dish_id)
+            if dish is None:
+                raise ValueError(f"Dish {dish_id} not found.")
+
             return await uow.dish.get_modifiers(dish_id)
 
     async def get_dish_materials(self, dish_id):
         async with self._uow as uow:
+            dish = await uow.dish.get_by_id(dish_id)
+            if dish is None:
+                raise ValueError(f"Dish {dish_id} not found.")
+
             materials_dto = await uow.dish.get_dish_materials(dish_id)
 
             video = None
@@ -84,3 +93,51 @@ class DishServiceImpl(DishService):
             await uow.dish.add_dish_materials(dish_id, [meta.id for meta in meta_list])
 
             return meta_list
+
+    async def delete_dish_materials(self, dish_id, material_ids):
+        async with self._uow as uow:
+            dish = await uow.dish.get_by_id(dish_id)
+            if dish is None:
+                raise ValueError(f"Dish {dish_id} not found.")
+
+            actual_materials_dto = await uow.dish.get_dish_materials(dish_id)
+            actual_materials = actual_materials_dto.materials
+
+            not_exist_materials = set(material_ids) - set(actual_materials)
+            exist_materials = set(material_ids) & set(actual_materials)
+
+            results = await self._file_client.delete_files(list(exist_materials))
+            deleted_with_error = set(
+                result.file_id for result in results if result.error is not None
+            )
+
+            for id in not_exist_materials:
+                results.append(
+                    FileDeleteResultSchema(
+                        file_id=id,
+                        error=ErrorSchema(message="Material does not exist in dish."),
+                    )
+                )
+
+            await self._uow.dish.delete_dish_materials_by_external_id(
+                dish_id, list(exist_materials - deleted_with_error)
+            )
+
+            return results
+
+    async def delete_dish_video(self, dish_id):
+        async with self._uow as uow:
+            dish = await uow.dish.get_by_id(dish_id)
+            if dish is None:
+                raise ValueError(f"Dish {dish_id} not found.")
+
+            materials = await uow.dish.get_dish_materials(dish_id)
+
+            if materials.video is None:
+                raise ValueError(f"Video for dish {dish_id} not found.")
+
+            (delete_result,) = await self._file_client.delete_files([materials.video])
+            if delete_result.error is None:
+                await uow.dish.update(dish_id, DishUpdateSchema(video=None))
+
+            return delete_result

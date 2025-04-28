@@ -81,7 +81,7 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
 
         return converters.card_to_card_schema(card)
 
-    async def delete_card_materials(self, id, material_ids):
+    async def delete_card_materials_by_external_id(self, id, material_ids):
         s = select(BusinessCard).where(BusinessCard.id == id)
         card = (await self._session.execute(s)).scalars().first()
 

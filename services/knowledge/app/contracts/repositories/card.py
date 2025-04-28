@@ -43,7 +43,7 @@ class CardRepository(BaseRepository):
         """
 
     @abstractmethod
-    async def delete_card_materials(self, id, material_ids: list[int]):
+    async def delete_card_materials_by_external_id(self, id, material_ids: list[int]):
         """Delete card materials by `material_ids`.
         Raises:
             ValueError: If card with `id` not exist.

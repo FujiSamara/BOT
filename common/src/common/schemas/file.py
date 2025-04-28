@@ -34,6 +34,11 @@ class FileLinkSchema(FileMetaSchema):
     url: str
 
 
+class FileUpdateResultSchema(BaseSchema):
+    meta: FileMetaSchema | None
+    error: ErrorSchema | None
+
+
 class FileDeleteResultSchema(BaseSchema):
     file_id: int
     error: ErrorSchema | None

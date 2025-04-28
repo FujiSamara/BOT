@@ -49,6 +49,9 @@ async def get_card_materials(
 ) -> list[FileLinkSchema]:
     try:
         return await service.get_card_materials(id)
+    except ValueError as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -81,7 +84,7 @@ async def delete_card_materials(
         return results
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -103,7 +106,7 @@ async def add_card_materials(
         return await service.add_card_materials(id, materials)
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -125,7 +128,7 @@ async def update_card_by_id(
         return await service.update_card(id, card_update)
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

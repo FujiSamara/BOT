@@ -48,5 +48,5 @@ class CardService(BaseService):
         Raises:
             ValueError: If card with `id` not exist.
         Returns:
-            A list of `FileDeleteResultSchema` objects describing the files that failed to be deleted.
+            A list of `FileDeleteResultSchema` objects describing the materials that failed to be deleted.
         """
