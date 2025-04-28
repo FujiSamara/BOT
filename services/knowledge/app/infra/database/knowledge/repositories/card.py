@@ -80,3 +80,21 @@ class SQLCardRepository(CardRepository, SQLBaseRepository):
         await self._session.refresh(card)
 
         return converters.card_to_card_schema(card)
+
+    async def delete_card_materials(self, id, material_ids):
+        s = select(BusinessCard).where(BusinessCard.id == id)
+        card = (await self._session.execute(s)).scalars().first()
+
+        if card is None:
+            raise ValueError(f"Card {id} not found.")
+
+        s = select(BusinessCardMaterial).where(
+            BusinessCardMaterial.external_id.in_(material_ids)
+        )
+
+        materials = (await self._session.execute(s)).scalars().all()
+
+        for material in materials:
+            await self._session.delete(material)
+
+        await self._session.flush()
