@@ -1779,6 +1779,8 @@ def get_timesheets(
             post_name = worker.post.name
             total_hours, total_shifts = total_dict.get(worker.id, (0, 0))
             duration_per_day = per_days_dict.get(worker.id, {})
+            if total_shifts == 0:
+                continue
 
             timesheet = TimeSheetSchema(
                 id=worker.id,
