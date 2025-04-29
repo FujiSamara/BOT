@@ -7,10 +7,10 @@ import hmac
 import hashlib
 
 from common.schemas.client_credential import ClientCredentials
-from common.schemas.file import FileInSchema
+from common.schemas.file import FileInSchema, FileDeleteResultSchema
 from app.container import Container
 from app.contracts.services import FileService
-from app.schemas.file import FileConfirmSchema, FileDeleteResultSchema
+from app.schemas.file import FileConfirmSchema
 from common.schemas.file import FileLinkSchema
 
 from app.controllers.api.dependencies import Authorization

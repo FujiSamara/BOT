@@ -164,3 +164,20 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
             self._session.add(dm)
 
         await self._session.flush()
+
+    async def delete_dish_materials_by_external_id(self, id, material_ids):
+        s = select(TTKProduct).where(TTKProduct.id == id)
+        product = (await self._session.execute(s)).scalars().first()
+
+        if product is None:
+            raise ValueError(f"Dish {id} not found.")
+
+        s_materials = select(DishMaterial).where(
+            DishMaterial.external_id.in_(material_ids)
+        )
+        materials = list((await self._session.execute(s_materials)).scalars().all())
+
+        for material in materials:
+            await self._session.delete(material)
+
+        await self._session.flush()

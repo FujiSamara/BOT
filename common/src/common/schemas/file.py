@@ -1,6 +1,7 @@
 from datetime import datetime
-from common.schemas.base import BaseSchema
 from pydantic import ConfigDict, Field
+
+from common.schemas.base import BaseSchema, ErrorSchema
 
 
 class FileInSchema(BaseSchema):
@@ -31,3 +32,13 @@ class FileMetaSchema(BaseSchema):
 
 class FileLinkSchema(FileMetaSchema):
     url: str
+
+
+class FileUpdateResultSchema(BaseSchema):
+    meta: FileLinkSchema | None
+    error: ErrorSchema | None
+
+
+class FileDeleteResultSchema(BaseSchema):
+    file_id: int
+    error: ErrorSchema | None

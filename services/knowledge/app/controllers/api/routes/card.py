@@ -1,5 +1,6 @@
 from logging import Logger
-from fastapi import APIRouter, Depends, Security, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Depends, Query, Security, HTTPException, status
 from dependency_injector.wiring import Provide, inject
 import traceback
 
@@ -48,6 +49,42 @@ async def get_card_materials(
 ) -> list[FileLinkSchema]:
     try:
         return await service.get_card_materials(id)
+    except ValueError as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+@router.delete("/{id}/materials")
+@inject
+async def delete_card_materials(
+    id: int,
+    ids: Annotated[list[int], Query()],
+    service: CardService = Depends(Provide[Container.card_service]),
+    logger: Logger = Depends(Provide[Container.logger]),
+    _: ClientCredentials = Security(
+        Authorization,
+        scopes=[Scopes.CardWrite.value],
+    ),
+):
+    try:
+        results = await service.deleta_card_materials(id, ids)
+        if any([result.error is not None for result in results]):
+            error_msg = "Several card materials not deleted:\n"
+            files_msg = "\n".join(
+                [
+                    f"ID: [{result.file_id}], {result.error.message}"
+                    for result in results
+                    if result.error is not None
+                ]
+            )
+            logger.warning(error_msg + files_msg)
+        return results
+    except ValueError as e:
+        logger.error("\n".join([str(e), traceback.format_exc()]))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -69,7 +106,7 @@ async def add_card_materials(
         return await service.add_card_materials(id, materials)
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -91,7 +128,7 @@ async def update_card_by_id(
         return await service.update_card(id, card_update)
     except ValueError as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception as e:
         logger.error("\n".join([str(e), traceback.format_exc()]))
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))

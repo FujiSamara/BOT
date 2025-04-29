@@ -1,5 +1,6 @@
 from common.contracts.clients import RemoteFileClient
-from common.schemas.file import FileLinkSchema, FileInSchema
+from common.schemas import ErrorSchema
+from common.schemas.file import FileLinkSchema, FileInSchema, FileDeleteResultSchema
 from app.contracts.services import CardService
 from app.contracts.uow import CardUnitOfWork
 
@@ -25,6 +26,10 @@ class CardServiceImpl(CardService):
 
     async def get_card_materials(self, card_id):
         async with self._uow as uow:
+            card = await uow.card.get_by_id(card_id)
+            if card is None:
+                raise ValueError(f"Dish {card_id} not found.")
+
             materials = await uow.card.get_card_materials(card_id)
             return await self._file_client.request_get_links(materials)
 
@@ -60,3 +65,33 @@ class CardServiceImpl(CardService):
     async def update_card(self, card_id, card_update):
         async with self._uow as uow:
             return await uow.card.update(card_id, card_update)
+
+    async def deleta_card_materials(self, card_id, material_ids):
+        async with self._uow as uow:
+            card = await uow.card.get_by_id(card_id)
+            if card is None:
+                raise ValueError(f"Dish {card_id} not found.")
+
+            actual_materials = await uow.card.get_card_materials(card_id)
+
+            not_exist_materials = set(material_ids) - set(actual_materials)
+            exist_materials = set(material_ids) & set(actual_materials)
+
+            results = await self._file_client.delete_files(list(exist_materials))
+            deleted_with_error = set(
+                result.file_id for result in results if result.error is not None
+            )
+
+            for id in not_exist_materials:
+                results.append(
+                    FileDeleteResultSchema(
+                        file_id=id,
+                        error=ErrorSchema(message="Material does not exist in card."),
+                    )
+                )
+
+            await self._uow.card.delete_card_materials_by_external_id(
+                card_id, list(exist_materials - deleted_with_error)
+            )
+
+            return results

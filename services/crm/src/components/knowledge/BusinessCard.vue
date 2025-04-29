@@ -14,7 +14,13 @@ const props = defineProps({
 		type: Object as PropType<BusinessCard>,
 		required: true,
 	},
+	canEdit: {
+		type: Boolean,
+	},
 });
+const emits = defineEmits<{
+	(e: "delete", materialId: number): void;
+}>();
 
 let warningComplete = false;
 
@@ -84,7 +90,13 @@ const pdfFile = computed(() => {
 						<span class="icon" :class="{ reversed: expanded }"></span>
 					</div>
 				</div>
-				<CardMaterials :materials="props.card.materials"></CardMaterials>
+				<CardMaterials
+					:materials="props.card.materials"
+					@delete="
+						(index: number) => emits('delete', props.card.materials[index].id)
+					"
+					:can-delete="props.canEdit"
+				></CardMaterials>
 			</footer>
 			<div
 				v-else-if="props.card.materials === undefined"

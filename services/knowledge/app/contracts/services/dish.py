@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 from common.contracts.services import BaseService
 
 from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsSchema
@@ -18,7 +18,10 @@ class DishService(BaseService):
 
     @abstractmethod
     async def get_dish_materials(self, dish_id: int) -> DishMaterialsSchema:
-        pass
+        """Get metadata for dish materials.
+        Raises:
+            ValueError: If dish with `dish_id` not found.
+        """
 
     @abstractmethod
     async def add_dish_video(self, dish_id: int, video: FileInSchema) -> FileLinkSchema:
@@ -41,4 +44,25 @@ class DishService(BaseService):
             ValueError: If dish with `dish_id` not found or material already exist.
         Returns:
             File put links with meta.
+        """
+
+    @abstractmethod
+    async def delete_dish_materials(
+        self, dish_id: int, material_ids: list[int]
+    ) -> list[FileDeleteResultSchema]:
+        """Delete materials from dish.
+        Raises:
+            ValueError: If dish with `id` not exist.
+        Returns:
+            A list of `FileDeleteResultSchema` objects describing the materials that failed to be deleted.
+        """
+
+    @abstractmethod
+    async def delete_dish_video(self, dish_id) -> FileDeleteResultSchema:
+        """Delete video from dish if it exist.
+        Raises:
+            ValueError: If dish with `id` not exist.
+            ValueError: If dish video not exist.
+        Returns:
+            A `FileDeleteResultSchema` object describing the video that failed to be deleted.
         """

@@ -2,9 +2,9 @@ from datetime import datetime
 from app.contracts.services import FileService
 from app.contracts.clients import FileClient
 from app.contracts.uow import FileUnitOfWork
-from app.schemas.file import FileCreateSchema, FileUpdateSchema, FileDeleteResultSchema
+from app.schemas.file import FileCreateSchema, FileSchema, FileUpdateSchema
 from common.schemas import ErrorSchema
-from common.schemas.file import FileLinkSchema
+from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 
 
 class FileServiceImpl(FileService):
@@ -15,6 +15,13 @@ class FileServiceImpl(FileService):
         self._file_client = file_client
         self._buckets = buckets
 
+    async def _remove_unconfirmed(self, files: list[FileSchema]) -> list[FileSchema]:
+        """Remove unconfirmed files in specidied `files`."""
+        unconfirmed_files = [file for file in files if not file.confirmed]
+        async with self._file_uow as uow:
+            await uow.file.delete(unconfirmed_files)
+        return [file for file in files if file.confirmed]
+
     async def _find_free_bucket(self, key: str) -> str | None:
         """Finds first bucket not consists the file with `key`.
         Returns:
@@ -22,6 +29,7 @@ class FileServiceImpl(FileService):
         """
         async with self._file_uow as uow:
             files = await uow.file.get_by_key(key)
+        files = await self._remove_unconfirmed(files)
 
         for bucket in self._buckets:
             if not any([file.bucket == bucket for file in files]):
@@ -81,9 +89,7 @@ class FileServiceImpl(FileService):
     async def create_get_links(self, ids, expiration=3600):
         async with self._file_uow as uow:
             files = await uow.file.get_by_ids(ids)
-
-            unconfirmed_files = [file for file in files if not file.confirmed]
-            await uow.file.delete(unconfirmed_files)
+        files = await self._remove_unconfirmed(files)
 
         result = []
 

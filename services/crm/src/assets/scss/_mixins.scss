@@ -93,33 +93,7 @@
   }
 }
 
-@mixin field() {
-  @include window();
-
-  flex-direction: row;
-  align-items: center;
-  position: relative;
-  width: fit-content;
-
-  gap: 10px;
-
-  padding: 15px 20px;
-  outline: 0 !important;
-
-  transition:
-    border-color 0.25s,
-    background-color 0.25s;
-
-  span {
-    font-family: Wix Madefor Display;
-    font-weight: 500;
-    font-size: 14px;
-    color: $main-dark-gray;
-
-    white-space: nowrap;
-    transition: color 0.25s;
-  }
-
+@mixin withIcon() {
   .tool-icon-wrapper {
     display: flex;
     justify-content: center;
@@ -150,6 +124,36 @@
 
     transition: background-color 0.25s;
   }
+}
+
+@mixin field() {
+  @include window();
+
+  flex-direction: row;
+  align-items: center;
+  position: relative;
+  width: fit-content;
+
+  gap: 10px;
+
+  padding: 15px 20px;
+  outline: 0 !important;
+
+  transition:
+    border-color 0.25s,
+    background-color 0.25s;
+
+  span {
+    font-family: Wix Madefor Display;
+    font-weight: 500;
+    font-size: 14px;
+    color: $main-dark-gray;
+
+    white-space: nowrap;
+    transition: color 0.25s;
+  }
+
+  @include withIcon();
 
   .tool-message {
     position: absolute;

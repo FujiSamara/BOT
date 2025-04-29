@@ -43,6 +43,10 @@ const onCardSave = async (val: any) => {
 	await controller.updateCard(val);
 	await loadDivision();
 };
+const onMaterialDelete = async (materialId: number) => {
+	await controller.deleteCardMaterial(materialId);
+	await loadDivision();
+};
 
 const subDivisionClicked = async (index: number) => {
 	if (division.value === undefined) return;
@@ -168,6 +172,7 @@ onMounted(async () => {
 						:path="division.path"
 						:can-edit="division.canEdit && !controller.cardLoading.value"
 						@save="onCardSave"
+						@delete="onMaterialDelete"
 					></Card>
 
 					<div
