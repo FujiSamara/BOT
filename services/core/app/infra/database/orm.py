@@ -1795,11 +1795,6 @@ def get_timesheets(
             .order_by(WorkTime.day)
         )
 
-        if records_per_page is not None and query_schema is not None:
-            per_day_sel = per_day_sel.offset((page - 1) * records_per_page).limit(
-                records_per_page
-            )
-
         # Worker id, total duration, total shifts
         total_sel = (
             select(w_sub.c.id, func.sum(WorkTime.work_duration), func.count())
@@ -1816,12 +1811,17 @@ def get_timesheets(
             .group_by(w_sub.c.id)
         )
 
+        if records_per_page is not None and query_schema is not None:
+            total_sel = total_sel.offset((page - 1) * records_per_page).limit(
+                records_per_page
+            )
+
         # Worker id/worktime id/day/duration
         per_days: list[tuple[int, int, date, float]] = s.execute(per_day_sel).all()
         totals = s.execute(total_sel).all()
 
         workers: list[Worker] = (
-            s.execute(workers_sel.where(Worker.id.in_([id for (id, *_) in per_days])))
+            s.execute(workers_sel.where(Worker.id.in_([id for (id, *_) in totals])))
             .scalars()
             .all()
         )
