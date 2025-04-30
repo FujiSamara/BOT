@@ -1,12 +1,10 @@
 from fastapi import Response, Security
 from fastapi.responses import StreamingResponse
 from fastapi.routing import APIRouter
+from datetime import datetime
 
 from app.services import timesheet
-from app.schemas import (
-    QuerySchema,
-    TalbeInfoSchema,
-)
+from app.schemas import QuerySchema, TalbeInfoSchema, DateSchema
 
 from app.adapters.input.api.auth import User, get_user
 
@@ -21,7 +19,15 @@ async def get_pages_info(
     _: User = Security(get_user, scopes=["crm_worktime"]),
 ) -> TalbeInfoSchema:
     record_count = timesheet.get_timesheet_count(query)
-    all_record_count = timesheet.get_timesheet_count(QuerySchema())
+    all_record_count = timesheet.get_timesheet_count(
+        QuerySchema(
+            date_query=DateSchema(
+                start=datetime.now().replace(year=1900),
+                end=datetime.now().replace(year=2100),
+                column="",
+            )
+        )
+    )
     page_count = (record_count + records_per_page - 1) // records_per_page
 
     return TalbeInfoSchema(
