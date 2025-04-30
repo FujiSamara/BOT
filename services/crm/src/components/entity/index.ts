@@ -491,7 +491,7 @@ export class EnumEntity extends InputSelectEntity<EnumRecordSchema> {
 
 export class DepartmentEntity extends InputSelectEntity<DepartmentSchema> {
 	public placeholder = "Предприятие";
-	protected _service = new EntityService<ExpenditureSchema>("post");
+	protected _service = new EntityService<ExpenditureSchema>("department");
 
 	protected async onSubmit(val: string): Promise<void> {
 		const service = new EntityService<DepartmentSchema>("department");
