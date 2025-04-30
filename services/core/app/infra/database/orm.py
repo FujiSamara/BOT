@@ -1684,6 +1684,57 @@ def export_models(
 # endregion
 
 
+def get_timesheet_count(query_schema: QuerySchema) -> int:
+    with session.begin() as s:
+        local = pytz.timezone(settings.timezone)
+
+        start = (
+            query_schema.date_query.start.astimezone(local)
+            if query_schema.date_query.start.tzinfo
+            else local.localize(query_schema.date_query.start)
+        )
+
+        end = (
+            query_schema.date_query.end.astimezone(local)
+            if query_schema.date_query.end.tzinfo
+            else local.localize(query_schema.date_query.end)
+        )
+
+        query_schema.date_query = None
+
+        if query_schema.order_by_query:
+            if query_schema.order_by_query.column == "worker_fullname":
+                query_schema.order_by_query.column = "l_name"
+            elif query_schema.order_by_query.column == "post_name":
+                query_schema.order_by_query.column = "post"
+            elif query_schema.order_by_query.column == "department_name":
+                query_schema.order_by_query.column = "department"
+
+        query_builder = create_query_builder(Worker, query_schema, s)
+        workers_sel = query_builder.select
+        w_sub = workers_sel.subquery()
+        total_sel = (
+            select(w_sub.c.id, func.sum(WorkTime.work_duration), func.count())
+            .join(w_sub, w_sub.c.id == WorkTime.worker_id)
+            .where(
+                WorkTime.work_duration != null(),
+                WorkTime.work_duration != 0,
+                WorkTime.work_begin != null(),
+                WorkTime.work_end != null(),
+                WorkTime.work_begin >= start,
+                WorkTime.work_end <= end,
+            )
+            .having(func.count() > 0)
+            .group_by(w_sub.c.id)
+        ).subquery()
+
+        count_sel = select(func.count()).select_from(total_sel)
+
+        count = s.execute(count_sel).scalar()
+
+        return count if count is not None else 0
+
+
 def get_timesheets(
     query_schema: QuerySchema,
     page: int | None = None,
@@ -1715,10 +1766,7 @@ def get_timesheets(
                 query_schema.order_by_query.column = "department"
 
         query_builder = create_query_builder(Worker, query_schema, s)
-        if records_per_page is not None and query_schema is not None:
-            query_builder.select = query_builder.select.offset(
-                (page - 1) * records_per_page
-            ).limit(records_per_page)
+
         workers_sel = query_builder.select
         w_sub = workers_sel.subquery()
 
@@ -1740,7 +1788,10 @@ def get_timesheets(
                 WorkTime.work_begin >= start,
                 WorkTime.work_end <= end,
             )
-            .having(WorkTime.day != null())
+            .having(
+                WorkTime.day != null(),
+                func.sum(WorkTime.work_duration) > 0,
+            )
             .order_by(WorkTime.day)
         )
 
@@ -1756,13 +1807,24 @@ def get_timesheets(
                 WorkTime.work_begin >= start,
                 WorkTime.work_end <= end,
             )
+            .having(func.count() > 0)
             .group_by(w_sub.c.id)
         )
 
-        workers: list[Worker] = s.execute(workers_sel).scalars().all()
+        if records_per_page is not None and query_schema is not None:
+            total_sel = total_sel.offset((page - 1) * records_per_page).limit(
+                records_per_page
+            )
+
         # Worker id/worktime id/day/duration
         per_days: list[tuple[int, int, date, float]] = s.execute(per_day_sel).all()
         totals = s.execute(total_sel).all()
+
+        workers: list[Worker] = (
+            s.execute(workers_sel.where(Worker.id.in_([id for (id, *_) in totals])))
+            .scalars()
+            .all()
+        )
 
         total_dict = {total[0]: (total[1], total[2]) for total in totals}
         per_days_dict: dict[int, dict[date, ShiftDurationSchema]] = {}

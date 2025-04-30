@@ -10,6 +10,7 @@ def get_timesheet_count(
     query_schema: QuerySchema,
 ) -> int:
     """Returns timesheet count in bd."""
+    return orm.get_timesheet_count(query_schema)
     query_schema.date_query = None
     return orm.get_model_count(Worker, query_schema)
 
