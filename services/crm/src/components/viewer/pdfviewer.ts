@@ -20,7 +20,6 @@ export const usePdfViewer = (
 	let document: PDFDocumentProxy;
 	let eventBus: EventBus | null = null;
 	let destroyEventBus = () => {};
-	let waitRender = async () => {};
 
 	const ready = ref(true);
 	let needRender = false;
@@ -50,9 +49,8 @@ export const usePdfViewer = (
 			linkService,
 			removePageBorders: true,
 		});
-		const { destroy, waitInit, waitPageRender } = useEventHandling(eventBus);
+		const { destroy, waitInit } = useEventHandling(eventBus);
 		destroyEventBus = destroy;
-		waitRender = waitPageRender;
 
 		linkService.setViewer(pdfViewer);
 		linkService.setDocument(document, null);
@@ -109,7 +107,6 @@ export const usePdfViewer = (
 			if (needRender) {
 				needRender = false;
 				await resize();
-				await waitRender();
 			}
 			await new Promise((resolve) => setTimeout(resolve, 100));
 		}

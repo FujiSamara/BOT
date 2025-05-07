@@ -36,13 +36,13 @@ onMounted(async () => {
 
 	if (!wrapper.value) return;
 	resizeObserver = new ResizeObserver(() => viewer.tryResize());
-	resizeObserver.observe(wrapper.value);
+	resizeObserver.observe(document.getElementsByTagName("html")[0]);
 });
 onUnmounted(() => {
 	viewer.destroy();
 	if (!wrapper.value || !resizeObserver) return;
 
-	resizeObserver.unobserve(wrapper.value);
+	resizeObserver.unobserve(document.getElementsByTagName("html")[0]);
 	resizeObserver.disconnect();
 });
 </script>
