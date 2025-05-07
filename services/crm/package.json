@@ -19,7 +19,7 @@
     "gsap": "^3.12.7",
     "jwt-decode": "^4.0.0",
     "npm": "^11.2.0",
-    "pdfjs-dist": "^5.1.91",
+    "pdfjs-dist": "^5.2.133",
     "pinia": "^2.2.2",
     "promise.withresolvers": "^1.0.3",
     "url": "^0.11.3",
