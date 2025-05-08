@@ -16,6 +16,11 @@ class IngredientSchema(BaseSchema):
     amount: float
 
 
+class DishModifierGroupSchema(BaseSchema):
+    title: str
+    modifiers: list["DishModifierSchema"]
+
+
 class DishModifierSchema(BaseSchema):
     id: int
     title: str
