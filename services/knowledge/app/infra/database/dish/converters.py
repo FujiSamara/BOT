@@ -16,5 +16,7 @@ def modifier_to_modifier_schema(modifier: dict) -> DishModifierSchema:
     return DishModifierSchema.model_validate(modifier)
 
 
-def materials_to_materials_dto(materials: list[int], video: int) -> DishMaterialsDTO:
+def materials_to_materials_dto(
+    materials: list[int], video: int | None
+) -> DishMaterialsDTO:
     return DishMaterialsDTO(materials=materials, video=video)
