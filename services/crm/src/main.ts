@@ -1,3 +1,5 @@
+import "pdfjs-dist/web/pdf_viewer.css";
+(globalThis as any).pdfjsLib = await import("pdfjs-dist/legacy/build/pdf.mjs");
 import "promise.withresolvers/shim"; // For safari <= 17.3.
 
 import { createApp } from "vue";
