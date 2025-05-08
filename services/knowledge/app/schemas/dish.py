@@ -17,13 +17,12 @@ class IngredientSchema(BaseSchema):
 
 
 class DishModifierGroupSchema(BaseSchema):
-    title: str
+    title: str | None
     modifiers: list["DishModifierSchema"]
 
 
 class DishModifierSchema(BaseSchema):
-    id: int
-    title: str
+    title: str | None
     ingredients: list[IngredientSchema]
 
 

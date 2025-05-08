@@ -9,6 +9,7 @@ from app.infra.database.dish.models import (
     TTKDishModifier,
     TTKAssemblyChart,
     TTKIngredient,
+    TTKModifierGroup,
 )
 from app.infra.database.knowledge.models import DishDivision, DishMaterial
 from app.schemas.dish import DishSchema
@@ -41,7 +42,7 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
             DishDivision.division_id == id
         )
         result = (await self._session.execute(dish_divisions)).scalars().all()
-        return result
+        return list(result)
 
     async def get_by_division_id(self, id):
         dish_divisions = await self._get_dish_division_ids(id)
@@ -59,67 +60,61 @@ class SQLDishRepository(DishRepository, SQLBaseRepository):
         return dishes[0]
 
     async def get_modifiers(self, product_id):
-        modifiers_count = (
-            await self._session.execute(
-                select(func.count(TTKDishModifier.id)).where(
-                    TTKDishModifier.product_id == product_id
-                )
+        s = (
+            select(
+                TTKAssemblyChart.product_id,
+                TTKModifierGroup.title,
+                TTKDishModifier.group_id,
+                TTKDishModifier.title,
+                TTKAssemblyChart.modifier_id,
+                TTKAssemblyChart.ingredient_id,
+                TTKIngredient.title,
+                TTKAssemblyChart.amount,
             )
-        ).scalar_one()
-
-        if modifiers_count != 0:
-            modifiers_s_sub = (
-                select(TTKDishModifier.id, TTKDishModifier.title)
-                .where(TTKDishModifier.product_id == product_id)
-                .subquery()
+            .join(TTKIngredient, TTKIngredient.id == TTKAssemblyChart.ingredient_id)
+            .join(TTKProduct, TTKProduct.id == TTKAssemblyChart.product_id)
+            .join(
+                TTKDishModifier,
+                TTKDishModifier.id == TTKAssemblyChart.modifier_id,
+                isouter=True,
             )
-
-            s = (
-                select(
-                    modifiers_s_sub.c.id,
-                    modifiers_s_sub.c.title,
-                    TTKAssemblyChart.ingredient_id,
-                    TTKIngredient.title,
-                    TTKAssemblyChart.amount,
-                )
-                .join(
-                    TTKAssemblyChart,
-                    modifiers_s_sub.c.id == TTKAssemblyChart.modifier_id,
-                )
-                .join(TTKIngredient, TTKIngredient.id == TTKAssemblyChart.ingredient_id)
+            .join(
+                TTKModifierGroup,
+                TTKModifierGroup.id == TTKDishModifier.group_id,
+                isouter=True,
             )
-        else:
-            s = (
-                select(
-                    TTKAssemblyChart.product_id,
-                    TTKProduct.title,
-                    TTKAssemblyChart.ingredient_id,
-                    TTKIngredient.title,
-                    TTKAssemblyChart.amount,
-                )
-                .join(TTKIngredient, TTKIngredient.id == TTKAssemblyChart.ingredient_id)
-                .join(TTKProduct, TTKProduct.id == TTKAssemblyChart.product_id)
-                .where(TTKAssemblyChart.product_id == product_id)
-            )
+            .where(TTKAssemblyChart.product_id == product_id)
+        )
 
         rows = (await self._session.execute(s)).all()
 
-        modifiers_dict: dict[int, dict] = {}
-        for row in rows:
-            modifier_id, modifier_title, ingredient_id, title, amount = row
+        groups_dict: dict[int | None, dict] = {}
 
-            modifiers_dict.setdefault(
-                modifier_id,
-                {"id": modifier_id, "title": modifier_title, "ingredients": []},
-            )["ingredients"].append(
+        for (
+            product_id,
+            group_title,
+            group_id,
+            modifier_title,
+            modifier_id,
+            ingredient_id,
+            ingredient_title,
+            amount,
+        ) in rows:
+            groups_dict.setdefault(group_id, {"title": group_title, "modifiers": {}})[
+                "modifiers"
+            ].setdefault(modifier_id, {"title": modifier_title, "ingredients": []})[
+                "ingredients"
+            ].append(
                 {
                     "id": ingredient_id,
-                    "title": title,
+                    "title": ingredient_title,
                     "amount": amount,
                 }
             )
+
         return [
-            converters.modifier_to_modifier_schema(v) for v in modifiers_dict.values()
+            converters.modifier_group_to_modifier_group_schema(v)
+            for v in groups_dict.values()
         ]
 
     async def get_by_id(self, id):

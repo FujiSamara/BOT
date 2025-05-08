@@ -10,7 +10,7 @@ from app.container import Container
 from app.controllers.api.dependencies import Authorization
 from app.infra.config.scopes import Scopes
 
-from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsSchema
+from app.schemas.dish import DishSchema, DishModifierGroupSchema, DishMaterialsSchema
 from app.schemas.file import FileInSchema
 from app.contracts.services import DishService
 
@@ -45,7 +45,7 @@ async def get_dish_modifiers(
         Authorization,
         scopes=[Scopes.DishRead.value],
     ),
-) -> list[DishModifierSchema]:
+) -> list[DishModifierGroupSchema]:
     try:
         return await service.get_dish_modifiers(id)
     except ValueError as e:

@@ -3,7 +3,7 @@ from abc import abstractmethod
 from common.schemas.file import FileLinkSchema, FileDeleteResultSchema
 from common.contracts.services import BaseService
 
-from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsSchema
+from app.schemas.dish import DishSchema, DishModifierGroupSchema, DishMaterialsSchema
 from app.schemas.file import FileInSchema
 
 
@@ -13,7 +13,7 @@ class DishService(BaseService):
         pass
 
     @abstractmethod
-    async def get_dish_modifiers(self, dish_id: int) -> list[DishModifierSchema]:
+    async def get_dish_modifiers(self, dish_id: int) -> list[DishModifierGroupSchema]:
         pass
 
     @abstractmethod

@@ -1,4 +1,9 @@
-from app.schemas.dish import DishSchema, DishModifierSchema, DishMaterialsDTO
+from app.schemas.dish import (
+    DishSchema,
+    DishModifierSchema,
+    DishMaterialsDTO,
+    DishModifierGroupSchema,
+)
 from app.infra.database.dish.models import TTKProduct
 
 
@@ -20,3 +25,15 @@ def materials_to_materials_dto(
     materials: list[int], video: int | None
 ) -> DishMaterialsDTO:
     return DishMaterialsDTO(materials=materials, video=video)
+
+
+def modifier_group_to_modifier_group_schema(group) -> DishModifierGroupSchema:
+    title = group["title"]
+    modifier_dict: dict = group["modifiers"]
+    return DishModifierGroupSchema(
+        title=title,
+        modifiers=[
+            DishModifierSchema.model_validate(modifier)
+            for modifier in modifier_dict.values()
+        ],
+    )
