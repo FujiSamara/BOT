@@ -58,8 +58,12 @@ class TTKDishModifier(Base):
     __tablename__ = "ttk_modifiers"
 
     product_id: Mapped[int] = mapped_column(
-        ForeignKey("ttk_products.id"), nullable=False
+        ForeignKey("ttk_products.id"), nullable=False, index=True
     )
+    group_id: Mapped[int] = mapped_column(
+        ForeignKey("ttk_modifier_groups.id"), nullable=True, index=True
+    )
+
     title: Mapped[str] = mapped_column(nullable=False)
 
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
@@ -103,3 +107,9 @@ class TTKAssemblyChart(Base):
 
     iiko_uuid: Mapped[UUID] = mapped_column(unique=True)
     weight: Mapped[float] = mapped_column(nullable=False)
+
+
+class TTKModifierGroup(Base):
+    __tablename__ = "ttk_modifier_groups"
+
+    title: Mapped[str] = mapped_column(nullable=False)

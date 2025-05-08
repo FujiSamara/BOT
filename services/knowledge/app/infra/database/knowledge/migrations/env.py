@@ -27,6 +27,7 @@ target_metadata.remove(extra_models.TTKProduct.__table__)
 target_metadata.remove(extra_models.TTKAssemblyChart.__table__)
 target_metadata.remove(extra_models.TTKGroup.__table__)
 target_metadata.remove(extra_models.TTKCategory.__table__)
+target_metadata.remove(extra_models.TTKModifierGroup.__table__)
 
 
 def run_migrations_offline() -> None:
