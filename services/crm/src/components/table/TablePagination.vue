@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, Ref, watch } from "vue";
+import { computed, onActivated, onMounted, ref, Ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps({
@@ -32,6 +32,7 @@ const loadPages = (): boolean => {
 };
 
 const updatePages = () => {
+	console.log(props);
 	const result: Array<number> = [];
 	const middle = props.pageCount / 2;
 
@@ -81,6 +82,10 @@ const onInput = (e: Event) => {
 
 onMounted(() => {
 	if (!loadPages()) updatePages();
+});
+
+onActivated(() => {
+	updatePages();
 });
 </script>
 
