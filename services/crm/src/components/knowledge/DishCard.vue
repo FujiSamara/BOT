@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, PropType, ref } from "vue";
+import { computed, PropType, Ref, ref, watch } from "vue";
 import PulseSpinner from "@/components/UI-new/PulseSpinner.vue";
 import CardMaterials from "./CardMaterials.vue";
-import { DishCard } from "@/components/knowledge/types";
+import { DishCard, IngredientSchema } from "@/components/knowledge/types";
 
 const props = defineProps({
 	card: {
@@ -18,58 +18,83 @@ const emits = defineEmits<{
 }>();
 const isCompound = ref(true);
 
-const modifiers = computed(() => {
-	if (props.card.modifiers === undefined) return undefined;
+const parseIngridients = (ingredients: IngredientSchema[]) => {
+	const temp = {
+		sauces: ingredients
+			.filter((ing) => ing.title.toLocaleLowerCase().includes("соус"))
+			.sort((a, b) => -a.title.length + b.title.length),
+		compounds: ingredients
+			.filter((ing) => !ing.title.toLocaleLowerCase().includes("соус"))
+			.sort((a, b) => -a.title.length + b.title.length),
+	};
 
-	const temp = props.card.modifiers.map((val) => {
-		return {
-			id: val.id,
-			title: val.title,
-			sauces: val.ingredients
-				.filter((ing) => ing.title.toLocaleLowerCase().includes("соус"))
-				.sort((a, b) => -a.title.length + b.title.length),
-			compounds: val.ingredients
-				.filter((ing) => !ing.title.toLocaleLowerCase().includes("соус"))
-				.sort((a, b) => -a.title.length + b.title.length),
-		};
-	});
+	return {
+		group1: {
+			sauces: temp.sauces.filter((_, i) => i % 2 === 0),
+			compounds: temp.compounds.filter((_, i) => i % 2 === 0),
+		},
+		group2: {
+			sauces: temp.sauces.filter((_, i) => i % 2 === 1),
+			compounds: temp.compounds.filter((_, i) => i % 2 === 1),
+		},
+	};
+};
 
-	return temp.map((mod) => {
-		return {
-			id: mod.id,
-			title: mod.title,
-			group1: {
-				sauces: mod.sauces.filter((_, i) => i % 2 === 0),
-				compounds: mod.compounds.filter((_, i) => i % 2 === 0),
-			},
-			group2: {
-				sauces: mod.sauces.filter((_, i) => i % 2 === 1),
-				compounds: mod.compounds.filter((_, i) => i % 2 === 1),
-			},
-		};
-	});
+const groups = computed(() => {
+	if (props.card.modifiers === undefined) return [];
+
+	return [...props.card.modifiers];
 });
-const modifierIndex = ref(0);
-const modifier = computed(() => {
-	if (modifiers.value === undefined) return;
-	if (modifiers.value.length === 0) {
-		isCompound.value = false;
-		return;
+
+const modifierIndexes: Ref<number[]> = ref([]);
+watch(
+	groups,
+	() => {
+		modifierIndexes.value = groups.value.map((_) => 0);
+	},
+	{ immediate: true },
+);
+
+const ingridients = computed(() => {
+	const result: IngredientSchema[] = [];
+
+	if (!modifierIndexes.value.length) {
+		return parseIngridients(result);
 	}
-	return modifiers.value[modifierIndex.value];
+
+	for (let index = 0; index < groups.value.length; index++) {
+		const group = groups.value[index];
+		const choosedIndex = modifierIndexes.value[index];
+		const choosedModfier = group.modifiers[choosedIndex];
+
+		result.push(...choosedModfier.ingredients);
+	}
+
+	return parseIngridients(result);
 });
-const saucesExist = computed(() => {
-	if (modifier.value === undefined) return false;
+const ingridientsExist = computed(() => {
 	return (
-		modifier.value.group1.sauces.length + modifier.value.group2.sauces.length
+		ingridients.value.group1.compounds.length +
+			ingridients.value.group2.compounds.length !==
+		0
+	);
+});
+
+const saucesExist = computed(() => {
+	return (
+		ingridients.value.group1.sauces.length +
+		ingridients.value.group2.sauces.length
 	);
 });
 const compoundsExist = computed(() => {
-	if (modifier.value === undefined) return false;
 	return (
-		modifier.value.group1.compounds.length +
-		modifier.value.group2.compounds.length
+		ingridients.value.group1.compounds.length +
+		ingridients.value.group2.compounds.length
 	);
+});
+
+const filtersExist = computed(() => {
+	return groups.value.some((modifier) => modifier.modifiers.length > 1);
 });
 
 const video = computed(() => {
@@ -88,12 +113,12 @@ const convertAmount = (amount: number): string => {
 			<img :src="props.card.image" />
 			<div class="info-wrapper">
 				<Transition name="fade" mode="out-in">
-					<div v-if="modifiers !== undefined" class="info">
+					<div v-if="props.card.modifiers !== undefined" class="info">
 						<div class="controls">
 							<div class="switch">
 								<button
 									@click="isCompound = true"
-									v-if="modifier"
+									v-if="groups.length"
 									:class="{ active: isCompound }"
 								>
 									Состав
@@ -109,14 +134,18 @@ const convertAmount = (amount: number): string => {
 						</div>
 
 						<Transition name="fade" mode="out-in">
-							<div v-if="isCompound && modifier" class="compound-wrapper">
-								<div class="filters" v-if="modifiers.length > 1">
+							<div v-if="isCompound && groups.length" class="compound-wrapper">
+								<div
+									class="filters"
+									v-if="filtersExist"
+									v-for="(group, groupIndex) in groups"
+								>
 									<span class="title">Фильтры</span>
-									<ul>
-										<li v-for="(modifier, i) in modifiers">
+									<ul v-if="group.modifiers.length > 1">
+										<li v-for="(modifier, i) in group.modifiers">
 											<button
-												@click="modifierIndex = i"
-												:class="{ active: i === modifierIndex }"
+												@click="modifierIndexes[groupIndex] = i"
+												:class="{ active: i === modifierIndexes[groupIndex] }"
 											>
 												{{ modifier.title }}
 											</button>
@@ -124,12 +153,16 @@ const convertAmount = (amount: number): string => {
 									</ul>
 								</div>
 								<Transition name="fade" mode="out-in">
-									<div :key="modifier.id" class="compound-inner">
+									<div
+										v-if="ingridientsExist"
+										:key="modifierIndexes.reduce((f, s) => f + s)"
+										class="compound-inner"
+									>
 										<div class="part" v-if="saucesExist">
 											<span class="title">Соус</span>
 											<div class="group">
 												<ul>
-													<li v-for="sauce in modifier.group1.sauces">
+													<li v-for="sauce in ingridients.group1.sauces">
 														<span class="li-title">{{ sauce.title }}</span>
 														<span class="li-amount">{{
 															convertAmount(sauce.amount)
@@ -137,7 +170,7 @@ const convertAmount = (amount: number): string => {
 													</li>
 												</ul>
 												<ul>
-													<li v-for="sauce in modifier.group2.sauces">
+													<li v-for="sauce in ingridients.group2.sauces">
 														<span class="li-title">{{ sauce.title }}</span>
 														<span class="li-amount">{{
 															convertAmount(sauce.amount)
@@ -150,7 +183,7 @@ const convertAmount = (amount: number): string => {
 											<span class="title">Состав</span>
 											<div class="group">
 												<ul>
-													<li v-for="compound in modifier.group1.compounds">
+													<li v-for="compound in ingridients.group1.compounds">
 														<span class="li-title">{{ compound.title }}</span>
 														<span class="li-amount">{{
 															convertAmount(compound.amount)
@@ -158,7 +191,7 @@ const convertAmount = (amount: number): string => {
 													</li>
 												</ul>
 												<ul>
-													<li v-for="compound in modifier.group2.compounds">
+													<li v-for="compound in ingridients.group2.compounds">
 														<span class="li-title">{{ compound.title }}</span>
 														<span class="li-amount">{{
 															convertAmount(compound.amount)
@@ -273,6 +306,7 @@ const convertAmount = (amount: number): string => {
 						button {
 							width: 112px;
 							height: 39px;
+							color: $main-accent-blue;
 
 							border: 1px solid $sec-dark-gray-25;
 							background-color: $bg-light-blue;

@@ -5,7 +5,7 @@ import {
 	CardType,
 	DishCard,
 	DishMaterials,
-	DishModifierSchema,
+	DishModifierGroupSchema,
 	DivisionType,
 	FileLinkSchema,
 	KnowledgeDivision,
@@ -96,12 +96,22 @@ export class KnowledgeService {
 
 	public async getDishModifiers(
 		dish_id: number,
-	): Promise<DishModifierSchema[] | undefined> {
+	): Promise<DishModifierGroupSchema[] | undefined> {
 		const url = `${this._endpoint}/dishes/${dish_id}/modifiers`;
 		const resp = await this._networkStore.withAuthChecking(axios.get(url));
 		if (!resp.data) return;
 
-		return resp.data;
+		return resp.data.map((group: any) => {
+			return {
+				title: group.title === null ? undefined : group.title,
+				modifiers: group.modifiers.map((modifier: any) => {
+					return {
+						title: modifier.title === null ? undefined : modifier.title,
+						...modifier,
+					};
+				}),
+			};
+		});
 	}
 
 	public async getDishMaterials(

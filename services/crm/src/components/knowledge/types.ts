@@ -39,14 +39,18 @@ export interface BusinessCard extends Card {
 	materials: FileLinkSchema[];
 }
 
-interface IngredientSchema extends BaseSchema {
+export interface IngredientSchema extends BaseSchema {
 	id: number;
 	title: string;
 	amount: number;
 }
 export interface DishModifierSchema extends BaseSchema {
-	title: string;
+	title: string | undefined;
 	ingredients: IngredientSchema[];
+}
+export interface DishModifierGroupSchema extends BaseSchema {
+	title: string | undefined;
+	modifiers: DishModifierSchema[];
 }
 
 export interface FileLinkSchema extends BaseSchema {
@@ -71,7 +75,7 @@ export interface DishCard extends Card {
 	title: string;
 	image: string;
 	description: string;
-	modifiers?: DishModifierSchema[];
+	modifiers?: DishModifierGroupSchema[];
 	materials?: DishMaterials;
 }
 
