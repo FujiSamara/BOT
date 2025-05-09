@@ -32,7 +32,6 @@ const loadPages = (): boolean => {
 };
 
 const updatePages = () => {
-	console.log(props);
 	const result: Array<number> = [];
 	const middle = props.pageCount / 2;
 
