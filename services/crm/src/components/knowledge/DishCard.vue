@@ -135,22 +135,23 @@ const convertAmount = (amount: number): string => {
 
 						<Transition name="fade" mode="out-in">
 							<div v-if="isCompound && groups.length" class="compound-wrapper">
-								<div
-									class="filters"
-									v-if="filtersExist"
-									v-for="(group, groupIndex) in groups"
-								>
+								<div class="filters-wrappper" v-if="filtersExist">
 									<span class="title">Фильтры</span>
-									<ul v-if="group.modifiers.length > 1">
-										<li v-for="(modifier, i) in group.modifiers">
-											<button
-												@click="modifierIndexes[groupIndex] = i"
-												:class="{ active: i === modifierIndexes[groupIndex] }"
-											>
-												{{ modifier.title }}
-											</button>
-										</li>
-									</ul>
+									<div class="filters" v-for="(group, groupIndex) in groups">
+										<span class="group-title" v-if="groups.length > 1">{{
+											group.title || `Group_${groupIndex + 1}`
+										}}</span>
+										<ul v-if="group.modifiers.length > 1">
+											<li v-for="(modifier, i) in group.modifiers">
+												<button
+													@click="modifierIndexes[groupIndex] = i"
+													:class="{ active: i === modifierIndexes[groupIndex] }"
+												>
+													{{ modifier.title || `Modifier_${i + 1}` }}
+												</button>
+											</li>
+										</ul>
+									</div>
 								</div>
 								<Transition name="fade" mode="out-in">
 									<div
@@ -336,40 +337,58 @@ const convertAmount = (amount: number): string => {
 					font-size: 16px;
 				}
 
-				.filters {
+				.filters-wrappper {
 					display: flex;
 					flex-direction: column;
 
 					max-width: 100%;
 					gap: 16px;
 
-					ul {
+					.filters {
 						display: flex;
 						flex-direction: row;
-						width: fit-content;
-						max-width: 100%;
-						flex-wrap: wrap;
+						gap: 16px;
+						align-items: center;
 
-						gap: 8px;
+						.group-title {
+							font-family: Wix Madefor Display;
+							font-weight: 500;
+							font-size: 14px;
+							line-height: 100%;
+							letter-spacing: 0%;
+							text-align: center;
 
-						border-radius: 16px;
-						background-color: $main-white;
-
-						button {
-							min-width: 84px;
-							height: 42px;
-							padding: 8px 14px;
-
-							background-color: $main-white;
-							border: none;
 							color: $main-accent-blue;
-							border-radius: 24px;
-							transition: background-color 0.25s;
+						}
 
-							&.active,
-							&:hover {
-								color: $main-white;
-								background-color: $sec-gray-blue;
+						ul {
+							display: flex;
+							flex-direction: row;
+							width: fit-content;
+							max-width: 100%;
+							flex-wrap: wrap;
+
+							gap: 8px;
+
+							border-radius: 16px;
+							background-color: $main-white;
+
+							button {
+								min-width: 84px;
+								height: 42px;
+								padding: 8px 14px;
+
+								background-color: $main-white;
+								border: none;
+								color: $main-accent-blue;
+								border-radius: 24px;
+								transition: background-color 0.25s;
+
+								&.active,
+								&:hover {
+									color: $main-white;
+									background-color: $sec-gray-blue;
+								}
 							}
 						}
 					}
